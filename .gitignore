@@ -1,0 +1,19 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.DS_Store
+
+# Local tooling / machine state
+.python-version
+.mcp.json
+tmp/
+
+# Generated outputs
+outputs/
+
+# Large M4 raw data files (downloaded via scripts/download_data.py)
+data/raw/m4/
+notebooks/.ipynb_checkpoints/

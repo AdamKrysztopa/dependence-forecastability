@@ -1,0 +1,20 @@
+purpose: benchmark_exog_panel
+rolling_origin:
+  n_origins: 8
+  horizons: [1, 2, 3, 4, 5, 6, 8, 12]
+metric:
+  n_neighbors: 8
+  min_pairs_ami: 30
+  min_pairs_pami: 50
+  n_surrogates: 99
+  random_state: 42
+slice_case_ids:
+  - bike_cnt_temp
+  - bike_cnt_hum
+  - bike_cnt_noise
+  - aapl_spy
+  - aapl_noise
+  - btc_eth
+  - btc_noise
+analysis_scope: both
+project_extension: true

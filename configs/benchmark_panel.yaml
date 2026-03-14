@@ -1,0 +1,28 @@
+version: 1
+purpose: optional_benchmark_panel
+paper_baseline:
+  frequencies: [Yearly, Quarterly, Monthly, Weekly, Daily, Hourly]
+  horizon_caps:
+    Yearly: 6
+    Quarterly: 8
+    Monthly: 18
+    Weekly: 13
+    Daily: 14
+    Hourly: 48
+rolling_origin:
+  n_origins: 10
+  horizons: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 24, 30, 36, 42, 48]
+metric:
+  n_neighbors: 8
+  n_surrogates: 99
+  random_state: 42
+leakage_policy:
+  compute_diagnostics_on_train_only: true
+  score_forecasts_on_holdout_only: true
+data:
+  source: m4_subset
+  frequencies: [Yearly, Quarterly, Monthly, Weekly, Daily, Hourly]
+  n_series_per_frequency: 20
+models:
+  include_lightgbm_autoreg: false
+  include_nbeats: false

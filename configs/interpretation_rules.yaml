@@ -1,0 +1,26 @@
+version: 1
+scientific_framing:
+  ami: "AMI(h) is total predictive dependence between X_t and X_{t+h}."
+  pami: "pAMI(h) is direct predictive dependence at horizon h conditioned on lags 1..h-1."
+  analogy_ami: "nonlinear ACF"
+  analogy_pami: "nonlinear PACF"
+  disclosure:
+    paper_aligned: "AMI is paper-aligned."
+    extension: "pAMI is a project extension and is not paper-native."
+research_questions:
+  - "Can paper-style AMI behavior be reproduced on canonical examples?"
+  - "What does pAMI add beyond AMI on canonical examples?"
+  - "Does pAMI separate inherited dependence from direct lag-specific dependence?"
+  - "In rolling-origin evaluation, is AMI better for triage while pAMI is better for lag selection?"
+  - "When AMI is broad but pAMI is sparse, is mediated structure the best interpretation?"
+hypotheses:
+  H1: "For structured series, pAMI decays faster than AMI."
+  H2: "For periodic and seasonal data, AMI is broad while pAMI is sparser."
+  H3: "For nonlinear chaotic series, AMI persists while pAMI isolates fewer direct lags."
+  H4: "For weakly dependent stochastic series, both are weak and pAMI is more conservative."
+  H5: "AMI is stronger for triage; pAMI is stronger for compact lag selection."
+analysis_rules:
+  horizon_specific_metrics: true
+  ami_diagnostic_only: true
+  min_surrogates: 99
+  n_neighbors_default: 8

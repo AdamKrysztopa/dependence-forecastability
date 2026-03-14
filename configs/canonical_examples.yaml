@@ -1,0 +1,51 @@
+version: 1
+purpose: canonical_examples_interpretive_only
+examples:
+  - name: sine_wave
+    enabled: true
+    generator:
+      kind: sine
+      n_points: 240
+      period: 24
+      noise_std: 0.05
+      random_state: 42
+  - name: air_passengers
+    enabled: true
+    source: built_in
+    note: monthly_airline_passengers_reference_series
+  - name: henon_map
+    enabled: true
+    generator:
+      kind: henon
+      n_points: 240
+      a: 1.4
+      b: 0.3
+      random_state: 42
+  - name: simulated_stock_returns
+    enabled: true
+    generator:
+      kind: gaussian_returns
+      n_points: 400
+      drift: 0.0
+      volatility: 0.02
+      random_state: 42
+  - name: bitcoin_returns
+    enabled: true
+    source: data/raw/canonical/bitcoin_returns.csv
+    note: daily_log_returns_BTC_USD_2015_2024
+  - name: gold_returns
+    enabled: true
+    source: data/raw/canonical/gold_returns.csv
+    note: daily_log_returns_gold_futures_GC_2000_2024
+  - name: crude_oil_returns
+    enabled: true
+    source: data/raw/canonical/crude_oil_returns.csv
+    note: daily_log_returns_crude_oil_futures_CL_2000_2024
+  - name: aapl_returns
+    enabled: true
+    source: data/raw/canonical/aapl_returns.csv
+    note: daily_log_returns_AAPL_2000_2024
+metric:
+  n_neighbors: 8
+  n_surrogates: 99
+  random_state: 42
