@@ -1,0 +1,51 @@
+# CausalRivers CrossAMI / pCrossAMI analysis configuration
+# ─────────────────────────────────────────────────────────
+# Dataset: East Germany subset of the CausalRivers benchmark
+#   Paper: "Scaling up benchmarking of causal discovery for real-world time-series"
+#   Source: https://github.com/CausalRivers/causalrivers
+#   Release: https://github.com/CausalRivers/benchmark/releases/tag/First_release
+#   License: data license Germany dl-de/by-2-0
+#
+# Target station: 978 (Unstrut river, Sachsen-Anhalt, ~126 m elevation)
+# Rationale: highest in-degree (7 direct upstream tributaries) with >98% data coverage
+
+data:
+  raw_dir: "data/raw/causal_rivers/product"
+  ts_file: "rivers_ts_east_germany.csv"
+  graph_file: "rivers_east_germany.p"
+  meta_file: "rivers_meta_east_germany.csv"
+  # 15-minute resolution → resample to 6H before analysis to reduce autocorrelation
+  # and cut compute time; 6H still captures daily flood routing with lag ~1–4 steps.
+  resample_freq: "6h"
+
+station_selection:
+  target_id: 978          # Unstrut @ Wendelstein — downstream confluence
+  positive_upstream:      # Direct tributaries (ground-truth causal in graph)
+    - 979                 # Unstrut upstream gauge (same river, immediately above)
+    - 1095                # Wipper (major left tributary)
+    - 313                 # Helbe (right tributary)
+    - 758                 # Scherkonde (right tributary)
+    - 490                 # Lossa (right tributary)
+  negative_control:       # Stations with no path to target — expect ~zero CrossAMI
+    - 67                  # Belziger Bach (Havel basin, Brandenburg)
+    - 71                  # Berste (Havel basin, Brandenburg)
+    - 99                  # Briese (Havel basin, Brandenburg)
+
+rolling_origin:
+  n_origins: 8
+  horizons: [1, 2, 3, 4, 6, 8, 12]  # 6-h steps; horizon-12 = 3 days ahead
+
+metric:
+  n_neighbors: 8
+  random_state: 42
+  n_surrogates: 99
+  min_pairs_raw: 30
+  min_pairs_partial: 50
+  max_lag: 20             # 20 × 6H = 5 days max cross-lag window
+  # Signal-to-noise multiplier: a value must exceed NOISE_FLOOR × signal_multiplier
+  # to be treated as a genuine signal.  Lower N → more sensitive (more FPs);
+  # higher N → more conservative (more FNs).  Default 2.0 is a pragmatic mid-point.
+  signal_multiplier: 2.0
+
+analysis_scope: "both"    # compute both raw CrossAMI and pCrossAMI
+project_extension: true   # pCrossAMI is a project extension, not paper-native
