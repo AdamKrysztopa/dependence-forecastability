@@ -15,7 +15,7 @@ Last revised: 2026-04-11
 |---|------|-------|--------|
 | E1 | **Complete hexagonal foundation** — formalize ports, enforce boundaries, settings layer | AGT-001, AGT-002, AGT-003 | ✅ done |
 | E2 | **Triage domain and policies** — readiness gate, method router, triage models | AGT-004, AGT-005, AGT-006 | ✅ done |
-| E3 | **Triage orchestration use case** — deterministic pipeline wiring | AGT-007 | not started |
+| E3 | **Triage orchestration use case** — deterministic pipeline wiring | AGT-007 | ✅ done |
 | E4 | **PydanticAI adapter** — LLM-orchestrated triage over deterministic core | AGT-008a, AGT-008b | not started |
 | E5 | **Transport adapters** — CLI, FastAPI, MCP | AGT-009, AGT-010, AGT-011 | not started |
 | E6 | **Operational maturity** — streaming, observability, durability | AGT-012, AGT-013, AGT-014 | not started |
@@ -379,7 +379,7 @@ Routing rules (deterministic — no LLM):
 
 # E3 — Triage Orchestration Use Case
 
-## AGT-007 — Implement triage orchestration use case
+## AGT-007 — Implement triage orchestration use case ✅
 
 **Priority:** Must Have · **Points:** 5 · **Labels:** `use-case`, `must-have`
 
