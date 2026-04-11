@@ -1,3 +1,4 @@
+<!-- type: reference -->
 # Agentic Triage Backlog
 
 Status: proposed → **revised** → **in progress**  
@@ -16,11 +17,11 @@ Last revised: 2026-04-11
 | E1 | **Complete hexagonal foundation** — formalize ports, enforce boundaries, settings layer | AGT-001, AGT-002, AGT-003 | ✅ done |
 | E2 | **Triage domain and policies** — readiness gate, method router, triage models | AGT-004, AGT-005, AGT-006 | ✅ done |
 | E3 | **Triage orchestration use case** — deterministic pipeline wiring | AGT-007 | ✅ done |
-| E4 | **PydanticAI adapter** — LLM-orchestrated triage over deterministic core | AGT-008a, AGT-008b | not started |
+| E4 | **PydanticAI adapter** — LLM-orchestrated triage over deterministic core | AGT-008a, AGT-008b | ✅ done |
 | E5 | **Transport adapters** — CLI, FastAPI, MCP | AGT-009, AGT-010, AGT-011 | not started |
 | E6 | **Operational maturity** — streaming, observability, durability | AGT-012, AGT-013, AGT-014 | not started |
-| E7 | **Quality gates and regression** — architecture tests, benchmark regression | AGT-015, AGT-016 | not started |
-| E8 | **Extensions** — scorer comparison, notebook facade, A2A spike | AGT-017, AGT-018, AGT-019 | not started |
+| E7 | **Quality gates, agent workflow, and regression** — architecture docs, role parity, benchmark regression | AGT-015, AGT-016, AGT-020 | not started |
+| E8 | **User enablement and extensions** — scorer comparison, notebook-agent facade, triage notebook, A2A spike | AGT-017, AGT-018, AGT-021, AGT-019 | not started |
 
 ---
 
@@ -122,6 +123,28 @@ The agent layer must sit **around** this workflow, not rebuild it.
 | **PydanticAI** | LLM orchestration adapter over deterministic services | After E3 (deterministic triage works standalone) |
 | **MCP** | Tool-server exposure for IDE / assistant interop | After E4 (PydanticAI adapter works) |
 | **A2A** | Remote multi-agent collaboration | Deferred — spike only after MCP is stable |
+
+---
+
+## Post-E3 rebaseline
+
+E3 proves the triage workflow works without any LLM. After that milestone, the
+next priority is not “add more agents” in the abstract. The priority is to make
+the deterministic core easier to consume without violating SOLID or hexagonal
+boundaries.
+
+- `tester` becomes a core workflow role. `.codex` already has it; `.github`
+  must gain parity before agent-assisted delivery is considered production-ready.
+- `devops` is justified when E5/E6 create runtime ownership for CI, packaging,
+  FastAPI, MCP, streaming, or service health. Until then, infrastructure work
+  stays under existing roles and remains adapter-scoped.
+- `agent_engineer` is justified only when E4 starts and prompt/tool/eval work
+  becomes a real maintenance surface. It is not a second `coder`.
+- Notebook preparation in this phase means notebook-safe facades, smoke
+  contracts, and how-to documentation only. The frozen contract forbids
+  `.ipynb` edits.
+- New specialist roles require explicit file ownership and stage-gate
+  responsibility; otherwise they add coordination noise rather than leverage.
 
 ---
 
@@ -437,7 +460,7 @@ is wired.
 
 # E4 — PydanticAI Adapter
 
-## AGT-008a — PydanticAI agent with tool bindings
+## AGT-008a — PydanticAI agent with tool bindings ✅
 
 **Priority:** Must Have · **Points:** 5 · **Labels:** `pydanticai`, `adapter`, `must-have`
 
@@ -473,7 +496,7 @@ New module: `src/forecastability/adapters/pydantic_ai_agent.py`.
 
 ---
 
-## AGT-008b — PydanticAI narrative and explainability layer
+## AGT-008b — PydanticAI narrative and explainability layer ✅
 
 **Priority:** Should Have · **Points:** 3 · **Labels:** `pydanticai`, `narrative`, `should-have`
 
@@ -669,7 +692,7 @@ Persist intermediate triage state so interrupted significance-heavy runs can res
 
 ---
 
-# E7 — Quality Gates and Regression
+# E7 — Quality Gates, Agent Workflow, and Regression
 
 ## AGT-015 — Architecture enforcement documentation
 
@@ -719,7 +742,59 @@ Prevent routing or interpretation drift using canonical series.
 
 ---
 
-# E8 — Extensions
+## AGT-020 — Agent roster parity and ownership map
+
+**Priority:** Must Have · **Points:** 3 · **Labels:** `agents`, `dx`, `must-have`
+
+### Goal
+
+Make agent-assisted delivery predictable by aligning the supported role set
+across `.github` and `.codex`, defining what each role owns, and preventing
+workflow drift.
+
+### Scope
+
+- Document the canonical agent roster and ownership map.
+- Close current parity gaps such as `.codex` having `tester` while `.github`
+  does not.
+- Decide whether `devops` and `agent_engineer` are needed now, later, or not at
+  all.
+- Keep every role bounded to adapters, docs, verification, or architecture
+  concerns; domain logic stays in code, not in prompts.
+
+### Tasks
+
+- Add or update the canonical roster in `.github/AGENT_FLOW.md` and related
+  instruction files.
+- Define the core maintained roles:
+  `orchestrator`, `coder`, `tester`, `documenter`, `analyst`,
+  `software_architect`, `statistician`, `reporter`.
+- Add an ownership table for optional roles:
+  - `devops` — `.github/workflows/`, packaging, runtime config, local service
+    bootstrapping, deployment docs
+  - `agent_engineer` — PydanticAI prompts, tool bindings, eval fixtures,
+    guardrails, agent-usage examples
+- Add explicit entry criteria:
+  - introduce `devops` when the first service-like adapter or CI/release
+    workflow becomes a maintenance burden
+  - introduce `agent_engineer` when E4 starts and prompt/eval work stops being
+    incidental
+
+### Acceptance criteria
+
+- Supported roles are documented once and referenced from both `.github` and
+  `.codex`.
+- No maintained workflow depends on a role that exists in only one agent system.
+- Every added role has a concrete file/service ownership boundary and a
+  stage-gate responsibility.
+
+### Dependencies
+
+- AGT-007.
+
+---
+
+# E8 — User Enablement and Extensions
 
 ## AGT-017 — Scorer-comparison triage mode
 
@@ -739,27 +814,123 @@ Let `TriageRequest(goal="comparison")` trigger multi-scorer execution.
 
 ---
 
-## AGT-018 — Notebook triage facade
+## AGT-018 — Notebook-safe and agent-ready triage facade
 
-**Priority:** Could Have · **Points:** 2 · **Labels:** `notebooks`, `could-have`
+**Priority:** Should Have · **Points:** 5 · **Labels:** `notebooks`, `dx`, `should-have`
 
 ### Goal
 
-One-liner triage entry point for Jupyter users.
+Prepare a notebook-friendly triage path that is easy to use today and
+agent-ready later, without editing or adding `.ipynb` files in this phase.
 
 ```python
 from forecastability.triage import run_triage, TriageRequest
 result = run_triage(TriageRequest(series=ts, goal="univariate"))
 ```
 
+### Scope
+
+- Stable one-cell deterministic usage from `forecastability.triage`.
+- Notebook-friendly rendering or serialization helpers so `TriageResult` is easy
+  to inspect without bespoke notebook glue code.
+- How-to documentation with copy-pasteable Python cells in Markdown, not in
+  committed notebook files.
+- Phase 2 hook: once E4 exists, the same notebook flow may opt into
+  agent-generated explanation without changing the compute path.
+
+### Tasks
+
+- Preserve a minimal import surface for notebook users under
+  `forecastability.triage`.
+- Add notebook-safe formatting helpers instead of building a second notebook-only
+  orchestration layer.
+- Add a notebook smoke contract covering imports and a minimal deterministic
+  usage example.
+- Document a staged UX:
+  - stage 1 — deterministic `run_triage()` in one cell
+  - stage 2 — optional agent explanation after AGT-008a
+- State the non-goal explicitly: no `.ipynb` edits while the compatibility
+  contract is in force
+
 ### Acceptance criteria
 
 - Facade delegates to `run_triage()`, not a separate orchestration path.
+- Existing notebooks remain unchanged.
 - No new notebook dependencies.
+- A notebook user can execute deterministic triage in one cell and understand
+  the next step for agent-assisted explanation.
 
 ### Dependencies
 
 - AGT-007.
+- AGT-020.
+- Optional: AGT-008a.
+
+---
+
+## AGT-021 — Agentic triage demo notebook
+
+**Priority:** Should Have · **Points:** 5 · **Labels:** `notebooks`, `dx`, `should-have`
+
+### Goal
+
+Create `notebooks/03_agentic_triage.ipynb` — a standalone, runnable notebook
+that demonstrates the triage pipeline end-to-end.  It teaches the user
+`run_triage()` as the single entry point for forecastability analysis and
+previews the future agent-assisted explanation path.
+
+### Scope
+
+Unlike AGT-018 (which prepares the facade and helpers without creating notebook
+files), this item **creates an actual `.ipynb`**.  The notebook freeze rule
+protects existing notebooks 01 and 02; a newly committed notebook becomes
+frozen only after its initial merge.
+
+#### Section outline
+
+| # | Type | Title | Purpose |
+|---|---|---|---|
+| 1 | md | Title + Introduction | What is triage? Single entry point |
+| 2 | md/py | Setup & imports | `from forecastability.triage import run_triage, TriageRequest` + datasets |
+| 3 | md/py | §1 — One-Cell Triage (AR(1)) | Demonstrate the happy path: clear → univariate_with_significance → high forecastability |
+| 4 | md/py | §2 — Readiness Gate | Short series → blocked; medium series → warning with codes |
+| 5 | md/py | §3 — Method Routing | White noise (low forecastability), Hénon map (nonlinear), exogenous path |
+| 6 | md/py | §4 — Interpretation Deep Dive | Pattern classes A–E table built from results |
+| 7 | md/py | §5 — Visualization | Plot AMI/pAMI curves extracted from TriageResult |
+| 8 | md/py | §6 — Agent-Assisted Explanation (Preview) | Commented/guarded PydanticAI cell with `try/except ImportError` |
+| 9 | md | §7 — Takeaways | Single entry point, deterministic, extensible |
+
+#### Architectural constraints
+
+- **All compute goes through `run_triage()`** — no direct `ForecastabilityAnalyzer` calls.
+- **No new dependencies** — only `forecastability`, `numpy`, `matplotlib`.
+- **Agent cells are opt-in** — guarded by `try/except ImportError`, graceful when
+  PydanticAI is absent.
+- **No secrets in cells** — agent cells reference `.env` via the settings layer.
+- **Deterministic** — every cell uses `random_state=42`.
+
+### Tasks
+
+- Create `notebooks/03_agentic_triage.ipynb` with the section outline above.
+- Add the notebook to `EXPECTED_NOTEBOOKS` in `scripts/check_notebook_contract.py`.
+- Add a triage-specific smoke test in `tests/test_notebook_contract.py` verifying
+  `from forecastability.triage import run_triage, TriageRequest` resolves.
+- If AGT-018 display helpers exist, use them; otherwise inline minimal formatting.
+- Ensure `uv run pytest` passes with the new smoke test.
+
+### Acceptance criteria
+
+- Notebook is runnable end-to-end with `uv run jupyter nbconvert --execute`.
+- All compute delegates to `run_triage()`.
+- Existing notebooks 01 and 02 are byte-for-byte unchanged.
+- Agent preview cells degrade gracefully (no crash without PydanticAI).
+- Notebook is added to the contract check script (`check_notebook_contract.py`).
+
+### Dependencies
+
+- AGT-007 (done).
+- AGT-018 (display helpers — soft dependency, can inline if absent).
+- AGT-008a (PydanticAI — optional, only for §6 preview cells).
 
 ---
 
@@ -809,9 +980,14 @@ graph TD
     AGT001 --> AGT007
     AGT007 --> AGT008a["AGT-008a<br>PydanticAI agent"]
     AGT008a --> AGT008b["AGT-008b<br>Narrative layer"]
+    AGT007 --> AGT020["AGT-020<br>Agent role parity"]
     AGT007 --> AGT009["AGT-009<br>CLI adapter"]
     AGT007 --> AGT010["AGT-010<br>FastAPI adapter"]
     AGT007 --> AGT011["AGT-011<br>MCP adapter"]
+    AGT007 --> AGT018["AGT-018<br>Notebook-agent facade"]
+    AGT018 --> AGT021["AGT-021<br>Triage demo notebook"]
+    AGT020 --> AGT018
+    AGT008a -.->|optional| AGT021
     AGT001 --> AGT012["AGT-012<br>Event streaming"]
     AGT007 --> AGT012
     AGT012 --> AGT013["AGT-013<br>Observability"]
@@ -830,13 +1006,16 @@ graph TD
 6. **AGT-006** — Method router
 7. AGT-015 — Architecture docs
 8. **AGT-007** — Triage orchestration use case ← **first end-to-end milestone**
-9. AGT-008a — PydanticAI agent
-10. AGT-008b — Narrative layer
-11. AGT-009, AGT-010, AGT-011 — transport adapters (parallelizable)
-12. AGT-012 — Event streaming
-13. AGT-013 — Observability
-14. AGT-016 — Regression tests
-15. AGT-014, AGT-017, AGT-018, AGT-019 — extensions
+9. AGT-020 — Agent roster parity and ownership map
+10. AGT-018 — Notebook-safe deterministic path and future agent hook
+11. **AGT-021** — Agentic triage demo notebook
+12. AGT-008a — PydanticAI agent
+13. AGT-008b — Narrative layer
+14. AGT-009, AGT-010, AGT-011 — transport adapters (parallelizable)
+15. AGT-012 — Event streaming
+16. AGT-013 — Observability
+17. AGT-016 — Regression tests
+18. AGT-014, AGT-017, AGT-019 — lower-priority extensions
 
 ---
 
@@ -844,13 +1023,16 @@ graph TD
 
 This backlog is complete when:
 
-- [ ] `run_triage()` is callable from Python without any LLM or agent runtime
-- [ ] All scientific computation delegates to existing library code (no duplication)
-- [ ] Port interfaces formalized in `ports/` with boundary tests enforcing them
-- [ ] PydanticAI adapter wraps `run_triage()` and never generates numbers
-- [ ] `.env` is the documented home for runtime keys; typed settings model validates them
+- [x] `run_triage()` is callable from Python without any LLM or agent runtime
+- [x] All scientific computation delegates to existing library code (no duplication)
+- [x] Port interfaces formalized in `ports/` with boundary tests enforcing them
+- [x] PydanticAI adapter wraps `run_triage()` and never generates numbers
+- [x] `.env` is the documented home for runtime keys; typed settings model validates them
+- [ ] Supported agent roles and ownership are aligned across `.github` and `.codex`
 - [ ] At least one transport adapter (CLI, API, or MCP) works end-to-end
 - [ ] Architecture rules documented in `docs/architecture.md`
+- [ ] Notebook users have a documented, notebook-safe triage path that reuses `run_triage()`
+- [ ] `notebooks/03_agentic_triage.ipynb` demonstrates the triage pipeline end-to-end
 - [ ] All items pass `uv run pytest -q -ra`, `uv run ruff check .`, `uv run ty check`
-- [ ] Notebooks remain byte-for-byte unchanged
+- [ ] Notebooks 01 and 02 remain byte-for-byte unchanged
 - [ ] A2A remains deferred unless a concrete distributed use case justifies it

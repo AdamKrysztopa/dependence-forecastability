@@ -118,3 +118,4 @@ class TriageResult(BaseModel):
     interpretation: Any | None = None  # InterpretationResult at runtime
     recommendation: str | None = None
     blocked: bool
+    narrative: str | None = None
