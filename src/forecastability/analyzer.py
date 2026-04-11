@@ -19,6 +19,7 @@ from forecastability.metrics import (
 from forecastability.scorers import (
     DependenceScorer,
     ScorerInfo,
+    ScorerRegistryProtocol,
     default_registry,
 )
 
@@ -84,7 +85,7 @@ class ForecastabilityAnalyzer:
             raise ValueError("n_surrogates must be >= 99")
         self.n_surrogates = n_surrogates
         self.random_state = random_state
-        self._registry = default_registry()
+        self._registry: ScorerRegistryProtocol = default_registry()
         self._state = AnalyzerState(method=method)
 
     # ------------------------------------------------------------------
