@@ -1,11 +1,11 @@
 # Agentic Triage Backlog
 
-Status: proposed → **revised**  
+Status: proposed → **revised** → **in progress**  
 Owner: Adam Krysztopa  
 Area: `docs/plan/`  
 Planning style: MoSCoW-aligned backlog  
 Primary target: agentic triage around deterministic forecastability analysis  
-Last revised: 2025-04-11
+Last revised: 2026-04-11
 
 ---
 
@@ -13,8 +13,8 @@ Last revised: 2025-04-11
 
 | # | Epic | Items | Status |
 |---|------|-------|--------|
-| E1 | **Complete hexagonal foundation** — formalize ports, enforce boundaries, settings layer | AGT-001, AGT-002, AGT-003 | not started |
-| E2 | **Triage domain and policies** — readiness gate, method router, triage models | AGT-004, AGT-005, AGT-006 | not started |
+| E1 | **Complete hexagonal foundation** — formalize ports, enforce boundaries, settings layer | AGT-001, AGT-002, AGT-003 | ✅ done |
+| E2 | **Triage domain and policies** — readiness gate, method router, triage models | AGT-004, AGT-005, AGT-006 | ✅ done |
 | E3 | **Triage orchestration use case** — deterministic pipeline wiring | AGT-007 | not started |
 | E4 | **PydanticAI adapter** — LLM-orchestrated triage over deterministic core | AGT-008a, AGT-008b | not started |
 | E5 | **Transport adapters** — CLI, FastAPI, MCP | AGT-009, AGT-010, AGT-011 | not started |

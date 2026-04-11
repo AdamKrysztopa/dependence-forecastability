@@ -1,0 +1,27 @@
+"""Public API of the triage subsystem."""
+
+from __future__ import annotations
+
+from forecastability.triage.models import (
+    AnalysisGoal,
+    MethodPlan,
+    ReadinessReport,
+    ReadinessStatus,
+    ReadinessWarning,
+    TriageRequest,
+    TriageResult,
+)
+from forecastability.triage.readiness import assess_readiness
+from forecastability.triage.router import plan_method
+
+__all__ = [
+    "AnalysisGoal",
+    "ReadinessStatus",
+    "ReadinessWarning",
+    "ReadinessReport",
+    "MethodPlan",
+    "TriageRequest",
+    "TriageResult",
+    "assess_readiness",
+    "plan_method",
+]
