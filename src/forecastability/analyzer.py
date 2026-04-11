@@ -26,6 +26,12 @@ from forecastability.scorers import (
 # ---------------------------------------------------------------------------
 # Service imports — thin wrappers kept here for backward-compat internal calls
 # ---------------------------------------------------------------------------
+from forecastability.services.exog_partial_curve_service import (
+    compute_exog_partial_curve as _compute_exog_partial_curve,
+)
+from forecastability.services.exog_raw_curve_service import (
+    compute_exog_raw_curve as _compute_exog_raw_curve,
+)
 from forecastability.services.partial_curve_service import (
     compute_partial_curve as _compute_partial_curve,
 )
@@ -561,14 +567,23 @@ class ForecastabilityAnalyzerExog(ForecastabilityAnalyzer):
         self.ts = arr
         self.exog = validated_exog
         self._method = method
-        self._state.raw = _compute_raw_curve(
-            arr,
-            max_lag,
-            info.scorer,
-            exog=validated_exog,
-            min_pairs=min_pairs,
-            random_state=self.random_state,
-        )
+        if validated_exog is not None:
+            self._state.raw = _compute_exog_raw_curve(
+                arr,
+                validated_exog,
+                max_lag,
+                info.scorer,
+                min_pairs=min_pairs,
+                random_state=self.random_state,
+            )
+        else:
+            self._state.raw = _compute_raw_curve(
+                arr,
+                max_lag,
+                info.scorer,
+                min_pairs=min_pairs,
+                random_state=self.random_state,
+            )
         return self._state.raw
 
     def compute_partial(
@@ -588,14 +603,23 @@ class ForecastabilityAnalyzerExog(ForecastabilityAnalyzer):
         self.ts = arr
         self.exog = validated_exog
         self._method = method
-        self._state.partial = _compute_partial_curve(
-            arr,
-            max_lag,
-            info.scorer,
-            exog=validated_exog,
-            min_pairs=min_pairs,
-            random_state=self.random_state,
-        )
+        if validated_exog is not None:
+            self._state.partial = _compute_exog_partial_curve(
+                arr,
+                validated_exog,
+                max_lag,
+                info.scorer,
+                min_pairs=min_pairs,
+                random_state=self.random_state,
+            )
+        else:
+            self._state.partial = _compute_partial_curve(
+                arr,
+                max_lag,
+                info.scorer,
+                min_pairs=min_pairs,
+                random_state=self.random_state,
+            )
         return self._state.partial
 
     def compute_significance(
