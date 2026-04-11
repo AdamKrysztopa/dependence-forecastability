@@ -6,7 +6,7 @@ Owner: Adam Krysztopa
 Area: `docs/plan/`  
 Planning style: MoSCoW-aligned backlog  
 Primary target: agentic triage around deterministic forecastability analysis  
-Last revised: 2026-04-11 (E6 complete)
+Last revised: 2026-04-11 (E7 complete)
 
 ---
 
@@ -20,7 +20,7 @@ Last revised: 2026-04-11 (E6 complete)
 | E4 | **PydanticAI adapter** — LLM-orchestrated triage over deterministic core | AGT-008a, AGT-008b | ✅ done |
 | E5 | **Transport adapters** — CLI, FastAPI, MCP | AGT-009, AGT-010, AGT-011 | ✅ done |
 | E6 | **Operational maturity** — streaming, observability, durability | AGT-012, AGT-013, AGT-014 | ✅ done |
-| E7 | **Quality gates, agent workflow, and regression** — architecture docs, role parity, benchmark regression | AGT-015, AGT-016, AGT-020 | not started |
+| E7 | **Quality gates, agent workflow, and regression** — architecture docs, role parity, benchmark regression | AGT-015, AGT-016, AGT-020 | ✅ done |
 | E8 | **User enablement and extensions** — scorer comparison, notebook-agent facade, triage notebook, A2A spike | AGT-017, AGT-018, AGT-021, AGT-019 | not started |
 
 ---
@@ -694,7 +694,7 @@ Persist intermediate triage state so interrupted significance-heavy runs can res
 
 # E7 — Quality Gates, Agent Workflow, and Regression
 
-## AGT-015 — Architecture enforcement documentation
+## AGT-015 — Architecture enforcement documentation ✅
 
 **Priority:** Must Have · **Points:** 2 · **Labels:** `docs`, `must-have`
 
@@ -717,7 +717,7 @@ None.
 
 ---
 
-## AGT-016 — Benchmark regression tests for triage routing
+## AGT-016 — Benchmark regression tests for triage routing ✅
 
 **Priority:** Should Have · **Points:** 3 · **Labels:** `testing`, `regression`, `should-have`
 
@@ -742,7 +742,7 @@ Prevent routing or interpretation drift using canonical series.
 
 ---
 
-## AGT-020 — Agent roster parity and ownership map
+## AGT-020 — Agent roster parity and ownership map ✅
 
 **Priority:** Must Have · **Points:** 3 · **Labels:** `agents`, `dx`, `must-have`
 
