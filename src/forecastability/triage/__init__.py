@@ -13,6 +13,7 @@ from forecastability.triage.models import (
 )
 from forecastability.triage.readiness import assess_readiness
 from forecastability.triage.router import plan_method
+from forecastability.triage.run_triage import run_triage
 
 __all__ = [
     "AnalysisGoal",
@@ -24,4 +25,5 @@ __all__ = [
     "TriageResult",
     "assess_readiness",
     "plan_method",
+    "run_triage",
 ]
