@@ -4,10 +4,23 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+from pydantic import BaseModel, ConfigDict
 
 from forecastability.aggregation import summarize_canonical_result
+from forecastability.rolling_origin import build_expanding_window_splits
 from forecastability.pipeline import run_canonical_example
+from forecastability.analyzer import ForecastabilityAnalyzerExog
 from forecastability.types import CanonicalExampleResult
+
+
+class TargetBaselineCurves(BaseModel):
+    """Train-window target-only AMI/pAMI curves aggregated by horizon."""
+
+    model_config = ConfigDict(frozen=True)
+
+    series_name: str
+    ami_by_horizon: dict[int, float]
+    pami_by_horizon: dict[int, float]
 
 
 def compute_k_sensitivity(
@@ -47,6 +60,68 @@ def compute_k_sensitivity(
             }
         )
     return pd.DataFrame(rows)
+
+
+def compute_target_baseline_by_horizon(
+    *,
+    series_name: str,
+    target: np.ndarray,
+    horizons: list[int],
+    n_origins: int,
+    random_state: int,
+    min_pairs_raw: int,
+    min_pairs_partial: int,
+    n_surrogates: int,
+) -> TargetBaselineCurves:
+    """Compute horizon-specific target-only AMI and pAMI on train windows."""
+    ami_by_horizon: dict[int, float] = {}
+    pami_by_horizon: dict[int, float] = {}
+
+    for horizon in horizons:
+        try:
+            splits = build_expanding_window_splits(
+                target,
+                n_origins=n_origins,
+                horizon=horizon,
+            )
+        except ValueError:
+            continue
+
+        ami_vals: list[float] = []
+        pami_vals: list[float] = []
+        for idx, split in enumerate(splits):
+            analyzer = ForecastabilityAnalyzerExog(
+                n_surrogates=n_surrogates,
+                random_state=random_state + (1000 * horizon) + idx,
+            )
+            train_target = split.train
+            ami_curve = analyzer.compute_raw(
+                train_target,
+                max_lag=horizon,
+                method="mi",
+                min_pairs=min_pairs_raw,
+                exog=None,
+            )
+            pami_curve = analyzer.compute_partial(
+                train_target,
+                max_lag=horizon,
+                method="mi",
+                min_pairs=min_pairs_partial,
+                exog=None,
+            )
+            ami_vals.append(float(ami_curve[horizon - 1]))
+            pami_vals.append(float(pami_curve[horizon - 1]))
+
+        if ami_vals:
+            ami_by_horizon[horizon] = float(np.mean(ami_vals))
+        if pami_vals:
+            pami_by_horizon[horizon] = float(np.mean(pami_vals))
+
+    return TargetBaselineCurves(
+        series_name=series_name,
+        ami_by_horizon=ami_by_horizon,
+        pami_by_horizon=pami_by_horizon,
+    )
 
 
 def bootstrap_descriptor_uncertainty(

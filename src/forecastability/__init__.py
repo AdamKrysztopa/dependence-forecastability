@@ -22,6 +22,7 @@ from forecastability.datasets import (
     generate_ar1,
     generate_white_noise,
 )
+from forecastability.extensions import TargetBaselineCurves, compute_target_baseline_by_horizon
 from forecastability.scorers import (
     DependenceScorer,
     ScorerInfo,
@@ -73,7 +74,9 @@ __all__ = [
     "ScorerRegistry",
     "SensitivityConfig",
     "SeriesEvaluationResult",
+    "TargetBaselineCurves",
     "UncertaintyConfig",
     "default_registry",
+    "compute_target_baseline_by_horizon",
     "validate_time_series",
 ]
