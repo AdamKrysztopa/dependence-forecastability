@@ -18,6 +18,7 @@ from forecastability.triage.events import (
     TriageStageStarted,
 )
 from forecastability.triage.models import (
+    AnalysisGoal,
     MethodPlan,
     ReadinessReport,
     ReadinessStatus,
@@ -332,7 +333,11 @@ def run_triage(
             f"class={interpretation.forecastability_class}"  # type: ignore[possibly-undefined]
         ),
     ):
-        interpretation = interpret_canonical_result(canonical)  # type: ignore[assignment]
+        is_exogenous = request.goal == AnalysisGoal.exogenous or request.exog is not None
+        interpretation = interpret_canonical_result(  # type: ignore[assignment]
+            canonical,
+            is_exogenous=is_exogenous,
+        )
 
     recommendation = analyze_result.recommendation
 

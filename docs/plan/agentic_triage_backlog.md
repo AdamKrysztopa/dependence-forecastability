@@ -21,7 +21,7 @@ Last revised: 2026-04-11 (E7 complete)
 | E5 | **Transport adapters** — CLI, FastAPI, MCP | AGT-009, AGT-010, AGT-011 | ✅ done |
 | E6 | **Operational maturity** — streaming, observability, durability | AGT-012, AGT-013, AGT-014 | ✅ done |
 | E7 | **Quality gates, agent workflow, and regression** — architecture docs, role parity, benchmark regression | AGT-015, AGT-016, AGT-020 | ✅ done |
-| E8 | **User enablement and extensions** — scorer comparison, notebook-agent facade, triage notebook, A2A spike | AGT-017, AGT-018, AGT-021, AGT-019 | not started |
+| E8 | **User enablement and extensions** — scorer comparison, notebook-agent facade, triage notebook, A2A spike | AGT-017, AGT-018, AGT-021, AGT-019 | ✅ done |
 
 ---
 

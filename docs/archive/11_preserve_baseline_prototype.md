@@ -101,7 +101,7 @@ class ForecastabilityAnalyzer:
         if mean_ami > 0.8:
             rec = "HIGH → Complex global models (Transformers, N-BEATS)"
         elif mean_ami > 0.3:
-            rec = "MEDIUM → Seasonal ARIMA / Prophet / LightGBM"
+            rec = "MEDIUM → Seasonal ARIMA / LightGBM"
         else:
             rec = "LOW → Naïve or seasonal naïve only"
         print(f"Recommendation: {rec}")

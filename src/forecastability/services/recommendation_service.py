@@ -6,17 +6,21 @@ import numpy as np
 
 from forecastability.validation import validate_time_series
 
-# Family → (high_threshold, medium_threshold)
+# Family → (high_threshold, medium_threshold) — peak-based, calibrated on
+# canonical examples (WN ≈ 0.02, AR(1) ≈ 0.38, Logistic/Sine/Hénon ≥ 1.1).
 _TRIAGE_THRESHOLDS: dict[str, tuple[float, float]] = {
-    "nonlinear": (0.8, 0.3),
-    "linear": (0.5, 0.2),
-    "rank": (0.5, 0.2),
-    "bounded_nonlinear": (0.5, 0.2),
+    "nonlinear": (0.15, 0.05),
+    "linear": (0.15, 0.05),
+    "rank": (0.15, 0.05),
+    "bounded_nonlinear": (0.15, 0.05),
 }
 
 
 def _triage_recommendation(raw_curve: np.ndarray, *, family: str, is_cross: bool = False) -> str:
-    """Generate a triage recommendation from the raw curve mean.
+    """Generate a triage recommendation from the raw curve peak.
+
+    Uses the peak (maximum) of the raw dependence curve with thresholds
+    aligned to :func:`forecastability.interpretation._forecastability_class`.
 
     Args:
         raw_curve: Raw dependence curve array.
@@ -26,20 +30,20 @@ def _triage_recommendation(raw_curve: np.ndarray, *, family: str, is_cross: bool
     Returns:
         Human-readable recommendation string.
     """
-    high, medium = _TRIAGE_THRESHOLDS.get(family, (0.8, 0.3))
-    mean_raw = float(np.mean(raw_curve[: min(20, raw_curve.size)]))
+    high, medium = _TRIAGE_THRESHOLDS.get(family, (0.15, 0.05))
+    peak_raw = float(np.max(raw_curve))
 
     if is_cross:
-        if mean_raw > high:
-            return "HIGH -> Strongly predictive exogenous (include in Transformers, N-BEATS, etc.)"
-        if mean_raw > medium:
-            return "MEDIUM -> Useful exogenous (include in ARIMAX/Prophet/LightGBM)"
+        if peak_raw > high:
+            return "HIGH -> Strongly predictive exogenous (include in ARIMAX/LightGBM)"
+        if peak_raw > medium:
+            return "MEDIUM -> Useful exogenous signal; include and validate"
         return "LOW -> Weak exogenous; drop or test further"
 
-    if mean_raw > high:
-        return "HIGH -> Complex global models (Transformers, N-BEATS)"
-    if mean_raw > medium:
-        return "MEDIUM -> Seasonal ARIMA / Prophet / LightGBM"
+    if peak_raw > high:
+        return "HIGH -> Complex structured models (deep AR, nonlinear, LSTM)"
+    if peak_raw > medium:
+        return "MEDIUM -> Seasonal ARIMA / LightGBM"
     return "LOW -> Naive or seasonal naive only"
 
 

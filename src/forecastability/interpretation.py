@@ -52,12 +52,183 @@ def _directness_class(directness_ratio: float, n_sig_ami: int, n_sig_pami: int) 
     return "low"
 
 
+def _interpret_univariate(
+    forecastability_class: str,
+    directness_class: str,
+    result: CanonicalExampleResult,
+    has_seasonal_peak: bool,
+) -> tuple[str, str]:
+    """Return ``(modeling_regime, narrative)`` for univariate AMI/pAMI."""
+    # Pattern A — high forecastability, direct memory
+    if forecastability_class == "high" and directness_class in {"high", "arch_suspected"}:
+        return (
+            "rich_models_with_structured_memory",
+            "Strong total dependence remains largely direct after conditioning. "
+            "Richer structured models (deep AR, nonlinear, LSTM) are justified.",
+        )
+    # Pattern B — high forecastability, mediated memory
+    if forecastability_class == "high":
+        return (
+            "compact_structured_models",
+            "Strong total dependence, but much of the long-lag structure is mediated by "
+            "shorter lags. Compact lag or state-space/seasonal designs are preferred.",
+        )
+    # Pattern A+ — medium forecastability, high directness
+    if forecastability_class == "medium" and directness_class in {"high", "arch_suspected"}:
+        return (
+            "nonlinear_direct_models",
+            "Moderate total dependence with high directness — memory is direct and not "
+            "mediated through intermediate lags. Short-lag AR or nonlinear models "
+            "(NNAR, SETAR) capture this structure well.",
+        )
+    # Pattern C — medium forecastability, seasonal peak
+    if forecastability_class == "medium" and has_seasonal_peak:
+        return (
+            "seasonal_or_compact_autoregression",
+            "Moderate dependence with a seasonal directness peak. "
+            "Seasonal models or compact autoregression (SARIMA, ETS) are preferred.",
+        )
+    # Pattern C′ — medium forecastability, low directness
+    if forecastability_class == "medium" and directness_class == "low":
+        return (
+            "seasonal_decomposition",
+            "Moderate total AMI but low direct pAMI: the predictive signal is predominantly "
+            "periodic or seasonal and mediated through the cycle, not per-horizon direct. "
+            "Seasonal decomposition (STL, SARIMA, Fourier) is the preferred approach.",
+        )
+    # Pattern C″ — medium forecastability, medium directness
+    if forecastability_class == "medium":
+        return (
+            "seasonal_or_regularized_models",
+            "Moderate dependence with selective direct lags. "
+            "Regularized AR or seasonal models are typically sufficient.",
+        )
+    # Pattern D′ — low forecastability, medium/high directness
+    if forecastability_class == "low" and directness_class in {
+        "medium",
+        "high",
+        "arch_suspected",
+    }:
+        _short_lag_pami = float(np.max(result.pami.values[: min(3, result.pami.values.size)]))
+        if _short_lag_pami < 0.05:
+            return (
+                "baseline_or_robust_decision_design",
+                "Both total and direct dependence are near the noise floor — "
+                "the high directness ratio reflects the instability of dividing two "
+                "small quantities, not genuine structure. "
+                "Baseline methods (mean, drift, naive) are likely sufficient.",
+            )
+        return (
+            "compact_autoregression",
+            "Low total dependence, but the exploitable signal is direct and "
+            "concentrated in short lags (lag 1–3). A compact AR(1)–AR(3) model "
+            "captures it; deeper lags and richer architectures are unlikely to "
+            "improve over naive.",
+        )
+    # Pattern D — low forecastability, low directness (e.g. white noise)
+    return (
+        "baseline_or_robust_decision_design",
+        "Both total and direct dependence are weak — near the noise floor. "
+        "Baseline methods (mean, drift, naive) are likely sufficient.",
+    )
+
+
+def _interpret_exogenous(
+    forecastability_class: str,
+    directness_class: str,
+    result: CanonicalExampleResult,
+    has_seasonal_peak: bool,
+) -> tuple[str, str]:
+    """Return ``(modeling_regime, narrative)`` for exogenous CrossAMI/pCrossAMI.
+
+    "Directness" in the exogenous context means **incremental value**: how much
+    of the cross-dependence survives after conditioning on the target's own
+    autoregressive structure.  High directness → the exogenous driver adds
+    genuinely new information beyond what the target already encodes.
+    """
+    if forecastability_class == "high" and directness_class in {"high", "arch_suspected"}:
+        return (
+            "include_exogenous_multivariate",
+            "Strong cross-dependence that persists after conditioning on the target's own "
+            "history. The exogenous driver carries substantial incremental information — "
+            "multivariate models (ARIMAX, VAR, LSTM with exog) are strongly justified.",
+        )
+    if forecastability_class == "high":
+        return (
+            "include_exogenous_mediated",
+            "Strong cross-dependence, but much of it is mediated through the target's own "
+            "autoregressive structure. The driver is useful but partially redundant — "
+            "include it in models that can condition on target history (ARIMAX, LightGBM).",
+        )
+    if forecastability_class == "medium" and directness_class in {"high", "arch_suspected"}:
+        return (
+            "include_exogenous_direct",
+            "Moderate cross-dependence with high incremental value after conditioning. "
+            "The driver adds genuine new information; include in multivariate forecasting "
+            "models (ARIMAX, LightGBM with exog features).",
+        )
+    if forecastability_class == "medium" and has_seasonal_peak:
+        return (
+            "include_exogenous_seasonal",
+            "Moderate cross-dependence with a seasonal peak. "
+            "The driver's value is concentrated at seasonal horizons — seasonal "
+            "multivariate models or lagged feature engineering are preferred.",
+        )
+    if forecastability_class == "medium" and directness_class == "low":
+        return (
+            "exogenous_marginal_value",
+            "Moderate cross-dependence but low incremental value: most of the signal is "
+            "already captured by the target's own lags. The driver adds marginal value — "
+            "include with caution and validate via hold-out.",
+        )
+    if forecastability_class == "medium":
+        return (
+            "include_exogenous_selective",
+            "Moderate cross-dependence with selective incremental value at specific lags. "
+            "Include the driver with lag-specific feature engineering (ARIMAX, LightGBM).",
+        )
+    if forecastability_class == "low" and directness_class in {
+        "medium",
+        "high",
+        "arch_suspected",
+    }:
+        _short_lag = float(np.max(result.pami.values[: min(3, result.pami.values.size)]))
+        if _short_lag < 0.05:
+            return (
+                "drop_exogenous",
+                "Cross-dependence is near the noise floor. The apparently high incremental "
+                "ratio is an artefact of dividing two very small quantities. "
+                "The driver is unlikely to improve forecasts — drop or test further.",
+            )
+        return (
+            "exogenous_weak_but_direct",
+            "Weak overall cross-dependence, but the signal that exists is incremental "
+            "(not captured by target's own lags). A simple lagged regression at short "
+            "horizons may extract modest value.",
+        )
+    return (
+        "drop_exogenous",
+        "Cross-dependence is weak across all horizons and offers no incremental value "
+        "beyond the target's own history. The driver is unlikely to improve forecasts.",
+    )
+
+
 def interpret_canonical_result(
     result: CanonicalExampleResult,
     *,
     best_smape: float | None = None,
+    is_exogenous: bool = False,
 ) -> InterpretationResult:
-    """Interpret AMI and pAMI behavior using Patterns A-E."""
+    """Interpret AMI and pAMI behavior using Patterns A-E.
+
+    Args:
+        result: Canonical result containing raw (AMI/CrossAMI) and partial
+            (pAMI/pCrossAMI) curves.
+        best_smape: Optional best sMAPE from rolling-origin evaluation.
+        is_exogenous: When ``True``, the curves represent cross-series
+            dependence (CrossAMI / pCrossAMI) and narratives use
+            exogenous vocabulary instead of self-predictability language.
+    """
     summary = summarize_canonical_result(result)
 
     # Global AMI peak — the single strongest lag-specific dependence signal.
@@ -90,82 +261,13 @@ def interpret_canonical_result(
         and result.pami.values[seasonal_period - 1] > np.percentile(result.pami.values, 75)
     )
 
-    # Pattern A — high forecastability, direct memory
-    if forecastability_class == "high" and directness_class in {"high", "arch_suspected"}:
-        modeling_regime = "rich_models_with_structured_memory"
-        narrative = (
-            "Strong total dependence remains largely direct after conditioning. "
-            "Richer structured models (deep AR, nonlinear, LSTM) are justified."
+    if is_exogenous:
+        modeling_regime, narrative = _interpret_exogenous(
+            forecastability_class, directness_class, result, has_seasonal_peak
         )
-    # Pattern B — high forecastability, mediated memory
-    elif forecastability_class == "high":
-        modeling_regime = "compact_structured_models"
-        narrative = (
-            "Strong total dependence, but much of the long-lag structure is mediated by "
-            "shorter lags. Compact lag or state-space/seasonal designs are preferred."
-        )
-    # Pattern A+ — medium forecastability, high directness (e.g. chaotic attractors)
-    elif forecastability_class == "medium" and directness_class in {"high", "arch_suspected"}:
-        modeling_regime = "nonlinear_direct_models"
-        narrative = (
-            "Moderate total dependence with high directness — memory is direct and not "
-            "mediated through intermediate lags. Short-lag AR or nonlinear models "
-            "(NNAR, SETAR) capture this structure well."
-        )
-    # Pattern C — medium forecastability, seasonal peak in pAMI
-    elif forecastability_class == "medium" and has_seasonal_peak:
-        modeling_regime = "seasonal_or_compact_autoregression"
-        narrative = (
-            "Moderate dependence with a seasonal directness peak. "
-            "Seasonal models or compact autoregression (SARIMA, ETS) are preferred."
-        )
-    # Pattern C′ — medium forecastability, low directness (e.g. periodic/sine series)
-    elif forecastability_class == "medium" and directness_class == "low":
-        modeling_regime = "seasonal_decomposition"
-        narrative = (
-            "Moderate total AMI but low direct pAMI: the predictive signal is predominantly "
-            "periodic or seasonal and mediated through the cycle, not per-horizon direct. "
-            "Seasonal decomposition (STL, SARIMA, Fourier) is the preferred approach."
-        )
-    # Pattern C″ — medium forecastability, medium directness
-    elif forecastability_class == "medium":
-        modeling_regime = "seasonal_or_regularized_models"
-        narrative = (
-            "Moderate dependence with selective direct lags. "
-            "Regularized AR or seasonal models are typically sufficient."
-        )
-    # Pattern D′ — low forecastability, medium/high directness (e.g. AR(1))
-    # Guard: if the first-lag pAMI is negligible, the high directness ratio is
-    # unreliable (ratio of two near-zero quantities) and the series should be
-    # treated as baseline rather than "compact AR".
-    elif forecastability_class == "low" and directness_class in {
-        "medium",
-        "high",
-        "arch_suspected",
-    }:
-        _short_lag_pami = float(np.max(result.pami.values[: min(3, result.pami.values.size)]))
-        if _short_lag_pami < 0.05:
-            modeling_regime = "baseline_or_robust_decision_design"
-            narrative = (
-                "Both total and direct dependence are near the noise floor — "
-                "the high directness ratio reflects the instability of dividing two "
-                "small quantities, not genuine structure. "
-                "Baseline methods (mean, drift, naive) are likely sufficient."
-            )
-        else:
-            modeling_regime = "compact_autoregression"
-            narrative = (
-                "Low total dependence, but the exploitable signal is direct and "
-                "concentrated in short lags (lag 1–3). A compact AR(1)–AR(3) model "
-                "captures it; deeper lags and richer architectures are unlikely to "
-                "improve over naive."
-            )
-    # Pattern D — low forecastability, low directness (e.g. white noise)
     else:
-        modeling_regime = "baseline_or_robust_decision_design"
-        narrative = (
-            "Both total and direct dependence are weak — near the noise floor. "
-            "Baseline methods (mean, drift, naive) are likely sufficient."
+        modeling_regime, narrative = _interpret_univariate(
+            forecastability_class, directness_class, result, has_seasonal_peak
         )
 
     exploitability_mismatch = False
