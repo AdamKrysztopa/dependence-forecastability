@@ -21,6 +21,7 @@ NOTEBOOKS_DIR = REPO_ROOT / "notebooks"
 EXPECTED_NOTEBOOKS = [
     "01_canonical_forecastability.ipynb",
     "02_exogenous_analysis.ipynb",
+    "03_agentic_triage.ipynb",
 ]
 
 PASS = "\u2713"

@@ -93,3 +93,43 @@ def test_import_generate_ar1_from_datasets() -> None:
     from forecastability.datasets import generate_ar1  # noqa: F401
 
     assert callable(generate_ar1)
+
+
+# ---------------------------------------------------------------------------
+# Notebook 03 — agentic triage import surface
+# ---------------------------------------------------------------------------
+
+
+def test_import_run_triage() -> None:
+    from forecastability.triage import run_triage  # noqa: F401
+
+    assert callable(run_triage)
+
+
+def test_import_triage_request_and_result() -> None:
+    from forecastability.triage import TriageRequest, TriageResult  # noqa: F401
+
+    assert TriageRequest is not None
+    assert TriageResult is not None
+
+
+def test_import_analysis_goal() -> None:
+    from forecastability.triage import AnalysisGoal  # noqa: F401
+
+    assert AnalysisGoal is not None
+
+
+def test_import_collecting_event_emitter() -> None:
+    from forecastability.adapters.event_emitter import CollectingEventEmitter  # noqa: F401
+
+    assert CollectingEventEmitter is not None
+
+
+def test_import_triage_stage_events() -> None:
+    from forecastability.triage.events import (  # noqa: F401
+        TriageStageCompleted,
+        TriageStageStarted,
+    )
+
+    assert TriageStageStarted is not None
+    assert TriageStageCompleted is not None
