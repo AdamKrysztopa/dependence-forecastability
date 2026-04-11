@@ -7,11 +7,12 @@ and services implement these ports without importing from this module.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 import numpy as np
 
 from forecastability.scorers import DependenceScorer, ScorerInfo
+from forecastability.triage.events import TriageEvent
 from forecastability.types import CanonicalExampleResult, InterpretationResult
 
 __all__ = [
@@ -22,6 +23,8 @@ __all__ = [
     "RecommendationPort",
     "ReportRendererPort",
     "SettingsPort",
+    "EventEmitterPort",
+    "CheckpointPort",
 ]
 
 
@@ -126,3 +129,35 @@ class SettingsPort(Protocol):
     def get_mcp_host(self) -> str: ...
 
     def get_mcp_port(self) -> int: ...
+
+
+@runtime_checkable
+class EventEmitterPort(Protocol):
+    """Emits triage pipeline progress events (AGT-012).
+
+    Implementations may log, stream SSE, publish to a queue, or no-op.
+    """
+
+    def emit(self, event: TriageEvent) -> None: ...
+
+
+@runtime_checkable
+class CheckpointPort(Protocol):
+    """Persists and restores partial triage state for durable execution (AGT-014).
+
+    Each triage run is identified by a ``checkpoint_key`` string.  Adapters
+    may use the filesystem, a database, or an in-memory store.
+    """
+
+    def load_checkpoint(self, checkpoint_key: str) -> dict[str, Any] | None:
+        """Return the saved state dict for *checkpoint_key*, or ``None``."""
+        ...
+
+    def save_checkpoint(
+        self,
+        checkpoint_key: str,
+        stage: str,
+        state: dict[str, Any],
+    ) -> None:
+        """Overwrite the checkpoint for *checkpoint_key* with *state*."""
+        ...

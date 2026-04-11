@@ -306,9 +306,14 @@ def create_triage_agent(
         Returns a structured summary of all results including forecastability
         class, directness, primary lags, modeling regime, and recommendation.
         """
+        from forecastability.adapters.event_emitter import LoggingEventEmitter
+
         request = _build_request(ctx.deps)
-        result = run_triage(request)
-        return _triage_result_to_dict(result)
+        result = run_triage(request, event_emitter=LoggingEventEmitter())
+        out = _triage_result_to_dict(result)
+        if result.timing:
+            out["timing_ms"] = result.timing
+        return out
 
     # ------------------------------------------------------------------
     # Tool: list_available_scorers

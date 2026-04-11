@@ -1,8 +1,10 @@
-"""Triage orchestration use case (AGT-007)."""
+"""Triage orchestration use case (AGT-007, AGT-013, AGT-014)."""
 
 from __future__ import annotations
 
+import time
 from collections.abc import Callable
+from typing import Any
 
 from forecastability.analyzer import (
     AnalyzeResult,
@@ -10,6 +12,11 @@ from forecastability.analyzer import (
     ForecastabilityAnalyzerExog,
 )
 from forecastability.interpretation import interpret_canonical_result
+from forecastability.triage.events import (
+    TriageError,
+    TriageStageCompleted,
+    TriageStageStarted,
+)
 from forecastability.triage.models import (
     MethodPlan,
     ReadinessReport,
@@ -68,11 +75,83 @@ def _run_compute(request: TriageRequest, method_plan: MethodPlan) -> AnalyzeResu
     )
 
 
+def _serialize_readiness(report: ReadinessReport) -> dict[str, Any]:
+    return {
+        "status": report.status.value,
+        "warnings": [{"code": w.code, "message": w.message} for w in report.warnings],
+    }
+
+
+def _serialize_method_plan(plan: MethodPlan) -> dict[str, Any]:
+    return {
+        "route": plan.route,
+        "compute_surrogates": plan.compute_surrogates,
+        "assumptions": plan.assumptions,
+        "rationale": plan.rationale,
+    }
+
+
+class _StageTimer:
+    """Context manager that measures wall-clock time and emits lifecycle events.
+
+    Args:
+        stage: Stage name for event labels.
+        emitter: :class:`~forecastability.ports.EventEmitterPort` or ``None``.
+        timing: Mutable dict where ``{stage: duration_ms}`` is recorded, or
+            ``None`` to skip timing collection entirely.
+        summary_fn: Callable returning a one-line summary string after success.
+    """
+
+    def __init__(
+        self,
+        stage: str,
+        emitter: Any,
+        timing: dict[str, float] | None,
+        summary_fn: Callable[[], str] = lambda: "",
+    ) -> None:
+        self._stage = stage
+        self._emitter = emitter
+        self._timing = timing
+        self._summary_fn = summary_fn
+        self._start: float = 0.0
+
+    def __enter__(self) -> _StageTimer:
+        self._start = time.perf_counter()
+        if self._emitter is not None:
+            self._emitter.emit(TriageStageStarted(stage=self._stage))
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: object,
+    ) -> None:
+        duration_ms = (time.perf_counter() - self._start) * 1_000
+        if self._timing is not None:
+            self._timing[self._stage] = duration_ms
+        if self._emitter is None:
+            return
+        if exc_type is not None:
+            self._emitter.emit(TriageError(stage=self._stage, error=str(exc_val)))
+        else:
+            self._emitter.emit(
+                TriageStageCompleted(
+                    stage=self._stage,
+                    duration_ms=duration_ms,
+                    result_summary=self._summary_fn(),
+                )
+            )
+
+
 def run_triage(
     request: TriageRequest,
     *,
     readiness_gate: Callable[[TriageRequest], ReadinessReport] = assess_readiness,
     router: Callable[[TriageRequest, ReadinessReport], MethodPlan] = plan_method,
+    event_emitter: Any = None,
+    checkpoint: Any = None,
+    checkpoint_key: str = "default",
 ) -> TriageResult:
     """Orchestrate the full triage pipeline for a forecastability request.
 
@@ -94,28 +173,147 @@ def run_triage(
         router: Callable that returns a :class:`MethodPlan` given a request and
             readiness report.  Defaults to :func:`plan_method`; injectable for
             testing.
+        event_emitter: Optional :class:`~forecastability.ports.EventEmitterPort`
+            that receives lifecycle events and timing data (AGT-013).  Accepts
+            any object with an ``emit`` method; ``None`` disables event emission.
+        checkpoint: Optional :class:`~forecastability.ports.CheckpointPort` for
+            durable execution (AGT-014).  When provided the function saves
+            partial state after each stage and resumes from the last committed
+            stage if ``checkpoint_key`` already has saved state.
+        checkpoint_key: Unique identifier for the current run's checkpoint.
+            Defaults to ``"default"``; callers should supply a stable run ID
+            for durable resume.
 
     Returns:
         :class:`TriageResult` with all sub-results populated, or a short-circuit
         result with ``blocked=True`` when the readiness gate blocks processing.
+        The ``timing`` field contains per-stage wall-clock durations in
+        milliseconds when ``event_emitter`` is provided.
     """
-    readiness = readiness_gate(request)
+    timing: dict[str, float] | None = {} if event_emitter is not None else None
+
+    # --- resume from checkpoint if available ---
+    resumed_stage: str | None = None
+
+    if checkpoint is not None:
+        ckpt = checkpoint.load_checkpoint(checkpoint_key)
+        if ckpt is not None:
+            resumed_stage = ckpt.get("stage")
+
+    # ------------------------------------------------------------------ #
+    # Stage 1: readiness                                                  #
+    # ------------------------------------------------------------------ #
+    readiness: ReadinessReport
+
+    if resumed_stage in {"routing", "compute", "interpretation"}:
+        assert checkpoint is not None
+        ckpt = checkpoint.load_checkpoint(checkpoint_key)
+        assert ckpt is not None
+        data = ckpt["data"]
+        from forecastability.triage.models import ReadinessWarning  # local import avoids cycle
+
+        readiness = ReadinessReport(
+            status=data["readiness"]["status"],
+            warnings=[
+                ReadinessWarning(code=w["code"], message=w["message"])
+                for w in data["readiness"]["warnings"]
+            ],
+        )
+    else:
+        with _StageTimer(
+            "readiness",
+            event_emitter,
+            timing,
+            summary_fn=lambda: (
+                f"status={readiness.status.value}"
+                if "readiness" in dir()
+                else "evaluating"
+            ),
+        ):
+            readiness = readiness_gate(request)  # type: ignore[assignment]
+
+        if checkpoint is not None:
+            checkpoint.save_checkpoint(
+                checkpoint_key,
+                "readiness",
+                {"readiness": _serialize_readiness(readiness)},
+            )
 
     if readiness.status == ReadinessStatus.blocked:
         return TriageResult(
             request=request,
             readiness=readiness,
             blocked=True,
+            timing=timing if timing else None,
         )
 
-    method_plan = router(request, readiness)
-    analyze_result = _run_compute(request, method_plan)
+    # ------------------------------------------------------------------ #
+    # Stage 2: routing                                                    #
+    # ------------------------------------------------------------------ #
+    method_plan: MethodPlan
 
+    if resumed_stage in {"compute", "interpretation"}:
+        assert checkpoint is not None
+        ckpt = checkpoint.load_checkpoint(checkpoint_key)
+        assert ckpt is not None
+        data = ckpt["data"]
+        method_plan = MethodPlan(**data["method_plan"])
+    else:
+        with _StageTimer(
+            "routing",
+            event_emitter,
+            timing,
+            summary_fn=lambda: f"route={method_plan.route}",  # type: ignore[possibly-undefined]
+        ):
+            method_plan = router(request, readiness)  # type: ignore[assignment]
+
+        if checkpoint is not None:
+            checkpoint.save_checkpoint(
+                checkpoint_key,
+                "routing",
+                {
+                    "readiness": _serialize_readiness(readiness),
+                    "method_plan": _serialize_method_plan(method_plan),
+                },
+            )
+
+    # ------------------------------------------------------------------ #
+    # Stage 3: compute                                                    #
+    # ------------------------------------------------------------------ #
+    analyze_result: AnalyzeResult
+
+    with _StageTimer(
+        "compute",
+        event_emitter,
+        timing,
+        summary_fn=lambda: (
+            f"method={analyze_result.method}"  # type: ignore[possibly-undefined]
+            f" raw_mean={analyze_result.raw.mean():.4f}"
+        ),
+    ):
+        analyze_result = _run_compute(request, method_plan)  # type: ignore[assignment]
+
+    if checkpoint is not None:
+        checkpoint.save_checkpoint(
+            checkpoint_key,
+            "compute",
+            {
+                "readiness": _serialize_readiness(readiness),
+                "method_plan": _serialize_method_plan(method_plan),
+                # numpy arrays are not JSON-serialisable; store summary only
+                "compute_summary": {
+                    "method": analyze_result.method,
+                    "recommendation": analyze_result.recommendation,
+                    "n_raw_lags": int(analyze_result.raw.size),
+                },
+            },
+        )
+
+    # ------------------------------------------------------------------ #
+    # Stage 4: interpretation                                             #
+    # ------------------------------------------------------------------ #
     # Preserve the semantic contract: None = "surrogates not computed";
     # an empty array = "computed, none significant" (W1 — statistician review).
-    # AnalyzeResult does not carry the raw band arrays, so lower_band/upper_band
-    # in MetricCurve remain None even when surrogates were run (W2 — accepted
-    # limitation of the current AnalyzeResult schema; does not affect interpretation).
     ami_sig = None if not method_plan.compute_surrogates else analyze_result.sig_raw_lags
     pami_sig = None if not method_plan.compute_surrogates else analyze_result.sig_partial_lags
 
@@ -126,8 +324,36 @@ def run_triage(
         pami=MetricCurve(values=analyze_result.partial, significant_lags=pami_sig),
     )
 
-    interpretation = interpret_canonical_result(canonical)
+    with _StageTimer(
+        "interpretation",
+        event_emitter,
+        timing,
+        summary_fn=lambda: (
+            f"class={interpretation.forecastability_class}"  # type: ignore[possibly-undefined]
+        ),
+    ):
+        interpretation = interpret_canonical_result(canonical)  # type: ignore[assignment]
+
     recommendation = analyze_result.recommendation
+
+    if checkpoint is not None:
+        checkpoint.save_checkpoint(
+            checkpoint_key,
+            "interpretation",
+            {
+                "readiness": _serialize_readiness(readiness),
+                "method_plan": _serialize_method_plan(method_plan),
+                "compute_summary": {
+                    "method": analyze_result.method,
+                    "recommendation": analyze_result.recommendation,
+                    "n_raw_lags": int(analyze_result.raw.size),
+                },
+                "interpretation_summary": {
+                    "forecastability_class": interpretation.forecastability_class,
+                    "directness_class": interpretation.directness_class,
+                },
+            },
+        )
 
     return TriageResult(
         request=request,
@@ -137,4 +363,5 @@ def run_triage(
         interpretation=interpretation,
         recommendation=recommendation,
         blocked=False,
+        timing=timing if timing else None,
     )

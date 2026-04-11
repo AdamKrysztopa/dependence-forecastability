@@ -119,3 +119,4 @@ class TriageResult(BaseModel):
     recommendation: str | None = None
     blocked: bool
     narrative: str | None = None
+    timing: dict[str, float] | None = None  # stage_name -> duration_ms (AGT-013)

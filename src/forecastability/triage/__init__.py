@@ -2,6 +2,12 @@
 
 from __future__ import annotations
 
+from forecastability.triage.events import (
+    TriageError,
+    TriageEvent,
+    TriageStageCompleted,
+    TriageStageStarted,
+)
 from forecastability.triage.models import (
     AnalysisGoal,
     MethodPlan,
@@ -23,6 +29,10 @@ __all__ = [
     "MethodPlan",
     "TriageRequest",
     "TriageResult",
+    "TriageStageStarted",
+    "TriageStageCompleted",
+    "TriageError",
+    "TriageEvent",
     "assess_readiness",
     "plan_method",
     "run_triage",
