@@ -21,10 +21,19 @@ dependencies = [
 agent = [
   "pydantic-ai>=0.2",
 ]
+transport = [
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.32",
+  "mcp>=1.0",
+]
+
+[project.scripts]
+forecastability = "forecastability.adapters.cli:main"
 
 [dependency-groups]
 dev = [
   "anyio>=4.12.1",
+  "httpx>=0.27",
   "pytest>=8.4.0",
   "pytest-anyio>=0.0.0",
   "ruff>=0.11.0",

@@ -18,7 +18,7 @@ Last revised: 2026-04-11
 | E2 | **Triage domain and policies** — readiness gate, method router, triage models | AGT-004, AGT-005, AGT-006 | ✅ done |
 | E3 | **Triage orchestration use case** — deterministic pipeline wiring | AGT-007 | ✅ done |
 | E4 | **PydanticAI adapter** — LLM-orchestrated triage over deterministic core | AGT-008a, AGT-008b | ✅ done |
-| E5 | **Transport adapters** — CLI, FastAPI, MCP | AGT-009, AGT-010, AGT-011 | not started |
+| E5 | **Transport adapters** — CLI, FastAPI, MCP | AGT-009, AGT-010, AGT-011 | ✅ done |
 | E6 | **Operational maturity** — streaming, observability, durability | AGT-012, AGT-013, AGT-014 | not started |
 | E7 | **Quality gates, agent workflow, and regression** — architecture docs, role parity, benchmark regression | AGT-015, AGT-016, AGT-020 | not started |
 | E8 | **User enablement and extensions** — scorer comparison, notebook-agent facade, triage notebook, A2A spike | AGT-017, AGT-018, AGT-021, AGT-019 | not started |
@@ -530,7 +530,7 @@ Add LLM-generated narrative summaries that wrap deterministic results.
 
 # E5 — Transport Adapters
 
-## AGT-009 — CLI adapter
+## AGT-009 — CLI adapter ✅
 
 **Priority:** Should Have · **Points:** 3 · **Labels:** `cli`, `adapter`, `should-have`
 
@@ -559,7 +559,7 @@ Output: JSON or Markdown to stdout.
 
 ---
 
-## AGT-010 — FastAPI adapter
+## AGT-010 — FastAPI adapter ✅
 
 **Priority:** Should Have · **Points:** 5 · **Labels:** `api`, `adapter`, `should-have`
 
@@ -585,7 +585,7 @@ Endpoints: `POST /triage`, `GET /scorers`, `GET /health`.
 
 ---
 
-## AGT-011 — MCP server adapter
+## AGT-011 — MCP server adapter ✅
 
 **Priority:** Should Have · **Points:** 5 · **Labels:** `mcp`, `adapter`, `should-have`
 
