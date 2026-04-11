@@ -138,11 +138,7 @@ class OutputConfig(BaseModel):
     json_dir: Path
     reports_dir: Path
 
-    @model_validator(mode="after")
-    def _create_dirs(self) -> OutputConfig:
-        for directory in (self.figures_dir, self.tables_dir, self.json_dir, self.reports_dir):
-            directory.mkdir(parents=True, exist_ok=True)
-        return self
+
 
 
 class CMIConfig(BaseModel):

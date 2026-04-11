@@ -46,6 +46,28 @@ class ScorerInfo:
     description: str
 
 
+@runtime_checkable
+class ScorerRegistryProtocol(Protocol):
+    """Minimal interface that internal services depend on.
+
+    Any object satisfying this protocol may be used wherever a scorer
+    registry is expected, enabling dependency inversion and test doubles.
+    """
+
+    def get(self, name: str) -> ScorerInfo: ...
+
+    def register(
+        self,
+        name: str,
+        scorer: DependenceScorer,
+        *,
+        family: Literal["nonlinear", "linear", "rank", "bounded_nonlinear"],
+        description: str,
+    ) -> None: ...
+
+    def list_scorers(self) -> list[ScorerInfo]: ...
+
+
 class ScorerRegistry:
     """Registry of named dependence scorers.
 

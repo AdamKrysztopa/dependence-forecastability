@@ -16,4 +16,8 @@ outputs/
 
 # Large M4 raw data files (downloaded via scripts/download_data.py)
 data/raw/m4/
+
+# CausalRivers benchmark data (large binary + CSV; see notebooks/03_causal_rivers.ipynb for download instructions)
+data/raw/causal_rivers/
 notebooks/.ipynb_checkpoints/
+.env
