@@ -39,6 +39,7 @@ from forecastability.services.recommendation_service import (
 from forecastability.services.significance_service import (
     compute_significance_bands_generic,
 )
+from forecastability.state import AnalyzerState
 from forecastability.surrogates import compute_significance_bands
 from forecastability.validation import validate_time_series
 
@@ -84,21 +85,29 @@ class ForecastabilityAnalyzer:
         self.n_surrogates = n_surrogates
         self.random_state = random_state
         self._registry = default_registry()
-        self._method = method
+        self._state = AnalyzerState(method=method)
 
-        # Legacy AMI/pAMI caches
-        self._ami: np.ndarray | None = None
-        self._pami: np.ndarray | None = None
-        self._ami_bands: tuple[np.ndarray, np.ndarray] | None = None
-        self._pami_bands: tuple[np.ndarray, np.ndarray] | None = None
+    # ------------------------------------------------------------------
+    # State proxy properties
+    # ------------------------------------------------------------------
 
-        # Generic caches
-        self._raw: np.ndarray | None = None
-        self._partial: np.ndarray | None = None
-        self._raw_bands: tuple[np.ndarray, np.ndarray] | None = None
-        self._partial_bands: tuple[np.ndarray, np.ndarray] | None = None
+    @property
+    def ts(self) -> np.ndarray | None:
+        """Cached target series."""
+        return self._state.ts
 
-        self.ts: np.ndarray | None = None
+    @ts.setter
+    def ts(self, value: np.ndarray | None) -> None:
+        self._state.ts = value
+
+    @property
+    def _method(self) -> str:
+        """Last scorer method used."""
+        return self._state.method
+
+    @_method.setter
+    def _method(self, value: str) -> None:
+        self._state.method = value
 
     # ------------------------------------------------------------------
     # Scorer registry helpers
@@ -137,26 +146,26 @@ class ForecastabilityAnalyzer:
     def compute_ami(self, ts: np.ndarray, max_lag: int = 100) -> np.ndarray:
         """Compute AMI curve and cache it."""
         self.ts = validate_time_series(ts, min_length=max_lag + 31)
-        self._ami = compute_ami(
+        self._state.ami = compute_ami(
             self.ts,
             max_lag=max_lag,
             n_neighbors=8,
             min_pairs=30,
             random_state=self.random_state,
         )
-        return self._ami
+        return self._state.ami
 
     def compute_pami(self, ts: np.ndarray, max_lag: int = 50) -> np.ndarray:
         """Compute pAMI curve and cache it."""
         self.ts = validate_time_series(ts, min_length=max_lag + 51)
-        self._pami = compute_pami_linear_residual(
+        self._state.pami = compute_pami_linear_residual(
             self.ts,
             max_lag=max_lag,
             n_neighbors=8,
             min_pairs=50,
             random_state=self.random_state,
         )
-        return self._pami
+        return self._state.pami
 
     # ------------------------------------------------------------------
     # Generic scorer methods
@@ -185,10 +194,10 @@ class ForecastabilityAnalyzer:
         arr = validate_time_series(ts, min_length=max_lag + min_pairs + 1)
         self.ts = arr
         self._method = method
-        self._raw = _compute_raw_curve(
+        self._state.raw = _compute_raw_curve(
             arr, max_lag, info.scorer, min_pairs=min_pairs, random_state=self.random_state
         )
-        return self._raw
+        return self._state.raw
 
     def compute_partial(
         self,
@@ -213,10 +222,10 @@ class ForecastabilityAnalyzer:
         arr = validate_time_series(ts, min_length=max_lag + min_pairs + 1)
         self.ts = arr
         self._method = method
-        self._partial = _compute_partial_curve(
+        self._state.partial = _compute_partial_curve(
             arr, max_lag, info.scorer, min_pairs=min_pairs, random_state=self.random_state
         )
-        return self._partial
+        return self._state.partial
 
     # ------------------------------------------------------------------
     # Significance bands
@@ -255,9 +264,9 @@ class ForecastabilityAnalyzer:
             n_jobs=n_jobs,
         )
         if which == "ami":
-            self._ami_bands = bands
+            self._state.ami_bands = bands
         else:
-            self._pami_bands = bands
+            self._state.pami_bands = bands
         return bands
 
     def compute_significance_generic(
@@ -308,9 +317,9 @@ class ForecastabilityAnalyzer:
             n_jobs=n_jobs,
         )
         if which == "raw":
-            self._raw_bands = bands
+            self._state.raw_bands = bands
         else:
-            self._partial_bands = bands
+            self._state.partial_bands = bands
         return bands
 
     # ------------------------------------------------------------------
@@ -376,8 +385,8 @@ class ForecastabilityAnalyzer:
         label = (method or self._method).upper()
 
         raw, partial = self._resolve_curves_for_plot()
-        raw_bands = self._raw_bands or self._ami_bands
-        partial_bands = self._partial_bands or self._pami_bands
+        raw_bands = self._state.raw_bands or self._state.ami_bands
+        partial_bands = self._state.partial_bands or self._state.pami_bands
 
         fig, axs = plt.subplots(2, 1, figsize=(11, 8))
         _plot_curve(axs[0], raw, raw_bands, color="b", label=f"Raw {label}(h)")
@@ -396,10 +405,10 @@ class ForecastabilityAnalyzer:
 
     def _infer_max_lag(self, which: str) -> int:
         """Infer max_lag from cached curves."""
-        if which == "ami" and self._ami is not None:
-            return int(self._ami.size)
-        if which == "pami" and self._pami is not None:
-            return int(self._pami.size)
+        if which == "ami" and self._state.ami is not None:
+            return int(self._state.ami.size)
+        if which == "pami" and self._state.pami is not None:
+            return int(self._state.pami.size)
         raise ValueError("max_lag is required when the selected metric has not been computed yet.")
 
     def _analyze_legacy(
@@ -409,24 +418,24 @@ class ForecastabilityAnalyzer:
         self.compute_ami(ts, max_lag=max_lag)
         self.compute_pami(ts, max_lag=partial_lag)
 
-        assert self._ami is not None  # noqa: S101
-        assert self._pami is not None  # noqa: S101
+        assert self._state.ami is not None  # noqa: S101
+        assert self._state.pami is not None  # noqa: S101
 
         if compute_surrogates:
             self.compute_significance("ami", max_lag=max_lag)
             self.compute_significance("pami", max_lag=partial_lag)
-            assert self._ami_bands is not None  # noqa: S101
-            assert self._pami_bands is not None  # noqa: S101
-            sig_raw = np.where(self._ami > self._ami_bands[1])[0] + 1
-            sig_partial = np.where(self._pami > self._pami_bands[1])[0] + 1
+            assert self._state.ami_bands is not None  # noqa: S101
+            assert self._state.pami_bands is not None  # noqa: S101
+            sig_raw = np.where(self._state.ami > self._state.ami_bands[1])[0] + 1
+            sig_partial = np.where(self._state.pami > self._state.pami_bands[1])[0] + 1
         else:
             sig_raw = np.array([], dtype=int)
             sig_partial = np.array([], dtype=int)
 
-        rec = _triage_recommendation(self._ami, family="nonlinear")
+        rec = _triage_recommendation(self._state.ami, family="nonlinear")
         return AnalyzeResult(
-            raw=self._ami.copy(),
-            partial=self._pami.copy(),
+            raw=self._state.ami.copy(),
+            partial=self._state.pami.copy(),
             sig_raw_lags=sig_raw,
             sig_partial_lags=sig_partial,
             recommendation=rec,
@@ -447,24 +456,24 @@ class ForecastabilityAnalyzer:
         self.compute_raw(ts, max_lag, method=method)
         self.compute_partial(ts, partial_lag, method=method)
 
-        assert self._raw is not None  # noqa: S101
-        assert self._partial is not None  # noqa: S101
+        assert self._state.raw is not None  # noqa: S101
+        assert self._state.partial is not None  # noqa: S101
 
         if compute_surrogates:
             self.compute_significance_generic("raw", max_lag, method=method)
             self.compute_significance_generic("partial", partial_lag, method=method)
-            assert self._raw_bands is not None  # noqa: S101
-            assert self._partial_bands is not None  # noqa: S101
-            sig_raw = np.where(self._raw > self._raw_bands[1])[0] + 1
-            sig_partial = np.where(self._partial > self._partial_bands[1])[0] + 1
+            assert self._state.raw_bands is not None  # noqa: S101
+            assert self._state.partial_bands is not None  # noqa: S101
+            sig_raw = np.where(self._state.raw > self._state.raw_bands[1])[0] + 1
+            sig_partial = np.where(self._state.partial > self._state.partial_bands[1])[0] + 1
         else:
             sig_raw = np.array([], dtype=int)
             sig_partial = np.array([], dtype=int)
 
-        rec = _triage_recommendation(self._raw, family=info.family)
+        rec = _triage_recommendation(self._state.raw, family=info.family)
         return AnalyzeResult(
-            raw=self._raw.copy(),
-            partial=self._partial.copy(),
+            raw=self._state.raw.copy(),
+            partial=self._state.partial.copy(),
             sig_raw_lags=sig_raw,
             sig_partial_lags=sig_partial,
             recommendation=rec,
@@ -473,8 +482,8 @@ class ForecastabilityAnalyzer:
 
     def _resolve_curves_for_plot(self) -> tuple[np.ndarray, np.ndarray]:
         """Return (raw, partial) curves from whichever cache is populated."""
-        raw = self._raw if self._raw is not None else self._ami
-        partial = self._partial if self._partial is not None else self._pami
+        raw = self._state.raw if self._state.raw is not None else self._state.ami
+        partial = self._state.partial if self._state.partial is not None else self._state.pami
         if raw is None or partial is None:
             raise ValueError("No cached curves. Run analyze or compute methods first.")
         return raw, partial
@@ -498,7 +507,19 @@ class ForecastabilityAnalyzerExog(ForecastabilityAnalyzer):
         method: str = "mi",
     ) -> None:
         super().__init__(n_surrogates=n_surrogates, random_state=random_state, method=method)
-        self.exog: np.ndarray | None = None
+
+    # ------------------------------------------------------------------
+    # State proxy property for exog
+    # ------------------------------------------------------------------
+
+    @property
+    def exog(self) -> np.ndarray | None:
+        """Cached exogenous series."""
+        return self._state.exog
+
+    @exog.setter
+    def exog(self, value: np.ndarray | None) -> None:
+        self._state.exog = value
 
     def compute_ami(
         self, ts: np.ndarray, max_lag: int = 100, *, exog: np.ndarray | None = None
@@ -539,7 +560,7 @@ class ForecastabilityAnalyzerExog(ForecastabilityAnalyzer):
         self.ts = arr
         self.exog = validated_exog
         self._method = method
-        self._raw = _compute_raw_curve(
+        self._state.raw = _compute_raw_curve(
             arr,
             max_lag,
             info.scorer,
@@ -547,7 +568,7 @@ class ForecastabilityAnalyzerExog(ForecastabilityAnalyzer):
             min_pairs=min_pairs,
             random_state=self.random_state,
         )
-        return self._raw
+        return self._state.raw
 
     def compute_partial(
         self,
@@ -566,7 +587,7 @@ class ForecastabilityAnalyzerExog(ForecastabilityAnalyzer):
         self.ts = arr
         self.exog = validated_exog
         self._method = method
-        self._partial = _compute_partial_curve(
+        self._state.partial = _compute_partial_curve(
             arr,
             max_lag,
             info.scorer,
@@ -574,7 +595,7 @@ class ForecastabilityAnalyzerExog(ForecastabilityAnalyzer):
             min_pairs=min_pairs,
             random_state=self.random_state,
         )
-        return self._partial
+        return self._state.partial
 
     def compute_significance(
         self,
@@ -629,9 +650,9 @@ class ForecastabilityAnalyzerExog(ForecastabilityAnalyzer):
             n_jobs=n_jobs,
         )
         if which == "raw":
-            self._raw_bands = bands
+            self._state.raw_bands = bands
         else:
-            self._partial_bands = bands
+            self._state.partial_bands = bands
         return bands
 
     def analyze(
@@ -689,8 +710,8 @@ class ForecastabilityAnalyzerExog(ForecastabilityAnalyzer):
             label = f"Cross-{label}"
 
         raw, partial = self._resolve_curves_for_plot()
-        raw_bands = self._raw_bands or self._ami_bands
-        partial_bands = self._partial_bands or self._pami_bands
+        raw_bands = self._state.raw_bands or self._state.ami_bands
+        partial_bands = self._state.partial_bands or self._state.pami_bands
 
         fig, axs = plt.subplots(2, 1, figsize=(11, 8))
         _plot_curve(axs[0], raw, raw_bands, color="b", label=f"Raw {label}(h)")
@@ -720,24 +741,24 @@ class ForecastabilityAnalyzerExog(ForecastabilityAnalyzer):
         self.compute_raw(ts, max_lag, method=method, exog=exog)
         self.compute_partial(ts, partial_lag, method=method, exog=exog)
 
-        assert self._raw is not None  # noqa: S101
-        assert self._partial is not None  # noqa: S101
+        assert self._state.raw is not None  # noqa: S101
+        assert self._state.partial is not None  # noqa: S101
 
         if compute_surrogates:
             self.compute_significance_generic("raw", max_lag, method=method, exog=exog)
             self.compute_significance_generic("partial", partial_lag, method=method, exog=exog)
-            assert self._raw_bands is not None  # noqa: S101
-            assert self._partial_bands is not None  # noqa: S101
-            sig_raw = np.where(self._raw > self._raw_bands[1])[0] + 1
-            sig_partial = np.where(self._partial > self._partial_bands[1])[0] + 1
+            assert self._state.raw_bands is not None  # noqa: S101
+            assert self._state.partial_bands is not None  # noqa: S101
+            sig_raw = np.where(self._state.raw > self._state.raw_bands[1])[0] + 1
+            sig_partial = np.where(self._state.partial > self._state.partial_bands[1])[0] + 1
         else:
             sig_raw = np.array([], dtype=int)
             sig_partial = np.array([], dtype=int)
 
-        rec = _triage_recommendation(self._raw, family=info.family, is_cross=exog is not None)
+        rec = _triage_recommendation(self._state.raw, family=info.family, is_cross=exog is not None)
         return AnalyzeResult(
-            raw=self._raw.copy(),
-            partial=self._partial.copy(),
+            raw=self._state.raw.copy(),
+            partial=self._state.partial.copy(),
             sig_raw_lags=sig_raw,
             sig_partial_lags=sig_partial,
             recommendation=rec,
