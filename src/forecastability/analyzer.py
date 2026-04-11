@@ -6,17 +6,13 @@ for MI, Pearson, Spearman, Kendall, and distance correlation.
 
 from __future__ import annotations
 
-import os
-from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from typing import Literal
 
 import matplotlib.pyplot as plt
 import numpy as np
-from sklearn.linear_model import LinearRegression
 
 from forecastability.metrics import (
-    _scale_series,
     compute_ami,
     compute_pami_linear_residual,
 )
@@ -25,16 +21,26 @@ from forecastability.scorers import (
     ScorerInfo,
     default_registry,
 )
-from forecastability.surrogates import compute_significance_bands, phase_surrogates
-from forecastability.validation import validate_time_series
 
-# Family → (high_threshold, medium_threshold)
-_TRIAGE_THRESHOLDS: dict[str, tuple[float, float]] = {
-    "nonlinear": (0.8, 0.3),
-    "linear": (0.5, 0.2),
-    "rank": (0.5, 0.2),
-    "bounded_nonlinear": (0.5, 0.2),
-}
+# ---------------------------------------------------------------------------
+# Service imports — thin wrappers kept here for backward-compat internal calls
+# ---------------------------------------------------------------------------
+from forecastability.services.partial_curve_service import (
+    compute_partial_curve as _compute_partial_curve,
+)
+from forecastability.services.plot_service import _plot_curve
+from forecastability.services.raw_curve_service import (
+    compute_raw_curve as _compute_raw_curve,
+)
+from forecastability.services.recommendation_service import (
+    _triage_recommendation,
+    _validate_exog_for_target,
+)
+from forecastability.services.significance_service import (
+    compute_significance_bands_generic,
+)
+from forecastability.surrogates import compute_significance_bands
+from forecastability.validation import validate_time_series
 
 
 @dataclass(slots=True)
@@ -291,32 +297,16 @@ class ForecastabilityAnalyzer:
             raise ValueError("which must be one of {'raw', 'partial'}")
 
         info = self._registry.get(method)
-        surr = phase_surrogates(
+        bands = compute_significance_bands_generic(
             self.ts,
-            n_surrogates=self.n_surrogates,
-            random_state=self.random_state,
+            self.n_surrogates,
+            self.random_state,
+            max_lag,
+            info,
+            which,
+            min_pairs=min_pairs,
+            n_jobs=n_jobs,
         )
-
-        compute_fn = _compute_raw_curve if which == "raw" else _compute_partial_curve
-        n_workers = (os.cpu_count() or 1) if n_jobs == -1 else n_jobs
-
-        def _eval(idx: int) -> np.ndarray:
-            seed = self.random_state + idx + 1
-            return compute_fn(
-                surr[idx], max_lag, info.scorer, min_pairs=min_pairs, random_state=seed
-            )
-
-        if n_workers == 1:
-            values: list[np.ndarray] = [_eval(i) for i in range(surr.shape[0])]
-        else:
-            with ThreadPoolExecutor(max_workers=min(n_workers, surr.shape[0])) as pool:
-                values = list(pool.map(_eval, range(surr.shape[0])))
-
-        stacked = np.vstack(values)
-        lower = np.percentile(stacked, 2.5, axis=0)
-        upper = np.percentile(stacked, 97.5, axis=0)
-        bands = (lower, upper)
-
         if which == "raw":
             self._raw_bands = bands
         else:
@@ -627,38 +617,17 @@ class ForecastabilityAnalyzerExog(ForecastabilityAnalyzer):
             raise ValueError("Cached exogenous series length must match cached target length.")
 
         info = self._registry.get(method)
-        surr = phase_surrogates(
+        bands = compute_significance_bands_generic(
             self.ts,
-            n_surrogates=self.n_surrogates,
-            random_state=self.random_state,
+            self.n_surrogates,
+            self.random_state,
+            max_lag,
+            info,
+            which,
+            exog=self.exog,
+            min_pairs=min_pairs,
+            n_jobs=n_jobs,
         )
-
-        compute_fn = _compute_raw_curve if which == "raw" else _compute_partial_curve
-        cached_exog = self.exog
-        n_workers = (os.cpu_count() or 1) if n_jobs == -1 else n_jobs
-
-        def _eval(idx: int) -> np.ndarray:
-            seed = self.random_state + idx + 1
-            return compute_fn(
-                surr[idx],
-                max_lag,
-                info.scorer,
-                exog=cached_exog,
-                min_pairs=min_pairs,
-                random_state=seed,
-            )
-
-        if n_workers == 1:
-            values: list[np.ndarray] = [_eval(i) for i in range(surr.shape[0])]
-        else:
-            with ThreadPoolExecutor(max_workers=min(n_workers, surr.shape[0])) as pool:
-                values = list(pool.map(_eval, range(surr.shape[0])))
-
-        stacked = np.vstack(values)
-        lower = np.percentile(stacked, 2.5, axis=0)
-        upper = np.percentile(stacked, 97.5, axis=0)
-        bands = (lower, upper)
-
         if which == "raw":
             self._raw_bands = bands
         else:
@@ -776,128 +745,6 @@ class ForecastabilityAnalyzerExog(ForecastabilityAnalyzer):
         )
 
 
-# ------------------------------------------------------------------
-# Module-level helpers
-# ------------------------------------------------------------------
-
-
-def _compute_raw_curve(
-    arr: np.ndarray,
-    max_lag: int,
-    scorer: DependenceScorer,
-    *,
-    exog: np.ndarray | None = None,
-    min_pairs: int,
-    random_state: int,
-) -> np.ndarray:
-    """Compute a raw dependence curve using *scorer*."""
-    scaled = _scale_series(arr)
-    predictor = _scale_series(exog) if exog is not None else scaled
-    curve = np.zeros(max_lag, dtype=float)
-    for h in range(1, max_lag + 1):
-        if scaled.size - h < min_pairs:
-            break
-        past = predictor[:-h]
-        future = scaled[h:]
-        curve[h - 1] = scorer(past, future, random_state=random_state + h)
-    return curve
-
-
-def _compute_partial_curve(
-    arr: np.ndarray,
-    max_lag: int,
-    scorer: DependenceScorer,
-    *,
-    exog: np.ndarray | None = None,
-    min_pairs: int,
-    random_state: int,
-) -> np.ndarray:
-    """Compute a partial (residualized) dependence curve using *scorer*."""
-    scaled = _scale_series(arr)
-    predictor = _scale_series(exog) if exog is not None else scaled
-    curve = np.zeros(max_lag, dtype=float)
-    for h in range(1, max_lag + 1):
-        if scaled.size - h < min_pairs:
-            break
-        past = predictor[:-h]
-        future = scaled[h:]
-        res_past, res_future = _residualize(scaled, h, past, future, exog=exog)
-        curve[h - 1] = scorer(res_past, res_future, random_state=random_state + h)
-    return curve
-
-
-def _residualize(
-    scaled: np.ndarray,
-    h: int,
-    past: np.ndarray,
-    future: np.ndarray,
-    *,
-    exog: np.ndarray | None = None,
-) -> tuple[np.ndarray, np.ndarray]:
-    """Linearly residualize past and future on intermediate lags.
-
-    Residualization is linear. For nonlinear scorers (MI, distance correlation),
-    this removes only linear mediation — nonlinear indirect dependence may remain.
-    For Pearson, this yields exact partial correlation.
-    """
-    if h <= 1:
-        return past, future
-    n_rows = scaled.size - h
-    cols = [scaled[offset : offset + n_rows] for offset in range(1, h)]
-    z = np.column_stack(cols)
-    model_future = LinearRegression().fit(z, future)
-    res_future = future - model_future.predict(z)
-    if exog is not None:
-        return past.copy(), res_future
-    model_past = LinearRegression().fit(z, past)
-    return past - model_past.predict(z), res_future
-
-
-def _validate_exog_for_target(exog: np.ndarray | None, *, target: np.ndarray) -> np.ndarray | None:
-    """Validate optional exogenous series and enforce exact length match."""
-    if exog is None:
-        return None
-    validated = validate_time_series(exog, min_length=target.size)
-    if validated.size != target.size:
-        raise ValueError(
-            f"exog length ({validated.size}) must exactly match target length ({target.size})"
-        )
-    return validated
-
-
-def _triage_recommendation(raw_curve: np.ndarray, *, family: str, is_cross: bool = False) -> str:
-    """Generate a triage recommendation from the raw curve mean."""
-    high, medium = _TRIAGE_THRESHOLDS.get(family, (0.8, 0.3))
-    mean_raw = float(np.mean(raw_curve[: min(20, raw_curve.size)]))
-
-    if is_cross:
-        if mean_raw > high:
-            return "HIGH -> Strongly predictive exogenous (include in Transformers, N-BEATS, etc.)"
-        if mean_raw > medium:
-            return "MEDIUM -> Useful exogenous (include in ARIMAX/Prophet/LightGBM)"
-        return "LOW -> Weak exogenous; drop or test further"
-
-    if mean_raw > high:
-        return "HIGH -> Complex global models (Transformers, N-BEATS)"
-    if mean_raw > medium:
-        return "MEDIUM -> Seasonal ARIMA / Prophet / LightGBM"
-    return "LOW -> Naive or seasonal naive only"
-
-
-def _plot_curve(
-    ax: plt.Axes,
-    values: np.ndarray,
-    bands: tuple[np.ndarray, np.ndarray] | None,
-    *,
-    color: str,
-    label: str,
-) -> None:
-    """Plot a single curve with optional significance bands."""
-    lags = np.arange(1, values.size + 1)
-    ax.plot(lags, values, f"{color}-", lw=2, label=label)
-    if bands is not None:
-        ax.fill_between(lags, bands[0], bands[1], color=color, alpha=0.15, label="95% band")
-    ax.axhline(0.0, color="k", lw=0.5)
-    ax.set_xlabel("Lag")
-    ax.legend()
-    ax.grid(alpha=0.3)
+# _compute_raw_curve, _compute_partial_curve, _plot_curve, _triage_recommendation,
+# _TRIAGE_THRESHOLDS, and _validate_exog_for_target are imported at the top of this
+# module from the services package and remain accessible here for backward compat.
