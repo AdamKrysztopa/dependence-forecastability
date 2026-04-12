@@ -1,0 +1,3 @@
+model_name,mean_spearman_ami_smape,mean_spearman_pami_smape,mean_delta_pami_minus_ami,preferred_diagnostic
+ets,-1.0,-0.8666666666666666,0.1333333333333334,pami
+naive,-1.0,-0.8666666666666666,0.1333333333333334,pami

@@ -320,14 +320,14 @@ The strongest marketable story is no longer only “AMI replication + extension.
 **Why:** Public confidence grows when benchmark examples are small, fixed, and rerunnable.
 
 ### Actions
-- [ ] Add a tiny benchmark fixture dataset folder for docs/tests.
-- [ ] Freeze expected outputs for selected examples.
-- [ ] Add a script that rebuilds summary artifacts from raw benchmark runs.
-- [ ] Add a “reproduce the summary table” command.
+- [x] Add a tiny benchmark fixture dataset folder for docs/tests.
+- [x] Freeze expected outputs for selected examples.
+- [x] Add a script that rebuilds summary artifacts from raw benchmark runs and verifies fixture consistency.
+- [x] Add a “reproduce the summary table” command.
 
 ### Acceptance criteria
-- [ ] Users can rerun representative examples exactly.
-- [ ] Docs and benchmark summaries do not drift silently.
+- [x] Users can rerun representative examples exactly.
+- [x] Docs and benchmark summaries do not drift silently.
 
 ---
 
