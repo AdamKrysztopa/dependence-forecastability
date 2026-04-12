@@ -17,6 +17,9 @@ This file defines what must be true before any roadmap item can be marked comple
 - Every new item extends functionality, study coverage, or reporting beyond the paper baseline.
 - Documentation states whether the item is paper-native parity or project-only extension.
 - Extensions do not weaken or replace the paper-aligned workflow.
+- Agent-enabled UX layers and notebook facades reuse the deterministic triage use case; they add convenience, explanation, or transport only.
+- New notebooks (e.g. `03_agentic_triage.ipynb`) must route all compute through `run_triage()` and must not duplicate orchestration logic from notebooks 01/02.
+- If agent workflows are maintained in both `.github` and `.codex`, the supported role roster and ownership boundaries are documented and aligned.
 
 ## Verification gates
 
