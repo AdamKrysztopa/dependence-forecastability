@@ -3,6 +3,14 @@
 
 Navigation hub for the AMI → pAMI Forecastability Analysis documentation.
 
+## Quickstart
+
+Task-oriented first-run entry points.
+
+| Document | Description |
+|---|---|
+| [quickstart.md](quickstart.md) | Laddered quickstart: 60s CLI, 5m notebook, 10m Python API, 15m HTTP API, plus optional agent and MCP routes using one shared signal |
+
 ## Theory
 
 Conceptual background and mathematical foundations.

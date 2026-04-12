@@ -8,6 +8,13 @@
 
 This package reproduces the paper's horizon-specific AMI workflow and extends it with pAMI and deterministic triage tooling so you can quickly assess whether dependence is strong, direct, and likely useful before costly model search.
 
+## Quickstart ladder (recommended)
+
+Start with one deterministic signal and move from CLI to notebook, Python API,
+HTTP API, then optional agent/MCP surfaces:
+
+- [docs/quickstart.md](docs/quickstart.md)
+
 ## Who this is for
 
 - Forecasting practitioners who need a pre-model diagnostic for lag usefulness.

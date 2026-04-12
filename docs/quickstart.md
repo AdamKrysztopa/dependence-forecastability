@@ -1,0 +1,329 @@
+<!-- type: how-to -->
+# Quickstart Ladder
+
+One deterministic signal, multiple entry routes.
+
+This guide uses the same AR(1) signal across CLI, notebook, Python API,
+HTTP API, and optional agent/MCP surfaces so outputs stay directly comparable.
+
+## Shared Signal (Used Everywhere)
+
+All routes below use:
+
+- `generate_ar1(n_samples=150, phi=0.85, random_state=42)`
+- `goal="univariate"`
+- `max_lag=20`
+- `n_surrogates=99`
+- `random_state=42`
+
+> [!WARNING]
+> This ladder is for fast dependence triage. For forecast evaluation, compute
+> diagnostics on each rolling-origin training window only. Do not compute on
+> full series and then claim out-of-sample validity.
+
+## Comparable Output Contract
+
+Normalize each route to the same keys when comparing results:
+
+| Comparable key | CLI JSON | Python/notebook object | HTTP JSON | MCP tool JSON |
+|---|---|---|---|---|
+| `blocked` | `blocked` | `result.blocked` | `blocked` | `blocked` |
+| `readiness_status` | `readiness.status` | `result.readiness.status.value` | `readiness_status` | `readiness.status` |
+| `forecastability_class` | `interpretation.forecastability_class` | `result.interpretation.forecastability_class` | `forecastability_class` | `interpretation.forecastability_class` |
+| `modeling_regime` | `interpretation.modeling_regime` | `result.interpretation.modeling_regime` | `modeling_regime` | `interpretation.modeling_regime` |
+| `primary_lags` | `interpretation.primary_lags` | `list(result.interpretation.primary_lags)` | `primary_lags` | `interpretation.primary_lags` |
+| `recommendation` | `recommendation` | `result.recommendation` | `recommendation` | `recommendation` |
+
+Expected normalized summary for this AR(1) setup:
+
+```json
+{
+  "blocked": false,
+  "readiness_status": "warning",
+  "forecastability_class": "high",
+  "modeling_regime": "compact_structured_models",
+  "primary_lags": [1, 7],
+  "recommendation": "HIGH -> Complex structured models (deep AR, nonlinear, LSTM)"
+}
+```
+
+## 60 Seconds: Deterministic CLI Run
+
+```bash
+AR1_JSON="$(uv run python - <<'PY'
+import json
+from forecastability import generate_ar1
+
+series = generate_ar1(n_samples=150, phi=0.85, random_state=42)
+print(json.dumps(series.tolist()))
+PY
+)"
+
+uv run forecastability triage \
+  --series "$AR1_JSON" \
+  --goal univariate \
+  --max-lag 20 \
+  --n-surrogates 99 \
+  --random-state 42 \
+  --format json
+```
+
+Expected output snippet:
+
+```json
+{
+  "blocked": false,
+  "readiness": {
+    "status": "warning"
+  },
+  "interpretation": {
+    "forecastability_class": "high",
+    "modeling_regime": "compact_structured_models",
+    "primary_lags": [1, 7]
+  },
+  "recommendation": "HIGH -> Complex structured models (deep AR, nonlinear, LSTM)"
+}
+```
+
+## 5 Minutes: Notebook Exploration
+
+Launch notebook tooling:
+
+```bash
+uv sync --group notebook
+uv run jupyter lab
+```
+
+Open [../notebooks/03_agentic_triage.ipynb](../notebooks/03_agentic_triage.ipynb)
+and run a scratch cell:
+
+```python
+from forecastability import generate_ar1
+from forecastability.triage import TriageRequest, run_triage
+
+series = generate_ar1(n_samples=150, phi=0.85, random_state=42)
+result = run_triage(
+    TriageRequest(
+        series=series,
+        goal="univariate",
+        max_lag=20,
+        n_surrogates=99,
+        random_state=42,
+    )
+)
+
+summary = {
+    "blocked": result.blocked,
+    "readiness_status": result.readiness.status.value,
+    "forecastability_class": result.interpretation.forecastability_class,
+    "modeling_regime": result.interpretation.modeling_regime,
+    "primary_lags": list(result.interpretation.primary_lags),
+    "recommendation": result.recommendation,
+}
+summary
+```
+
+Expected output snippet:
+
+```json
+{
+  "blocked": false,
+  "readiness_status": "warning",
+  "forecastability_class": "high",
+  "modeling_regime": "compact_structured_models",
+  "primary_lags": [1, 7],
+  "recommendation": "HIGH -> Complex structured models (deep AR, nonlinear, LSTM)"
+}
+```
+
+## 10 Minutes: Python API Usage
+
+```bash
+uv run python - <<'PY'
+import json
+from forecastability import generate_ar1
+from forecastability.triage import TriageRequest, run_triage
+
+series = generate_ar1(n_samples=150, phi=0.85, random_state=42)
+result = run_triage(
+    TriageRequest(
+        series=series,
+        goal="univariate",
+        max_lag=20,
+        n_surrogates=99,
+        random_state=42,
+    )
+)
+
+summary = {
+    "blocked": result.blocked,
+    "readiness_status": result.readiness.status.value,
+    "forecastability_class": result.interpretation.forecastability_class,
+    "modeling_regime": result.interpretation.modeling_regime,
+    "primary_lags": list(result.interpretation.primary_lags),
+    "recommendation": result.recommendation,
+}
+print(json.dumps(summary, indent=2))
+PY
+```
+
+Expected output snippet:
+
+```json
+{
+  "blocked": false,
+  "readiness_status": "warning",
+  "forecastability_class": "high",
+  "modeling_regime": "compact_structured_models",
+  "primary_lags": [1, 7],
+  "recommendation": "HIGH -> Complex structured models (deep AR, nonlinear, LSTM)"
+}
+```
+
+## 15 Minutes: HTTP API Call
+
+Terminal A: start the API server.
+
+```bash
+uv sync --extra transport
+uv run uvicorn forecastability.adapters.api:app --host 127.0.0.1 --port 8000
+```
+
+Terminal B: generate the same payload and call `POST /triage`.
+
+```bash
+uv run python - <<'PY'
+import json
+from forecastability import generate_ar1
+
+payload = {
+    "series": generate_ar1(n_samples=150, phi=0.85, random_state=42).tolist(),
+    "goal": "univariate",
+    "max_lag": 20,
+    "n_surrogates": 99,
+    "random_state": 42,
+}
+with open("/tmp/forecastability_ar1_payload.json", "w", encoding="utf-8") as f:
+    json.dump(payload, f)
+PY
+
+curl -sS -X POST http://127.0.0.1:8000/triage \
+  -H 'Content-Type: application/json' \
+  --data @/tmp/forecastability_ar1_payload.json
+```
+
+Expected output snippet:
+
+```json
+{
+  "blocked": false,
+  "readiness_status": "warning",
+  "route": "univariate_no_significance",
+  "compute_surrogates": false,
+  "forecastability_class": "high",
+  "modeling_regime": "compact_structured_models",
+  "primary_lags": [1, 7],
+  "recommendation": "HIGH -> Complex structured models (deep AR, nonlinear, LSTM)"
+}
+```
+
+## Optional: Agent Narration
+
+```bash
+uv sync --extra agent
+```
+
+Set provider configuration in `.env` (for example `OPENAI_API_KEY` and
+`OPENAI_MODEL`), then run:
+
+```bash
+uv run python - <<'PY'
+import asyncio
+import json
+from forecastability import generate_ar1
+from forecastability.adapters.pydantic_ai_agent import run_triage_agent
+
+async def main() -> None:
+    series = generate_ar1(n_samples=150, phi=0.85, random_state=42)
+    explanation = await run_triage_agent(
+        series,
+        max_lag=20,
+        n_surrogates=99,
+        random_state=42,
+    )
+    print(
+        json.dumps(
+            {
+                "forecastability_class": explanation.forecastability_class,
+                "directness_class": explanation.directness_class,
+                "modeling_regime": explanation.modeling_regime,
+                "primary_lags": explanation.primary_lags,
+                "recommendation": explanation.recommendation,
+                "narrative": explanation.narrative,
+                "caveats": explanation.caveats,
+            },
+            indent=2,
+        )
+    )
+
+asyncio.run(main())
+PY
+```
+
+Expected output snippet:
+
+```json
+{
+  "forecastability_class": "high",
+  "directness_class": "medium",
+  "modeling_regime": "compact_structured_models",
+  "primary_lags": [1, 7],
+  "recommendation": "HIGH -> Complex structured models (deep AR, nonlinear, LSTM)",
+  "narrative": "...model-generated explanation...",
+  "caveats": [
+    "Series length (150) < 200. Surrogate significance bands may be unstable; interpret p-values with caution."
+  ]
+}
+```
+
+## Optional: MCP Integration
+
+Start the MCP server:
+
+```bash
+uv sync --extra transport
+uv run python -m forecastability.adapters.mcp_server
+```
+
+From an MCP client, call tool `run_triage_tool` with:
+
+```json
+{
+  "series": "same AR(1) list as above",
+  "goal": "univariate",
+  "max_lag": 20,
+  "n_surrogates": 99,
+  "random_state": 42
+}
+```
+
+Expected tool output snippet:
+
+```json
+{
+  "blocked": false,
+  "readiness": {
+    "status": "warning"
+  },
+  "method_plan": {
+    "route": "univariate_no_significance",
+    "compute_surrogates": false
+  },
+  "interpretation": {
+    "forecastability_class": "high",
+    "modeling_regime": "compact_structured_models",
+    "primary_lags": [1, 7]
+  },
+  "recommendation": "HIGH -> Complex structured models (deep AR, nonlinear, LSTM)"
+}
+```
