@@ -3,6 +3,31 @@
 
 Navigation hub for the AMI → pAMI Forecastability Analysis documentation.
 
+## Quickstart
+
+Task-oriented first-run entry points.
+
+| Document | Description |
+|---|---|
+| [quickstart.md](quickstart.md) | Laddered quickstart: 60s CLI, 5m notebook, 10m Python API, 15m HTTP API, plus optional agent and MCP routes using one shared signal |
+
+## Results
+
+Decision-focused evidence summary.
+
+| Document | Description |
+|---|---|
+| [results_summary.md](results_summary.md) | Compact evidence-first summary of univariate AMI/pAMI, exogenous screening, and triage workflow findings, with explicit limitations |
+
+## Operational Guidance
+
+Practical guides for choosing components and mapping diagnostics to industrial decisions.
+
+| Document | Description |
+|---|---|
+| [why_use_this.md](why_use_this.md) | Component comparison matrix for AMI, pAMI, directness ratio, exogenous analysis, triage, and optional narration |
+| [use_cases_industrial.md](use_cases_industrial.md) | Manufacturing/reliability/PdM scenario matrix with recommended path, outputs, and next decisions |
+
 ## Theory
 
 Conceptual background and mathematical foundations.
@@ -18,6 +43,16 @@ Conceptual background and mathematical foundations.
 | Document | Description |
 |---|---|
 | [architecture.md](architecture.md) | Hexagonal architecture guide, SOLID principles, layer boundaries, enforcement |
+
+## Project Policy
+
+| Document | Description |
+|---|---|
+| [versioning.md](versioning.md) | Semantic versioning policy, stability levels, and migration-note requirements |
+| [api_contract.md](api_contract.md) | FastAPI and SSE transport contract: request/response schemas, validation and readiness semantics, event sequence, and integration examples |
+| [observability.md](observability.md) | Operational observability and auditability guide: event payload contract, checkpoint replay boundaries, logging fields, and failure triage workflow |
+| [production_readiness.md](production_readiness.md) | Production maturity zones, safe default deterministic path, and failure/non-goal contract for CLI/API/agent surfaces |
+| [agent_layer.md](agent_layer.md) | Deterministic-first contract for optional LLM narration, strict mode behavior, and numeric-grounding checks |
 
 ## Code Reference
 
@@ -38,6 +73,7 @@ Project roadmap and acceptance criteria (MoSCoW framework).
 | Document | Description |
 |---|---|
 | [plan/README.md](plan/README.md) | Planning surface overview |
+| [plan/dependence_forecastability_progress.md](plan/dependence_forecastability_progress.md) | Branch tracker mapping implemented dependence-forecastability backlog items to status, delivered scope, and commit hashes |
 | [plan/acceptance_criteria.md](plan/acceptance_criteria.md) | Done criteria for all roadmap items |
 | [plan/must_have.md](plan/must_have.md) | Non-negotiable items (✅ complete) |
 | [plan/should_have.md](plan/should_have.md) | High-value improvements (✅ complete) |

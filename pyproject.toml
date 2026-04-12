@@ -1,9 +1,28 @@
 [project]
 name = "forecastability"
 version = "0.1.0"
-description = "AMI + pAMI forecastability analysis framework"
+description = "Paper-aligned AMI and extension pAMI diagnostics for forecastability triage"
 readme = "README.md"
+license = { file = "LICENSE" }
 requires-python = ">=3.11,<3.13"
+keywords = [
+  "forecasting",
+  "time-series",
+  "mutual-information",
+  "forecastability",
+  "diagnostics",
+  "triage",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering",
+  "Topic :: Scientific/Engineering :: Information Analysis",
+]
 dependencies = [
   "matplotlib==3.10.8",
   "numpy==2.4.3",
@@ -16,6 +35,13 @@ dependencies = [
   "pydantic>=2.12.5",
   "pydantic-settings>=2.7",
 ]
+
+[project.urls]
+Homepage = "https://github.com/AdamKrysztopa/dependence-forecastability"
+Documentation = "https://github.com/AdamKrysztopa/dependence-forecastability/tree/main/docs"
+Source = "https://github.com/AdamKrysztopa/dependence-forecastability"
+Issues = "https://github.com/AdamKrysztopa/dependence-forecastability/issues"
+Changelog = "https://github.com/AdamKrysztopa/dependence-forecastability/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 agent = [

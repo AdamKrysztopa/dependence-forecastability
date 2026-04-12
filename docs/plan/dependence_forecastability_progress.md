@@ -1,0 +1,30 @@
+<!-- type: reference -->
+# dependence-forecastability - Progress Tracker
+
+_Last updated: 2026-04-12_
+
+Source backlog: [dependence_forecastability_detailed_backlog.md](dependence_forecastability_detailed_backlog.md)
+
+> [!IMPORTANT]
+> `dependence_forecastability_detailed_backlog.md` remains the authoritative backlog and is intentionally retained.
+> This progress tracker records branch delivery status only, because P1-P3 are not fully implemented.
+
+## Implemented items on `feat/dependence-forecastability-backlog`
+
+| Backlog item id/title | Status | Scope delivered | Commit hash | Notes |
+|---|---|---|---|---|
+| #1 Publish a real versioned release story | partial | Added `CHANGELOG.md` and `docs/versioning.md` for release/change policy and stability-level framing. | `41d2e73` | Public release publication (for example `v0.1.0`) and full upgrade-note lifecycle remain open. |
+| #2 Add a visible production-readiness contract | done | Added `docs/production_readiness.md` with maturity zones, safe defaults, and failure/non-goal framing. | `247ced2` | Deterministic versus optional agentic paths are explicitly separated. |
+| #3 Rework the README first screen | done | Restructured top-level README entry path and first-run framing for quicker orientation. | `bc23ebf` | Reduced concept density before first executable path. |
+| #4 Add an opinionated quickstart ladder | done | Added `docs/quickstart.md` covering CLI, notebook, Python API, HTTP API, and optional routes. | `a7a5cec` | Single shared-signal progression documented across routes. |
+| #5 Add explicit benchmark/result cards | done | Added `docs/results_summary.md` with compact evidence-first outcomes and limitations. | `7aa5f87` | Decision-focused summary layer now exists outside notebooks. |
+| #6 Improve packaging metadata and install trust | partial | Enhanced packaging metadata and installation matrix in project packaging/docs surface. | `09bac87` | Full distribution lifecycle (for example publication workflow) remains open. |
+| #7 Create a "Why use this?" comparison page | done | Added `docs/why_use_this.md` with component selection matrix and caveats. | `8fbdf5d` | Component-choice guidance is now centralized. |
+| #8 Add a use-case pack for manufacturing / reliability / PdM | done | Added `docs/use_cases_industrial.md` with scenario-to-decision mapping. | `8fbdf5d` | Uses operational, non-sensational framing. |
+| #9 Turn "agentic" into a carefully framed optional layer | done | Added `docs/agent_layer.md` documenting deterministic-first and optional narration contract. | `bd16de9` | Includes strict-mode and grounding boundaries. |
+| #10 Add one hardened API contract page | done | Added `docs/api_contract.md` covering schemas, SSE sequence, and failure semantics. | `b410661` | Integration contract is now explicit and version-aware. |
+| #13 Add observability and auditability guidance | done | Added `docs/observability.md` with event payload, checkpoint semantics, and audit/logging guidance. | `0413cc5` | Operational tracing workflow is documented for production usage. |
+
+## Remaining backlog context
+
+P1-P3 are not fully implemented. Keep all remaining planning and acceptance tracking in [dependence_forecastability_detailed_backlog.md](dependence_forecastability_detailed_backlog.md).

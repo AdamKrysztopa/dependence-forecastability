@@ -1,16 +1,107 @@
 <!-- type: reference -->
 # AMI -> pAMI Forecastability Analysis
 
-[![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://python.org)
+[![CI](https://img.shields.io/github/check-runs/AdamKrysztopa/dependence-forecastability/main?label=CI)](https://github.com/AdamKrysztopa/dependence-forecastability/actions)
+[![Version](https://img.shields.io/github/v/tag/AdamKrysztopa/dependence-forecastability?label=version&sort=semver)](https://github.com/AdamKrysztopa/dependence-forecastability/releases)
+[![Docs](https://img.shields.io/github/deployments/AdamKrysztopa/dependence-forecastability/github-pages?label=docs)](https://github.com/AdamKrysztopa/dependence-forecastability/tree/main/docs)
+[![Python 3.11-3.12](https://img.shields.io/badge/python-3.11%20to%203.12-blue.svg)](https://python.org)
 [![arXiv](https://img.shields.io/badge/arXiv-2601.10006-b31b1b.svg)](https://doi.org/10.48550/arXiv.2601.10006)
 
-## What this repository does
+## Value proposition
 
-This project reproduces the paper's horizon-specific AMI workflow and extends it with pAMI for direct-vs-mediated lag structure analysis.
+This package reproduces the paper's horizon-specific AMI workflow and extends it with pAMI and deterministic triage tooling so you can quickly assess whether dependence is strong, direct, and likely useful before costly model search.
 
-- Paper-native metric: AMI, \(I_h = I(X_t; X_{t+h})\)
-- Project extension: pAMI, \(\tilde{I}_h = I(X_t; X_{t+h} \mid X_{t+1},\ldots,X_{t+h-1})\)
-- Scope extension: exogenous cross-dependence and a scorer registry
+## Quickstart ladder (recommended)
+
+Start with one deterministic signal and move from CLI to notebook, Python API,
+HTTP API, then optional agent/MCP surfaces:
+
+- [docs/quickstart.md](docs/quickstart.md)
+
+## Who this is for
+
+- Forecasting practitioners who need a pre-model diagnostic for lag usefulness.
+- Data scientists comparing direct vs mediated dependence across horizons.
+- Teams building production triage flows (CLI, API, or notebooks) around deterministic metrics.
+
+## Fastest quickstart (single executable path)
+
+```bash
+uv sync && MPLBACKEND=Agg uv run python scripts/run_canonical_examples.py
+```
+
+## What result you get
+
+- Canonical AMI and pAMI JSON outputs in `outputs/json/canonical/`.
+- Canonical diagnostic figures in `outputs/figures/canonical/`.
+- Deterministic A-E pattern classification plus lag recommendations per series.
+
+## Where to go next
+
+- Benchmark panel evaluation: `MPLBACKEND=Agg uv run python scripts/run_benchmark_panel.py`
+- Exogenous driver analysis: `MPLBACKEND=Agg uv run python scripts/run_exog_analysis.py`
+- Component selection guide: [docs/why_use_this.md](docs/why_use_this.md)
+- Industrial scenario guide: [docs/use_cases_industrial.md](docs/use_cases_industrial.md)
+- HTTP API contract reference: [docs/api_contract.md](docs/api_contract.md)
+- Observability and auditability guide: [docs/observability.md](docs/observability.md)
+- Agent layer contract (deterministic-first): [docs/agent_layer.md](docs/agent_layer.md)
+- Results summary (evidence-first): [docs/results_summary.md](docs/results_summary.md)
+- Agentic walkthrough notebook: [notebooks/03_agentic_triage.ipynb](notebooks/03_agentic_triage.ipynb)
+- Full docs index: [docs/README.md](docs/README.md)
+
+## Visual architecture summary
+
+```mermaid
+flowchart TD
+    subgraph Adapters
+        CLI["CLI"]
+        API["FastAPI + SSE"]
+        MCP["MCP Server"]
+        Agent["PydanticAI Agent"]
+    end
+    subgraph Ports["Ports (9 Protocols)"]
+        P["Validator · CurveCompute · Significance · Interpretation · Recommendation · ReportRenderer · Settings · EventEmitter · Checkpoint"]
+    end
+    subgraph UseCases["Use Cases"]
+        UC1["run_triage()"]
+        UC2["Rolling-Origin Evaluation"]
+    end
+    subgraph Triage["Triage Sub-domain"]
+        T1["Readiness Gate"]
+        T2["Method Router"]
+        T3["Event Emitter"]
+    end
+    subgraph Domain
+        D1["metrics · validation · interpretation"]
+        D2["surrogates · scorers · config · types"]
+    end
+
+    Adapters --> Ports
+    Ports --> UseCases
+    UseCases --> Triage
+    Triage --> Domain
+```
+
+The package follows hexagonal (ports-and-adapters) architecture. Domain code has no dependency on adapters; adapters wire concrete implementations at the edge.
+
+## Common use cases
+
+- Signal triage: quickly classify whether a series is likely forecastable at useful horizons.
+- Lookback/horizon screening: identify lag ranges where AMI and pAMI remain informative.
+- Exogenous driver screening: rank candidate external drivers with CrossAMI and pCrossAMI.
+- Industrial/PdM context: prioritize sensors or telemetry channels before full model pipelines.
+
+## Versioning and stability
+
+- Release history: [CHANGELOG.md](CHANGELOG.md)
+- Policy and stability matrix: [docs/versioning.md](docs/versioning.md)
+
+Current snapshot: core domain APIs are stable; CLI and HTTP API adapters are beta; MCP and agent layers are experimental.
+
+## Production readiness
+
+- Contract: [docs/production_readiness.md](docs/production_readiness.md)
+- Safe default path: run deterministic `run_triage()` first; treat LLM narration as optional.
 
 ## What this project adds beyond the paper
 
@@ -51,48 +142,6 @@ The paper validates AMI as a frequency-conditional triage signal for model selec
 | HTTP API | FastAPI endpoints + SSE streaming (`transport` extra) |
 | MCP server | Model Context Protocol tools for IDE-integrated assistants (`transport` extra) |
 
-## Paper baseline (what we are based on)
-
-Source paper:
-- Peter Maurice Catt, *The Knowable Future: Mapping the Decay of Past-Future Mutual Information Across Forecast Horizons*, arXiv:2601.10006 (January 2026; v3 February 2026)
-- PDF: https://arxiv.org/pdf/2601.10006
-- DOI: https://doi.org/10.48550/arXiv.2601.10006
-
-Paper setup reproduced here:
-- M4 frequencies: Yearly, Quarterly, Monthly, Weekly, Daily, Hourly
-- Horizon caps by frequency (paper Section 3.1): 6, 8, 18, 13, 14, 48 respectively
-- Rolling-origin protocol with train-only diagnostics and post-origin forecast scoring
-- Surrogate significance logic with \(n_{surrogates} \ge 99\) and 95% bands
-
-Paper finding used as anchor:
-- AMI is a frequency-conditional triage signal for model selection.
-- Strongest negative AMI-sMAPE rank association appears in higher-information regimes (Hourly/Weekly/Quarterly/Yearly), weaker for Daily and moderate for Monthly.
-
-## Time-series applicability (paper + implementation)
-
-From the paper:
-- Very short, sparse, or degenerate series can make MI estimates unstable.
-- Hourly/Weekly/Quarterly/Yearly showed clearer AMI-error discrimination than Daily.
-- Frequency-specific horizon caps are required to avoid infeasible or noisy long-horizon evaluation.
-
-From this implementation:
-- AMI minimum length constraint:
-  \[
-  N \ge \texttt{max\_lag} + \texttt{min\_pairs\_ami} + 1
-  \]
-- pAMI minimum length constraint (linear residual backend):
-  \[
-  N \ge \max\left(\texttt{max\_lag} + \texttt{min\_pairs\_pami} + 1,\ 2\,\texttt{max\_lag}\right)
-  \]
-- Defaults (`max_lag=100`, `min_pairs_ami=30`, `min_pairs_pami=50`) imply:
-  - AMI: \(N \ge 131\)
-  - pAMI: \(N \ge 201\)
-
-Operational guidance:
-- Detrend or difference before AMI/pAMI when strong trend exists.
-- Avoid interpreting sparse intermittent-demand series with many structural zeros as if they were dense continuous processes.
-- Keep lags modest for short yearly/quarterly histories.
-
 ## Core workflow
 
 ```mermaid
@@ -107,41 +156,6 @@ flowchart LR
     G --> H[Modeling regime recommendation]
 ```
 
-## Architecture
-
-```mermaid
-flowchart TD
-    subgraph Adapters
-        CLI["CLI"]
-        API["FastAPI + SSE"]
-        MCP["MCP Server"]
-        Agent["PydanticAI Agent"]
-    end
-    subgraph Ports["Ports (9 Protocols)"]
-        P["Validator · CurveCompute · Significance · Interpretation · Recommendation · ReportRenderer · Settings · EventEmitter · Checkpoint"]
-    end
-    subgraph UseCases["Use Cases"]
-        UC1["run_triage()"]
-        UC2["Rolling-Origin Evaluation"]
-    end
-    subgraph Triage["Triage Sub-domain"]
-        T1["Readiness Gate"]
-        T2["Method Router"]
-        T3["Event Emitter"]
-    end
-    subgraph Domain
-        D1["metrics · validation · interpretation"]
-        D2["surrogates · scorers · config · types"]
-    end
-
-    Adapters --> Ports
-    Ports --> UseCases
-    UseCases --> Triage
-    Triage --> Domain
-```
-
-The package follows hexagonal (ports-and-adapters) architecture. Domain code has no dependency on adapters. Nine narrow `Protocol` interfaces define the port boundary. Adapters (CLI, API, MCP, Agent) wire concrete implementations at the edge.
-
 ## Quality and invariants
 
 Project invariants:
@@ -151,14 +165,20 @@ Project invariants:
 - Integrals use `np.trapezoid` (not `np.trapz`).
 - `directness_ratio > 1.0` is treated as an ARCH/estimation warning, not direct evidence.
 
-## Extras
+## Installation matrix
 
-```bash
-uv sync                        # core only
-uv sync --extra agent          # + PydanticAI LLM integration
-uv sync --extra transport      # + FastAPI, Uvicorn, MCP server
-uv sync --group notebook       # + Jupyter, JupyterLab, ipykernel
-```
+| Profile | Install command | Includes |
+|---|---|---|
+| Core | `uv sync` | Base package dependencies |
+| Transport | `uv sync --extra transport` | FastAPI, Uvicorn, and MCP transport adapters |
+| Agent | `uv sync --extra agent` | PydanticAI narration adapter |
+| Dev | `uv sync --group dev` | Test, lint, and type-check toolchain |
+| Notebook (optional) | `uv sync --group notebook` | Jupyter and notebook execution tooling |
+
+Python compatibility notes:
+- Project metadata declares `requires-python = ">=3.11,<3.13"`.
+- Use Python 3.11 or 3.12 for supported installs.
+- Python 3.13+ is intentionally excluded until compatibility is validated.
 
 ## Run
 
@@ -266,6 +286,48 @@ Full documentation index: [docs/README.md](docs/README.md)
 | **Code reference** | [docs/code/module_map.md](docs/code/module_map.md) · [docs/code/exog_analyzer.md](docs/code/exog_analyzer.md) |
 | **Planning** | [docs/plan/README.md](docs/plan/README.md) · [docs/plan/acceptance_criteria.md](docs/plan/acceptance_criteria.md) |
 | **Archive** | [docs/archive/](docs/archive/) (27 historical build-phase documents) |
+
+## Paper baseline (what we are based on)
+
+Source paper:
+- Peter Maurice Catt, *The Knowable Future: Mapping the Decay of Past-Future Mutual Information Across Forecast Horizons*, arXiv:2601.10006 (January 2026; v3 February 2026)
+- PDF: https://arxiv.org/pdf/2601.10006
+- DOI: https://doi.org/10.48550/arXiv.2601.10006
+
+Paper setup reproduced here:
+- M4 frequencies: Yearly, Quarterly, Monthly, Weekly, Daily, Hourly
+- Horizon caps by frequency (paper Section 3.1): 6, 8, 18, 13, 14, 48 respectively
+- Rolling-origin protocol with train-only diagnostics and post-origin forecast scoring
+- Surrogate significance logic with \(n_{surrogates} \ge 99\) and 95% bands
+
+Paper finding used as anchor:
+- AMI is a frequency-conditional triage signal for model selection.
+- Strongest negative AMI-sMAPE rank association appears in higher-information regimes (Hourly/Weekly/Quarterly/Yearly), weaker for Daily and moderate for Monthly.
+
+## Time-series applicability (paper + implementation)
+
+From the paper:
+- Very short, sparse, or degenerate series can make MI estimates unstable.
+- Hourly/Weekly/Quarterly/Yearly showed clearer AMI-error discrimination than Daily.
+- Frequency-specific horizon caps are required to avoid infeasible or noisy long-horizon evaluation.
+
+From this implementation:
+- AMI minimum length constraint:
+    \[
+    N \ge \texttt{max\_lag} + \texttt{min\_pairs\_ami} + 1
+    \]
+- pAMI minimum length constraint (linear residual backend):
+    \[
+    N \ge \max\left(\texttt{max\_lag} + \texttt{min\_pairs\_pami} + 1,\ 2\,\texttt{max\_lag}\right)
+    \]
+- Defaults (`max_lag=100`, `min_pairs_ami=30`, `min_pairs_pami=50`) imply:
+    - AMI: \(N \ge 131\)
+    - pAMI: \(N \ge 201\)
+
+Operational guidance:
+- Detrend or difference before AMI/pAMI when strong trend exists.
+- Avoid interpreting sparse intermittent-demand series with many structural zeros as if they were dense continuous processes.
+- Keep lags modest for short yearly/quarterly histories.
 
 ## Extension disclosure
 
