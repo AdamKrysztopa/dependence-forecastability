@@ -423,6 +423,19 @@ def run_triage(
     complexity_band: ComplexityBandResult | None = None
     complexity_band = build_complexity_band(request.series)
 
+    # ------------------------------------------------------------------ #
+    # Stage 8: largest Lyapunov exponent (F5, experimental)              #
+    # ------------------------------------------------------------------ #
+    from forecastability.triage.lyapunov import LargestLyapunovExponentResult
+
+    largest_lyapunov_exponent: LargestLyapunovExponentResult | None = None
+    try:
+        from forecastability.services.lyapunov_service import build_largest_lyapunov_exponent
+
+        largest_lyapunov_exponent = build_largest_lyapunov_exponent(request.series)
+    except Exception:
+        pass  # experimental — never crashes triage
+
     return TriageResult(
         request=request,
         readiness=readiness,
@@ -435,4 +448,5 @@ def run_triage(
         forecastability_profile=forecastability_profile,
         theoretical_limit_diagnostics=theoretical_limit_diagnostics,
         complexity_band=complexity_band,
+        largest_lyapunov_exponent=largest_lyapunov_exponent,
     )

@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict
 from forecastability.analyzer import AnalyzeResult
 from forecastability.triage.complexity_band import ComplexityBandResult
 from forecastability.triage.forecastability_profile import ForecastabilityProfile
+from forecastability.triage.lyapunov import LargestLyapunovExponentResult
 from forecastability.triage.theoretical_limit_diagnostics import TheoreticalLimitDiagnostics
 from forecastability.types import InterpretationResult
 
@@ -128,6 +129,9 @@ class TriageResult(BaseModel):
             ``None`` when blocked or when no analyze result is available.
         complexity_band: Entropy-based complexity classification for the
             target series (F6); ``None`` when blocked.
+        largest_lyapunov_exponent: Estimated largest Lyapunov exponent from
+            Rosenstein algorithm (F5, experimental); ``None`` when blocked or
+            when estimation is skipped.
     """
 
     model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
@@ -144,3 +148,4 @@ class TriageResult(BaseModel):
     forecastability_profile: ForecastabilityProfile | None = None
     theoretical_limit_diagnostics: TheoreticalLimitDiagnostics | None = None
     complexity_band: ComplexityBandResult | None = None
+    largest_lyapunov_exponent: LargestLyapunovExponentResult | None = None

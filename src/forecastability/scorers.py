@@ -8,6 +8,7 @@ from itertools import permutations
 from typing import Literal, Protocol, runtime_checkable
 
 import numpy as np
+from scipy.spatial import cKDTree  # type: ignore[attr-defined]
 from scipy.spatial.distance import pdist, squareform
 from scipy.stats import kendalltau, spearmanr
 from sklearn.feature_selection import mutual_info_regression
@@ -70,7 +71,8 @@ class ScorerInfo:
     scorer: DependenceScorer | SeriesDiagnosticScorer
     family: Literal["nonlinear", "linear", "rank", "bounded_nonlinear"]
     description: str
-    kind: Literal["bivariate", "univariate"] = "bivariate"
+    kind: Literal["bivariate", "univariate", "diagnostic"] = "bivariate"
+    experimental: bool = False
 
 
 @runtime_checkable
@@ -90,7 +92,8 @@ class ScorerRegistryProtocol(Protocol):
         *,
         family: Literal["nonlinear", "linear", "rank", "bounded_nonlinear"],
         description: str,
-        kind: Literal["bivariate", "univariate"] = "bivariate",
+        kind: Literal["bivariate", "univariate", "diagnostic"] = "bivariate",
+        experimental: bool = False,
     ) -> None: ...
 
     def list_scorers(self) -> list[ScorerInfo]: ...
@@ -116,7 +119,8 @@ class ScorerRegistry:
         *,
         family: Literal["nonlinear", "linear", "rank", "bounded_nonlinear"],
         description: str,
-        kind: Literal["bivariate", "univariate"] = "bivariate",
+        kind: Literal["bivariate", "univariate", "diagnostic"] = "bivariate",
+        experimental: bool = False,
     ) -> None:
         """Register a scorer under *name*.
 
@@ -127,8 +131,11 @@ class ScorerRegistry:
             family: Scorer family (``"nonlinear"``, ``"linear"``, ``"rank"``,
                 or ``"bounded_nonlinear"``).
             description: One-line description.
-            kind: ``"bivariate"`` for ``(past, future)`` scorers (default) or
-                ``"univariate"`` for single-series scorers.
+            kind: ``"bivariate"`` for ``(past, future)`` scorers (default),
+                ``"univariate"`` for single-series scorers, or
+                ``"diagnostic"`` for experimental diagnostic scorers.
+            experimental: When ``True`` the scorer is gated behind an opt-in
+                flag and must not drive production triage decisions.
         """
         self._scorers[name] = ScorerInfo(
             name=name,
@@ -136,6 +143,7 @@ class ScorerRegistry:
             family=family,
             description=description,
             kind=kind,
+            experimental=experimental,
         )
 
     def register_scorer(
@@ -467,6 +475,189 @@ def _spectral_predictability_scorer(
 
 
 # ---------------------------------------------------------------------------
+# LLE helper functions (Rosenstein et al., 1993)
+# ---------------------------------------------------------------------------
+
+
+def _embed_series(series: np.ndarray, *, m: int, tau: int) -> np.ndarray:
+    """Embed a 1-D series into delay vectors using Takens' theorem.
+
+    Constructs an array of shape ``(N - (m-1)*tau, m)`` where row *i* is::
+
+        [y_i, y_{i+tau}, ..., y_{i+(m-1)*tau}]
+
+    Args:
+        series: 1-D float array of length *N*.
+        m: Embedding dimension (number of delays per vector).
+        tau: Time delay between successive elements in each vector.
+
+    Returns:
+        Delay-embedding matrix of shape ``(N - (m-1)*tau, m)``.
+        Returns an empty ``(0, m)`` array when the series is too short.
+    """
+    n = len(series)
+    n_embedded = n - (m - 1) * tau
+    if n_embedded <= 0:
+        return np.empty((0, m), dtype=float)
+    row_offsets = np.arange(n_embedded)
+    col_offsets = np.arange(m) * tau
+    indices = row_offsets[:, None] + col_offsets[None, :]
+    return series[indices]
+
+
+def _select_valid_nn(
+    indices_k: np.ndarray,
+    *,
+    n_e: int,
+    theiler_window: int,
+) -> np.ndarray:
+    """Select the first neighbor outside the Theiler window for each point.
+
+    Args:
+        indices_k: Array of shape ``(n_e, k)`` with sorted neighbor indices.
+        n_e: Number of embedded points.
+        theiler_window: Minimum temporal separation to be considered a valid neighbor.
+
+    Returns:
+        1-D integer array of shape ``(n_e,)`` with the valid nearest-neighbor
+        index for each point, or ``-1`` when no valid neighbor exists.
+    """
+    nn = np.full(n_e, -1, dtype=np.intp)
+    for i in range(n_e):
+        for j in indices_k[i]:
+            if abs(int(j) - i) > theiler_window:
+                nn[i] = int(j)
+                break
+    return nn
+
+
+def _find_nearest_with_theiler(
+    embedded: np.ndarray,
+    *,
+    theiler_window: int,
+) -> np.ndarray:
+    """Find the nearest neighbor of every point with Theiler window exclusion.
+
+    Queries ``theiler_window * 2 + 3`` candidates per point so that at
+    least one falls outside the temporal exclusion zone.
+
+    Args:
+        embedded: Delay-embedding matrix of shape ``(n_e, m)``.
+        theiler_window: Minimum temporal separation required.
+
+    Returns:
+        1-D integer array of shape ``(n_e,)`` with nearest-neighbor indices.
+        Points with no valid neighbor carry ``-1``.
+    """
+    n_e = len(embedded)
+    k = min(theiler_window * 2 + 3, n_e)
+    tree = cKDTree(embedded)
+    _, indices_k = tree.query(embedded, k=k)
+    if indices_k.ndim == 1:
+        indices_k = indices_k[:, None]
+    return _select_valid_nn(indices_k, n_e=n_e, theiler_window=theiler_window)
+
+
+def _compute_log_divergence(
+    embedded: np.ndarray,
+    nn_indices: np.ndarray,
+    *,
+    evolution_steps: int,
+) -> np.ndarray:
+    """Compute the average log-divergence curve over evolution steps.
+
+    For each step *j* and valid pair ``(i, nn_i)`` computes
+    ``log(||x_{i+j} - x_{nn_i+j}||)`` then averages over all pairs.
+
+    Args:
+        embedded: Delay-embedding matrix of shape ``(n_e, m)``.
+        nn_indices: Valid nearest-neighbor indices of shape ``(n_e,)``.
+            Invalid entries are ``-1``.
+        evolution_steps: Number of steps to track divergence.
+
+    Returns:
+        1-D array of shape ``(evolution_steps,)`` with mean log distances.
+        Steps without any valid pair contain ``nan``.
+    """
+    n_e = len(embedded)
+    valid_mask = nn_indices >= 0
+    i_vals = np.where(valid_mask)[0]
+    nn_vals = nn_indices[valid_mask]
+    y = np.full(evolution_steps, np.nan)
+    for j in range(evolution_steps):
+        step_ok = (i_vals + j < n_e) & (nn_vals + j < n_e)
+        if not step_ok.any():
+            break
+        diffs = embedded[i_vals[step_ok] + j] - embedded[nn_vals[step_ok] + j]
+        dists = np.linalg.norm(diffs, axis=1)
+        pos = dists > 0
+        if pos.any():
+            y[j] = float(np.mean(np.log(dists[pos])))
+    return y
+
+
+def _estimate_lle_rosenstein(
+    embedded: np.ndarray,
+    *,
+    theiler_window: int,
+    evolution_steps: int,
+) -> float:
+    """Estimate the largest Lyapunov exponent via the Rosenstein algorithm.
+
+    Fits a linear slope to the average log-divergence curve constructed from
+    Rosenstein et al. (1993).  The slope is the LLE estimate λ̂.
+
+    Args:
+        embedded: Delay-embedding matrix of shape ``(n_e, m)``.
+        theiler_window: Minimum temporal separation for nearest-neighbor search.
+        evolution_steps: Number of divergence-tracking steps.
+
+    Returns:
+        Linear slope of the average log-divergence curve, or ``nan`` when
+        estimation is not reliable (too few points or flat divergence).
+    """
+    if len(embedded) < 10:
+        return float("nan")
+    nn_indices = _find_nearest_with_theiler(embedded, theiler_window=theiler_window)
+    if not (nn_indices >= 0).any():
+        return float("nan")
+    y = _compute_log_divergence(embedded, nn_indices, evolution_steps=evolution_steps)
+    valid = np.isfinite(y)
+    if valid.sum() < 2:
+        return float("nan")
+    xs = np.where(valid)[0].astype(float)
+    ys = y[valid]
+    slope = float(np.polyfit(xs, ys, 1)[0])
+    return slope
+
+
+def _largest_lyapunov_exponent_scorer(
+    series: np.ndarray,
+    *,
+    random_state: int = 42,
+) -> float:
+    """Experimental LLE scorer via Rosenstein algorithm.
+
+    Implements :class:`SeriesDiagnosticScorer`.  ``random_state`` is accepted
+    for interface compatibility but has no effect (LLE estimation is deterministic).
+
+    Returns ``nan`` when the series is too short or estimation fails.
+
+    Args:
+        series: 1-D float array, length >= 8.
+        random_state: Unused; present for protocol compatibility.
+
+    Returns:
+        LLE estimate λ̂ as a float, or ``nan`` on failure.
+    """
+    del random_state
+    from forecastability.services.lyapunov_service import build_largest_lyapunov_exponent
+
+    result = build_largest_lyapunov_exponent(series)
+    return result.lambda_estimate
+
+
+# ---------------------------------------------------------------------------
 # Default registry factory
 # ---------------------------------------------------------------------------
 
@@ -487,6 +678,7 @@ def default_registry() -> ScorerRegistry:
     ``permutation_entropy``     nonlinear          Normalised permutation entropy (Bandt & Pompe)
     ``spectral_entropy``        nonlinear          Normalised spectral entropy from Welch PSD
     ``spectral_predictability`` nonlinear          Spectral predictability Ω (1 − normalised SE)
+    ``largest_lyapunov_exponent`` nonlinear        Estimated LLE via Rosenstein (experimental)
     ==========================  =================  =============================================
 
     Returns:
@@ -543,5 +735,13 @@ def default_registry() -> ScorerRegistry:
         family="nonlinear",
         description="Spectral predictability Ω = 1 − normalised SE (Wang et al., 2025)",
         kind="univariate",
+    )
+    registry.register(
+        "largest_lyapunov_exponent",
+        _largest_lyapunov_exponent_scorer,
+        family="nonlinear",
+        description="Estimated LLE from Rosenstein algorithm (experimental)",
+        kind="diagnostic",
+        experimental=True,
     )
     return registry

@@ -22,6 +22,7 @@ from forecastability.triage.events import (
     TriageStageStarted,
 )
 from forecastability.triage.forecastability_profile import ForecastabilityProfile
+from forecastability.triage.lyapunov import LargestLyapunovExponentResult
 from forecastability.triage.models import (
     AnalysisGoal,
     MethodPlan,
@@ -86,6 +87,7 @@ __all__ = [
     "TriageEvent",
     "ForecastabilityProfile",
     "ComplexityBandResult",
+    "LargestLyapunovExponentResult",
     "PredictiveInfoLearningCurve",
     "SpectralPredictabilityResult",
     "assess_readiness",

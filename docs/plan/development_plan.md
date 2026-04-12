@@ -3,7 +3,7 @@
 
 **Replaces:** MoSCoW plan (removed)
 **Source epic:** [`not_planed/triage_extension_epic_math_grounded.md`](not_planed/triage_extension_epic_math_grounded.md)
-**Last reviewed:** 2026-04-12 (F1 implemented 2026-04-12; F2, SeriesDiagnosticScorer, PSD utility implemented 2026-04-12; F6 implemented 2026-04-12; F4 implemented 2026-04-12; F3 implemented 2026-04-12)
+**Last reviewed:** 2026-04-12 (F1 implemented 2026-04-12; F2, SeriesDiagnosticScorer, PSD utility implemented 2026-04-12; F6 implemented 2026-04-12; F4 implemented 2026-04-12; F3 implemented 2026-04-12; F5 implemented 2026-04-12)
 
 ---
 
@@ -57,7 +57,7 @@ Before reading the per-feature sections, note what the repo already provides:
 | F6 | Entropy-Based Complexity Triage | 2 | 0 % (shares PSD with F4) | New scorer(s) + complexity-band service | ✅ Done |
 | F4 | Spectral Predictability | 2 | 0 % | New scorer + shared PSD utility | ✅ Done |
 | F3 | Predictive Information Learning Curves | 2 | 0 % | New service, new estimator (multi-dim MI) | ✅ Done |
-| F5 | Largest Lyapunov Exponent | 3 | 0 % | New experimental scorer | Not started |
+| F5 | Largest Lyapunov Exponent | 3 | 0 % | New experimental scorer | ✅ Done |
 | F7 | Batch Multi-Signal Ranking | 3 | ~85 % — `run_batch_triage()` exists | Incremental: add new-scorer columns | Not started |
 | F8 | Enhanced Exogenous Screening | 3 | ~80 % — screening workbench exists | Incremental: add inter-driver redundancy penalty | Not started |
 | F9 | Benchmark & Reproducibility Expansion | 3 | Infrastructure exists | Fixture creation for F1–F6 outputs | Not started |
@@ -405,11 +405,11 @@ $$\lambda \approx \frac{1}{\Delta t} \log \frac{\lVert\delta(\Delta t)\rVert}{\d
 `experimental: true` in config. Never auto-include in composite triage score.
 
 **Acceptance criteria:**
-- [ ] Stable deterministic execution
-- [ ] Conservative interpretation text
-- [ ] Gated behind explicit experimental flag in config
-- [ ] Not merged into composite readiness score
-- [ ] Mandatory surrogate validation documented
+- [x] Stable deterministic execution
+- [x] Conservative interpretation text
+- [x] Gated behind explicit experimental flag in config
+- [x] Not merged into composite readiness score
+- [x] Mandatory surrogate validation documented
 
 ---
 

@@ -82,7 +82,7 @@ def test_analyzer_custom_scorer_registration() -> None:
 
 
 def test_analyzer_list_scorers() -> None:
-    """Verify all 8 default scorers are listed (5 bivariate + 3 univariate)."""
+    """Verify all 9 default scorers are listed (5 bivariate + 3 univariate + 1 experimental)."""
     analyzer = ForecastabilityAnalyzer(n_surrogates=99)
     scorers = analyzer.list_scorers()
     names = {s.name for s in scorers}
@@ -95,6 +95,7 @@ def test_analyzer_list_scorers() -> None:
         "permutation_entropy",
         "spectral_entropy",
         "spectral_predictability",
+        "largest_lyapunov_exponent",
     }
 
 
