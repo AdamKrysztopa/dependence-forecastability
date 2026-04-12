@@ -8,6 +8,7 @@ import numpy as np
 from pydantic import BaseModel, ConfigDict
 
 from forecastability.analyzer import AnalyzeResult
+from forecastability.triage.complexity_band import ComplexityBandResult
 from forecastability.triage.forecastability_profile import ForecastabilityProfile
 from forecastability.triage.theoretical_limit_diagnostics import TheoreticalLimitDiagnostics
 from forecastability.types import InterpretationResult
@@ -125,6 +126,8 @@ class TriageResult(BaseModel):
         theoretical_limit_diagnostics: Information-theoretic ceiling on
             predictive improvement per horizon, derived from the AMI curve;
             ``None`` when blocked or when no analyze result is available.
+        complexity_band: Entropy-based complexity classification for the
+            target series (F6); ``None`` when blocked.
     """
 
     model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
@@ -140,3 +143,4 @@ class TriageResult(BaseModel):
     timing: dict[str, float] | None = None  # stage_name -> duration_ms (AGT-013)
     forecastability_profile: ForecastabilityProfile | None = None
     theoretical_limit_diagnostics: TheoreticalLimitDiagnostics | None = None
+    complexity_band: ComplexityBandResult | None = None

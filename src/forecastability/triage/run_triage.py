@@ -13,10 +13,12 @@ from forecastability.analyzer import (
     ForecastabilityAnalyzerExog,
 )
 from forecastability.interpretation import interpret_canonical_result
+from forecastability.services.complexity_band_service import build_complexity_band
 from forecastability.services.forecastability_profile_service import build_forecastability_profile
 from forecastability.services.theoretical_limit_diagnostics_service import (
     build_theoretical_limit_diagnostics,
 )
+from forecastability.triage.complexity_band import ComplexityBandResult
 from forecastability.triage.events import (
     TriageError,
     TriageStageCompleted,
@@ -415,6 +417,12 @@ def run_triage(
             analyze_result.raw,
         )
 
+    # ------------------------------------------------------------------ #
+    # Stage 7: entropy-based complexity triage (F6)                      #
+    # ------------------------------------------------------------------ #
+    complexity_band: ComplexityBandResult | None = None
+    complexity_band = build_complexity_band(request.series)
+
     return TriageResult(
         request=request,
         readiness=readiness,
@@ -426,4 +434,5 @@ def run_triage(
         timing=timing if timing else None,
         forecastability_profile=forecastability_profile,
         theoretical_limit_diagnostics=theoretical_limit_diagnostics,
+        complexity_band=complexity_band,
     )

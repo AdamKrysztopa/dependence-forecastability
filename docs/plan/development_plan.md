@@ -3,7 +3,7 @@
 
 **Replaces:** MoSCoW plan (removed)
 **Source epic:** [`not_planed/triage_extension_epic_math_grounded.md`](not_planed/triage_extension_epic_math_grounded.md)
-**Last reviewed:** 2026-04-12 (F1 implemented 2026-04-12; F2, SeriesDiagnosticScorer, PSD utility implemented 2026-04-12)
+**Last reviewed:** 2026-04-12 (F1 implemented 2026-04-12; F2, SeriesDiagnosticScorer, PSD utility implemented 2026-04-12; F6 implemented 2026-04-12)
 
 ---
 
@@ -54,7 +54,7 @@ Before reading the per-feature sections, note what the repo already provides:
 | F10 | Permutation-AMI Naming Cleanup | 1 | 100 % — convention already followed | Documentation-only | ✅ Done (convention already followed; theory doc confirms naming) |
 | Infra | `SeriesDiagnosticScorer` protocol | 1 | — | New protocol alongside `DependenceScorer` | ✅ Done |
 | Infra | Shared PSD / FFT utility | 1 | — | Deterministic PSD helper for F4, F6 | ✅ Done |
-| F6 | Entropy-Based Complexity Triage | 2 | 0 % (shares PSD with F4) | New scorer(s) + complexity-band service | Not started |
+| F6 | Entropy-Based Complexity Triage | 2 | 0 % (shares PSD with F4) | New scorer(s) + complexity-band service | ✅ Done |
 | F4 | Spectral Predictability | 2 | 0 % | New scorer + shared PSD utility | Not started |
 | F3 | Predictive Information Learning Curves | 2 | 0 % | New service, new estimator (multi-dim MI) | Not started |
 | F5 | Largest Lyapunov Exponent | 3 | 0 % | New experimental scorer | Not started |
@@ -263,10 +263,10 @@ The PE + spectral entropy plane separates periodic, chaotic, and stochastic regi
 - `ComplexityBandService` mapping (PE, spectral entropy) → `low` / `medium` / `high`.
 
 **Acceptance criteria:**
-- [ ] Low overhead
-- [ ] Clear separation between estimator and interpretation
-- [ ] Works as complementary triage—never sole decision-maker
-- [ ] Tie-breaking rule documented
+- [x] Low overhead
+- [x] Clear separation between estimator and interpretation
+- [x] Works as complementary triage—never sole decision-maker
+- [x] Tie-breaking rule documented
 
 ---
 

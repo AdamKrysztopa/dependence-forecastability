@@ -113,11 +113,14 @@ class TestListScorers:
 
     def test_default_count(self, registry: ScorerRegistry) -> None:
         scorers = registry.list_scorers()
-        assert len(scorers) == 5
+        assert len(scorers) == 7
 
     def test_names(self, registry: ScorerRegistry) -> None:
         names = {s.name for s in registry.list_scorers()}
-        assert names == {"mi", "pearson", "spearman", "kendall", "distance"}
+        assert names == {
+            "mi", "pearson", "spearman", "kendall", "distance",
+            "permutation_entropy", "spectral_entropy",
+        }
 
 
 class TestDistanceCorrelationBounded:

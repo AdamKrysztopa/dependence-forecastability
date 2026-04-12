@@ -14,6 +14,7 @@ from forecastability.triage.batch_models import (
     BatchTriageRequest,
     BatchTriageResponse,
 )
+from forecastability.triage.complexity_band import ComplexityBandResult
 from forecastability.triage.events import (
     TriageError,
     TriageEvent,
@@ -82,6 +83,7 @@ __all__ = [
     "TriageError",
     "TriageEvent",
     "ForecastabilityProfile",
+    "ComplexityBandResult",
     "assess_readiness",
     "plan_method",
     "rank_batch_items",
