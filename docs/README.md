@@ -11,6 +11,14 @@ Task-oriented first-run entry points.
 |---|---|
 | [quickstart.md](quickstart.md) | Laddered quickstart: 60s CLI, 5m notebook, 10m Python API, 15m HTTP API, plus optional agent and MCP routes using one shared signal |
 
+## Executive Overview
+
+High-level, low-jargon project framing for non-specialists and stakeholder sharing.
+
+| Document | Description |
+|---|---|
+| [executive_summary.md](executive_summary.md) | One-page visual summary of problem, novelty, AMI/pAMI triage value, readiness today, and next steps |
+
 ## Results
 
 Decision-focused evidence summary.

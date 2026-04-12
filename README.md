@@ -38,6 +38,7 @@ uv sync && MPLBACKEND=Agg uv run python scripts/run_canonical_examples.py
 
 ## Where to go next
 
+- Executive one-page overview: [docs/executive_summary.md](docs/executive_summary.md)
 - Benchmark panel evaluation: `MPLBACKEND=Agg uv run python scripts/run_benchmark_panel.py`
 - Exogenous driver analysis: `MPLBACKEND=Agg uv run python scripts/run_exog_analysis.py`
 - Component selection guide: [docs/why_use_this.md](docs/why_use_this.md)
@@ -287,6 +288,7 @@ Full documentation index: [docs/README.md](docs/README.md)
 
 | Area | Key Documents |
 |---|---|
+| **Executive overview** | [docs/executive_summary.md](docs/executive_summary.md) |
 | **Architecture** | [docs/architecture.md](docs/architecture.md) |
 | **Theory** | [docs/theory/foundations.md](docs/theory/foundations.md) · [docs/theory/interpretation_patterns.md](docs/theory/interpretation_patterns.md) |
 | **Code reference** | [docs/code/module_map.md](docs/code/module_map.md) · [docs/code/exog_analyzer.md](docs/code/exog_analyzer.md) |

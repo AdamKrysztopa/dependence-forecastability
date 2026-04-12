@@ -457,17 +457,17 @@ The strongest marketable story is no longer only “AMI replication + extension.
 **Why:** For sharing on LinkedIn, with engineering managers, or with industrial stakeholders, a concise overview is very useful.
 
 ### Actions
-- [ ] Add `docs/executive_summary.md`.
-- [ ] Cover:
+- [x] Add `docs/executive_summary.md`.
+- [x] Cover:
   - what problem this solves,
   - what is novel here,
   - why AMI/pAMI triage matters,
   - what is ready today,
   - what comes next.
-- [ ] Keep it highly visual and low-jargon.
+- [x] Keep it highly visual and low-jargon.
 
 ### Acceptance criteria
-- [ ] The project can be shared with non-specialists without sending them into the full README immediately.
+- [x] The project can be shared with non-specialists without sending them into the full README immediately.
 
 ---
 
@@ -534,7 +534,7 @@ The strongest marketable story is no longer only “AMI replication + extension.
 - [x] Why-use-this comparison page
 - [x] Industrial use-case pack
 - [x] Agent-layer framing page
-- [ ] Executive summary
+- [x] Executive summary
 - [x] Selected notebook-to-doc conversions
 
 ## Phase 4 — Functional expansion
