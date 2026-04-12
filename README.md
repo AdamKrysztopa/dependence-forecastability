@@ -1,7 +1,10 @@
 <!-- type: reference -->
 # AMI -> pAMI Forecastability Analysis
 
-[![Python 3.11](https://img.shields.io/badge/python-3.11-blue.svg)](https://python.org)
+[![CI](https://img.shields.io/github/check-runs/AdamKrysztopa/dependence-forecastability/main?label=CI)](https://github.com/AdamKrysztopa/dependence-forecastability/actions)
+[![Version](https://img.shields.io/github/v/tag/AdamKrysztopa/dependence-forecastability?label=version&sort=semver)](https://github.com/AdamKrysztopa/dependence-forecastability/releases)
+[![Docs](https://img.shields.io/github/deployments/AdamKrysztopa/dependence-forecastability/github-pages?label=docs)](https://github.com/AdamKrysztopa/dependence-forecastability/tree/main/docs)
+[![Python 3.11-3.12](https://img.shields.io/badge/python-3.11%20to%203.12-blue.svg)](https://python.org)
 [![arXiv](https://img.shields.io/badge/arXiv-2601.10006-b31b1b.svg)](https://doi.org/10.48550/arXiv.2601.10006)
 
 ## Value proposition
@@ -157,14 +160,20 @@ Project invariants:
 - Integrals use `np.trapezoid` (not `np.trapz`).
 - `directness_ratio > 1.0` is treated as an ARCH/estimation warning, not direct evidence.
 
-## Extras
+## Installation matrix
 
-```bash
-uv sync                        # core only
-uv sync --extra agent          # + PydanticAI LLM integration
-uv sync --extra transport      # + FastAPI, Uvicorn, MCP server
-uv sync --group notebook       # + Jupyter, JupyterLab, ipykernel
-```
+| Profile | Install command | Includes |
+|---|---|---|
+| Core | `uv sync` | Base package dependencies |
+| Transport | `uv sync --extra transport` | FastAPI, Uvicorn, and MCP transport adapters |
+| Agent | `uv sync --extra agent` | PydanticAI narration adapter |
+| Dev | `uv sync --group dev` | Test, lint, and type-check toolchain |
+| Notebook (optional) | `uv sync --group notebook` | Jupyter and notebook execution tooling |
+
+Python compatibility notes:
+- Project metadata declares `requires-python = ">=3.11,<3.13"`.
+- Use Python 3.11 or 3.12 for supported installs.
+- Python 3.13+ is intentionally excluded until compatibility is validated.
 
 ## Run
 
