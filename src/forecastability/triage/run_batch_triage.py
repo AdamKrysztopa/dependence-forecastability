@@ -163,6 +163,14 @@ def _build_item_result(
     warning_codes = [warning.code for warning in result.readiness.warnings]
     outcome = "blocked" if result.blocked else "ok"
 
+    spectral_predictability = None
+    permutation_entropy = None
+    complexity_band_label = None
+    if result.complexity_band is not None:
+        spectral_predictability = round(1.0 - result.complexity_band.spectral_entropy, 6)
+        permutation_entropy = result.complexity_band.permutation_entropy
+        complexity_band_label = result.complexity_band.complexity_band
+
     return BatchTriageItemResult(
         series_id=item.series_id,
         outcome=outcome,
@@ -179,6 +187,9 @@ def _build_item_result(
             exogenous_usefulness=exogenous_usefulness,
         ),
         recommendation=result.recommendation,
+        spectral_predictability=spectral_predictability,
+        permutation_entropy=permutation_entropy,
+        complexity_band_label=complexity_band_label,
     )
 
 
@@ -244,6 +255,9 @@ def _to_summary_row(item: BatchTriageItemResult) -> BatchSummaryRow:
         recommendation=item.recommendation,
         error_code=item.error_code,
         error_message=item.error_message,
+        spectral_predictability=item.spectral_predictability,
+        permutation_entropy=item.permutation_entropy,
+        complexity_band_label=item.complexity_band_label,
     )
 
 

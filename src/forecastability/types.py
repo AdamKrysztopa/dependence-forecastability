@@ -115,6 +115,8 @@ class ExogenousDriverSummary(BaseModel):
     top_horizon_usefulness_score: float | None = None
     n_horizons_above_floor: int
     warning_horizon_count: int
+    bh_significant: bool = False
+    redundancy_score: float | None = None
 
 
 class ExogenousScreeningWorkbenchResult(BaseModel):

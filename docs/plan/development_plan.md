@@ -3,7 +3,7 @@
 
 **Replaces:** MoSCoW plan (removed)
 **Source epic:** [`not_planed/triage_extension_epic_math_grounded.md`](not_planed/triage_extension_epic_math_grounded.md)
-**Last reviewed:** 2026-04-12 (F1 implemented 2026-04-12; F2, SeriesDiagnosticScorer, PSD utility implemented 2026-04-12; F6 implemented 2026-04-12; F4 implemented 2026-04-12; F3 implemented 2026-04-12; F5 implemented 2026-04-12)
+**Last reviewed:** 2026-04-12 (F1 implemented 2026-04-12; F2, SeriesDiagnosticScorer, PSD utility implemented 2026-04-12; F6 implemented 2026-04-12; F4 implemented 2026-04-12; F3 implemented 2026-04-12; F5 implemented 2026-04-12; F7, F8 implemented 2026-04-12)
 
 ---
 
@@ -58,8 +58,8 @@ Before reading the per-feature sections, note what the repo already provides:
 | F4 | Spectral Predictability | 2 | 0 % | New scorer + shared PSD utility | ✅ Done |
 | F3 | Predictive Information Learning Curves | 2 | 0 % | New service, new estimator (multi-dim MI) | ✅ Done |
 | F5 | Largest Lyapunov Exponent | 3 | 0 % | New experimental scorer | ✅ Done |
-| F7 | Batch Multi-Signal Ranking | 3 | ~85 % — `run_batch_triage()` exists | Incremental: add new-scorer columns | Not started |
-| F8 | Enhanced Exogenous Screening | 3 | ~80 % — screening workbench exists | Incremental: add inter-driver redundancy penalty | Not started |
+| F7 | Batch Multi-Signal Ranking | 3 | ~85 % — `run_batch_triage()` exists | Incremental: add new-scorer columns | ✅ Done |
+| F8 | Enhanced Exogenous Screening | 3 | ~80 % — screening workbench exists | Incremental: add inter-driver redundancy penalty | ✅ Done |
 | F9 | Benchmark & Reproducibility Expansion | 3 | Infrastructure exists | Fixture creation for F1–F6 outputs | Not started |
 
 ---
@@ -432,9 +432,9 @@ CSV/JSON export. `comparison_report.py` adds priority scoring.
 Recommend reporting the full diagnostic vector, not just the rank.
 
 **Acceptance criteria:**
-- [ ] New scorer columns appear when those scorers are registered
-- [ ] Handles 50+ signals without memory blow-up
-- [ ] Composite ranking formula documented and configurable
+- [x] New scorer columns appear when those scorers are registered
+- [x] Handles 50+ signals without memory blow-up
+- [x] Composite ranking formula documented and configurable
 
 ---
 
@@ -454,9 +454,9 @@ usefulness scoring, per-driver keep/review/reject, and pruning with reason codes
 than simultaneous conditioning when $d > 5$ drivers at $n < 1000$.
 
 **Acceptance criteria:**
-- [ ] Integrates with current exogenous triage flow
-- [ ] Deterministic and lightweight
-- [ ] BH correction documented and applied
+- [x] Integrates with current exogenous triage flow
+- [x] Deterministic and lightweight
+- [x] BH correction documented and applied
 
 ---
 

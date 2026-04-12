@@ -25,6 +25,9 @@ SUMMARY_TABLE_COLUMNS: tuple[str, ...] = (
     "recommendation",
     "error_code",
     "error_message",
+    "spectral_predictability",
+    "permutation_entropy",
+    "complexity_band_label",
 )
 
 FAILURE_TABLE_COLUMNS: tuple[str, ...] = (
@@ -130,6 +133,9 @@ class BatchTriageItemResult(BaseModel):
     recommendation: str | None = None
     error_code: str | None = None
     error_message: str | None = None
+    spectral_predictability: float | None = None
+    permutation_entropy: float | None = None
+    complexity_band_label: str | None = None
 
 
 class BatchSummaryRow(BaseModel):
@@ -151,6 +157,9 @@ class BatchSummaryRow(BaseModel):
     recommendation: str | None
     error_code: str | None
     error_message: str | None
+    spectral_predictability: float | None
+    permutation_entropy: float | None
+    complexity_band_label: str | None
 
 
 class BatchFailureRow(BaseModel):
