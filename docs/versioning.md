@@ -13,6 +13,12 @@ This project follows Semantic Versioning: `MAJOR.MINOR.PATCH`.
 > While versions are below `1.0.0`, some breaking changes may occur in MINOR releases.
 > Any such change still requires explicit migration notes.
 
+## Current version and change history
+
+- Current release: `v0.1.0`
+- Change history: [../CHANGELOG.md](../CHANGELOG.md)
+- Version-specific upgrade notes: [releases/v0.1.0.md](releases/v0.1.0.md)
+
 ## Stability levels
 
 - **stable**: compatibility is expected across MINOR and PATCH releases.

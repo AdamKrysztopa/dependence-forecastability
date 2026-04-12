@@ -47,17 +47,17 @@ The strongest marketable story is no longer only “AMI replication + extension.
 
 ### Actions
 - [x] Create `CHANGELOG.md` with semantic sections: Added, Changed, Fixed, Deprecated, Removed.
-- [ ] Publish `v0.1.0` as the first explicit public release.
+- [x] Publish `v0.1.0` as the first explicit public release.
 - [x] Add a lightweight versioning policy in `README.md` or `docs/versioning.md`.
 - [x] Mark features as one of:
   - stable,
   - beta,
   - experimental.
 - [x] State whether domain-level interfaces are frozen or only “best effort stable.”
-- [ ] Add upgrade notes for each release.
+- [x] Add upgrade notes for each release.
 
 ### Acceptance criteria
-- [ ] A user can see current version, past releases, and what changed between them.
+- [x] A user can see current version, past releases, and what changed between them.
 - [x] Stability level is explicit for CLI, API, MCP, agent, and domain APIs.
 - [x] A breaking change has a documented migration note.
 

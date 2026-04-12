@@ -48,7 +48,9 @@ Conceptual background and mathematical foundations.
 
 | Document | Description |
 |---|---|
+| [../CHANGELOG.md](../CHANGELOG.md) | Repository release and change history using Keep a Changelog sections |
 | [versioning.md](versioning.md) | Semantic versioning policy, stability levels, and migration-note requirements |
+| [releases/v0.1.0.md](releases/v0.1.0.md) | Explicit upgrade notes artifact for release `v0.1.0` |
 | [api_contract.md](api_contract.md) | FastAPI and SSE transport contract: request/response schemas, validation and readiness semantics, event sequence, and integration examples |
 | [observability.md](observability.md) | Operational observability and auditability guide: event payload contract, checkpoint replay boundaries, logging fields, and failure triage workflow |
 | [production_readiness.md](production_readiness.md) | Production maturity zones, safe default deterministic path, and failure/non-goal contract for CLI/API/agent surfaces |

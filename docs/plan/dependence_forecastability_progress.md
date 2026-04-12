@@ -13,7 +13,7 @@ Source backlog: [dependence_forecastability_detailed_backlog.md](dependence_fore
 
 | Backlog item id/title | Status | Scope delivered | Commit hash | Notes |
 |---|---|---|---|---|
-| #1 Publish a real versioned release story | partial | Added `CHANGELOG.md` and `docs/versioning.md` for release/change policy and stability-level framing. | `41d2e73` | Public release publication (for example `v0.1.0`) and full upgrade-note lifecycle remain open. |
+| #1 Publish a real versioned release story | done | Added tag-driven release automation in `.github/workflows/release.yml`, added explicit upgrade notes artifact `docs/releases/v0.1.0.md`, and linked current version plus change history from docs surfaces (`CHANGELOG.md`, `docs/versioning.md`, `docs/README.md`). | `41d2e73 + this commit` | Release path is now automated on `v*` tags with dist artifacts published to GitHub Releases. |
 | #2 Add a visible production-readiness contract | done | Added `docs/production_readiness.md` with maturity zones, safe defaults, and failure/non-goal framing. | `247ced2` | Deterministic versus optional agentic paths are explicitly separated. |
 | #3 Rework the README first screen | done | Restructured top-level README entry path and first-run framing for quicker orientation. | `bc23ebf` | Reduced concept density before first executable path. |
 | #4 Add an opinionated quickstart ladder | done | Added `docs/quickstart.md` covering CLI, notebook, Python API, HTTP API, and optional routes. | `a7a5cec` | Single shared-signal progression documented across routes. |
