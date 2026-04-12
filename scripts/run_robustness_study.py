@@ -61,7 +61,7 @@ def _save_backend_csv(result: object, path: Path) -> None:
     from forecastability.types import RobustnessStudyResult
 
     assert isinstance(result, RobustnessStudyResult)
-    rows: list[dict[str, str | int | float | bool]] = []
+    rows: list[dict[str, str | int | float | bool | None]] = []
     for bc in result.backend_comparisons:
         for entry in bc.entries:
             rows.append(
@@ -70,9 +70,12 @@ def _save_backend_csv(result: object, path: Path) -> None:
                     "backend": entry.backend,
                     "n_sig_ami": entry.n_sig_ami,
                     "n_sig_pami": entry.n_sig_pami,
+                    "n_sig_pami_delta_vs_linear": entry.n_sig_pami_delta_vs_linear,
                     "directness_ratio": entry.directness_ratio,
+                    "directness_ratio_delta_vs_linear": entry.directness_ratio_delta_vs_linear,
                     "auc_ami": entry.auc_ami,
                     "auc_pami": entry.auc_pami,
+                    "auc_pami_delta_vs_linear": entry.auc_pami_delta_vs_linear,
                     "directness_ratio_warning": entry.directness_ratio_warning,
                     "rank_correlation": bc.rank_correlation,
                     "lag_ranking_stable": bc.lag_ranking_stable,

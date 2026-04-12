@@ -60,6 +60,50 @@ def test_pami_significant_lag_count_not_exceed_ami_for_structured_example() -> N
     assert result.pami.significant_lags.size <= result.ami.significant_lags.size
 
 
+def test_run_canonical_example_dispatches_selected_backend(monkeypatch) -> None:
+    sine = generate_sine_wave(n_samples=320, random_state=21)
+    seen_backend: dict[str, str] = {}
+
+    def _stub_compute_pami_with_backend(
+        ts: np.ndarray,
+        max_lag: int,
+        *,
+        backend: str = "linear_residual",
+        rf_estimators: int = 200,
+        rf_max_depth: int | None = 8,
+        et_estimators: int = 300,
+        et_max_depth: int | None = 10,
+        n_neighbors: int = 8,
+        min_pairs: int = 50,
+        random_state: int = 42,
+    ) -> np.ndarray:
+        del ts
+        del rf_estimators, rf_max_depth, et_estimators, et_max_depth
+        del n_neighbors, min_pairs, random_state
+        seen_backend["name"] = backend
+        return np.full(max_lag, 0.05)
+
+    monkeypatch.setattr(
+        "forecastability.pipeline.compute_pami_with_backend",
+        _stub_compute_pami_with_backend,
+    )
+
+    result = run_canonical_example(
+        "sine_wave",
+        sine,
+        max_lag_ami=20,
+        max_lag_pami=14,
+        n_neighbors=8,
+        n_surrogates=99,
+        alpha=0.05,
+        random_state=10,
+        pami_backend="extra_trees_residual",
+        skip_bands=True,
+    )
+    assert seen_backend["name"] == "extra_trees_residual"
+    assert result.metadata["pami_backend"] == "extra_trees_residual"
+
+
 def test_rolling_origin_pipeline_is_train_only_for_diagnostics() -> None:
     ts = np.sin(np.linspace(0.0, 30.0, 360)) + np.linspace(0.0, 2.0, 360)
     horizons = [1, 3, 6]

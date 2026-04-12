@@ -85,6 +85,31 @@ class TestBackendComparison:
         assert isinstance(result.rank_correlation, float)
         assert isinstance(result.directness_ratio_range, float)
 
+    def test_comparison_outputs_include_deltas_vs_linear(self) -> None:
+        ts = _sine_series(n=220)
+        result = run_backend_comparison(
+            series_name="test_sine",
+            ts=ts,
+            max_lag_ami=10,
+            max_lag_pami=8,
+            backends=["linear_residual", "rf_residual", "extra_trees_residual"],
+            n_neighbors=8,
+            n_surrogates=99,
+            alpha=0.05,
+            random_state=42,
+        )
+
+        by_backend = {entry.backend: entry for entry in result.entries}
+        linear_entry = by_backend["linear_residual"]
+        assert linear_entry.auc_pami_delta_vs_linear == pytest.approx(0.0)
+        assert linear_entry.directness_ratio_delta_vs_linear == pytest.approx(0.0)
+        assert linear_entry.n_sig_pami_delta_vs_linear == 0
+
+        for entry in result.entries:
+            assert entry.auc_pami_delta_vs_linear is not None
+            assert entry.directness_ratio_delta_vs_linear is not None
+            assert entry.n_sig_pami_delta_vs_linear is not None
+
 
 class TestSampleSizeStress:
     """Tests for run_sample_size_stress."""
@@ -212,6 +237,14 @@ class TestConfigValidation:
         with pytest.raises(ValueError, match="at least 2"):
             RobustnessStudyConfig(backends=["linear_residual"])
 
+    def test_requires_linear_backend_for_baseline_comparison(self) -> None:
+        with pytest.raises(ValueError, match="must include 'linear_residual'"):
+            RobustnessStudyConfig(backends=["rf_residual", "extra_trees_residual"])
+
+    def test_rejects_unknown_backends(self) -> None:
+        with pytest.raises(ValueError, match="Unsupported backends"):
+            RobustnessStudyConfig(backends=["linear_residual", "unknown_backend"])
+
     def test_rejects_empty_fractions(self) -> None:
         with pytest.raises(ValueError, match="non-empty"):
             RobustnessStudyConfig(sample_fractions=[])
@@ -222,5 +255,7 @@ class TestConfigValidation:
 
     def test_valid_config(self) -> None:
         config = RobustnessStudyConfig()
-        assert len(config.backends) == 2
+        assert len(config.backends) == 3
+        assert "linear_residual" in config.backends
+        assert "extra_trees_residual" in config.backends
         assert config.n_surrogates >= 99

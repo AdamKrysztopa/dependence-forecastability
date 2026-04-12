@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal, Protocol
+from typing import Protocol
 
 import numpy as np
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import ExtraTreesRegressor, RandomForestRegressor
 from sklearn.feature_selection import mutual_info_regression
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler
@@ -50,6 +50,23 @@ class RandomForestResidualBackend:
         return target - model.predict(z)
 
 
+@dataclass(slots=True)
+class ExtraTreesResidualBackend:
+    """Extra-trees residualization backend (variance-reduced nonlinear variant)."""
+
+    n_estimators: int = 300
+    max_depth: int | None = 10
+
+    def residualize(self, z: np.ndarray, target: np.ndarray, *, random_state: int) -> np.ndarray:
+        model = ExtraTreesRegressor(
+            n_estimators=self.n_estimators,
+            max_depth=self.max_depth,
+            random_state=random_state,
+        )
+        model.fit(z, target)
+        return target - model.predict(z)
+
+
 def _scale_series(ts: np.ndarray) -> np.ndarray:
     """Standardize a univariate time series."""
     return StandardScaler().fit_transform(ts.reshape(-1, 1)).ravel()
@@ -65,17 +82,29 @@ def _build_conditioning_matrix(ts: np.ndarray, lag: int) -> np.ndarray:
 
 
 def _backend_from_name(
-    backend: Literal["linear_residual", "rf_residual"],
+    backend: str,
     *,
     rf_estimators: int,
     rf_max_depth: int | None,
+    et_estimators: int,
+    et_max_depth: int | None,
 ) -> ResidualBackend:
     """Construct a residual backend from configuration."""
     if backend == "linear_residual":
         return LinearResidualBackend()
-    return RandomForestResidualBackend(
-        n_estimators=rf_estimators,
-        max_depth=rf_max_depth,
+    if backend == "rf_residual":
+        return RandomForestResidualBackend(
+            n_estimators=rf_estimators,
+            max_depth=rf_max_depth,
+        )
+    if backend == "extra_trees_residual":
+        return ExtraTreesResidualBackend(
+            n_estimators=et_estimators,
+            max_depth=et_max_depth,
+        )
+    raise ValueError(
+        "Unsupported pAMI backend. Supported backends are "
+        "'linear_residual', 'rf_residual', and 'extra_trees_residual'."
     )
 
 
@@ -83,9 +112,11 @@ def compute_pami_with_backend(
     ts: np.ndarray,
     max_lag: int,
     *,
-    backend: Literal["linear_residual", "rf_residual"] = "linear_residual",
+    backend: str = "linear_residual",
     rf_estimators: int = 200,
     rf_max_depth: int | None = 8,
+    et_estimators: int = 300,
+    et_max_depth: int | None = 10,
     n_neighbors: int = 8,
     min_pairs: int = 50,
     random_state: int = 42,
@@ -100,6 +131,8 @@ def compute_pami_with_backend(
         backend,
         rf_estimators=rf_estimators,
         rf_max_depth=rf_max_depth,
+        et_estimators=et_estimators,
+        et_max_depth=et_max_depth,
     )
 
     pami = np.zeros(max_lag, dtype=float)

@@ -196,6 +196,9 @@ class BackendComparisonEntry(BaseModel):
     auc_pami: float
     pami_values: list[float]
     directness_ratio_warning: bool
+    auc_pami_delta_vs_linear: float | None = None
+    directness_ratio_delta_vs_linear: float | None = None
+    n_sig_pami_delta_vs_linear: int | None = None
 
 
 class BackendComparisonResult(BaseModel):

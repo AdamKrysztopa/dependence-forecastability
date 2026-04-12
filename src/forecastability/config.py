@@ -146,14 +146,18 @@ class CMIConfig(BaseModel):
         backend: Conditional MI backend name.
         rf_estimators: Number of trees for RF residual backend.
         rf_max_depth: Optional max depth for RF residual backend.
+        et_estimators: Number of trees for extra-trees residual backend.
+        et_max_depth: Optional max depth for extra-trees residual backend.
         random_state: Seed for deterministic execution.
     """
 
     model_config = ConfigDict(frozen=True)
 
-    backend: Literal["linear_residual", "rf_residual"] = "linear_residual"
+    backend: Literal["linear_residual", "rf_residual", "extra_trees_residual"] = "linear_residual"
     rf_estimators: Annotated[int, Field(ge=10)] = 200
     rf_max_depth: Annotated[int, Field(ge=2)] | None = 8
+    et_estimators: Annotated[int, Field(ge=10)] = 300
+    et_max_depth: Annotated[int, Field(ge=2)] | None = 10
     random_state: int = 42
 
 
@@ -440,7 +444,7 @@ class RobustnessStudyConfig(BaseModel):
     """Configuration for pAMI robustness study.
 
     Args:
-        backends: pAMI residual backends to compare.
+        backends: pAMI residual backends to compare against linear baseline.
         sample_fractions: Fractions of series length for stress testing.
         max_lag_ami: Maximum lag for AMI curves.
         max_lag_pami: Maximum lag for pAMI curves.
@@ -455,7 +459,9 @@ class RobustnessStudyConfig(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    backends: list[str] = Field(default_factory=lambda: ["linear_residual", "rf_residual"])
+    backends: list[str] = Field(
+        default_factory=lambda: ["linear_residual", "rf_residual", "extra_trees_residual"]
+    )
     sample_fractions: list[float] = Field(default_factory=lambda: [0.5, 0.75, 1.0])
     max_lag_ami: Annotated[int, Field(ge=1)] = 60
     max_lag_pami: Annotated[int, Field(ge=1)] = 40
@@ -472,6 +478,18 @@ class RobustnessStudyConfig(BaseModel):
     def _backends_valid(cls, v: list[str]) -> list[str]:
         if len(v) < 2:
             raise ValueError("backends must contain at least 2 entries")
+        if len(v) != len(set(v)):
+            raise ValueError("backends must be unique")
+        allowed = {"linear_residual", "rf_residual", "extra_trees_residual"}
+        unknown = sorted(set(v) - allowed)
+        if unknown:
+            raise ValueError(
+                "Unsupported backends: "
+                + ", ".join(unknown)
+                + ". Allowed: linear_residual, rf_residual, extra_trees_residual"
+            )
+        if "linear_residual" not in v:
+            raise ValueError("backends must include 'linear_residual' as baseline for comparison")
         return v
 
     @field_validator("sample_fractions")

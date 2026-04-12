@@ -56,6 +56,7 @@ Conceptual background and mathematical foundations.
 |---|---|
 | [theory/README.md](theory/README.md) | Theory guide scope and paper references |
 | [theory/foundations.md](theory/foundations.md) | AMI and pAMI definitions, significance logic, rolling-origin invariants |
+| [theory/pami_residual_backends.md](theory/pami_residual_backends.md) | Residual backend trade-offs, linear-baseline comparison workflow, and failure modes |
 | [theory/interpretation_patterns.md](theory/interpretation_patterns.md) | Pattern A–E classification logic for agentic narration |
 
 ## Architecture

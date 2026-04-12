@@ -492,12 +492,12 @@ The strongest marketable story is no longer only “AMI replication + extension.
 **Why:** This is scientifically interesting, but lower priority than workflow adoption and operational trust.
 
 ### Actions
-- [ ] Evaluate alternative residualisation backends.
-- [ ] Add benchmark comparisons with the current linear residual backend.
-- [ ] Document trade-offs and failure modes.
+- [x] Evaluate alternative residualisation backends.
+- [x] Add benchmark comparisons with the current linear residual backend.
+- [x] Document trade-offs and failure modes.
 
 ### Acceptance criteria
-- [ ] New backends are justified by measurable value, not novelty alone.
+- [x] New backends are justified by measurable value, not novelty alone.
 
 ---
 
