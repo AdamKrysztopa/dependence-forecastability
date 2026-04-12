@@ -12,6 +12,13 @@ This project reproduces the paper's horizon-specific AMI workflow and extends it
 - Project extension: pAMI, \(\tilde{I}_h = I(X_t; X_{t+h} \mid X_{t+1},\ldots,X_{t+h-1})\)
 - Scope extension: exogenous cross-dependence and a scorer registry
 
+## Versioning and stability
+
+- Release history: [CHANGELOG.md](CHANGELOG.md)
+- Policy and stability matrix: [docs/versioning.md](docs/versioning.md)
+
+Current snapshot: core domain APIs are stable; CLI and HTTP API adapters are beta; MCP and agent layers are experimental.
+
 ## What this project adds beyond the paper
 
 The paper validates AMI as a frequency-conditional triage signal for model selection. This project adds diagnostics and infrastructure the paper does not provide:

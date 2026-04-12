@@ -19,6 +19,12 @@ Conceptual background and mathematical foundations.
 |---|---|
 | [architecture.md](architecture.md) | Hexagonal architecture guide, SOLID principles, layer boundaries, enforcement |
 
+## Project Policy
+
+| Document | Description |
+|---|---|
+| [versioning.md](versioning.md) | Semantic versioning policy, stability levels, and migration-note requirements |
+
 ## Code Reference
 
 API documentation and module maps.
