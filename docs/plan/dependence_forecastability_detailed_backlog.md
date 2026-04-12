@@ -478,12 +478,12 @@ The strongest marketable story is no longer only “AMI replication + extension.
 **Why:** A dashboard can help demonstrations and internal adoption, but it should come after packaging, contracts, and evidence.
 
 ### Actions
-- [ ] Prototype a minimal dashboard for single-series and batch triage.
-- [ ] Keep it as a thin adapter over existing use cases.
-- [ ] Do not let dashboard logic leak into domain or triage code.
+- [x] Prototype a minimal dashboard for single-series and batch triage.
+- [x] Keep it as a thin adapter over existing use cases.
+- [x] Do not let dashboard logic leak into domain or triage code.
 
 ### Acceptance criteria
-- [ ] The UI is demonstrative and operationally useful without distorting the architecture.
+- [x] The UI is demonstrative and operationally useful without distorting the architecture.
 
 ---
 

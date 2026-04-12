@@ -55,6 +55,7 @@ transport = [
 
 [project.scripts]
 forecastability = "forecastability.adapters.cli:main"
+forecastability-dashboard = "forecastability.adapters.dashboard:main"
 
 [dependency-groups]
 dev = [
