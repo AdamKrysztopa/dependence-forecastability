@@ -82,7 +82,7 @@ _SIGNAL_SPECS: list[tuple[str, np.ndarray]] = [
 ]
 
 _BAND_COLORS: dict[str, str] = {
-    "low": "#2ecc71",   # green
+    "low": "#2ecc71",  # green
     "medium": "#f39c12",  # orange
     "high": "#e74c3c",  # red
 }
@@ -193,12 +193,20 @@ def _plot_pe_se_scatter(
     lo = _LOW_THRESHOLD * 2
     hi = _HIGH_THRESHOLD * 2
 
-    ax.fill_between(x, np.zeros_like(x), np.clip(lo - x, 0, 1), alpha=0.12, color="#2ecc71",
-                    label="Low region")
-    ax.fill_between(x, np.clip(lo - x, 0, 1), np.clip(hi - x, 0, 1), alpha=0.12,
-                    color="#f39c12", label="Medium region")
-    ax.fill_between(x, np.clip(hi - x, 0, 1), np.ones_like(x), alpha=0.12, color="#e74c3c",
-                    label="High region")
+    ax.fill_between(
+        x, np.zeros_like(x), np.clip(lo - x, 0, 1), alpha=0.12, color="#2ecc71", label="Low region"
+    )
+    ax.fill_between(
+        x,
+        np.clip(lo - x, 0, 1),
+        np.clip(hi - x, 0, 1),
+        alpha=0.12,
+        color="#f39c12",
+        label="Medium region",
+    )
+    ax.fill_between(
+        x, np.clip(hi - x, 0, 1), np.ones_like(x), alpha=0.12, color="#e74c3c", label="High region"
+    )
 
     # Diagonal boundary lines
     ax.plot(x, np.clip(lo - x, 0, 1), "--", color="#2ecc71", lw=1.2)

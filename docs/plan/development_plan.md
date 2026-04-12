@@ -3,7 +3,7 @@
 
 **Replaces:** MoSCoW plan (removed)
 **Source epic:** [`not_planed/triage_extension_epic_math_grounded.md`](not_planed/triage_extension_epic_math_grounded.md)
-**Last reviewed:** 2026-04-12 (F1 implemented 2026-04-12; F2, SeriesDiagnosticScorer, PSD utility implemented 2026-04-12; F6 implemented 2026-04-12)
+**Last reviewed:** 2026-04-12 (F1 implemented 2026-04-12; F2, SeriesDiagnosticScorer, PSD utility implemented 2026-04-12; F6 implemented 2026-04-12; F4 implemented 2026-04-12)
 
 ---
 
@@ -55,7 +55,7 @@ Before reading the per-feature sections, note what the repo already provides:
 | Infra | `SeriesDiagnosticScorer` protocol | 1 | — | New protocol alongside `DependenceScorer` | ✅ Done |
 | Infra | Shared PSD / FFT utility | 1 | — | Deterministic PSD helper for F4, F6 | ✅ Done |
 | F6 | Entropy-Based Complexity Triage | 2 | 0 % (shares PSD with F4) | New scorer(s) + complexity-band service | ✅ Done |
-| F4 | Spectral Predictability | 2 | 0 % | New scorer + shared PSD utility | Not started |
+| F4 | Spectral Predictability | 2 | 0 % | New scorer + shared PSD utility | ✅ Done |
 | F3 | Predictive Information Learning Curves | 2 | 0 % | New service, new estimator (multi-dim MI) | Not started |
 | F5 | Largest Lyapunov Exponent | 3 | 0 % | New experimental scorer | Not started |
 | F7 | Batch Multi-Signal Ranking | 3 | ~85 % — `run_batch_triage()` exists | Incremental: add new-scorer columns | Not started |
@@ -298,9 +298,9 @@ $$\Omega(\mathbf{y}) = 1 - \frac{H_a(\mathbf{y})}{\log_a(N_{\mathrm{bins}})}$$
 - Document: windowing rule, normalisation rule, zero-power handling.
 
 **Acceptance criteria:**
-- [ ] Deterministic across runs
-- [ ] White noise scores low, periodic signal scores high
-- [ ] Runtime small relative to AMI path
+- [x] Deterministic across runs
+- [x] White noise scores low, periodic signal scores high
+- [x] Runtime small relative to AMI path
 
 ---
 

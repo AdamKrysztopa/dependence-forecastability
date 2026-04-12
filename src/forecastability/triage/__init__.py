@@ -52,6 +52,7 @@ from forecastability.triage.run_batch_triage import (
     run_batch_triage_with_details,
 )
 from forecastability.triage.run_triage import run_triage
+from forecastability.triage.spectral_predictability import SpectralPredictabilityResult
 
 __all__ = [
     "AnalysisGoal",
@@ -84,6 +85,7 @@ __all__ = [
     "TriageEvent",
     "ForecastabilityProfile",
     "ComplexityBandResult",
+    "SpectralPredictabilityResult",
     "assess_readiness",
     "plan_method",
     "rank_batch_items",

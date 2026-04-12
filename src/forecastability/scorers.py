@@ -435,6 +435,36 @@ def _spectral_entropy_scorer(
     return min(h / h_max, 1.0)
 
 
+def _spectral_predictability_scorer(
+    series: np.ndarray,
+    *,
+    random_state: int = 42,
+) -> float:
+    """Spectral predictability scorer Ω = 1 − normalised spectral entropy.
+
+    Implements :class:`SeriesDiagnosticScorer`.  Uses
+    :func:`~forecastability.spectral_utils.compute_normalised_psd` then
+    normalises by ``log(N_bins)`` where ``N_bins`` is the number of frequency
+    bins in the Welch estimate.
+
+    A value near 1 indicates a spectrally concentrated (predictable) series.
+    A value near 0 indicates a flat spectrum (white-noise-like).
+
+    Args:
+        series: 1-D float array, length >= 8.
+        random_state: Unused; present for interface consistency.
+
+    Returns:
+        Spectral predictability Ω ∈ [0, 1].
+    """
+    del random_state
+    _, p = compute_normalised_psd(series)
+    h = spectral_entropy(p, base=np.e)
+    h_max = float(np.log(len(p)))
+    if h_max < 1e-15:
+        return 1.0
+    return max(1.0 - min(h / h_max, 1.0), 0.0)
+
 
 # ---------------------------------------------------------------------------
 # Default registry factory
@@ -446,15 +476,18 @@ def default_registry() -> ScorerRegistry:
 
     Built-in scorers:
 
-    ============  ============  ========================================
-    Name          Family        Description
-    ============  ============  ========================================
-    ``mi``        nonlinear     kNN mutual information (n_neighbors=8)
-    ``pearson``   linear        Absolute Pearson correlation
-    ``spearman``  rank          Absolute Spearman rank correlation
-    ``kendall``   rank          Absolute Kendall tau-b correlation
-    ``distance``  bounded_nonlinear  Distance correlation (energy-distance)
-    ============  =================  ========================================
+    ==========================  =================  =============================================
+    Name                        Family             Description
+    ==========================  =================  =============================================
+    ``mi``                      nonlinear          kNN mutual information (n_neighbors=8)
+    ``pearson``                 linear             Absolute Pearson correlation
+    ``spearman``                rank               Absolute Spearman rank correlation
+    ``kendall``                 rank               Absolute Kendall tau-b correlation
+    ``distance``                bounded_nonlinear  Distance correlation (energy-distance)
+    ``permutation_entropy``     nonlinear          Normalised permutation entropy (Bandt & Pompe)
+    ``spectral_entropy``        nonlinear          Normalised spectral entropy from Welch PSD
+    ``spectral_predictability`` nonlinear          Spectral predictability Ω (1 − normalised SE)
+    ==========================  =================  =============================================
 
     Returns:
         A new :class:`ScorerRegistry` with all built-in scorers registered.
@@ -502,6 +535,13 @@ def default_registry() -> ScorerRegistry:
         _spectral_entropy_scorer,
         family="nonlinear",
         description="Normalised spectral entropy from Welch PSD",
+        kind="univariate",
+    )
+    registry.register(
+        "spectral_predictability",
+        _spectral_predictability_scorer,
+        family="nonlinear",
+        description="Spectral predictability Ω = 1 − normalised SE (Wang et al., 2025)",
         kind="univariate",
     )
     return registry

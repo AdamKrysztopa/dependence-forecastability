@@ -113,13 +113,19 @@ class TestListScorers:
 
     def test_default_count(self, registry: ScorerRegistry) -> None:
         scorers = registry.list_scorers()
-        assert len(scorers) == 7
+        assert len(scorers) == 8
 
     def test_names(self, registry: ScorerRegistry) -> None:
         names = {s.name for s in registry.list_scorers()}
         assert names == {
-            "mi", "pearson", "spearman", "kendall", "distance",
-            "permutation_entropy", "spectral_entropy",
+            "mi",
+            "pearson",
+            "spearman",
+            "kendall",
+            "distance",
+            "permutation_entropy",
+            "spectral_entropy",
+            "spectral_predictability",
         }
 
 

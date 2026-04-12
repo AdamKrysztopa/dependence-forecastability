@@ -82,13 +82,19 @@ def test_analyzer_custom_scorer_registration() -> None:
 
 
 def test_analyzer_list_scorers() -> None:
-    """Verify all 7 default scorers are listed (5 bivariate + 2 univariate)."""
+    """Verify all 8 default scorers are listed (5 bivariate + 3 univariate)."""
     analyzer = ForecastabilityAnalyzer(n_surrogates=99)
     scorers = analyzer.list_scorers()
     names = {s.name for s in scorers}
     assert names == {
-        "mi", "pearson", "spearman", "kendall", "distance",
-        "permutation_entropy", "spectral_entropy",
+        "mi",
+        "pearson",
+        "spearman",
+        "kendall",
+        "distance",
+        "permutation_entropy",
+        "spectral_entropy",
+        "spectral_predictability",
     }
 
 
