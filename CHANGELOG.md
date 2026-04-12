@@ -42,3 +42,7 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### Removed
 - No removals in the initial release.
+
+### Migration notes
+- No migration required for v0.1.0.
+- Upgrade notes: [docs/releases/v0.1.0.md](docs/releases/v0.1.0.md)

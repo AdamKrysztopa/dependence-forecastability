@@ -11,6 +11,14 @@ Task-oriented first-run entry points.
 |---|---|
 | [quickstart.md](quickstart.md) | Laddered quickstart: 60s CLI, 5m notebook, 10m Python API, 15m HTTP API, plus optional agent and MCP routes using one shared signal |
 
+## Executive Overview
+
+High-level, low-jargon project framing for non-specialists and stakeholder sharing.
+
+| Document | Description |
+|---|---|
+| [executive_summary.md](executive_summary.md) | One-page visual summary of problem, novelty, AMI/pAMI triage value, readiness today, and next steps |
+
 ## Results
 
 Decision-focused evidence summary.
@@ -18,6 +26,18 @@ Decision-focused evidence summary.
 | Document | Description |
 |---|---|
 | [results_summary.md](results_summary.md) | Compact evidence-first summary of univariate AMI/pAMI, exogenous screening, and triage workflow findings, with explicit limitations |
+
+## Notebook Narratives
+
+Durable narrative pages distilled from the most important notebooks.
+These are the primary explanation layer; notebooks remain deep evidence.
+
+| Document | Description |
+|---|---|
+| [notebooks/README.md](notebooks/README.md) | Overview of selected notebook conversions and rationale for the top-3 coverage set |
+| [notebooks/canonical_forecastability.md](notebooks/canonical_forecastability.md) | Durable summary of the canonical AMI/pAMI notebook: purpose, key figure, key result, and takeaways |
+| [notebooks/exogenous_analysis.md](notebooks/exogenous_analysis.md) | Durable summary of the exogenous CrossAMI/pCrossAMI notebook with warning-aware driver-screening outcomes |
+| [notebooks/agentic_triage.md](notebooks/agentic_triage.md) | Durable summary of deterministic triage orchestration and optional agent narration boundary |
 
 ## Operational Guidance
 
@@ -36,6 +56,7 @@ Conceptual background and mathematical foundations.
 |---|---|
 | [theory/README.md](theory/README.md) | Theory guide scope and paper references |
 | [theory/foundations.md](theory/foundations.md) | AMI and pAMI definitions, significance logic, rolling-origin invariants |
+| [theory/pami_residual_backends.md](theory/pami_residual_backends.md) | Residual backend trade-offs, linear-baseline comparison workflow, and failure modes |
 | [theory/interpretation_patterns.md](theory/interpretation_patterns.md) | Pattern A–E classification logic for agentic narration |
 
 ## Architecture
@@ -48,7 +69,9 @@ Conceptual background and mathematical foundations.
 
 | Document | Description |
 |---|---|
+| [../CHANGELOG.md](../CHANGELOG.md) | Repository release and change history using Keep a Changelog sections |
 | [versioning.md](versioning.md) | Semantic versioning policy, stability levels, and migration-note requirements |
+| [releases/v0.1.0.md](releases/v0.1.0.md) | Explicit upgrade notes artifact for release `v0.1.0` |
 | [api_contract.md](api_contract.md) | FastAPI and SSE transport contract: request/response schemas, validation and readiness semantics, event sequence, and integration examples |
 | [observability.md](observability.md) | Operational observability and auditability guide: event payload contract, checkpoint replay boundaries, logging fields, and failure triage workflow |
 | [production_readiness.md](production_readiness.md) | Production maturity zones, safe default deterministic path, and failure/non-goal contract for CLI/API/agent surfaces |

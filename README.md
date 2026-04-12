@@ -38,6 +38,7 @@ uv sync && MPLBACKEND=Agg uv run python scripts/run_canonical_examples.py
 
 ## Where to go next
 
+- Executive one-page overview: [docs/executive_summary.md](docs/executive_summary.md)
 - Benchmark panel evaluation: `MPLBACKEND=Agg uv run python scripts/run_benchmark_panel.py`
 - Exogenous driver analysis: `MPLBACKEND=Agg uv run python scripts/run_exog_analysis.py`
 - Component selection guide: [docs/why_use_this.md](docs/why_use_this.md)
@@ -46,6 +47,7 @@ uv sync && MPLBACKEND=Agg uv run python scripts/run_canonical_examples.py
 - Observability and auditability guide: [docs/observability.md](docs/observability.md)
 - Agent layer contract (deterministic-first): [docs/agent_layer.md](docs/agent_layer.md)
 - Results summary (evidence-first): [docs/results_summary.md](docs/results_summary.md)
+- Durable notebook narratives (primary docs layer): [docs/notebooks/README.md](docs/notebooks/README.md)
 - Agentic walkthrough notebook: [notebooks/03_agentic_triage.ipynb](notebooks/03_agentic_triage.ipynb)
 - Full docs index: [docs/README.md](docs/README.md)
 
@@ -268,6 +270,11 @@ uv sync --group notebook
 uv run python -m ipykernel install --user --name forecastability
 ```
 
+Primary narrative docs for the three most important notebooks:
+- [docs/notebooks/canonical_forecastability.md](docs/notebooks/canonical_forecastability.md)
+- [docs/notebooks/exogenous_analysis.md](docs/notebooks/exogenous_analysis.md)
+- [docs/notebooks/agentic_triage.md](docs/notebooks/agentic_triage.md)
+
 | Notebook | File | Description |
 |---|---|---|
 | 1 · Canonical Forecastability Cases — AMI vs pAMI + Full Report | [`notebooks/01_canonical_forecastability.ipynb`](notebooks/01_canonical_forecastability.ipynb) | End-to-end walk-through on five synthetic/real series (White Noise, AR(1), Logistic Map, Sine+Noise, Hénon Map).  Computes AMI and pAMI curves, surrogate bands, directness ratios, pattern interpretation, and generates a full Markdown report. |
@@ -281,6 +288,7 @@ Full documentation index: [docs/README.md](docs/README.md)
 
 | Area | Key Documents |
 |---|---|
+| **Executive overview** | [docs/executive_summary.md](docs/executive_summary.md) |
 | **Architecture** | [docs/architecture.md](docs/architecture.md) |
 | **Theory** | [docs/theory/foundations.md](docs/theory/foundations.md) · [docs/theory/interpretation_patterns.md](docs/theory/interpretation_patterns.md) |
 | **Code reference** | [docs/code/module_map.md](docs/code/module_map.md) · [docs/code/exog_analyzer.md](docs/code/exog_analyzer.md) |

@@ -38,6 +38,12 @@ This page is a compact, decision-first evidence layer. Notebooks are linked as d
 | Exogenous screening | 7 target-driver pairs | Rolling-origin CrossMI and conditioned pCrossAMI across fixed horizons | Prioritise drivers with persistent conditioned signal (e.g., `bike_cnt_temp`) and deprioritise noise controls | `directness_ratio > 1.0` appears in warning cases; treat as diagnostic instability |
 | Triage workflow | Canonical + exogenous triage regression inputs | Deterministic staged orchestration (`readiness -> routing -> compute -> interpretation`) | Early stop/routing reduces wasted modelling effort and enforces consistent screening paths | Route/class outputs are triage diagnostics, not direct proof of forecast error improvement |
 
+## Primary Narrative Pages
+
+- [notebooks/canonical_forecastability.md](notebooks/canonical_forecastability.md)
+- [notebooks/exogenous_analysis.md](notebooks/exogenous_analysis.md)
+- [notebooks/agentic_triage.md](notebooks/agentic_triage.md)
+
 ## Deep Evidence (Secondary)
 
 - [../notebooks/01_canonical_forecastability.ipynb](../notebooks/01_canonical_forecastability.ipynb)

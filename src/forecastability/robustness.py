@@ -137,30 +137,59 @@ def _assemble_backend_result(
     directness_stability_threshold: float = 0.15,
 ) -> BackendComparisonResult:
     """Compute stability flags from backend entries."""
+    enriched_entries, has_linear_baseline = _attach_linear_baseline_deltas(entries)
     warnings: list[str] = []
-    for e in entries:
+    if not has_linear_baseline:
+        warnings.append(
+            f"{series_name}: linear_residual baseline missing; delta_vs_linear fields are null"
+        )
+    for e in enriched_entries:
         if e.directness_ratio_warning:
             warnings.append(
                 f"{series_name}/{e.backend}: directness_ratio={e.directness_ratio:.3f} > 1.0"
             )
 
-    pami_arrays = [np.asarray(e.pami_values) for e in entries]
+    pami_arrays = [np.asarray(e.pami_values) for e in enriched_entries]
     min_len = min(a.size for a in pami_arrays)
     trimmed = [a[:min_len] for a in pami_arrays]
 
     rank_corr = _pairwise_rank_correlation(trimmed)
-    dr_values = [e.directness_ratio for e in entries]
+    dr_values = [e.directness_ratio for e in enriched_entries]
     dr_range = max(dr_values) - min(dr_values)
 
     return BackendComparisonResult(
         series_name=series_name,
-        entries=entries,
+        entries=enriched_entries,
         rank_correlation=rank_corr,
         directness_ratio_range=dr_range,
         lag_ranking_stable=rank_corr >= rank_stability_threshold,
         directness_ratio_stable=dr_range < directness_stability_threshold,
         warnings=warnings,
     )
+
+
+def _attach_linear_baseline_deltas(
+    entries: list[BackendComparisonEntry],
+) -> tuple[list[BackendComparisonEntry], bool]:
+    """Attach per-backend deltas against the linear residual baseline."""
+    baseline = next((entry for entry in entries if entry.backend == "linear_residual"), None)
+    if baseline is None:
+        return entries, False
+
+    enriched: list[BackendComparisonEntry] = []
+    for entry in entries:
+        enriched.append(
+            entry.model_copy(
+                update={
+                    "auc_pami_delta_vs_linear": float(entry.auc_pami - baseline.auc_pami),
+                    "directness_ratio_delta_vs_linear": float(
+                        entry.directness_ratio - baseline.directness_ratio
+                    ),
+                    "n_sig_pami_delta_vs_linear": int(entry.n_sig_pami - baseline.n_sig_pami),
+                }
+            )
+        )
+    return enriched, True
 
 
 def _pairwise_rank_correlation(arrays: list[np.ndarray]) -> float:

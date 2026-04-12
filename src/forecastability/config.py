@@ -139,8 +139,6 @@ class OutputConfig(BaseModel):
     reports_dir: Path
 
 
-
-
 class CMIConfig(BaseModel):
     """Configuration for pluggable conditional-MI backends.
 
@@ -148,14 +146,18 @@ class CMIConfig(BaseModel):
         backend: Conditional MI backend name.
         rf_estimators: Number of trees for RF residual backend.
         rf_max_depth: Optional max depth for RF residual backend.
+        et_estimators: Number of trees for extra-trees residual backend.
+        et_max_depth: Optional max depth for extra-trees residual backend.
         random_state: Seed for deterministic execution.
     """
 
     model_config = ConfigDict(frozen=True)
 
-    backend: Literal["linear_residual", "rf_residual"] = "linear_residual"
+    backend: Literal["linear_residual", "rf_residual", "extra_trees_residual"] = "linear_residual"
     rf_estimators: Annotated[int, Field(ge=10)] = 200
     rf_max_depth: Annotated[int, Field(ge=2)] | None = 8
+    et_estimators: Annotated[int, Field(ge=10)] = 300
+    et_max_depth: Annotated[int, Field(ge=2)] | None = 10
     random_state: int = 42
 
 
@@ -258,6 +260,147 @@ class ExogenousBenchmarkConfig(BaseModel):
         return v
 
 
+class ExogenousLagWindowConfig(BaseModel):
+    """Configuration for one lag window used in exogenous screening summaries.
+
+    Args:
+        name: Stable lag-window identifier.
+        start_horizon: Inclusive start horizon.
+        end_horizon: Inclusive end horizon.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    name: str
+    start_horizon: Annotated[int, Field(ge=1)]
+    end_horizon: Annotated[int, Field(ge=1)]
+
+    @model_validator(mode="after")
+    def _validate_window_bounds(self) -> ExogenousLagWindowConfig:
+        if self.start_horizon > self.end_horizon:
+            raise ValueError("start_horizon must be <= end_horizon")
+        return self
+
+
+class ExogenousScreeningPruningConfig(BaseModel):
+    """Optional pruning heuristics for weak exogenous drivers.
+
+    Args:
+        enabled: Whether pruning is applied.
+        min_mean_usefulness: Minimum mean usefulness score to avoid pruning.
+        min_peak_usefulness: Minimum peak usefulness score to avoid pruning.
+        horizon_usefulness_floor: Per-horizon usefulness floor for support counts.
+        min_horizons_above_floor: Minimum count of horizons above floor.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    enabled: bool = False
+    min_mean_usefulness: Annotated[float, Field(ge=0.0)] = 0.015
+    min_peak_usefulness: Annotated[float, Field(ge=0.0)] = 0.025
+    horizon_usefulness_floor: Annotated[float, Field(ge=0.0)] = 0.015
+    min_horizons_above_floor: Annotated[int, Field(ge=0)] = 2
+
+
+class ExogenousScreeningRecommendationConfig(BaseModel):
+    """Recommendation thresholds for keep/review/reject mapping.
+
+    Args:
+        keep_min_mean_usefulness: Mean usefulness threshold for keep.
+        keep_min_peak_usefulness: Peak usefulness threshold for keep.
+        review_min_mean_usefulness: Mean usefulness threshold for review.
+        review_min_peak_usefulness: Peak usefulness threshold for review.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    keep_min_mean_usefulness: Annotated[float, Field(ge=0.0)] = 0.04
+    keep_min_peak_usefulness: Annotated[float, Field(ge=0.0)] = 0.06
+    review_min_mean_usefulness: Annotated[float, Field(ge=0.0)] = 0.02
+    review_min_peak_usefulness: Annotated[float, Field(ge=0.0)] = 0.04
+
+    @model_validator(mode="after")
+    def _validate_threshold_order(self) -> ExogenousScreeningRecommendationConfig:
+        if self.keep_min_mean_usefulness < self.review_min_mean_usefulness:
+            raise ValueError("keep_min_mean_usefulness must be >= review_min_mean_usefulness")
+        if self.keep_min_peak_usefulness < self.review_min_peak_usefulness:
+            raise ValueError("keep_min_peak_usefulness must be >= review_min_peak_usefulness")
+        return self
+
+
+class ExogenousScreeningWorkbenchConfig(BaseModel):
+    """Configuration for target-plus-many-driver exogenous screening.
+
+    Args:
+        purpose: Human-readable workflow identifier.
+        horizons: Horizons used for rolling-origin diagnostics and ranking.
+        n_origins: Number of rolling origins.
+        random_state: Base random seed.
+        n_surrogates: Number of surrogates for train-window diagnostics.
+        min_pairs_raw: Minimum sample pairs for raw cross-MI.
+        min_pairs_partial: Minimum sample pairs for conditioned cross-MI.
+        lag_windows: Horizon windows for compact relevance summaries.
+        pruning: Optional weak-driver pruning rules.
+        recommendation: Keep/review/reject decision thresholds.
+        analysis_scope: Descriptive versus guidance scope disclosure.
+        project_extension: Disclosure flag for non-paper-native workflow.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    purpose: str = "exogenous_screening_workbench"
+    horizons: list[int] = Field(default_factory=lambda: list(range(1, 13)))
+    n_origins: Annotated[int, Field(ge=2)] = 6
+    random_state: int = 42
+    n_surrogates: Annotated[int, Field(ge=99)] = 99
+    min_pairs_raw: Annotated[int, Field(ge=2)] = 30
+    min_pairs_partial: Annotated[int, Field(ge=2)] = 50
+    lag_windows: list[ExogenousLagWindowConfig] = Field(
+        default_factory=lambda: [
+            ExogenousLagWindowConfig(name="near_term", start_horizon=1, end_horizon=3),
+            ExogenousLagWindowConfig(name="mid_term", start_horizon=4, end_horizon=8),
+            ExogenousLagWindowConfig(name="long_term", start_horizon=9, end_horizon=12),
+        ]
+    )
+    pruning: ExogenousScreeningPruningConfig = Field(
+        default_factory=ExogenousScreeningPruningConfig
+    )
+    recommendation: ExogenousScreeningRecommendationConfig = Field(
+        default_factory=ExogenousScreeningRecommendationConfig
+    )
+    analysis_scope: Literal["descriptive", "guidance", "both"] = "guidance"
+    project_extension: bool = True
+
+    @field_validator("horizons")
+    @classmethod
+    def _validate_horizons(cls, v: list[int]) -> list[int]:
+        if not v:
+            raise ValueError("horizons must be non-empty")
+        if any(h < 1 for h in v):
+            raise ValueError("all horizons must be >= 1")
+        if len(v) != len(set(v)):
+            raise ValueError("horizons must be unique")
+        return sorted(v)
+
+    @field_validator("lag_windows")
+    @classmethod
+    def _validate_lag_windows(
+        cls, v: list[ExogenousLagWindowConfig]
+    ) -> list[ExogenousLagWindowConfig]:
+        if not v:
+            raise ValueError("lag_windows must be non-empty")
+        names = [window.name for window in v]
+        if len(names) != len(set(names)):
+            raise ValueError("lag_windows names must be unique")
+        return v
+
+    @model_validator(mode="after")
+    def _validate_horizon_floor(self) -> ExogenousScreeningWorkbenchConfig:
+        if self.pruning.min_horizons_above_floor > len(self.horizons):
+            raise ValueError("pruning.min_horizons_above_floor cannot exceed number of horizons")
+        return self
+
+
 class UncertaintyConfig(BaseModel):
     """Configuration for bootstrap uncertainty summaries.
 
@@ -301,7 +444,7 @@ class RobustnessStudyConfig(BaseModel):
     """Configuration for pAMI robustness study.
 
     Args:
-        backends: pAMI residual backends to compare.
+        backends: pAMI residual backends to compare against linear baseline.
         sample_fractions: Fractions of series length for stress testing.
         max_lag_ami: Maximum lag for AMI curves.
         max_lag_pami: Maximum lag for pAMI curves.
@@ -316,7 +459,9 @@ class RobustnessStudyConfig(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    backends: list[str] = Field(default_factory=lambda: ["linear_residual", "rf_residual"])
+    backends: list[str] = Field(
+        default_factory=lambda: ["linear_residual", "rf_residual", "extra_trees_residual"]
+    )
     sample_fractions: list[float] = Field(default_factory=lambda: [0.5, 0.75, 1.0])
     max_lag_ami: Annotated[int, Field(ge=1)] = 60
     max_lag_pami: Annotated[int, Field(ge=1)] = 40
@@ -333,6 +478,18 @@ class RobustnessStudyConfig(BaseModel):
     def _backends_valid(cls, v: list[str]) -> list[str]:
         if len(v) < 2:
             raise ValueError("backends must contain at least 2 entries")
+        if len(v) != len(set(v)):
+            raise ValueError("backends must be unique")
+        allowed = {"linear_residual", "rf_residual", "extra_trees_residual"}
+        unknown = sorted(set(v) - allowed)
+        if unknown:
+            raise ValueError(
+                "Unsupported backends: "
+                + ", ".join(unknown)
+                + ". Allowed: linear_residual, rf_residual, extra_trees_residual"
+            )
+        if "linear_residual" not in v:
+            raise ValueError("backends must include 'linear_residual' as baseline for comparison")
         return v
 
     @field_validator("sample_fractions")

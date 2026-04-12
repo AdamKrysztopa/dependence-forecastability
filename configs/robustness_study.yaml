@@ -4,6 +4,7 @@ project_extension: true
 backends:
   - linear_residual
   - rf_residual
+  - extra_trees_residual
 sample_fractions:
   - 0.5
   - 0.75

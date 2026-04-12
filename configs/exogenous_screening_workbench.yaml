@@ -1,0 +1,42 @@
+purpose: exogenous_screening_workbench
+horizons:
+  - 1
+  - 2
+  - 3
+  - 4
+  - 5
+  - 6
+  - 7
+  - 8
+  - 9
+  - 10
+  - 11
+  - 12
+n_origins: 6
+random_state: 42
+n_surrogates: 99
+min_pairs_raw: 30
+min_pairs_partial: 50
+analysis_scope: guidance
+project_extension: true
+lag_windows:
+  - name: near_term
+    start_horizon: 1
+    end_horizon: 3
+  - name: mid_term
+    start_horizon: 4
+    end_horizon: 8
+  - name: long_term
+    start_horizon: 9
+    end_horizon: 12
+pruning:
+  enabled: true
+  min_mean_usefulness: 0.015
+  min_peak_usefulness: 0.025
+  horizon_usefulness_floor: 0.015
+  min_horizons_above_floor: 2
+recommendation:
+  keep_min_mean_usefulness: 0.04
+  keep_min_peak_usefulness: 0.06
+  review_min_mean_usefulness: 0.02
+  review_min_peak_usefulness: 0.04

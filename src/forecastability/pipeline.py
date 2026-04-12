@@ -81,7 +81,7 @@ def run_canonical_example(
         pami_values = compute_pami_with_backend(
             ts,
             max_lag_pami,
-            backend="rf_residual",
+            backend=pami_backend,
             n_neighbors=n_neighbors,
             random_state=random_state,
         )
