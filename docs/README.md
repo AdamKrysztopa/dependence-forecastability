@@ -11,6 +11,14 @@ Task-oriented first-run entry points.
 |---|---|
 | [quickstart.md](quickstart.md) | Laddered quickstart: 60s CLI, 5m notebook, 10m Python API, 15m HTTP API, plus optional agent and MCP routes using one shared signal |
 
+## Results
+
+Decision-focused evidence summary.
+
+| Document | Description |
+|---|---|
+| [results_summary.md](results_summary.md) | Compact evidence-first summary of univariate AMI/pAMI, exogenous screening, and triage workflow findings, with explicit limitations |
+
 ## Theory
 
 Conceptual background and mathematical foundations.
