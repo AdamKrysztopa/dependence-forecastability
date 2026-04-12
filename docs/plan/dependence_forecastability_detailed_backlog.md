@@ -413,7 +413,7 @@ The strongest marketable story is no longer only “AMI replication + extension.
 **Why:** For auditability and repeatability, it is useful to persist not only plots or summaries, but also inputs, config, versions, and stage results.
 
 ### Actions
-- [ ] Define a result bundle format containing:
+- [x] Define a result bundle format containing:
   - input metadata,
   - config snapshot,
   - versions,
@@ -421,12 +421,12 @@ The strongest marketable story is no longer only “AMI replication + extension.
   - recommendation,
   - optional narration,
   - warnings.
-- [ ] Add save/load utilities.
-- [ ] Add a provenance checksum or content hash where practical.
+- [x] Add save/load utilities.
+- [x] Add a provenance checksum or content hash where practical.
 
 ### Acceptance criteria
-- [ ] A run can be persisted, reloaded, compared, and reviewed later.
-- [ ] Reproducibility is improved across teams and environments.
+- [x] A run can be persisted, reloaded, compared, and reviewed later.
+- [x] Reproducibility is improved across teams and environments.
 
 ---
 
@@ -541,7 +541,7 @@ The strongest marketable story is no longer only “AMI replication + extension.
 - [x] Batch dataset/signal screening
 - [x] Multi-series comparison reports
 - [x] Exogenous screening workbench
-- [ ] Persisted provenance bundle
+- [x] Persisted provenance bundle
 
 ---
 
