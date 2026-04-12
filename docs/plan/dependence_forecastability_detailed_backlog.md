@@ -376,18 +376,18 @@ The strongest marketable story is no longer only “AMI replication + extension.
 **Why:** Once batch mode exists, comparative reporting becomes very useful for selecting model candidates and prioritizing effort.
 
 ### Actions
-- [ ] Add comparison report generation for multiple target series.
-- [ ] Add standardized tables and plots for:
+- [x] Add comparison report generation for multiple target series.
+- [x] Add standardized tables and plots for:
   - AMI AUC,
   - pAMI AUC,
   - directness ratio,
   - significance coverage,
   - horizon-specific drop-off.
-- [ ] Add a report summary that recommends which series deserve deeper modeling.
+- [x] Add a report summary that recommends which series deserve deeper modeling.
 
 ### Acceptance criteria
-- [ ] Teams can compare many signals consistently.
-- [ ] Comparative reports are suitable for engineering review meetings.
+- [x] Teams can compare many signals consistently.
+- [x] Comparative reports are suitable for engineering review meetings.
 
 ---
 
@@ -539,7 +539,7 @@ The strongest marketable story is no longer only “AMI replication + extension.
 
 ## Phase 4 — Functional expansion
 - [x] Batch dataset/signal screening
-- [ ] Multi-series comparison reports
+- [x] Multi-series comparison reports
 - [ ] Exogenous screening workbench
 - [ ] Persisted provenance bundle
 

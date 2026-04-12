@@ -6,7 +6,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-from forecastability.triage.models import AnalysisGoal
+from forecastability.triage.models import AnalysisGoal, TriageResult
 
 BatchOutcome = Literal["ok", "blocked", "failed"]
 
@@ -177,3 +177,33 @@ class BatchTriageResponse(BaseModel):
     items: list[BatchTriageItemResult]
     summary_table: list[BatchSummaryRow]
     failure_table: list[BatchFailureRow]
+
+
+class BatchTriageExecutionItem(BaseModel):
+    """One ranked batch item paired with the underlying triage result.
+
+    Attributes:
+        result: Ranked batch item emitted by ``run_batch_triage``.
+        triage_result: Detailed triage output for successful/blocked items,
+            ``None`` for failed entries where triage raised an error.
+    """
+
+    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
+
+    result: BatchTriageItemResult
+    triage_result: TriageResult | None = None
+
+
+class BatchTriageExecution(BaseModel):
+    """Batch response plus per-item execution details.
+
+    Attributes:
+        response: Stable ranked response with summary/failure tables.
+        items_with_results: Ranked items paired with optional detailed
+            :class:`TriageResult` payloads.
+    """
+
+    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
+
+    response: BatchTriageResponse
+    items_with_results: list[BatchTriageExecutionItem]

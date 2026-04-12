@@ -11,6 +11,8 @@ from forecastability.triage.batch_models import (
     BatchFailureRow,
     BatchSeriesRequest,
     BatchSummaryRow,
+    BatchTriageExecution,
+    BatchTriageExecutionItem,
     BatchTriageItemResult,
     BatchTriageRequest,
     BatchTriageResponse,
@@ -245,6 +247,98 @@ def _to_summary_row(item: BatchTriageItemResult) -> BatchSummaryRow:
     )
 
 
+def _execute_batch_items(
+    request: BatchTriageRequest,
+    *,
+    triage_runner: Callable[[TriageRequest], TriageResult],
+) -> list[BatchTriageExecutionItem]:
+    """Execute all batch items once and retain detailed triage results.
+
+    Args:
+        request: Batch request with per-series items.
+        triage_runner: Injectable single-series triage callable.
+
+    Returns:
+        Unranked execution items with one-pass triage outputs.
+    """
+    items: list[BatchTriageExecutionItem] = []
+    for item in request.items:
+        try:
+            triage_request = _to_triage_request(item, request)
+            triage_result = triage_runner(triage_request)
+            items.append(
+                BatchTriageExecutionItem(
+                    result=_build_item_result(item, triage_result),
+                    triage_result=triage_result,
+                )
+            )
+        except _RECOVERABLE_BATCH_ERRORS as error:
+            items.append(
+                BatchTriageExecutionItem(
+                    result=_build_failure_item(item, error),
+                    triage_result=None,
+                )
+            )
+    return items
+
+
+def _rank_execution_items(items: list[BatchTriageExecutionItem]) -> list[BatchTriageExecutionItem]:
+    """Apply deterministic ranking to execution items and assign 1-based rank."""
+    ordered = sorted(items, key=lambda item: _ranking_sort_key(item.result))
+    return [
+        item.model_copy(update={"result": item.result.model_copy(update={"rank": index + 1})})
+        for index, item in enumerate(ordered)
+    ]
+
+
+def _build_response(items: list[BatchTriageExecutionItem]) -> BatchTriageResponse:
+    """Build stable response tables from ranked execution items."""
+    ranked_items = [item.result for item in items]
+    summary_table = [_to_summary_row(item) for item in ranked_items]
+    failure_table = [
+        BatchFailureRow(
+            series_id=item.series_id,
+            error_code=item.error_code or "UnknownError",
+            error_message=item.error_message or "No error message provided",
+        )
+        for item in ranked_items
+        if item.outcome == "failed"
+    ]
+
+    return BatchTriageResponse(
+        items=ranked_items,
+        summary_table=summary_table,
+        failure_table=failure_table,
+    )
+
+
+def run_batch_triage_with_details(
+    request: BatchTriageRequest,
+    *,
+    triage_runner: Callable[[TriageRequest], TriageResult] = run_triage,
+) -> BatchTriageExecution:
+    """Run batch triage and return both stable response and detailed outputs.
+
+    Statistical safety note:
+        This use case delegates each item to ``run_triage()``, which computes AMI/pAMI
+        diagnostics on the provided series only and preserves existing train-only
+        conventions in downstream evaluation components.
+
+    Args:
+        request: Batch triage request with one or more series items.
+        triage_runner: Injectable single-series triage callable for testing.
+
+    Returns:
+        Batch execution payload with the stable ranked response and per-item
+        detailed triage outputs.
+    """
+    execution_items = _execute_batch_items(request, triage_runner=triage_runner)
+    ranked_items = _rank_execution_items(execution_items)
+    response = _build_response(ranked_items)
+
+    return BatchTriageExecution(response=response, items_with_results=ranked_items)
+
+
 def run_batch_triage(
     request: BatchTriageRequest,
     *,
@@ -265,30 +359,5 @@ def run_batch_triage(
         Ranked batch response containing per-item outcomes plus summary and
         failure tables.
     """
-    unranked_items: list[BatchTriageItemResult] = []
-
-    for item in request.items:
-        try:
-            triage_request = _to_triage_request(item, request)
-            triage_result = triage_runner(triage_request)
-            unranked_items.append(_build_item_result(item, triage_result))
-        except _RECOVERABLE_BATCH_ERRORS as error:
-            unranked_items.append(_build_failure_item(item, error))
-
-    ranked_items = rank_batch_items(unranked_items)
-    summary_table = [_to_summary_row(item) for item in ranked_items]
-    failure_table = [
-        BatchFailureRow(
-            series_id=item.series_id,
-            error_code=item.error_code or "UnknownError",
-            error_message=item.error_message or "No error message provided",
-        )
-        for item in ranked_items
-        if item.outcome == "failed"
-    ]
-
-    return BatchTriageResponse(
-        items=ranked_items,
-        summary_table=summary_table,
-        failure_table=failure_table,
-    )
+    execution = run_batch_triage_with_details(request, triage_runner=triage_runner)
+    return execution.response
