@@ -19,6 +19,11 @@ This project reproduces the paper's horizon-specific AMI workflow and extends it
 
 Current snapshot: core domain APIs are stable; CLI and HTTP API adapters are beta; MCP and agent layers are experimental.
 
+## Production readiness
+
+- Contract: [docs/production_readiness.md](docs/production_readiness.md)
+- Safe default path: run deterministic `run_triage()` first; treat LLM narration as optional.
+
 ## What this project adds beyond the paper
 
 The paper validates AMI as a frequency-conditional triage signal for model selection. This project adds diagnostics and infrastructure the paper does not provide:

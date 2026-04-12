@@ -24,6 +24,7 @@ Conceptual background and mathematical foundations.
 | Document | Description |
 |---|---|
 | [versioning.md](versioning.md) | Semantic versioning policy, stability levels, and migration-note requirements |
+| [production_readiness.md](production_readiness.md) | Production maturity zones, safe default deterministic path, and failure/non-goal contract for CLI/API/agent surfaces |
 
 ## Code Reference
 
