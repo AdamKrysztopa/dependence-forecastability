@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -66,6 +68,65 @@ class ExogenousBenchmarkResult(BaseModel):
     directness_ratio_by_horizon: dict[int, float]
     origins_used_by_horizon: dict[int, int]
     warning_horizons: list[int] = Field(default_factory=list)
+    metadata: dict[str, str | int | float] = Field(default_factory=dict)
+
+
+class ExogenousHorizonUsefulnessRow(BaseModel):
+    """Per-driver, per-horizon usefulness row for screening ranking."""
+
+    model_config = ConfigDict(frozen=True)
+
+    driver_name: str
+    horizon: int
+    raw_cross_mi: float
+    conditioned_cross_mi: float
+    directness_ratio: float
+    usefulness_score: float
+    horizon_rank: int
+
+
+class ExogenousLagWindowSummaryRow(BaseModel):
+    """Lag-window summary row for one candidate exogenous driver."""
+
+    model_config = ConfigDict(frozen=True)
+
+    driver_name: str
+    window_name: str
+    start_horizon: int
+    end_horizon: int
+    n_horizons_covered: int
+    mean_usefulness_score: float
+    peak_usefulness_score: float
+
+
+class ExogenousDriverSummary(BaseModel):
+    """Screening summary for one exogenous driver."""
+
+    model_config = ConfigDict(frozen=True)
+
+    overall_rank: int
+    driver_name: str
+    recommendation: Literal["keep", "review", "reject"]
+    pruned: bool
+    prune_reason: str | None = None
+    mean_usefulness_score: float
+    peak_usefulness_score: float
+    top_horizon: int | None = None
+    top_horizon_usefulness_score: float | None = None
+    n_horizons_above_floor: int
+    warning_horizon_count: int
+
+
+class ExogenousScreeningWorkbenchResult(BaseModel):
+    """Composite result for target-plus-many-drivers exogenous screening."""
+
+    model_config = ConfigDict(frozen=True)
+
+    target_name: str
+    horizons: list[int]
+    driver_summaries: list[ExogenousDriverSummary]
+    horizon_usefulness_rows: list[ExogenousHorizonUsefulnessRow]
+    lag_window_summaries: list[ExogenousLagWindowSummaryRow]
     metadata: dict[str, str | int | float] = Field(default_factory=dict)
 
 

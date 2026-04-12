@@ -396,15 +396,15 @@ The strongest marketable story is no longer only “AMI replication + extension.
 **Why:** The repo already includes exogenous cross-dependence analysis. The next useful step is a practical driver-screening workbench rather than only pairwise analysis. citeturn247678view0
 
 ### Actions
-- [ ] Support target-plus-many-drivers evaluation.
-- [ ] Add ranking of candidate drivers by horizon-specific usefulness.
-- [ ] Add optional pruning heuristics for weak drivers.
-- [ ] Add lag-window summaries for driver relevance.
-- [ ] Add a compact recommendation layer: keep / review / reject.
+- [x] Support target-plus-many-drivers evaluation.
+- [x] Add ranking of candidate drivers by horizon-specific usefulness.
+- [x] Add optional pruning heuristics for weak drivers.
+- [x] Add lag-window summaries for driver relevance.
+- [x] Add a compact recommendation layer: keep / review / reject.
 
 ### Acceptance criteria
-- [ ] Users can use the tool to narrow exogenous candidates before model building.
-- [ ] The repo gains clear value in multivariate forecasting preparation.
+- [x] Users can use the tool to narrow exogenous candidates before model building.
+- [x] The repo gains clear value in multivariate forecasting preparation.
 
 ---
 
@@ -540,7 +540,7 @@ The strongest marketable story is no longer only “AMI replication + extension.
 ## Phase 4 — Functional expansion
 - [x] Batch dataset/signal screening
 - [x] Multi-series comparison reports
-- [ ] Exogenous screening workbench
+- [x] Exogenous screening workbench
 - [ ] Persisted provenance bundle
 
 ---
