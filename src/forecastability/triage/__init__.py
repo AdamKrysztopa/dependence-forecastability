@@ -31,6 +31,7 @@ from forecastability.triage.models import (
     TriageRequest,
     TriageResult,
 )
+from forecastability.triage.predictive_info_learning_curve import PredictiveInfoLearningCurve
 from forecastability.triage.readiness import assess_readiness
 from forecastability.triage.result_bundle import (
     TriageBundleProvenance,
@@ -85,6 +86,7 @@ __all__ = [
     "TriageEvent",
     "ForecastabilityProfile",
     "ComplexityBandResult",
+    "PredictiveInfoLearningCurve",
     "SpectralPredictabilityResult",
     "assess_readiness",
     "plan_method",

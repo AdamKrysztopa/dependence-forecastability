@@ -3,7 +3,7 @@
 
 **Replaces:** MoSCoW plan (removed)
 **Source epic:** [`not_planed/triage_extension_epic_math_grounded.md`](not_planed/triage_extension_epic_math_grounded.md)
-**Last reviewed:** 2026-04-12 (F1 implemented 2026-04-12; F2, SeriesDiagnosticScorer, PSD utility implemented 2026-04-12; F6 implemented 2026-04-12; F4 implemented 2026-04-12)
+**Last reviewed:** 2026-04-12 (F1 implemented 2026-04-12; F2, SeriesDiagnosticScorer, PSD utility implemented 2026-04-12; F6 implemented 2026-04-12; F4 implemented 2026-04-12; F3 implemented 2026-04-12)
 
 ---
 
@@ -56,7 +56,7 @@ Before reading the per-feature sections, note what the repo already provides:
 | Infra | Shared PSD / FFT utility | 1 | — | Deterministic PSD helper for F4, F6 | ✅ Done |
 | F6 | Entropy-Based Complexity Triage | 2 | 0 % (shares PSD with F4) | New scorer(s) + complexity-band service | ✅ Done |
 | F4 | Spectral Predictability | 2 | 0 % | New scorer + shared PSD utility | ✅ Done |
-| F3 | Predictive Information Learning Curves | 2 | 0 % | New service, new estimator (multi-dim MI) | Not started |
+| F3 | Predictive Information Learning Curves | 2 | 0 % | New service, new estimator (multi-dim MI) | ✅ Done |
 | F5 | Largest Lyapunov Exponent | 3 | 0 % | New experimental scorer | Not started |
 | F7 | Batch Multi-Signal Ranking | 3 | ~85 % — `run_batch_triage()` exists | Incremental: add new-scorer columns | Not started |
 | F8 | Enhanced Exogenous Screening | 3 | ~80 % — screening workbench exists | Incremental: add inter-driver redundancy penalty | Not started |
@@ -339,10 +339,10 @@ $$\mathrm{EvoRate}(k) = I(X_{t:t-k+1};\; X_{t+1})$$
 - Plateau / convergence detection with mandatory bias-floor caveat.
 
 **Acceptance criteria:**
-- [ ] Reproducible on tiny fixtures
-- [ ] Works as optional specialised analysis path
-- [ ] Emits reliability warnings when $n < 1000$ or $k > 8$
-- [ ] Does not distort scorer registry abstraction
+- [x] Reproducible on tiny fixtures
+- [x] Works as optional specialised analysis path
+- [x] Emits reliability warnings when $n < 1000$ or $k > 8$
+- [x] Does not distort scorer registry abstraction
 
 ---
 
