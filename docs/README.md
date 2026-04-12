@@ -73,6 +73,7 @@ Project roadmap and acceptance criteria (MoSCoW framework).
 | Document | Description |
 |---|---|
 | [plan/README.md](plan/README.md) | Planning surface overview |
+| [plan/dependence_forecastability_progress.md](plan/dependence_forecastability_progress.md) | Branch tracker mapping implemented dependence-forecastability backlog items to status, delivered scope, and commit hashes |
 | [plan/acceptance_criteria.md](plan/acceptance_criteria.md) | Done criteria for all roadmap items |
 | [plan/must_have.md](plan/must_have.md) | Non-negotiable items (✅ complete) |
 | [plan/should_have.md](plan/should_have.md) | High-value improvements (✅ complete) |
