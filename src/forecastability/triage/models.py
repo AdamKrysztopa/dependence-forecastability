@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict
 
 from forecastability.analyzer import AnalyzeResult
 from forecastability.triage.forecastability_profile import ForecastabilityProfile
+from forecastability.triage.theoretical_limit_diagnostics import TheoreticalLimitDiagnostics
 from forecastability.types import InterpretationResult
 
 
@@ -121,6 +122,9 @@ class TriageResult(BaseModel):
         forecastability_profile: Derived forecastability profile with
             informative horizons and actionable recommendations; ``None``
             when blocked or when no analyze result is available.
+        theoretical_limit_diagnostics: Information-theoretic ceiling on
+            predictive improvement per horizon, derived from the AMI curve;
+            ``None`` when blocked or when no analyze result is available.
     """
 
     model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
@@ -135,3 +139,4 @@ class TriageResult(BaseModel):
     narrative: str | None = None
     timing: dict[str, float] | None = None  # stage_name -> duration_ms (AGT-013)
     forecastability_profile: ForecastabilityProfile | None = None
+    theoretical_limit_diagnostics: TheoreticalLimitDiagnostics | None = None

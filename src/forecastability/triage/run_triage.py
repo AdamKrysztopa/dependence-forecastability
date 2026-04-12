@@ -14,6 +14,9 @@ from forecastability.analyzer import (
 )
 from forecastability.interpretation import interpret_canonical_result
 from forecastability.services.forecastability_profile_service import build_forecastability_profile
+from forecastability.services.theoretical_limit_diagnostics_service import (
+    build_theoretical_limit_diagnostics,
+)
 from forecastability.triage.events import (
     TriageError,
     TriageStageCompleted,
@@ -30,6 +33,7 @@ from forecastability.triage.models import (
 )
 from forecastability.triage.readiness import assess_readiness
 from forecastability.triage.router import plan_method
+from forecastability.triage.theoretical_limit_diagnostics import TheoreticalLimitDiagnostics
 from forecastability.types import CanonicalExampleResult, MetricCurve
 
 
@@ -399,6 +403,18 @@ def run_triage(
             sig_raw_lags=sig_lags_0based,
         )
 
+    # ------------------------------------------------------------------ #
+    # Stage 6: information-theoretic limit diagnostics                    #
+    # ------------------------------------------------------------------ #
+    # Guard: ceiling semantics are only valid when the metric IS mutual
+    # information.  If routing is extended to non-MI methods in future,
+    # interpreting their raw curves as an MI ceiling would be wrong.
+    theoretical_limit_diagnostics: TheoreticalLimitDiagnostics | None = None
+    if analyze_result is not None and analyze_result.method == "mi":
+        theoretical_limit_diagnostics = build_theoretical_limit_diagnostics(
+            analyze_result.raw,
+        )
+
     return TriageResult(
         request=request,
         readiness=readiness,
@@ -409,4 +425,5 @@ def run_triage(
         blocked=False,
         timing=timing if timing else None,
         forecastability_profile=forecastability_profile,
+        theoretical_limit_diagnostics=theoretical_limit_diagnostics,
     )

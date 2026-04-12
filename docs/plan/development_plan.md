@@ -3,7 +3,7 @@
 
 **Replaces:** MoSCoW plan (removed)
 **Source epic:** [`not_planed/triage_extension_epic_math_grounded.md`](not_planed/triage_extension_epic_math_grounded.md)
-**Last reviewed:** 2026-04-12 (F1 implemented 2026-04-12)
+**Last reviewed:** 2026-04-12 (F1 implemented 2026-04-12; F2, SeriesDiagnosticScorer, PSD utility implemented 2026-04-12)
 
 ---
 
@@ -50,10 +50,10 @@ Before reading the per-feature sections, note what the repo already provides:
 | # | Feature | Phase | Overlap | Genuine new work | Status |
 |---|---------|-------|---------|------------------|--------|
 | F1 | Forecastability Profile & Informative Horizon Set | 1 | ~20 % — class label exists; formal profile object does not | New domain model + application service | ✅ Done |
-| F2 | Information-Theoretic Limit Diagnostics | 1 | ~5 % | New service + DPI / compression warnings | Not started |
+| F2 | Information-Theoretic Limit Diagnostics | 1 | ~5 % | New service + DPI / compression warnings | ✅ Done |
 | F10 | Permutation-AMI Naming Cleanup | 1 | 100 % — convention already followed | Documentation-only | ✅ Done (convention already followed; theory doc confirms naming) |
-| Infra | `SeriesDiagnosticScorer` protocol | 1 | — | New protocol alongside `DependenceScorer` | Not started |
-| Infra | Shared PSD / FFT utility | 1 | — | Deterministic PSD helper for F4, F6 | Not started |
+| Infra | `SeriesDiagnosticScorer` protocol | 1 | — | New protocol alongside `DependenceScorer` | ✅ Done |
+| Infra | Shared PSD / FFT utility | 1 | — | Deterministic PSD helper for F4, F6 | ✅ Done |
 | F6 | Entropy-Based Complexity Triage | 2 | 0 % (shares PSD with F4) | New scorer(s) + complexity-band service | Not started |
 | F4 | Spectral Predictability | 2 | 0 % | New scorer + shared PSD utility | Not started |
 | F3 | Predictive Information Learning Curves | 2 | 0 % | New service, new estimator (multi-dim MI) | Not started |
@@ -178,9 +178,9 @@ ceiling diagnostics now. Exploitation ratio stays as schema placeholder
   (aggregation, downsampling, lossy compression).
 
 **Acceptance criteria:**
-- [ ] `run_triage()` can output theoretical ceiling wording
-- [ ] Exploitation ratio is not implemented (placeholder only)
-- [ ] Documentation clearly separates possibility from realisation
+- [x] `run_triage()` can output theoretical ceiling wording
+- [x] Exploitation ratio is not implemented (placeholder only)
+- [x] Documentation clearly separates possibility from realisation
 
 ---
 

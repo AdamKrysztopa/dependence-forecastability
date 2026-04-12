@@ -29,21 +29,45 @@ class DependenceScorer(Protocol):
     ) -> float: ...
 
 
+@runtime_checkable
+class SeriesDiagnosticScorer(Protocol):
+    """Protocol for univariate diagnostic scoring functions.
+
+    A scorer takes a single 1-D series and returns a non-negative scalar
+    measuring a univariate property (entropy, spectral predictability, etc.).
+
+    This is distinct from :class:`DependenceScorer` which takes ``(past, future)``
+    pairs.  Used by F4 (SpectralPredictabilityScorer) and F6
+    (PermutationEntropyScorer).
+    """
+
+    def __call__(
+        self,
+        series: np.ndarray,
+        *,
+        random_state: int = 42,
+    ) -> float: ...
+
+
 @dataclass(slots=True)
 class ScorerInfo:
-    """Metadata for a registered dependence scorer.
+    """Metadata for a registered scorer.
 
     Attributes:
         name: Short identifier (e.g. ``"mi"``, ``"pearson"``).
-        scorer: Callable implementing the :class:`DependenceScorer` protocol.
+        scorer: Callable implementing :class:`DependenceScorer` or
+            :class:`SeriesDiagnosticScorer`.
         family: Scorer family used to auto-select triage thresholds.
         description: One-line description of the scorer.
+        kind: Whether the scorer operates on ``(past, future)`` pairs
+            (``"bivariate"``) or a single series (``"univariate"``).
     """
 
     name: str
-    scorer: DependenceScorer
+    scorer: DependenceScorer | SeriesDiagnosticScorer
     family: Literal["nonlinear", "linear", "rank", "bounded_nonlinear"]
     description: str
+    kind: Literal["bivariate", "univariate"] = "bivariate"
 
 
 @runtime_checkable
@@ -59,10 +83,11 @@ class ScorerRegistryProtocol(Protocol):
     def register(
         self,
         name: str,
-        scorer: DependenceScorer,
+        scorer: DependenceScorer | SeriesDiagnosticScorer,
         *,
         family: Literal["nonlinear", "linear", "rank", "bounded_nonlinear"],
         description: str,
+        kind: Literal["bivariate", "univariate"] = "bivariate",
     ) -> None: ...
 
     def list_scorers(self) -> list[ScorerInfo]: ...
@@ -84,25 +109,30 @@ class ScorerRegistry:
     def register(
         self,
         name: str,
-        scorer: DependenceScorer,
+        scorer: DependenceScorer | SeriesDiagnosticScorer,
         *,
         family: Literal["nonlinear", "linear", "rank", "bounded_nonlinear"],
         description: str,
+        kind: Literal["bivariate", "univariate"] = "bivariate",
     ) -> None:
         """Register a scorer under *name*.
 
         Args:
             name: Unique identifier for the scorer.
-            scorer: Callable matching :class:`DependenceScorer`.
+            scorer: Callable matching :class:`DependenceScorer` or
+                :class:`SeriesDiagnosticScorer`.
             family: Scorer family (``"nonlinear"``, ``"linear"``, ``"rank"``,
                 or ``"bounded_nonlinear"``).
             description: One-line description.
+            kind: ``"bivariate"`` for ``(past, future)`` scorers (default) or
+                ``"univariate"`` for single-series scorers.
         """
         self._scorers[name] = ScorerInfo(
             name=name,
             scorer=scorer,
             family=family,
             description=description,
+            kind=kind,
         )
 
     def register_scorer(
