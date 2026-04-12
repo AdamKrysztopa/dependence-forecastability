@@ -23,6 +23,7 @@ Source backlog: [dependence_forecastability_detailed_backlog.md](dependence_fore
 | #8 Add a use-case pack for manufacturing / reliability / PdM | done | Added `docs/use_cases_industrial.md` with scenario-to-decision mapping. | `8fbdf5d` | Uses operational, non-sensational framing. |
 | #9 Turn "agentic" into a carefully framed optional layer | done | Added `docs/agent_layer.md` documenting deterministic-first and optional narration contract. | `bd16de9` | Includes strict-mode and grounding boundaries. |
 | #10 Add one hardened API contract page | done | Added `docs/api_contract.md` covering schemas, SSE sequence, and failure semantics. | `b410661` | Integration contract is now explicit and version-aware. |
+| #11 Add interface-level contract tests | done | Added shared deterministic triage fixtures (`tests/conftest.py`), adapter protocol/behavior contract tests (`tests/test_adapter_interface_contracts.py`), and schema-level CLI/API/MCP parity tests on identical inputs (`tests/test_transport_schema_parity.py`). | `this commit` | Event emission ordering is now pinned for both full and blocked triage paths. |
 | #13 Add observability and auditability guidance | done | Added `docs/observability.md` with event payload, checkpoint semantics, and audit/logging guidance. | `0413cc5` | Operational tracing workflow is documented for production usage. |
 
 ## Remaining backlog context

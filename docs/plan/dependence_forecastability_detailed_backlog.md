@@ -304,14 +304,14 @@ The strongest marketable story is no longer only “AMI replication + extension.
 **Why:** The architecture claims nine narrow protocol interfaces and adapter isolation. Contract tests would make that architecture easier to verify over time. citeturn247678view2
 
 ### Actions
-- [ ] Add tests that verify each adapter honors the relevant protocol contract.
-- [ ] Add shared fixtures for deterministic triage outputs.
-- [ ] Add schema-level tests for CLI/API parity on the same input.
-- [ ] Add regression tests for event emission ordering.
+- [x] Add tests that verify each adapter honors the relevant protocol contract.
+- [x] Add shared fixtures for deterministic triage outputs.
+- [x] Add schema-level tests for CLI/API/MCP parity on the same input.
+- [x] Add regression tests for event emission ordering.
 
 ### Acceptance criteria
-- [ ] Changing adapters cannot silently drift away from application-layer expectations.
-- [ ] CLI/API/MCP differences are intentional and test-visible.
+- [x] Changing adapters cannot silently drift away from application-layer expectations.
+- [x] CLI/API/MCP differences are intentional and test-visible.
 
 ---
 
