@@ -43,6 +43,7 @@ uv sync && MPLBACKEND=Agg uv run python scripts/run_canonical_examples.py
 - Component selection guide: [docs/why_use_this.md](docs/why_use_this.md)
 - Industrial scenario guide: [docs/use_cases_industrial.md](docs/use_cases_industrial.md)
 - HTTP API contract reference: [docs/api_contract.md](docs/api_contract.md)
+- Observability and auditability guide: [docs/observability.md](docs/observability.md)
 - Agent layer contract (deterministic-first): [docs/agent_layer.md](docs/agent_layer.md)
 - Results summary (evidence-first): [docs/results_summary.md](docs/results_summary.md)
 - Agentic walkthrough notebook: [notebooks/03_agentic_triage.ipynb](notebooks/03_agentic_triage.ipynb)

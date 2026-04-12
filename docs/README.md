@@ -50,6 +50,7 @@ Conceptual background and mathematical foundations.
 |---|---|
 | [versioning.md](versioning.md) | Semantic versioning policy, stability levels, and migration-note requirements |
 | [api_contract.md](api_contract.md) | FastAPI and SSE transport contract: request/response schemas, validation and readiness semantics, event sequence, and integration examples |
+| [observability.md](observability.md) | Operational observability and auditability guide: event payload contract, checkpoint replay boundaries, logging fields, and failure triage workflow |
 | [production_readiness.md](production_readiness.md) | Production maturity zones, safe default deterministic path, and failure/non-goal contract for CLI/API/agent surfaces |
 | [agent_layer.md](agent_layer.md) | Deterministic-first contract for optional LLM narration, strict mode behavior, and numeric-grounding checks |
 
