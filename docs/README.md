@@ -19,6 +19,18 @@ Decision-focused evidence summary.
 |---|---|
 | [results_summary.md](results_summary.md) | Compact evidence-first summary of univariate AMI/pAMI, exogenous screening, and triage workflow findings, with explicit limitations |
 
+## Notebook Narratives
+
+Durable narrative pages distilled from the most important notebooks.
+These are the primary explanation layer; notebooks remain deep evidence.
+
+| Document | Description |
+|---|---|
+| [notebooks/README.md](notebooks/README.md) | Overview of selected notebook conversions and rationale for the top-3 coverage set |
+| [notebooks/canonical_forecastability.md](notebooks/canonical_forecastability.md) | Durable summary of the canonical AMI/pAMI notebook: purpose, key figure, key result, and takeaways |
+| [notebooks/exogenous_analysis.md](notebooks/exogenous_analysis.md) | Durable summary of the exogenous CrossAMI/pCrossAMI notebook with warning-aware driver-screening outcomes |
+| [notebooks/agentic_triage.md](notebooks/agentic_triage.md) | Durable summary of deterministic triage orchestration and optional agent narration boundary |
+
 ## Operational Guidance
 
 Practical guides for choosing components and mapping diagnostics to industrial decisions.

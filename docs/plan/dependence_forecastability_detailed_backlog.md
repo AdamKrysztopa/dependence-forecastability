@@ -437,18 +437,18 @@ The strongest marketable story is no longer only “AMI replication + extension.
 **Why:** GitHub language distribution often makes notebook-heavy repos look less production-ready at first glance. Converting the most important notebook insights into narrative docs helps rebalance that perception.
 
 ### Actions
-- [ ] Identify the 3 most important notebooks.
-- [ ] Turn each into a docs page with:
+- [x] Identify the 3 most important notebooks.
+- [x] Turn each into a docs page with:
   - purpose,
   - key figure,
   - key result,
   - takeaways,
   - link to notebook for full detail.
-- [ ] Keep notebooks as evidence, not as the only explanatory medium.
+- [x] Keep notebooks as evidence, not as the only explanatory medium.
 
 ### Acceptance criteria
-- [ ] Core insights are available without opening notebooks.
-- [ ] The repo looks more like a maintained toolkit and less like a notebook-first experiment.
+- [x] Core insights are available without opening notebooks.
+- [x] The repo looks more like a maintained toolkit and less like a notebook-first experiment.
 
 ---
 
@@ -535,7 +535,7 @@ The strongest marketable story is no longer only “AMI replication + extension.
 - [x] Industrial use-case pack
 - [x] Agent-layer framing page
 - [ ] Executive summary
-- [ ] Selected notebook-to-doc conversions
+- [x] Selected notebook-to-doc conversions
 
 ## Phase 4 — Functional expansion
 - [x] Batch dataset/signal screening
