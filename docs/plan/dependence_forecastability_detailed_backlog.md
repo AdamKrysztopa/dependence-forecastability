@@ -355,19 +355,19 @@ The strongest marketable story is no longer only “AMI replication + extension.
 **Why:** This is likely the most valuable next product feature. Real users often have many candidate signals or many potential exogenous drivers, not just one. A batch mode would move the repo much closer to practical industrial triage.
 
 ### Actions
-- [ ] Add a batch screening use case that accepts multiple series.
-- [ ] Rank outputs by:
+- [x] Add a batch screening use case that accepts multiple series.
+- [x] Rank outputs by:
   - readiness,
   - forecastability profile,
   - directness ratio,
   - exogenous usefulness,
   - recommended next action.
-- [ ] Add exportable summary tables.
-- [ ] Add failure isolation so one bad series does not fail the full batch.
+- [x] Add exportable summary tables.
+- [x] Add failure isolation so one bad series does not fail the full batch.
 
 ### Acceptance criteria
-- [ ] Users can screen a set of signals, not only one signal at a time.
-- [ ] Output is easy to sort, compare, and route into downstream model-selection workflows.
+- [x] Users can screen a set of signals, not only one signal at a time.
+- [x] Output is easy to sort, compare, and route into downstream model-selection workflows.
 
 ---
 
@@ -538,7 +538,7 @@ The strongest marketable story is no longer only “AMI replication + extension.
 - [ ] Selected notebook-to-doc conversions
 
 ## Phase 4 — Functional expansion
-- [ ] Batch dataset/signal screening
+- [x] Batch dataset/signal screening
 - [ ] Multi-series comparison reports
 - [ ] Exogenous screening workbench
 - [ ] Persisted provenance bundle
