@@ -4,18 +4,18 @@
 `docs/plan/` uses explicit MoSCoW prioritization for paper-baseline preservation plus project extensions.
 
 Baseline framing, invariants, and mathematical definitions still live in the main documentation set:
-- [README.md](/Users/adamkrysztopa/projects/papers/ami/README.md)
-- [docs/theory/foundations.md](/Users/adamkrysztopa/projects/papers/ami/docs/theory/foundations.md)
+- [README.md](../../README.md)
+- [docs/theory/foundations.md](../theory/foundations.md)
 
 ## Active planning surface
 
-| File | Purpose |
-|---|---|
-| [acceptance_criteria.md](acceptance_criteria.md) | Done criteria shared by all roadmap items |
-| [must_have.md](must_have.md) | Non-negotiable baseline parity and highest-priority extensions |
-| [should_have.md](should_have.md) | Important improvements with clear value but not blocking parity |
-| [could_have.md](could_have.md) | Optional extensions worth doing after higher-priority work |
-| [wont_have.md](wont_have.md) | Explicit exclusions for the current phase |
+| File | Purpose | Status |
+|---|---|---|
+| [acceptance_criteria.md](acceptance_criteria.md) | Done criteria shared by all roadmap items | Active |
+| [must_have.md](must_have.md) | Non-negotiable baseline parity and highest-priority extensions | ✅ Complete |
+| [should_have.md](should_have.md) | Important improvements with clear value but not blocking parity | ✅ Complete |
+| [could_have.md](could_have.md) | Optional extensions worth doing after higher-priority work | Open |
+| [wont_have.md](wont_have.md) | Explicit exclusions for the current phase | Active |
 
 ## Planning policy
 

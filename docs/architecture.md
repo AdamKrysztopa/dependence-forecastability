@@ -276,8 +276,7 @@ Run `uv run pytest tests/test_architecture_boundaries.py -v` to verify locally.
 
 ## References
 
-- Backlog and epic status: [docs/plan/agentic_triage_backlog.md](plan/agentic_triage_backlog.md)
-- Frozen public contract: [docs/plan/solid_refactor_contract.md](plan/solid_refactor_contract.md)
+- Planning surface: [docs/plan/README.md](plan/README.md)
 - Agent workflow: [.github/AGENT_FLOW.md](../.github/AGENT_FLOW.md)
 
 ---

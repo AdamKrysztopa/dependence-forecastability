@@ -43,7 +43,7 @@ For the multi-agent workflow and stage-gate sequence, see [AGENT_FLOW.md](./AGEN
 - Domain code must not depend on plotting, CLI, persistence, APIs, MCP, agent frameworks, or environment access
 - Use cases orchestrate domain behavior through ports; adapters isolate frameworks and external libraries
 - Entrypoints and scripts should wire dependencies, not hold business rules
-- Preserve the public contract in [docs/plan/solid_refactor_contract.md](../docs/plan/solid_refactor_contract.md)
+- Preserve the public API contract: frozen `__all__` exports, notebook invariants, backward-compatible signatures
 - Prefer additive, migration-safe refactors behind existing facades
 
 ## Configuration
