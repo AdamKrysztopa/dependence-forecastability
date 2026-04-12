@@ -257,15 +257,15 @@ uv run python -m ipykernel install --user --name forecastability
 
 ## Documentation map
 
-- [docs/architecture.md](docs/architecture.md)
-- [docs/theory/README.md](docs/theory/README.md)
-- [docs/theory/foundations.md](docs/theory/foundations.md)
-- [docs/plan/README.md](docs/plan/README.md)
-- [docs/plan/acceptance_criteria.md](docs/plan/acceptance_criteria.md)
-- [docs/plan/must_have.md](docs/plan/must_have.md)
-- [docs/plan/should_have.md](docs/plan/should_have.md)
-- [docs/plan/could_have.md](docs/plan/could_have.md)
-- [docs/plan/wont_have.md](docs/plan/wont_have.md)
+Full documentation index: [docs/README.md](docs/README.md)
+
+| Area | Key Documents |
+|---|---|
+| **Architecture** | [docs/architecture.md](docs/architecture.md) |
+| **Theory** | [docs/theory/foundations.md](docs/theory/foundations.md) · [docs/theory/interpretation_patterns.md](docs/theory/interpretation_patterns.md) |
+| **Code reference** | [docs/code/module_map.md](docs/code/module_map.md) · [docs/code/exog_analyzer.md](docs/code/exog_analyzer.md) |
+| **Planning** | [docs/plan/README.md](docs/plan/README.md) · [docs/plan/acceptance_criteria.md](docs/plan/acceptance_criteria.md) |
+| **Archive** | [docs/archive/](docs/archive/) (27 historical build-phase documents) |
 
 ## Extension disclosure
 
