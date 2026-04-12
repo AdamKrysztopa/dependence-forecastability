@@ -76,9 +76,7 @@ class TestBuildTriageRequest:
             _build_triage_request([1.0], goal="bad_goal")
 
     def test_parameters_are_passed_through(self) -> None:
-        req = _build_triage_request(
-            [1.0] * 5, max_lag=15, n_surrogates=199, random_state=7
-        )
+        req = _build_triage_request([1.0] * 5, max_lag=15, n_surrogates=199, random_state=7)
         assert req.max_lag == 15
         assert req.n_surrogates == 199
         assert req.random_state == 7

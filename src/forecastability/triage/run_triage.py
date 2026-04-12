@@ -13,11 +13,13 @@ from forecastability.analyzer import (
     ForecastabilityAnalyzerExog,
 )
 from forecastability.interpretation import interpret_canonical_result
+from forecastability.services.forecastability_profile_service import build_forecastability_profile
 from forecastability.triage.events import (
     TriageError,
     TriageStageCompleted,
     TriageStageStarted,
 )
+from forecastability.triage.forecastability_profile import ForecastabilityProfile
 from forecastability.triage.models import (
     AnalysisGoal,
     MethodPlan,
@@ -250,9 +252,7 @@ def run_triage(
             event_emitter,
             timing,
             summary_fn=lambda: (
-                f"status={readiness.status.value}"
-                if "readiness" in dir()
-                else "evaluating"
+                f"status={readiness.status.value}" if "readiness" in dir() else "evaluating"
             ),
         ):
             readiness = readiness_gate(request)  # type: ignore[assignment]
@@ -384,6 +384,21 @@ def run_triage(
             },
         )
 
+    # ------------------------------------------------------------------ #
+    # Stage 5: forecastability profile                                    #
+    # ------------------------------------------------------------------ #
+    forecastability_profile: ForecastabilityProfile | None = None
+    if analyze_result is not None:
+        # sig_raw_lags in AnalyzeResult are 1-based lag numbers;
+        # build_forecastability_profile expects 0-based array indices.
+        sig_lags_0based = (
+            (analyze_result.sig_raw_lags - 1) if method_plan.compute_surrogates else None
+        )
+        forecastability_profile = build_forecastability_profile(
+            analyze_result.raw,
+            sig_raw_lags=sig_lags_0based,
+        )
+
     return TriageResult(
         request=request,
         readiness=readiness,
@@ -393,4 +408,5 @@ def run_triage(
         recommendation=recommendation,
         blocked=False,
         timing=timing if timing else None,
+        forecastability_profile=forecastability_profile,
     )

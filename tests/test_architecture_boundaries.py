@@ -162,7 +162,6 @@ def test_use_cases_do_not_import_adapters() -> None:
                 relative = str(py_file.relative_to(ROOT))
                 violations.append(f"{relative}: imports '{dotted}'")
 
-    assert not violations, (
-        "use_cases/ modules must not import from adapters/.\n"
-        + "\n".join(violations)
+    assert not violations, "use_cases/ modules must not import from adapters/.\n" + "\n".join(
+        violations
     )

@@ -28,6 +28,7 @@ from forecastability.scorers import (
     ScorerRegistry,
     default_registry,
 )
+from forecastability.triage.forecastability_profile import ForecastabilityProfile
 from forecastability.types import (
     BackendComparisonResult,
     CanonicalExampleResult,
@@ -75,5 +76,6 @@ __all__ = [
     "SeriesEvaluationResult",
     "UncertaintyConfig",
     "default_registry",
+    "ForecastabilityProfile",
     "validate_time_series",
 ]

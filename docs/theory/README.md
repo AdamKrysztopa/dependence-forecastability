@@ -19,6 +19,7 @@ This repository keeps the paper's AMI framing and extends it with pAMI to separa
 | File | Purpose |
 |---|---|
 | [foundations.md](foundations.md) | Definitions, feasibility constraints, significance logic, and extension boundaries |
+| [forecastability_profile.md](forecastability_profile.md) | Forecastability Profile model, informative horizon set, epsilon resolution, and DPI diagnostic |
 | [pami_residual_backends.md](pami_residual_backends.md) | Residual backend options, benchmark deltas versus linear, and known failure modes |
 | [interpretation_patterns.md](interpretation_patterns.md) | Pattern-based interpretation logic used in reporting |
 

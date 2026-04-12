@@ -84,9 +84,7 @@ class TestRouteRegression:
         assert result.method_plan.route == "univariate_no_significance"
 
     def test_trend_seasonal_routes_univariate_no_significance(self) -> None:
-        req = TriageRequest(
-            series=_trend_seasonal(_N), max_lag=_MAX_LAG, random_state=_RNG_SEED
-        )
+        req = TriageRequest(series=_trend_seasonal(_N), max_lag=_MAX_LAG, random_state=_RNG_SEED)
         result = run_triage(req)
         assert result.blocked is False
         assert result.method_plan is not None
@@ -136,9 +134,7 @@ class TestInterpretationRegression:
 
     def test_trend_seasonal_forecastability_class_is_not_low(self) -> None:
         """Trend + seasonal has meaningful structure; class must not be 'low'."""
-        req = TriageRequest(
-            series=_trend_seasonal(_N), max_lag=_MAX_LAG, random_state=_RNG_SEED
-        )
+        req = TriageRequest(series=_trend_seasonal(_N), max_lag=_MAX_LAG, random_state=_RNG_SEED)
         result = run_triage(req)
         assert result.interpretation is not None
         assert result.interpretation.forecastability_class != "low"
@@ -206,6 +202,8 @@ class TestDeterminismRegression:
         assert r2.interpretation is not None
         assert r1.interpretation.forecastability_class == r2.interpretation.forecastability_class
         assert r1.method_plan == r2.method_plan
+        assert r1.analyze_result is not None
+        assert r2.analyze_result is not None
         assert np.allclose(r1.analyze_result.raw, r2.analyze_result.raw)
 
     def test_exog_is_deterministic(self) -> None:
@@ -222,4 +220,6 @@ class TestDeterminismRegression:
         r1 = run_triage(req)
         r2 = run_triage(req)
         assert r1.method_plan == r2.method_plan
+        assert r1.analyze_result is not None
+        assert r2.analyze_result is not None
         assert np.allclose(r1.analyze_result.raw, r2.analyze_result.raw)

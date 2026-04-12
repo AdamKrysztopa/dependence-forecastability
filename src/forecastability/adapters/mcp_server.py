@@ -102,9 +102,7 @@ def _readiness_to_json(report: Any) -> str:
     return json.dumps(
         {
             "status": report.status.value,
-            "warnings": [
-                {"code": w.code, "message": w.message} for w in report.warnings
-            ],
+            "warnings": [{"code": w.code, "message": w.message} for w in report.warnings],
         },
         indent=2,
     )
@@ -125,9 +123,7 @@ def _triage_result_to_json(result: Any) -> str:
         "blocked": result.blocked,
         "readiness": {
             "status": result.readiness.status.value,
-            "warnings": [
-                {"code": w.code, "message": w.message} for w in result.readiness.warnings
-            ],
+            "warnings": [{"code": w.code, "message": w.message} for w in result.readiness.warnings],
         },
     }
 
@@ -143,9 +139,7 @@ def _triage_result_to_json(result: Any) -> str:
         out["analyze_summary"] = {
             "method": ar.method,
             "recommendation": ar.recommendation,
-            "n_sig_raw_lags": (
-                int(ar.sig_raw_lags.size) if ar.sig_raw_lags is not None else 0
-            ),
+            "n_sig_raw_lags": (int(ar.sig_raw_lags.size) if ar.sig_raw_lags is not None else 0),
             "n_sig_partial_lags": (
                 int(ar.sig_partial_lags.size) if ar.sig_partial_lags is not None else 0
             ),
@@ -289,15 +283,20 @@ if _MCP_AVAILABLE:
         """
         schema = {
             "series": {
-                "type": "array[float]", "required": True,
+                "type": "array[float]",
+                "required": True,
                 "description": "Target time series",
             },
             "exog": {
-                "type": "array[float] | null", "required": False,
-                "default": None, "description": "Optional exogenous series",
+                "type": "array[float] | null",
+                "required": False,
+                "default": None,
+                "description": "Optional exogenous series",
             },
             "goal": {
-                "type": "string", "required": False, "default": "univariate",
+                "type": "string",
+                "required": False,
+                "default": "univariate",
                 "enum": ["univariate", "exogenous"],
             },
             "max_lag": {"type": "integer", "required": False, "default": 40},
@@ -326,16 +325,13 @@ def main() -> None:
 
     if not _MCP_AVAILABLE or mcp is None:
         print(
-            "mcp package not found. "
-            "Install with: uv sync --extra transport",
+            "mcp package not found. Install with: uv sync --extra transport",
             file=sys.stderr,
         )
         sys.exit(1)
 
     parser = argparse.ArgumentParser(description="Forecastability MCP server.")
-    parser.add_argument(
-        "--http", action="store_true", help="Use streamable-HTTP transport."
-    )
+    parser.add_argument("--http", action="store_true", help="Use streamable-HTTP transport.")
     args = parser.parse_args()
 
     if args.http:

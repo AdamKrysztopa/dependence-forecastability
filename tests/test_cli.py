@@ -132,9 +132,7 @@ class TestCmdTriageJson:
         assert "blocked" in data
         assert "readiness" in data
 
-    def test_short_series_produces_blocked_result(
-        self, capsys: pytest.CaptureFixture[str]
-    ) -> None:
+    def test_short_series_produces_blocked_result(self, capsys: pytest.CaptureFixture[str]) -> None:
         parser = build_parser()
         args = parser.parse_args(["triage", "--series", json.dumps(_make_short())])
         code = cmd_triage(args)
@@ -147,18 +145,14 @@ class TestCmdTriageJson:
         self, capsys: pytest.CaptureFixture[str]
     ) -> None:
         parser = build_parser()
-        args = parser.parse_args(
-            ["triage", "--series", json.dumps(_make_ar1()), "--max-lag", "20"]
-        )
+        args = parser.parse_args(["triage", "--series", json.dumps(_make_ar1()), "--max-lag", "20"])
         cmd_triage(args)
         captured = capsys.readouterr()
         data = json.loads(captured.out)
         assert "interpretation" in data
         assert data["interpretation"]["forecastability_class"] in {"high", "medium", "low"}
 
-    def test_markdown_format_produces_heading(
-        self, capsys: pytest.CaptureFixture[str]
-    ) -> None:
+    def test_markdown_format_produces_heading(self, capsys: pytest.CaptureFixture[str]) -> None:
         parser = build_parser()
         series_json = json.dumps(_make_ar1())
         args = parser.parse_args(
@@ -195,9 +189,7 @@ class TestCmdTriageCsv:
     ) -> None:
         csv_path = _write_csv(tmp_path, _make_ar1())
         parser = build_parser()
-        args = parser.parse_args(
-            ["triage", "--csv", str(csv_path), "--max-lag", "20"]
-        )
+        args = parser.parse_args(["triage", "--csv", str(csv_path), "--max-lag", "20"])
         code = cmd_triage(args)
         captured = capsys.readouterr()
         assert code == 0

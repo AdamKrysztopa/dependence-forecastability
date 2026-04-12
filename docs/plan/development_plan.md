@@ -3,7 +3,7 @@
 
 **Replaces:** MoSCoW plan (removed)
 **Source epic:** [`not_planed/triage_extension_epic_math_grounded.md`](not_planed/triage_extension_epic_math_grounded.md)
-**Last reviewed:** 2026-04-12
+**Last reviewed:** 2026-04-12 (F1 implemented 2026-04-12)
 
 ---
 
@@ -49,9 +49,9 @@ Before reading the per-feature sections, note what the repo already provides:
 
 | # | Feature | Phase | Overlap | Genuine new work | Status |
 |---|---------|-------|---------|------------------|--------|
-| F1 | Forecastability Profile & Informative Horizon Set | 1 | ~20 % — class label exists; formal profile object does not | New domain model + application service | Not started |
+| F1 | Forecastability Profile & Informative Horizon Set | 1 | ~20 % — class label exists; formal profile object does not | New domain model + application service | ✅ Done |
 | F2 | Information-Theoretic Limit Diagnostics | 1 | ~5 % | New service + DPI / compression warnings | Not started |
-| F10 | Permutation-AMI Naming Cleanup | 1 | 100 % — convention already followed | Documentation-only | Not started |
+| F10 | Permutation-AMI Naming Cleanup | 1 | 100 % — convention already followed | Documentation-only | ✅ Done (convention already followed; theory doc confirms naming) |
 | Infra | `SeriesDiagnosticScorer` protocol | 1 | — | New protocol alongside `DependenceScorer` | Not started |
 | Infra | Shared PSD / FFT utility | 1 | — | Deterministic PSD helper for F4, F6 | Not started |
 | F6 | Entropy-Based Complexity Triage | 2 | 0 % (shares PSD with F4) | New scorer(s) + complexity-band service | Not started |
@@ -137,11 +137,11 @@ is a structured profile, not a scalar.
 DPI warning, estimator reuse note.
 
 **Acceptance criteria:**
-- [ ] No breaking changes to current AMI/pAMI outputs
-- [ ] Profile fully derived from deterministic core outputs
-- [ ] Integrated into `TriageResult` output
-- [ ] Example runs end-to-end
-- [ ] Theory doc cites Catt and explains the equations
+- [x] No breaking changes to current AMI/pAMI outputs
+- [x] Profile fully derived from deterministic core outputs
+- [x] Integrated into `TriageResult` output
+- [x] Example runs end-to-end
+- [x] Theory doc cites Catt and explains the equations
 
 ---
 

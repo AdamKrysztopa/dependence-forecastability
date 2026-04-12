@@ -48,12 +48,8 @@ def test_no_concrete_imports_in_ports() -> None:
         if isinstance(node, ast.Import):
             for alias in node.names:
                 top = alias.name.split(".")[0]
-                assert top not in forbidden, (
-                    f"ports/__init__.py must not import {top!r}"
-                )
+                assert top not in forbidden, f"ports/__init__.py must not import {top!r}"
         elif isinstance(node, ast.ImportFrom):
             if node.module:
                 top = node.module.split(".")[0]
-                assert top not in forbidden, (
-                    f"ports/__init__.py must not import {top!r}"
-                )
+                assert top not in forbidden, f"ports/__init__.py must not import {top!r}"

@@ -24,9 +24,7 @@ class TriageStageStarted(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     stage: str
-    timestamp: datetime = Field(
-        default_factory=lambda: datetime.now(tz=UTC)
-    )
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(tz=UTC))
 
 
 class TriageStageCompleted(BaseModel):

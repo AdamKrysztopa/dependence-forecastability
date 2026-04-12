@@ -8,6 +8,7 @@ import numpy as np
 from pydantic import BaseModel, ConfigDict
 
 from forecastability.analyzer import AnalyzeResult
+from forecastability.triage.forecastability_profile import ForecastabilityProfile
 from forecastability.types import InterpretationResult
 
 
@@ -117,6 +118,9 @@ class TriageResult(BaseModel):
             AGT-028).
         timing: Per-stage wall-clock durations in milliseconds when an
             ``event_emitter`` is active; ``None`` otherwise.
+        forecastability_profile: Derived forecastability profile with
+            informative horizons and actionable recommendations; ``None``
+            when blocked or when no analyze result is available.
     """
 
     model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
@@ -130,3 +134,4 @@ class TriageResult(BaseModel):
     blocked: bool
     narrative: str | None = None
     timing: dict[str, float] | None = None  # stage_name -> duration_ms (AGT-013)
+    forecastability_profile: ForecastabilityProfile | None = None

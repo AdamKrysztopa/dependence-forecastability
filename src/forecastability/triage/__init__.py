@@ -20,6 +20,7 @@ from forecastability.triage.events import (
     TriageStageCompleted,
     TriageStageStarted,
 )
+from forecastability.triage.forecastability_profile import ForecastabilityProfile
 from forecastability.triage.models import (
     AnalysisGoal,
     MethodPlan,
@@ -80,6 +81,7 @@ __all__ = [
     "TriageStageCompleted",
     "TriageError",
     "TriageEvent",
+    "ForecastabilityProfile",
     "assess_readiness",
     "plan_method",
     "rank_batch_items",
