@@ -180,7 +180,8 @@ The strongest marketable story is no longer only “AMI replication + extension.
   - project URLs,
   - license metadata,
   - authors/maintainers where desired.
-- [ ] Decide on PyPI publication and prepare for it.
+- [x] Decide on PyPI publication and prepare for it.
+  - Decision (2026-04-12): publish to PyPI via GitHub OIDC trusted publishing on release publication.
 - [x] Add an installation matrix:
   - core,
   - transport,
