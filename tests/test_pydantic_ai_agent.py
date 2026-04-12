@@ -324,3 +324,51 @@ class TestBoundaryEnforcement:
                         assert not node.module.startswith("pydantic_ai"), (
                             f"{rel} imports from pydantic_ai"
                         )
+
+
+class TestAGT027AgentQuickstart:
+    """AGT-027: Smoke tests for the canonical agent entry point documented in README."""
+
+    def test_create_triage_agent_returns_agent_instance(self) -> None:
+        """create_triage_agent() is importable and returns an Agent instance."""
+        from pydantic_ai import Agent
+
+        from forecastability.adapters.pydantic_ai_agent import (
+            InfraSettings,
+            create_triage_agent,
+        )
+
+        settings = InfraSettings(_env_file=None)
+        agent = create_triage_agent(model="test", settings=settings)
+        assert isinstance(agent, Agent)
+
+    def test_agent_tool_count_matches_readme(self) -> None:
+        """All four tools described in README are registered on the agent."""
+        from forecastability.adapters.pydantic_ai_agent import (
+            InfraSettings,
+            create_triage_agent,
+        )
+
+        settings = InfraSettings(_env_file=None)
+        agent = create_triage_agent(model="test", settings=settings)
+        tool_names = set(agent._function_toolset.tools)
+        # These four tools are described in the README agent quickstart.
+        expected_tools = (
+            "validate_series", "plan_analysis", "run_full_triage", "list_available_scorers"
+        )
+        for expected in expected_tools:
+            assert expected in tool_names, f"Tool '{expected}' missing from agent"
+
+    def test_agent_result_is_deterministic_tool_output(self) -> None:
+        """TriageExplanation narrative is set by LLM; run_triage always returns None."""
+        # The docstring above was shortened to satisfy the line-length limit.
+        from forecastability.triage.models import TriageRequest
+        from forecastability.triage.run_triage import run_triage
+
+        # Deterministic path — no agent involved
+        rng = np.random.default_rng(42)
+        ts = np.array([0.85 ** i + rng.standard_normal() * 0.1 for i in range(200)])
+        req = TriageRequest(series=ts, max_lag=20, random_state=42)
+        result = run_triage(req)
+        # Narrative ownership: deterministic run_triage never sets narrative
+        assert result.narrative is None

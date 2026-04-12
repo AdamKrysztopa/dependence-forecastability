@@ -55,12 +55,6 @@ class TestPlanMethod:
         plan = plan_method(req, _clear_report())
         assert plan.route == "exogenous"
 
-    def test_goal_comparison_routes_comparison(self) -> None:
-        req = TriageRequest(series=_make_series(300), goal=AnalysisGoal.comparison)
-        plan = plan_method(req, _clear_report())
-        assert plan.route == "comparison"
-        assert plan.compute_surrogates is True
-
     def test_significance_infeasible_routes_univariate_no_sig(self) -> None:
         req = TriageRequest(series=_make_series(300))
         readiness = _warning_report("SIGNIFICANCE_FEASIBILITY")
@@ -82,13 +76,6 @@ class TestPlanMethod:
         readiness = _warning_report("SIGNIFICANCE_FEASIBILITY")
         plan = plan_method(req, readiness)
         assert plan.route == "exogenous"
-        assert plan.compute_surrogates is False
-
-    def test_comparison_with_sig_infeasible_no_surrogates(self) -> None:
-        req = TriageRequest(series=_make_series(300), goal=AnalysisGoal.comparison)
-        readiness = _warning_report("SIGNIFICANCE_FEASIBILITY")
-        plan = plan_method(req, readiness)
-        assert plan.route == "comparison"
         assert plan.compute_surrogates is False
 
     def test_plan_has_assumptions_and_rationale(self) -> None:

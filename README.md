@@ -100,6 +100,75 @@ uv run ruff check .
 uv run ty check
 ```
 
+## Agent quickstart
+
+The agentic triage layer wraps the deterministic `run_triage()` pipeline with
+an LLM adapter that explains results in plain language.  All numbers come from
+deterministic tools — the agent never invents numeric values.
+
+### Prerequisites
+
+```bash
+uv sync --extra agent  # installs pydantic-ai
+```
+
+Configure in `.env` (see `.env.example`):
+
+```ini
+OPENAI_API_KEY=sk-...
+OPENAI_MODEL=gpt-4o            # or gpt-4o-mini, gpt-4.1, etc.
+```
+
+### Minimal usage (deterministic only — no LLM)
+
+```python
+import numpy as np
+from forecastability.triage import run_triage, TriageRequest
+
+rng = np.random.default_rng(42)
+ts = np.array([0.85 ** i + rng.standard_normal() * 0.1 for i in range(300)])
+
+result = run_triage(TriageRequest(series=ts, goal="univariate", random_state=42))
+print(result.interpretation.forecastability_class)  # "high"
+print(result.recommendation)
+```
+
+### With LLM explanation (requires `agent` extra)
+
+```python
+import asyncio
+import numpy as np
+from forecastability.adapters.pydantic_ai_agent import run_triage_agent
+
+async def main():
+    rng = np.random.default_rng(42)
+    ts = np.array([0.85 ** i + rng.standard_normal() * 0.1 for i in range(300)])
+    explanation = await run_triage_agent(ts, max_lag=30, random_state=42)
+    print(explanation.narrative)
+    print(explanation.caveats)
+
+asyncio.run(main())
+```
+
+### Provider selection
+
+The agent defaults to the model configured in `OPENAI_MODEL` (settings layer).
+Override per call:
+
+```python
+from forecastability.adapters.pydantic_ai_agent import create_triage_agent
+agent = create_triage_agent(model="openai:gpt-4o-mini")
+```
+
+Any PydanticAI-compatible provider string works (e.g. `"anthropic:claude-3-5-sonnet-latest"`).
+
+> [!IMPORTANT]
+> The agent only narrates deterministic results.  It does not generate numeric
+> values.  `TriageResult.narrative` is always `None` for plain `run_triage()` calls.
+
+See [notebooks/03_agentic_triage.ipynb](notebooks/03_agentic_triage.ipynb) for a
+full interactive walkthrough.
+
 ## Interactive Notebooks
 
 Two self-contained Jupyter notebooks are provided in `notebooks/`.

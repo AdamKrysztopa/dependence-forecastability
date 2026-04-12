@@ -21,7 +21,10 @@ class TestAnalysisGoal:
     def test_enum_values(self) -> None:
         assert AnalysisGoal.univariate == "univariate"
         assert AnalysisGoal.exogenous == "exogenous"
-        assert AnalysisGoal.comparison == "comparison"
+
+    def test_comparison_removed(self) -> None:
+        """AGT-022: comparison was removed; verify it is not in the enum."""
+        assert not hasattr(AnalysisGoal, "comparison")
 
     def test_is_str_subclass(self) -> None:
         assert isinstance(AnalysisGoal.univariate, str)

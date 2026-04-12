@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 import pytest
+from typing import Generator
 
 # Skip the entire module if fastapi or httpx are not installed
 pytest.importorskip("fastapi")
@@ -247,3 +248,94 @@ class TestBuildTriageResponse:
         assert resp.readiness_status == "blocked"
         assert len(resp.readiness_warnings) == 1
         assert resp.forecastability_class is None
+
+
+# ---------------------------------------------------------------------------
+# GET /triage/stream — SSE streaming contract (AGT-024)
+# ---------------------------------------------------------------------------
+
+
+class TestTriageStreamEndpoint:
+    """AGT-024: SSE streaming endpoint contract tests."""
+
+    @pytest.fixture()
+    def streaming_client(self) -> Generator[TestClient, None, None]:
+        """TestClient wired to the app with streaming enabled."""
+        from unittest.mock import patch
+
+        assert app is not None, "FastAPI app is None — fastapi not installed"
+        with patch(
+            "forecastability.adapters.api.InfraSettings",
+            return_value=type(
+                "_MockSettings", (), {"triage_enable_streaming": True}
+            )(),
+        ):
+            yield TestClient(app)
+
+    def test_stream_disabled_returns_503(self, client: TestClient) -> None:
+        """When streaming is off (default), GET /triage/stream must return 503."""
+        from unittest.mock import patch
+
+        with patch(
+            "forecastability.adapters.api.InfraSettings",
+            return_value=type(
+                "_MockSettings", (), {"triage_enable_streaming": False}
+            )(),
+        ):
+            resp = client.get(
+                "/triage/stream",
+                params={"series": "[1.0, 2.0, 3.0]"},
+            )
+        assert resp.status_code == 503
+
+    def test_stream_invalid_json_series_returns_422(
+        self, streaming_client: TestClient
+    ) -> None:
+        """Malformed JSON in 'series' query param must return 422."""
+        resp = streaming_client.get(
+            "/triage/stream",
+            params={"series": "not-valid-json"},
+        )
+        assert resp.status_code == 422
+
+    def test_stream_ends_with_done_sentinel(
+        self, streaming_client: TestClient
+    ) -> None:
+        """Stream must end with a 'done' event as the final SSE data line."""
+        import json as _json
+
+        series = _make_ar1(n=50)
+        resp = streaming_client.get(
+            "/triage/stream",
+            params={"series": _json.dumps(series), "max_lag": 10, "n_surrogates": 10},
+        )
+        assert resp.status_code == 200
+        lines = [
+            line[len("data: "):].strip()
+            for line in resp.text.splitlines()
+            if line.startswith("data: ")
+        ]
+        assert len(lines) >= 1
+        last_event = _json.loads(lines[-1])
+        assert last_event["event_type"] == "done"
+
+    def test_stream_events_have_event_type_field(
+        self, streaming_client: TestClient
+    ) -> None:
+        """Every SSE data payload must have an 'event_type' key."""
+        import json as _json
+
+        series = _make_ar1(n=50)
+        resp = streaming_client.get(
+            "/triage/stream",
+            params={"series": _json.dumps(series), "max_lag": 10, "n_surrogates": 10},
+        )
+        assert resp.status_code == 200
+        data_lines = [
+            line[len("data: "):].strip()
+            for line in resp.text.splitlines()
+            if line.startswith("data: ")
+        ]
+        for raw in data_lines:
+            event = _json.loads(raw)
+            assert "event_type" in event, f"Missing event_type in: {event}"

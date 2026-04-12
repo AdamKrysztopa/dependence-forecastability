@@ -21,6 +21,7 @@ Or with the settings-configured port::
 
 from __future__ import annotations
 
+import threading
 from typing import Any
 
 import numpy as np
@@ -28,11 +29,13 @@ from pydantic import BaseModel, ConfigDict, field_validator
 
 try:
     from fastapi import FastAPI, HTTPException
+    from fastapi.responses import StreamingResponse
 
     _FASTAPI_AVAILABLE = True
 except ImportError:
     _FASTAPI_AVAILABLE = False
 
+from forecastability.adapters.settings import InfraSettings
 from forecastability.scorers import default_registry
 from forecastability.triage.models import AnalysisGoal, TriageRequest
 from forecastability.triage.run_triage import run_triage
@@ -61,7 +64,7 @@ class TriageHTTPRequest(BaseModel):
 
     series: list[float]
     exog: list[float] | None = None
-    goal: str = "univariate"
+    goal: str = "univariate"  # "univariate" | "exogenous"
     max_lag: int = 40
     n_surrogates: int = 99
     random_state: int = 42
@@ -247,7 +250,8 @@ else:
 
         Raises:
             HTTPException(422): When ``goal`` is not a valid
-                :class:`~forecastability.triage.models.AnalysisGoal`.
+                :class:`~forecastability.triage.models.AnalysisGoal`
+                (accepted values: ``"univariate"``, ``"exogenous"``).
         """
         try:
             goal = AnalysisGoal(body.goal)
@@ -275,3 +279,88 @@ else:
 
         result = run_triage(request)
         return _build_triage_response(result)
+
+    @app.get("/triage/stream")
+    def triage_stream(
+        series: str,
+        goal: str = "univariate",
+        max_lag: int = 40,
+        n_surrogates: int = 99,
+        random_state: int = 42,
+    ) -> StreamingResponse:
+        """Stream triage progress as Server-Sent Events (SSE).
+
+        Runs the complete deterministic triage pipeline in a background thread
+        and streams stage lifecycle events as SSE ``data:`` lines.  The stream
+        ends with ``data: {"event_type": "done"}``.
+
+        Only available when ``triage_enable_streaming=true`` in settings.
+
+        Args:
+            series: JSON-encoded list of floats, e.g. ``[0.1, -0.5, 0.3]``.
+            goal: ``"univariate"`` or ``"exogenous"``.
+            max_lag: Maximum lag to evaluate.
+            n_surrogates: Number of surrogates for significance bands.
+            random_state: Seed for determinism.
+
+        Returns:
+            ``text/event-stream`` response with SSE events.
+
+        Raises:
+            HTTPException(503): When streaming is disabled in settings.
+            HTTPException(422): When ``series`` is not valid JSON.
+        """
+        import json as _json
+
+        settings = InfraSettings()
+        if not settings.triage_enable_streaming:
+            raise HTTPException(
+                status_code=503,
+                detail=(
+                    "Streaming is disabled.  Set triage_enable_streaming=true "
+                    "in .env or environment to enable."
+                ),
+            )
+
+        try:
+            parsed: list[float] = _json.loads(series)
+        except _json.JSONDecodeError as exc:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Invalid JSON in 'series' query parameter: {exc}",
+            ) from exc
+
+        try:
+            goal_enum = AnalysisGoal(goal)
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Invalid goal '{goal}'. Valid values: {[g.value for g in AnalysisGoal]}",
+            ) from exc
+
+        from forecastability.adapters.event_emitter import StreamingEventEmitter
+
+        request = TriageRequest(
+            series=np.asarray(parsed, dtype=np.float64),
+            goal=goal_enum,
+            max_lag=max_lag,
+            n_surrogates=n_surrogates,
+            random_state=random_state,
+        )
+
+        emitter = StreamingEventEmitter()
+
+        def _run_in_background() -> None:
+            try:
+                run_triage(request, event_emitter=emitter)
+            finally:
+                emitter.close()
+
+        thread = threading.Thread(target=_run_in_background, daemon=True)
+        thread.start()
+
+        return StreamingResponse(
+            emitter.sse_stream(),
+            media_type="text/event-stream",
+            headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+        )

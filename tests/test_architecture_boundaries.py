@@ -29,7 +29,19 @@ _DOMAIN_MODULES = [
     "src/forecastability/scorers.py",
     "src/forecastability/cmi.py",
     "src/forecastability/surrogates.py",
+    # AGT-026: additional domain-like modules added to coverage
+    "src/forecastability/aggregation.py",  # pure domain: numpy/pandas/scipy only
+    # reporting.py: output transformation, not domain compute; no forbidden imports
+    "src/forecastability/reporting.py",
 ]
+
+# Modules that are domain-like but have justified partial exceptions to the rule.
+# Each entry maps module path → frozenset of additional allowed packages.
+_DOMAIN_MODULE_EXEMPTIONS: dict[str, frozenset[str]] = {
+    # analyzer.py contains a legacy .plot() method (pre-dates boundary rule).
+    # The plotting concern should eventually migrate to plots.py; tracked separately.
+    "src/forecastability/analyzer.py": frozenset({"matplotlib"}),
+}
 
 _DOMAIN_FORBIDDEN = frozenset(
     ["pydantic_ai", "fastapi", "mcp", "httpx", "click", "typer", "matplotlib"]
@@ -96,6 +108,22 @@ def test_domain_modules_have_no_infra_imports(module_path: str) -> None:
         f"{module_path} imports forbidden infrastructure package(s): "
         f"{sorted(set(violations))}. "
         "Domain modules must not depend on infrastructure or presentation layers."
+    )
+
+
+@pytest.mark.parametrize("module_path,extra_allowed", list(_DOMAIN_MODULE_EXEMPTIONS.items()))
+def test_domain_modules_with_exemptions_have_no_other_infra_imports(
+    module_path: str, extra_allowed: frozenset[str]
+) -> None:
+    """AGT-026: modules with justified exemptions must not import other forbidden packages."""
+    path = ROOT / module_path
+    imported = _get_imports(path)
+    effective_forbidden = _DOMAIN_FORBIDDEN - extra_allowed
+    violations = [pkg for pkg in imported if pkg in effective_forbidden]
+    assert not violations, (
+        f"{module_path} imports forbidden infrastructure package(s) "
+        f"(allowed exemptions: {sorted(extra_allowed)}): "
+        f"{sorted(set(violations))}."
     )
 
 

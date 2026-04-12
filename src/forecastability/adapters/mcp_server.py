@@ -68,8 +68,7 @@ def _build_triage_request(
     Args:
         series: Target time series as a list of floats.
         exog: Optional exogenous series (must match ``series`` length).
-        goal: Analysis goal string (``"univariate"``, ``"exogenous"``, or
-            ``"comparison"``).
+        goal: Analysis goal string (``"univariate"`` or ``"exogenous"``).
         max_lag: Maximum lag to evaluate.
         n_surrogates: Number of surrogates for significance estimation.
         random_state: Seed for deterministic execution.
@@ -224,7 +223,7 @@ if _MCP_AVAILABLE:
 
         Args:
             series: Target time series as a list of floats.
-            goal: ``"univariate"``, ``"exogenous"``, or ``"comparison"``.
+            goal: ``"univariate"`` or ``"exogenous"``.
             max_lag: Maximum lag to evaluate.
             n_surrogates: Number of surrogates for significance estimation.
             random_state: Seed for reproducibility.
@@ -299,7 +298,7 @@ if _MCP_AVAILABLE:
             },
             "goal": {
                 "type": "string", "required": False, "default": "univariate",
-                "enum": ["univariate", "exogenous", "comparison"],
+                "enum": ["univariate", "exogenous"],
             },
             "max_lag": {"type": "integer", "required": False, "default": 40},
             "n_surrogates": {"type": "integer", "required": False, "default": 99},

@@ -217,8 +217,8 @@ sequenceDiagram
 | `cmi.py` | domain | no | yes |
 | `scorers.py` | domain | no | yes |
 | `interpretation.py` | domain | no | yes |
-| `analyzer.py` | domain | no | yes |
-| `reporting.py` | domain | no (matplotlib via plots only) | yes |
+| `analyzer.py` | domain | matplotlib (legacy `.plot()` method — exempted, AGT-026) | yes |
+| `reporting.py` | domain output | no | yes |
 | `plots.py` | domain (exception) | matplotlib | yes |
 | `recommendation_service.py` | domain service | no | partial |
 | `triage/models.py` | triage sub-domain | no | no |
@@ -279,3 +279,71 @@ Run `uv run pytest tests/test_architecture_boundaries.py -v` to verify locally.
 - Backlog and epic status: [docs/plan/agentic_triage_backlog.md](plan/agentic_triage_backlog.md)
 - Frozen public contract: [docs/plan/solid_refactor_contract.md](plan/solid_refactor_contract.md)
 - Agent workflow: [.github/AGENT_FLOW.md](../.github/AGENT_FLOW.md)
+
+---
+
+## Narrative ownership (AGT-028)
+
+Explanatory prose about triage results belongs to exactly one layer.
+
+| Layer | Owns | Does not own |
+|---|---|---|
+| `run_triage()` use case | scientific outputs (`analyze_result`, `interpretation`, `recommendation`) | explanatory prose or LLM-written text |
+| PydanticAI adapter (`pydantic_ai_agent.py`) | `TriageExplanation.narrative` and `caveats` | numeric values (all numbers come from tool calls) |
+
+**Rule:** `TriageResult.narrative` is always `None` for deterministic `run_triage()` calls.
+Only the agent adapter layer may populate it after an LLM interaction.
+
+This separation ensures:
+- Deterministic behaviour is testable without any LLM or network call.
+- LLM narration can be disabled or replaced without breaking the scientific pipeline.
+- Downstream consumers that only need structured outputs can ignore `narrative` entirely.
+
+> [!IMPORTANT]
+> Never let a tool, use case, or domain module set `TriageResult.narrative`.
+> That field is the agent adapter's responsibility.
+
+---
+
+## Checkpoint semantics (AGT-023)
+
+Checkpoints implement **orchestration-state replay**, not full-artifact resume.
+
+| Checkpoint persists | Checkpoint does NOT persist |
+|---|---|
+| Readiness report (JSON-friendly dict) | Numpy arrays from compute stage |
+| Method plan (JSON-friendly dict) | `AnalyzeResult` objects |
+| Stage name (last completed stage) | `InterpretationResult` objects |
+
+On resume, stages up to and including the last committed stage are skipped;
+**compute always re-runs from scratch** because numpy arrays are not JSON-safe.
+
+To avoid correctness issues in multi-run contexts, always pass a unique
+`checkpoint_key` (e.g. a UUID) to `run_triage()`.  Using the default key
+`"default"` when a checkpoint adapter is active emits a :class:`UserWarning`.
+
+---
+
+## Streaming transport (AGT-024)
+
+Stage progress is exposed as Server-Sent Events (SSE) via `GET /triage/stream`.
+
+The transport path is:
+
+```
+run_triage() → StreamingEventEmitter.emit() → Queue → SSE generator → HTTP client
+```
+
+`StreamingEventEmitter` is an adapter in `adapters/event_emitter.py`.
+It is gated by the `triage_enable_streaming` settings flag.
+
+SSE event types emitted in order:
+
+| Event type | Payload |
+|---|---|
+| `stage_started` | `stage`, `timestamp` |
+| `stage_completed` | `stage`, `duration_ms`, `result_summary` |
+| `stage_error` | `stage`, `error` |
+| `done` | (no payload) |
+
+The endpoint is contract-tested in `tests/test_api.py`.

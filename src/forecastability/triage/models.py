@@ -3,18 +3,24 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Any
 
 import numpy as np
 from pydantic import BaseModel, ConfigDict
 
+from forecastability.analyzer import AnalyzeResult
+from forecastability.types import InterpretationResult
+
 
 class AnalysisGoal(StrEnum):
-    """High-level intent of a triage request."""
+    """High-level intent of a triage request.
+
+    ``comparison`` was removed in E9 (AGT-022) because no second reference
+    series exists in :class:`TriageRequest`.  Multi-scorer comparison remains
+    on the backlog as AGT-017 (re-opened, Could Have).
+    """
 
     univariate = "univariate"
     exogenous = "exogenous"
-    comparison = "comparison"
 
 
 class ReadinessStatus(StrEnum):
@@ -100,13 +106,17 @@ class TriageResult(BaseModel):
         request: Original triage request.
         readiness: Readiness gate outcome.
         method_plan: Selected compute path; ``None`` when blocked.
-        analyze_result: Runtime ``AnalyzeResult`` from the analyzer; typed as
-            ``Any`` to avoid circular imports — validated by duck-typing at use-
-            case level.
-        interpretation: Runtime ``InterpretationResult``; typed as ``Any`` for
-            the same reason.
+        analyze_result: :class:`~forecastability.analyzer.AnalyzeResult` from
+            the analyzer; ``None`` when blocked (AGT-025).
+        interpretation: :class:`~forecastability.types.InterpretationResult`;
+            ``None`` when blocked (AGT-025).
         recommendation: Human-readable triage recommendation string.
         blocked: Convenience flag, ``True`` when readiness status is blocked.
+        narrative: Optional LLM-generated explanation; always ``None`` for
+            deterministic ``run_triage()`` runs (owned by agent adapter,
+            AGT-028).
+        timing: Per-stage wall-clock durations in milliseconds when an
+            ``event_emitter`` is active; ``None`` otherwise.
     """
 
     model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
@@ -114,8 +124,8 @@ class TriageResult(BaseModel):
     request: TriageRequest
     readiness: ReadinessReport
     method_plan: MethodPlan | None = None
-    analyze_result: Any | None = None  # AnalyzeResult at runtime
-    interpretation: Any | None = None  # InterpretationResult at runtime
+    analyze_result: AnalyzeResult | None = None
+    interpretation: InterpretationResult | None = None
     recommendation: str | None = None
     blocked: bool
     narrative: str | None = None

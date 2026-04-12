@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+import warnings
 from collections.abc import Callable
 from typing import Any
 
@@ -45,9 +46,6 @@ def _run_compute(request: TriageRequest, method_plan: MethodPlan) -> AnalyzeResu
         ValueError: When route is unrecognised.
     """
     route = method_plan.route
-
-    if route == "comparison":
-        raise NotImplementedError("comparison route is not yet implemented (AGT-017)")
 
     if route not in {"univariate_with_significance", "univariate_no_significance", "exogenous"}:
         raise ValueError(f"Unknown route: {route}")
@@ -166,6 +164,17 @@ def run_triage(
     4. **Interpretation** — maps MI curves to a forecastability class and
        modeling regime.
 
+    .. note:: Checkpoint semantics (AGT-023)
+
+        Checkpoints implement **orchestration-state replay**, not full-artifact
+        resume.  Each stage saves the orchestration state (readiness report and
+        method plan as JSON-serialisable dicts) but *not* the full numpy arrays
+        from the compute stage.  Resuming will re-execute compute from scratch;
+        only readiness and routing stages can be skipped.  This is by design:
+        numpy arrays are large and not JSON-safe.  If you need full-artifact
+        resume, persist the ``AnalyzeResult`` separately and reconstruct it
+        before calling ``run_triage()``.
+
     Args:
         request: Inbound triage request containing the series, optional exog,
             and analysis parameters.
@@ -182,8 +191,11 @@ def run_triage(
             partial state after each stage and resumes from the last committed
             stage if ``checkpoint_key`` already has saved state.
         checkpoint_key: Unique identifier for the current run's checkpoint.
-            Defaults to ``"default"``; callers should supply a stable run ID
-            for durable resume.
+            Defaults to ``"default"``; supply a stable, per-run ID (e.g. a UUID)
+            to avoid collisions when multiple runs share the same checkpoint
+            store.  Using ``"default"`` in a multi-run context is a common
+            mistake — a :class:`UserWarning` is emitted when ``checkpoint`` is
+            not ``None`` and the key is ``"default"``.
 
     Returns:
         :class:`TriageResult` with all sub-results populated, or a short-circuit
@@ -192,6 +204,18 @@ def run_triage(
         milliseconds when ``event_emitter`` is provided.
     """
     timing: dict[str, float] | None = {} if event_emitter is not None else None
+
+    # AGT-023: warn when caller uses the default checkpoint key in a multi-run
+    # context, as it risks overwriting another run's partial state.
+    if checkpoint is not None and checkpoint_key == "default":
+        warnings.warn(
+            "run_triage(): checkpoint_key='default' is shared across runs.  "
+            "Supply a unique per-run key (e.g. a UUID) to avoid checkpoint "
+            "collisions.  Checkpoints implement replay-only semantics: only "
+            "readiness and routing stages can be skipped; compute always re-runs.",
+            UserWarning,
+            stacklevel=2,
+        )
 
     # --- resume from checkpoint if available ---
     resumed_stage: str | None = None

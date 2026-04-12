@@ -1,12 +1,12 @@
 <!-- type: reference -->
 # Agentic Triage Backlog
 
-Status: proposed → **revised** → **in progress**  
+Status: proposed → **revised** → **in progress** → **E9 complete**  
 Owner: Adam Krysztopa  
 Area: `docs/plan/`  
 Planning style: MoSCoW-aligned backlog  
 Primary target: agentic triage around deterministic forecastability analysis  
-Last revised: 2026-04-11 (E7 complete)
+Last revised: 2026-04-12 (E9 added — review hardening)
 
 ---
 
@@ -22,6 +22,7 @@ Last revised: 2026-04-11 (E7 complete)
 | E6 | **Operational maturity** — streaming, observability, durability | AGT-012, AGT-013, AGT-014 | ✅ done |
 | E7 | **Quality gates, agent workflow, and regression** — architecture docs, role parity, benchmark regression | AGT-015, AGT-016, AGT-020 | ✅ done |
 | E8 | **User enablement and extensions** — scorer comparison, notebook-agent facade, triage notebook, A2A spike | AGT-017, AGT-018, AGT-021, AGT-019 | ✅ done |
+| E9 | **Review hardening** — contract mismatch, checkpoint semantics, streaming UX, typing, boundary coverage, agent docs, narrative ownership | AGT-022, AGT-023, AGT-024, AGT-025, AGT-026, AGT-027, AGT-028 | ✅ done |
 
 ---
 
@@ -992,6 +993,15 @@ graph TD
     AGT007 --> AGT012
     AGT012 --> AGT013["AGT-013<br>Observability"]
     AGT013 --> AGT014["AGT-014<br>Durable execution"]
+
+    %% E9 — Review hardening
+    AGT007 --> AGT022["AGT-022<br>comparison route fix"]
+    AGT014 --> AGT023["AGT-023<br>Checkpoint semantics"]
+    AGT012 --> AGT024["AGT-024<br>Streaming transport"]
+    AGT010 --> AGT024
+    AGT004 --> AGT025["AGT-025<br>Narrow TriageResult typing"]
+    AGT003 --> AGT026["AGT-026<br>Expand boundary tests"]
+    AGT008a --> AGT027["AGT-027<br>Harden agent docs"]
     AGT007 --> AGT016["AGT-016<br>Regression tests"]
     AGT011 --> AGT019["AGT-019<br>A2A spike"]
 ```
@@ -1016,6 +1026,321 @@ graph TD
 16. AGT-013 — Observability
 17. AGT-016 — Regression tests
 18. AGT-014, AGT-017, AGT-019 — lower-priority extensions
+19. **AGT-022** — Resolve comparison route contract mismatch ← **review-critical**
+20. AGT-025 — Narrow `TriageResult` typing
+21. AGT-026 — Expand architecture boundary tests
+22. AGT-023 — Checkpoint durability semantics
+23. AGT-024 — Streaming transport surface
+24. AGT-027 — Harden PydanticAI adapter docs
+25. AGT-028 — Narrative ownership rule
+
+---
+
+# E9 — Review Hardening
+
+> [!NOTE]
+> Items in this epic originate from the static architecture review in
+> `docs/review_findings.md`.  They are ordered by review-severity
+> (High → Medium → Low) and numbered AGT-022 – AGT-028.
+
+## AGT-022 — Resolve `comparison` route contract mismatch ✅
+
+**Priority:** Must Have · **Points:** 5 · **Labels:** `contract`, `triage`, `must-have`
+
+### Goal
+
+Eliminate the gap between what public surfaces advertise (`comparison` as a
+valid `AnalysisGoal`) and what `run_triage()` can actually execute.
+
+### Evidence
+
+- `AnalysisGoal` includes `comparison`
+- HTTP request model, MCP schema, and CLI all expose `comparison`
+- `run_triage()` raises `NotImplementedError("comparison route is not yet implemented (AGT-017)")`
+- Backlog lists E8 / AGT-017 as done
+
+### Scope — choose one path
+
+**Path A — implement the comparison route now**
+- Add multi-scorer execution in `_run_compute()` (or a new helper)
+- Return a structured comparison result inside `TriageResult`
+- Cover route in `tests/test_triage_run.py` and transport contract tests
+
+**Path B — de-scope cleanly**
+- Remove `comparison` from `AnalysisGoal` enum exposed to users
+- Remove it from API, MCP, and CLI request schemas
+- Keep internal scaffolding only if clearly marked `_experimental`
+- Reopen AGT-017 in the backlog
+
+### Tasks
+
+- Decide Path A or Path B
+- If Path A: implement comparison execution, router branch, interpretation
+- If Path B: prune enum + transport schemas, mark AGT-017 as open
+- Add route-specific regression tests for the chosen behavior
+- Update backlog/epic status to match reality
+
+### Acceptance criteria
+
+- No public surface advertises a route that `run_triage()` cannot execute
+- Backlog status and code reality agree
+- Dedicated tests cover the chosen route behavior
+- `uv run pytest -q -ra` passes
+
+### Dependencies
+
+- AGT-007.
+
+---
+
+## AGT-023 — Clarify and strengthen checkpoint durability semantics ✅
+
+**Priority:** Should Have · **Points:** 3 · **Labels:** `durability`, `checkpoint`, `should-have`
+
+### Goal
+
+Make checkpoint semantics explicit: replay-only or full-artifact resume.
+
+### Evidence
+
+After the compute stage the checkpoint persists only a **summary** dict
+(`compute_summary`), not the full `AnalyzeResult`.  Resumed runs will still
+re-execute compute — weaker durability than callers may assume.
+
+### Scope
+
+**Option 1 — keep replay semantics (recommended first step)**
+- Rename / document clearly that checkpoints are *orchestration-state replay*,
+  not full-artifact resume
+- Add inline docstring and a note in `docs/architecture.md`
+
+**Option 2 — full compute resume**
+- After the compute stage, persist the minimal sufficient artifact
+  (raw/partial curves + sig lags) in a versioned JSON-safe format
+- On resume, deserialise and skip directly to interpretation
+
+### Tasks
+
+- Document chosen semantics in `run_triage()` docstring and `docs/architecture.md`
+- Make `checkpoint_key="default"` emit a warning when `checkpoint` is not `None`
+  (prevent accidental collisions in multi-run contexts)
+- Add a test that interrupts after compute and verifies expected resume behavior
+- If Option 2: add JSON-safe serialiser/deserialiser for `AnalyzeResult`
+
+### Acceptance criteria
+
+- Checkpoint semantics are explicit in docs and tests
+- Resume behavior is deterministic and tested for interrupted flows
+- Default key collision risk is documented or warned
+
+### Dependencies
+
+- AGT-014.
+
+---
+
+## AGT-024 — Productise user-visible streaming transport ✅
+
+**Priority:** Should Have · **Points:** 5 · **Labels:** `streaming`, `transport`, `should-have`
+
+### Goal
+
+Expose triage progress as a user-visible stream, not just internal events / logs.
+
+### Evidence
+
+The branch has `EventEmitterPort`, typed events, `LoggingEventEmitter`,
+`InMemoryCollectorEmitter`, and a settings flag `triage_enable_streaming`.
+However no confirmed external transport surface (SSE, WebSocket, MCP progress)
+lets an API/MCP client observe stages in real time.
+
+### Scope
+
+- Add an SSE streaming endpoint in `adapters/api.py` (e.g. `GET /triage/stream`)
+- Bridge `EventEmitterPort` → SSE via a `StreamingEventEmitter` adapter
+- Define payload schema and event ordering contract
+- Optionally: add MCP progress/event delivery if client ecosystem benefits
+
+### Tasks
+
+- Implement `StreamingEventEmitter` adapter
+- Add `GET /triage/stream` SSE endpoint gated by `triage_enable_streaming`
+- Add transport integration test asserting stage ordering and payload shape
+- Document streaming capability in `docs/architecture.md`
+
+### Acceptance criteria
+
+- External consumer can observe triage stage progress outside logs / tests
+- Streaming output is contract-tested (event names, order, payload schema)
+- Settings flag toggles real external behavior, not just internal plumbing
+- `uv run pytest -q -ra` passes
+
+### Dependencies
+
+- AGT-012, AGT-010.
+
+---
+
+## AGT-025 — Narrow `TriageResult` typing — eliminate `Any` ✅
+
+**Priority:** Should Have · **Points:** 3 · **Labels:** `typing`, `contract`, `should-have`
+
+### Goal
+
+Replace `Any` on the two most important fields of the central triage result
+model.
+
+### Evidence
+
+`TriageResult` currently declares:
+```python
+analyze_result: Any | None = None  # AnalyzeResult at runtime
+interpretation: Any | None = None  # InterpretationResult at runtime
+```
+
+Comment explains circular-import avoidance, but this weakens the most important
+application contract.
+
+### Scope
+
+Choose one approach:
+1. **TYPE_CHECKING guard** — import `AnalyzeResult` / `InterpretationResult`
+   under `if TYPE_CHECKING:` and use string annotations (`"AnalyzeResult"`)
+2. **Lightweight summary DTOs** — define `TriageComputeSummary` and
+   `TriageInterpretationSummary` models with only the fields adapters need
+3. **Protocol contracts** — define narrow structural protocols for the required
+   fields
+
+### Tasks
+
+- Replace `Any` with the chosen typed contract
+- Confirm no circular import at runtime
+- Update serialisation logic in adapters if the shape changed
+- Verify `uv run ty check` and `uv run pytest -q -ra` pass
+
+### Acceptance criteria
+
+- `TriageResult` exposes narrow typed contracts for downstream use
+- Adapter serialisation relies on stable shapes without duck-typing surprises
+- Circular import avoidance does *not* require `Any`
+
+### Dependencies
+
+- AGT-004.
+
+---
+
+## AGT-026 — Expand architecture boundary test coverage ✅
+
+**Priority:** Should Have · **Points:** 2 · **Labels:** `testing`, `hexagon`, `should-have`
+
+### Goal
+
+Close the gap between architecture docs and enforced boundary tests.
+
+### Evidence
+
+`_DOMAIN_MODULES` in `tests/test_architecture_boundaries.py` covers:
+`metrics`, `validation`, `interpretation`, `types`, `config`, `scorers`, `cmi`,
+`surrogates`.
+
+Not yet covered: `analyzer.py`, `aggregation.py`, `reporting.py`, and any other
+domain-like modules that should obey the same import constraints.
+
+### Tasks
+
+- Audit `src/forecastability/` for modules that behave as domain-like
+- Add missing modules to `_DOMAIN_MODULES` (or justify their exemption)
+- For `reporting.py`, decide whether it is domain or adapter and annotate
+- Run `uv run pytest tests/test_architecture_boundaries.py -v` to confirm
+
+### Acceptance criteria
+
+- Boundary test inventory matches the architecture intent in `docs/architecture.md`
+- All important scientific/core modules are either covered or explicitly exempted
+  (with rationale in a code comment)
+- No regressions
+
+### Dependencies
+
+- AGT-003.
+
+---
+
+## AGT-027 — Harden PydanticAI adapter and document canonical entry point ✅
+
+**Priority:** Low · **Points:** 2 · **Labels:** `pydanticai`, `docs`, `low`
+
+### Goal
+
+The agent facade already exists — strengthen it rather than recreate it.
+
+### Evidence
+
+`adapters/pydantic_ai_agent.py` exposes `create_triage_agent()` with tool
+bindings.  Tests verify the expected tool set.  What is missing: consolidated
+documentation, provider-selection guidance, and a smoke/integration test path
+for the `agent` extra.
+
+### Tasks
+
+- Document `create_triage_agent()` in root README under an "Agent quickstart"
+  section
+- Add provider-selection guidance (model, key, fallback)
+- Add a smoke test path for `uv sync --extra agent` + agent creation
+- Verify explanation output never invents unsupported values
+
+### Acceptance criteria
+
+- One canonical agent facade documented in README and notebook 03
+- Tests verify deterministic-tool / narrative separation
+- Provider configuration is explicit
+
+### Dependencies
+
+- AGT-008a.
+
+---
+
+## AGT-028 — Clarify narrative ownership rule ✅
+
+**Priority:** Low · **Points:** 1 · **Labels:** `docs`, `narrative`, `low`
+
+### Goal
+
+Document a single authoritative rule for who owns explanatory prose.
+
+### Evidence
+
+Two narrative concepts exist:
+- `TriageResult.narrative` on the deterministic model (default `None`)
+- Richer explanation in PydanticAI adapter with its own `narrative`
+
+Both are valid; but without a documented rule, confusion will grow.
+
+### Scope
+
+- Add a "Narrative ownership" section to `docs/architecture.md`
+- Establish the rule:
+  - `run_triage()` owns scientific outputs and structured recommendation
+  - The agent layer owns explanatory prose
+  - `TriageResult.narrative` remains `None` for pure deterministic runs unless a
+    specific non-LLM renderer is intentionally added
+- Add a test asserting `run_triage()` returns `narrative is None` without agent
+
+### Tasks
+
+- Write the ownership rule in `docs/architecture.md`
+- Add assertion to `tests/test_triage_run.py`
+
+### Acceptance criteria
+
+- One source of truth for explanatory prose is documented
+- Deterministic and agent-generated text are not conflated
+
+### Dependencies
+
+None.
 
 ---
 
@@ -1036,3 +1361,10 @@ This backlog is complete when:
 - [ ] All items pass `uv run pytest -q -ra`, `uv run ruff check .`, `uv run ty check`
 - [ ] Notebooks 01 and 02 remain byte-for-byte unchanged
 - [ ] A2A remains deferred unless a concrete distributed use case justifies it
+- [x] No public surface advertises a route `run_triage()` cannot execute (AGT-022)
+- [x] Checkpoint semantics explicit in docs and tested for resume behavior (AGT-023)
+- [x] User-visible streaming transport surface contract-tested (AGT-024)
+- [x] `TriageResult` uses narrow typed contracts instead of `Any` (AGT-025)
+- [x] Architecture boundary tests cover all domain-like modules (AGT-026)
+- [x] Canonical agent entry point documented in README (AGT-027)
+- [x] Narrative ownership rule documented; deterministic vs agent text not conflated (AGT-028)
