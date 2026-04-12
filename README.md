@@ -40,6 +40,8 @@ uv sync && MPLBACKEND=Agg uv run python scripts/run_canonical_examples.py
 
 - Benchmark panel evaluation: `MPLBACKEND=Agg uv run python scripts/run_benchmark_panel.py`
 - Exogenous driver analysis: `MPLBACKEND=Agg uv run python scripts/run_exog_analysis.py`
+- Component selection guide: [docs/why_use_this.md](docs/why_use_this.md)
+- Industrial scenario guide: [docs/use_cases_industrial.md](docs/use_cases_industrial.md)
 - Results summary (evidence-first): [docs/results_summary.md](docs/results_summary.md)
 - Agentic walkthrough notebook: [notebooks/03_agentic_triage.ipynb](notebooks/03_agentic_triage.ipynb)
 - Full docs index: [docs/README.md](docs/README.md)

@@ -19,6 +19,15 @@ Decision-focused evidence summary.
 |---|---|
 | [results_summary.md](results_summary.md) | Compact evidence-first summary of univariate AMI/pAMI, exogenous screening, and triage workflow findings, with explicit limitations |
 
+## Operational Guidance
+
+Practical guides for choosing components and mapping diagnostics to industrial decisions.
+
+| Document | Description |
+|---|---|
+| [why_use_this.md](why_use_this.md) | Component comparison matrix for AMI, pAMI, directness ratio, exogenous analysis, triage, and optional narration |
+| [use_cases_industrial.md](use_cases_industrial.md) | Manufacturing/reliability/PdM scenario matrix with recommended path, outputs, and next decisions |
+
 ## Theory
 
 Conceptual background and mathematical foundations.
