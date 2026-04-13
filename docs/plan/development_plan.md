@@ -3,7 +3,7 @@
 
 **Replaces:** MoSCoW plan (removed)
 **Source epic:** [`not_planed/triage_extension_epic_math_grounded.md`](not_planed/triage_extension_epic_math_grounded.md)
-**Last reviewed:** 2026-04-13 (F1 implemented 2026-04-12; F2, SeriesDiagnosticScorer, PSD utility implemented 2026-04-12; F6 implemented 2026-04-12; F4 implemented 2026-04-12; F3 implemented 2026-04-12; F5 implemented 2026-04-12; F7, F8 implemented 2026-04-12; F9 elaborated 2026-04-13; F9 implemented 2026-04-13; examples/notebooks/agents plan added 2026-04-13; E3/E4/E6 examples marked done 2026-04-13; E5/E7/E8 examples marked done 2026-04-13; N1 notebook implemented and executed 2026-04-13; N2 notebook implemented and executed 2026-04-13)
+**Last reviewed:** 2026-04-13 (F1 implemented 2026-04-12; F2, SeriesDiagnosticScorer, PSD utility implemented 2026-04-12; F6 implemented 2026-04-12; F4 implemented 2026-04-12; F3 implemented 2026-04-12; F5 implemented 2026-04-12; F7, F8 implemented 2026-04-12; F9 elaborated 2026-04-13; F9 implemented 2026-04-13; examples/notebooks/agents plan added 2026-04-13; E3/E4/E6 examples marked done 2026-04-13; E5/E7/E8 examples marked done 2026-04-13; N1 notebook implemented and executed 2026-04-13; N2 notebook implemented and executed 2026-04-13; N3/N4/N5 notebooks implemented and executed 2026-04-13)
 
 ---
 
@@ -83,9 +83,9 @@ Before reading the per-feature sections, note what the repo already provides:
 | E8 | Example | F8 Exog Screening | 3 | ~80 % — `run_exogenous_driver_redundancy_screening.py` | Add strong/weak/redundant driver narrative; consolidate | ✅ Done |
 | N1 | Notebook | F1 | 1 | — | `05_forecastability_profile_walkthrough` — profile vs scalar; non-monotone vs monotone | ✅ Done |
 | N2 | Notebook | F2 | 1 | — | `06_information_limits_and_compression` — ceiling vs realisation; compression warnings | ✅ Done |
-| N3 | Notebook | F3 | 2 | — | `07_predictive_information_learning_curves` — curve construction; plateau; bias-floor caveat | Not started |
-| N4 | Notebook | F4, F5, F6 | 2–3 | — | `08_spectral_and_entropy_diagnostics` — Ω, PE/SE plane, complexity bands, optional LLE | Not started |
-| N5 | Notebook | F7, F8 | 3 | — | `09_batch_and_exogenous_workbench` — batch ranking + exog screening + redundancy + BH | Not started |
+| N3 | Notebook | F3 | 2 | — | `07_predictive_information_learning_curves` — curve construction; plateau; bias-floor caveat | ✅ Done |
+| N4 | Notebook | F4, F5, F6 | 2–3 | — | `08_spectral_and_entropy_diagnostics` — Ω, PE/SE plane, complexity bands, optional LLE | ✅ Done |
+| N5 | Notebook | F7, F8 | 3 | — | `09_batch_and_exogenous_workbench` — batch ranking + exog screening + redundancy + BH | ✅ Done |
 | A1 | Agent adapter | F1–F8 | 3 | — | `triage_agent_payload_models.py` — Pydantic payload models for all diagnostics | Not started |
 | A2 | Agent adapter | F1–F8 | 3 | A1 | `triage_summary_serializer.py` — result models → agent-safe payloads; schema version | Not started |
 | A3 | Agent adapter | F1–F8 | 3 | A1, A2 | `triage_agent_interpretation_adapter.py` — concise summaries; warnings; experimental flags | Not started |

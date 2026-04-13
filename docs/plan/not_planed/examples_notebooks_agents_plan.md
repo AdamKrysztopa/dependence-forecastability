@@ -1,6 +1,6 @@
 # Examples, Notebooks, and Improved Agents Plan  
 **Companion to:** `development_plan.md`  
-**Last reviewed:** 2026-04-13  
+**Last reviewed:** 2026-04-13 (N3/N4/N5 notebooks implemented and executed)
 **Repo:** `AdamKrysztopa/dependence-forecastability`
 
 ---
@@ -105,9 +105,9 @@ notebooks/
   triage/
     01_forecastability_profile_walkthrough.ipynb
     02_information_limits_and_compression.ipynb
-    03_predictive_information_learning_curves.ipynb
-    04_spectral_and_entropy_diagnostics.ipynb
-    05_batch_and_exogenous_workbench.ipynb
+    07_predictive_information_learning_curves.ipynb
+    08_spectral_and_entropy_diagnostics.ipynb
+    09_batch_and_exogenous_workbench.ipynb
     06_agent_ready_triage_interpretation.ipynb
 ```
 
@@ -201,13 +201,13 @@ This keeps agent work in adapter land, not in the deterministic core.
 - [x] explicit reliability warning example for small sample size
 
 ### Notebook
-- [ ] `notebooks/triage/03_predictive_information_learning_curves.ipynb`
+- [x] `notebooks/triage/07_predictive_information_learning_curves.ipynb`
 
 ### Notebook sections
-- [ ] why “how much history?” differs from “is horizon forecastable?”
-- [ ] lookback curve construction
-- [ ] plateau detection
-- [ ] bias-floor warning and curse-of-dimensionality caveat
+- [x] why “how much history?” differs from “is horizon forecastable?”
+- [x] lookback curve construction
+- [x] plateau detection
+- [x] bias-floor warning and curse-of-dimensionality caveat
 
 ### Agent payload additions
 - [ ] `recommended_lookback`
@@ -229,7 +229,7 @@ This keeps agent work in adapter land, not in the deterministic core.
 - [x] note on preprocessing assumptions
 
 ### Notebook
-- [ ] merged into `04_spectral_and_entropy_diagnostics.ipynb`
+- [x] merged into `08_spectral_and_entropy_diagnostics.ipynb`
 
 ### Agent payload additions
 - [ ] `spectral_predictability_score`
@@ -250,7 +250,7 @@ This keeps agent work in adapter land, not in the deterministic core.
 - [x] explicit experimental warning in output
 
 ### Notebook
-- [ ] optional section inside `04_spectral_and_entropy_diagnostics.ipynb`
+- [x] optional section inside `08_spectral_and_entropy_diagnostics.ipynb`
 - [ ] or separate appendix notebook only if complexity grows too much
 
 ### Agent payload additions
@@ -275,7 +275,7 @@ This keeps agent work in adapter land, not in the deterministic core.
 - [x] complexity band result
 
 ### Notebook
-- [ ] merged into `04_spectral_and_entropy_diagnostics.ipynb`
+- [x] merged into `08_spectral_and_entropy_diagnostics.ipynb`
 
 ### Agent payload additions
 - [ ] `permutation_entropy`
@@ -297,7 +297,7 @@ This keeps agent work in adapter land, not in the deterministic core.
 - [x] export JSON/CSV example
 
 ### Notebook
-- [ ] `notebooks/triage/05_batch_and_exogenous_workbench.ipynb`
+- [x] `notebooks/triage/09_batch_and_exogenous_workbench.ipynb`
 
 ### Agent payload additions
 - [ ] `batch_rank`
@@ -318,7 +318,7 @@ This keeps agent work in adapter land, not in the deterministic core.
 - [x] keep/review/reject table
 
 ### Notebook
-- [ ] shared inside `05_batch_and_exogenous_workbench.ipynb`
+- [x] shared inside `09_batch_and_exogenous_workbench.ipynb`
 
 ### Agent payload additions
 - [ ] `driver_scores_by_horizon`
