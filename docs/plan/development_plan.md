@@ -72,9 +72,9 @@ Before reading the per-feature sections, note what the repo already provides:
 
 | # | Kind | Feature(s) | Phase | Overlap | Genuine new work | Status |
 |---|------|------------|-------|---------|------------------|--------|
-| E1a | Example | F1 Profile (synthetic) | 1 | — | Seasonal non-monotone + AR decay; print horizons, informative set, recommendations | Not started |
-| E1b | Example | F1 Profile (realistic) | 1 | — | Real-data profile walkthrough | Not started |
-| E2 | Example | F2 IT Limits | 1 | ~60 % — `run_phase1_limit_diagnostics.py` | Add compressed-vs-original; "possible" vs "achieved" distinction | Not started |
+| E1a | Example | F1 Profile (synthetic) | 1 | — | Seasonal non-monotone + AR decay; print horizons, informative set, recommendations | ✅ Done |
+| E1b | Example | F1 Profile (realistic) | 1 | — | Real-data profile walkthrough | ✅ Done |
+| E2 | Example | F2 IT Limits | 1 | ~60 % — `run_phase1_limit_diagnostics.py` | Add compressed-vs-original; "possible" vs "achieved" distinction | ✅ Done |
 | E3 | Example | F3 Learning Curves | 2 | ~80 % — `run_predictive_info_learning_curves.py` | Add reliability-warning demo for small $n$; consolidate | Not started |
 | E4 | Example | F4 Spectral | 2 | ~90 % — `run_spectral_predictability.py` | Minimal — consolidate into examples convention | Not started |
 | E5 | Example | F5 Lyapunov | 3 | ~80 % — `run_largest_lyapunov_exponent.py` | Add parameter-sensitivity demo; mandatory experimental warning | Not started |
