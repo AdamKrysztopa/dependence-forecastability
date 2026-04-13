@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 from forecastability.datasets import generate_ar1
 from forecastability.triage.forecastability_profile import ForecastabilityProfile
 from forecastability.triage.models import TriageRequest
-from forecastability.triage.run_triage import run_triage
+from forecastability.use_cases.run_triage import run_triage
 
 
 def _generate_non_monotone_seasonal(*, random_state: int, n_samples: int = 720) -> np.ndarray:

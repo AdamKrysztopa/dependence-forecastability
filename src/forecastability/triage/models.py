@@ -5,7 +5,7 @@ from __future__ import annotations
 from enum import StrEnum
 
 import numpy as np
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from forecastability.analyzer import AnalyzeResult
 from forecastability.triage.complexity_band import ComplexityBandResult
@@ -53,7 +53,7 @@ class TriageRequest(BaseModel):
     exog: np.ndarray | None = None
     goal: AnalysisGoal = AnalysisGoal.univariate
     max_lag: int = 40
-    n_surrogates: int = 99
+    n_surrogates: int = Field(default=99, ge=99)
     random_state: int = 42
 
 

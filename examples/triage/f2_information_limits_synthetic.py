@@ -28,8 +28,8 @@ from forecastability.services.theoretical_limit_diagnostics_service import (
     build_theoretical_limit_diagnostics,
 )
 from forecastability.triage.models import TriageRequest
-from forecastability.triage.run_triage import run_triage
 from forecastability.triage.theoretical_limit_diagnostics import TheoreticalLimitDiagnostics
+from forecastability.use_cases.run_triage import run_triage
 
 
 def _generate_source_signal(*, random_state: int, n_samples: int = 1200) -> np.ndarray:

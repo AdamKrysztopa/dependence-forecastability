@@ -13,6 +13,7 @@ from forecastability.analyzer import (
     ForecastabilityAnalyzerExog,
 )
 from forecastability.interpretation import interpret_canonical_result
+from forecastability.ports import CheckpointPort, EventEmitterPort
 from forecastability.services.complexity_band_service import build_complexity_band
 from forecastability.services.forecastability_profile_service import build_forecastability_profile
 from forecastability.services.theoretical_limit_diagnostics_service import (
@@ -112,7 +113,7 @@ class _StageTimer:
     def __init__(
         self,
         stage: str,
-        emitter: Any,
+        emitter: EventEmitterPort | None,
         timing: dict[str, float] | None,
         summary_fn: Callable[[], str] = lambda: "",
     ) -> None:
@@ -156,8 +157,8 @@ def run_triage(
     *,
     readiness_gate: Callable[[TriageRequest], ReadinessReport] = assess_readiness,
     router: Callable[[TriageRequest, ReadinessReport], MethodPlan] = plan_method,
-    event_emitter: Any = None,
-    checkpoint: Any = None,
+    event_emitter: EventEmitterPort | None = None,
+    checkpoint: CheckpointPort | None = None,
     checkpoint_key: str = "default",
 ) -> TriageResult:
     """Orchestrate the full triage pipeline for a forecastability request.

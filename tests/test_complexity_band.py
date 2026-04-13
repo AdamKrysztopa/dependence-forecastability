@@ -280,7 +280,7 @@ class TestTriageResultComplexityBand:
 
         rng = np.random.default_rng(0)
         series = rng.standard_normal(200)
-        request = TriageRequest(series=series, max_lag=5, n_surrogates=9)
+        request = TriageRequest(series=series, max_lag=5, n_surrogates=99)
         result = run_triage(request, readiness_gate=_blocking_gate)
 
         assert result.blocked is True

@@ -46,7 +46,7 @@ from forecastability.triage.batch_models import (
     BatchTriageRequest,
     BatchTriageResponse,
 )
-from forecastability.triage.run_batch_triage import run_batch_triage
+from forecastability.use_cases.run_batch_triage import run_batch_triage
 
 _logger = logging.getLogger(__name__)
 

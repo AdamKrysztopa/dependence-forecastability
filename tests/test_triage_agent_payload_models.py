@@ -374,7 +374,7 @@ def test_triage_agent_payload_from_blocked_result(
     deterministic_blocked_request,  # type: ignore[no-untyped-def]
 ) -> None:
     """Blocked TriageResult → payload has blocked=True and all diagnostics None."""
-    from forecastability.triage.run_triage import run_triage
+    from forecastability.use_cases.run_triage import run_triage
 
     result = run_triage(deterministic_blocked_request)
     payload = triage_agent_payload(result, series_id="blocked_series")

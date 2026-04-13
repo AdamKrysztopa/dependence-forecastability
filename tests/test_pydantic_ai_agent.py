@@ -133,7 +133,7 @@ class TestToolSerialisation:
     def test_triage_result_to_dict_complete(self) -> None:
         from forecastability.adapters.pydantic_ai_agent import _triage_result_to_dict
         from forecastability.triage.models import TriageRequest
-        from forecastability.triage.run_triage import run_triage
+        from forecastability.use_cases.run_triage import run_triage
 
         rng = np.random.default_rng(42)
         n = 150
@@ -206,7 +206,7 @@ class TestAgentWithTestModel:
             _triage_result_to_dict,
         )
         from forecastability.triage.readiness import assess_readiness
-        from forecastability.triage.run_triage import run_triage
+        from forecastability.use_cases.run_triage import run_triage
 
         settings = InfraSettings(_env_file=None)  # type: ignore[call-arg]
         rng = np.random.default_rng(42)
@@ -267,7 +267,7 @@ class TestTriageResultNarrativeField:
     def test_existing_run_triage_returns_none_narrative(self) -> None:
         """Deterministic run_triage returns None narrative (no LLM)."""
         from forecastability.triage.models import TriageRequest
-        from forecastability.triage.run_triage import run_triage
+        from forecastability.use_cases.run_triage import run_triage
 
         rng = np.random.default_rng(42)
         ts = rng.standard_normal(150)
@@ -366,7 +366,7 @@ class TestAGT027AgentQuickstart:
         """TriageExplanation narrative is set by LLM; run_triage always returns None."""
         # The docstring above was shortened to satisfy the line-length limit.
         from forecastability.triage.models import TriageRequest
-        from forecastability.triage.run_triage import run_triage
+        from forecastability.use_cases.run_triage import run_triage
 
         # Deterministic path — no agent involved
         rng = np.random.default_rng(42)

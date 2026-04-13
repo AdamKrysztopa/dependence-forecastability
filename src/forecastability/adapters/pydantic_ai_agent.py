@@ -17,6 +17,10 @@ import numpy as np
 from pydantic import BaseModel, ConfigDict
 
 from forecastability.adapters.settings import InfraSettings
+from forecastability.adapters.triage_presenter import (
+    present_triage_analytics,
+    present_triage_result,
+)
 from forecastability.triage.models import (
     AnalysisGoal,
     MethodPlan,
@@ -27,7 +31,7 @@ from forecastability.triage.models import (
 )
 from forecastability.triage.readiness import assess_readiness
 from forecastability.triage.router import plan_method
-from forecastability.triage.run_triage import run_triage
+from forecastability.use_cases.run_triage import run_triage
 
 try:
     from pydantic_ai import Agent, RunContext
@@ -176,49 +180,51 @@ def _triage_result_to_dict(result: TriageResult) -> dict[str, Any]:
 
     Avoids passing large numpy arrays; instead provides summary statistics.
     """
+    view = present_triage_result(result)
     out: dict[str, Any] = {
-        "blocked": result.blocked,
-        "readiness": _readiness_to_dict(result.readiness),
+        "blocked": view.blocked,
+        "readiness": {
+            "status": view.readiness_status,
+            "warnings": view.readiness_warnings,
+        },
     }
 
-    if result.method_plan is not None:
-        out["method_plan"] = _method_plan_to_dict(result.method_plan)
+    if view.route is not None:
+        out["method_plan"] = {
+            "route": view.route,
+            "compute_surrogates": view.compute_surrogates,
+            "assumptions": view.method_plan_assumptions,
+            "rationale": view.method_plan_rationale,
+        }
 
-    if result.analyze_result is not None:
-        ar = result.analyze_result
+    analytics = present_triage_analytics(result)
+    if view.method is not None and analytics is not None:
         out["analyze_summary"] = {
-            "method": ar.method,
-            "recommendation": ar.recommendation,
-            "raw_curve_mean": float(np.mean(ar.raw[:20]) if ar.raw.size >= 20 else np.mean(ar.raw)),
-            "partial_curve_mean": float(
-                np.mean(ar.partial[:20]) if ar.partial.size >= 20 else np.mean(ar.partial)
-            ),
-            "n_sig_raw_lags": (int(ar.sig_raw_lags.size) if ar.sig_raw_lags is not None else 0),
-            "n_sig_partial_lags": (
-                int(ar.sig_partial_lags.size) if ar.sig_partial_lags is not None else 0
-            ),
-            "raw_curve_max": float(np.max(ar.raw)),
-            "partial_curve_max": float(np.max(ar.partial)),
+            "method": view.method,
+            "recommendation": view.recommendation,
+            "raw_curve_mean": analytics.raw_curve_mean,
+            "partial_curve_mean": analytics.partial_curve_mean,
+            "n_sig_raw_lags": view.n_sig_raw_lags,
+            "n_sig_partial_lags": view.n_sig_partial_lags,
+            "raw_curve_max": analytics.raw_curve_max,
+            "partial_curve_max": analytics.partial_curve_max,
         }
 
-    if result.interpretation is not None:
-        interp = result.interpretation
-        out["interpretation"] = {
-            "forecastability_class": interp.forecastability_class,
-            "directness_class": interp.directness_class,
-            "primary_lags": interp.primary_lags,
-            "modeling_regime": interp.modeling_regime,
-            "narrative": interp.narrative,
-            "diagnostics": {
-                "peak_ami_first_5": interp.diagnostics.peak_ami_first_5,
-                "directness_ratio": interp.diagnostics.directness_ratio,
-                "n_sig_ami": interp.diagnostics.n_sig_ami,
-                "n_sig_pami": interp.diagnostics.n_sig_pami,
-            },
+    if view.forecastability_class is not None:
+        interp_dict: dict[str, Any] = {
+            "forecastability_class": view.forecastability_class,
+            "directness_class": view.directness_class,
+            "primary_lags": view.primary_lags,
+            "modeling_regime": view.modeling_regime,
         }
+        if analytics is not None:
+            interp_dict["narrative"] = analytics.narrative
+            if analytics.diagnostics is not None:
+                interp_dict["diagnostics"] = analytics.diagnostics
+        out["interpretation"] = interp_dict
 
-    if result.recommendation is not None:
-        out["recommendation"] = result.recommendation
+    if view.recommendation is not None:
+        out["recommendation"] = view.recommendation
 
     return out
 

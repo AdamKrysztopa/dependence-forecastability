@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 
 from forecastability.triage.models import AnalysisGoal, TriageRequest
-from forecastability.triage.run_triage import run_triage
+from forecastability.use_cases.run_triage import run_triage
 
 
 class TestRunTriageBlocked:

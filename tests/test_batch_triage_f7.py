@@ -18,7 +18,7 @@ from forecastability.triage.models import (
     TriageRequest,
     TriageResult,
 )
-from forecastability.triage.run_batch_triage import run_batch_triage_with_details
+from forecastability.use_cases.run_batch_triage import run_batch_triage_with_details
 
 
 def _stub_triage_runner(request: TriageRequest) -> TriageResult:

@@ -1,4 +1,4 @@
-"""Mutable cached state container for ForecastabilityAnalyzer.
+"""Frozen cached state container for ForecastabilityAnalyzer.
 
 Not exported from the public API (__init__.py).
 """
@@ -10,9 +10,12 @@ import dataclasses
 import numpy as np
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True, slots=True)
 class AnalyzerState:
-    """All mutable cached arrays owned by a ForecastabilityAnalyzer instance.
+    """Frozen cached arrays owned by a ForecastabilityAnalyzer instance.
+
+    Immutable by design — internal updates use ``dataclasses.replace()``
+    which creates cheap shallow copies (numpy arrays are reference types).
 
     Attributes:
         ts: Cached univariate target series.

@@ -33,6 +33,7 @@ from typing import Any
 import numpy as np
 from pydantic import ValidationError
 
+from forecastability.adapters.triage_presenter import present_triage_result
 from forecastability.scorers import default_registry
 from forecastability.triage.batch_models import (
     FAILURE_TABLE_COLUMNS,
@@ -40,9 +41,9 @@ from forecastability.triage.batch_models import (
     BatchTriageRequest,
     BatchTriageResponse,
 )
-from forecastability.triage.models import AnalysisGoal, TriageRequest
-from forecastability.triage.run_batch_triage import run_batch_triage
-from forecastability.triage.run_triage import run_triage
+from forecastability.triage.models import AnalysisGoal, TriageRequest, TriageResult
+from forecastability.use_cases.run_batch_triage import run_batch_triage
+from forecastability.use_cases.run_triage import run_triage
 
 # ---------------------------------------------------------------------------
 # Series loading helpers
@@ -168,7 +169,7 @@ def _write_table_csv(
 # ---------------------------------------------------------------------------
 
 
-def _triage_result_to_dict(result: Any) -> dict[str, Any]:
+def _triage_result_to_dict(result: TriageResult) -> dict[str, Any]:
     """Serialise a ``TriageResult`` to a JSON-safe dict.
 
     Args:
@@ -177,45 +178,42 @@ def _triage_result_to_dict(result: Any) -> dict[str, Any]:
     Returns:
         Plain dict suitable for ``json.dumps``.
     """
+    view = present_triage_result(result)
     out: dict[str, Any] = {
-        "blocked": result.blocked,
+        "blocked": view.blocked,
         "readiness": {
-            "status": result.readiness.status.value,
-            "warnings": [{"code": w.code, "message": w.message} for w in result.readiness.warnings],
+            "status": view.readiness_status,
+            "warnings": view.readiness_warnings,
         },
     }
 
-    if result.method_plan is not None:
+    if view.route is not None:
         out["method_plan"] = {
-            "route": result.method_plan.route,
-            "compute_surrogates": result.method_plan.compute_surrogates,
-            "rationale": result.method_plan.rationale,
-            "assumptions": result.method_plan.assumptions,
+            "route": view.route,
+            "compute_surrogates": view.compute_surrogates,
+            "rationale": view.method_plan_rationale,
+            "assumptions": view.method_plan_assumptions,
         }
 
-    if result.analyze_result is not None:
-        ar = result.analyze_result
+    if view.method is not None:
         out["analyze_summary"] = {
-            "method": ar.method,
-            "recommendation": ar.recommendation,
-            "n_sig_raw_lags": (int(ar.sig_raw_lags.size) if ar.sig_raw_lags is not None else 0),
-            "n_sig_partial_lags": (
-                int(ar.sig_partial_lags.size) if ar.sig_partial_lags is not None else 0
-            ),
+            "method": view.method,
+            "recommendation": view.recommendation,
+            "n_sig_raw_lags": view.n_sig_raw_lags,
+            "n_sig_partial_lags": view.n_sig_partial_lags,
         }
 
-    if result.interpretation is not None:
-        interp = result.interpretation
+    if view.forecastability_class is not None:
         out["interpretation"] = {
-            "forecastability_class": interp.forecastability_class,
-            "directness_class": interp.directness_class,
-            "modeling_regime": interp.modeling_regime,
-            "primary_lags": list(interp.primary_lags) if interp.primary_lags else [],
-            "pattern_class": getattr(interp, "pattern_class", None),
+            "forecastability_class": view.forecastability_class,
+            "directness_class": view.directness_class,
+            "modeling_regime": view.modeling_regime,
+            "primary_lags": view.primary_lags,
+            "pattern_class": view.pattern_class,
         }
 
-    if result.recommendation is not None:
-        out["recommendation"] = result.recommendation
+    if view.recommendation is not None:
+        out["recommendation"] = view.recommendation
 
     return out
 

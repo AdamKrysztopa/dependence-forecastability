@@ -10,8 +10,8 @@ from forecastability.services.theoretical_limit_diagnostics_service import (
     build_theoretical_limit_diagnostics,
 )
 from forecastability.triage.models import TriageRequest
-from forecastability.triage.run_triage import run_triage
 from forecastability.triage.theoretical_limit_diagnostics import TheoreticalLimitDiagnostics
+from forecastability.use_cases.run_triage import run_triage
 
 
 def test_build_returns_model() -> None:
@@ -89,7 +89,7 @@ def test_integrated_in_triage_result() -> None:
 
 def test_blocked_triage_returns_none() -> None:
     series = np.array([1.0, 2.0, 3.0])
-    request = TriageRequest(series=series, max_lag=5, n_surrogates=9, random_state=42)
+    request = TriageRequest(series=series, max_lag=5, random_state=42)
     result = run_triage(request)
     assert result.blocked is True
     assert result.theoretical_limit_diagnostics is None

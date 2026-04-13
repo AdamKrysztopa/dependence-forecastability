@@ -16,7 +16,7 @@ from forecastability.triage.batch_models import (
     BatchTriageRequest,
 )
 from forecastability.triage.models import TriageRequest, TriageResult
-from forecastability.triage.run_batch_triage import run_batch_triage_with_details
+from forecastability.use_cases.run_batch_triage import run_batch_triage_with_details
 
 SERIES_COMPARISON_TABLE_COLUMNS: tuple[str, ...] = (
     "rank",

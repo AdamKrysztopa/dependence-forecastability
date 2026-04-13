@@ -44,8 +44,8 @@ from forecastability.triage.batch_models import (
     BatchTriageResponse,
 )
 from forecastability.triage.models import AnalysisGoal, TriageRequest
-from forecastability.triage.run_batch_triage import run_batch_triage
-from forecastability.triage.run_triage import run_triage
+from forecastability.use_cases.run_batch_triage import run_batch_triage
+from forecastability.use_cases.run_triage import run_triage
 
 _DASHBOARD_HTML = """<!doctype html>
 <html lang="en">
@@ -212,7 +212,7 @@ _DASHBOARD_HTML = """<!doctype html>
             </label>
             <label>
               Surrogates
-              <input id="single-surrogates" type="number" value="99" min="1" />
+              <input id="single-surrogates" type="number" value="99" min="99" />
             </label>
             <label>
               Random state

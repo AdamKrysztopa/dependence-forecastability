@@ -22,10 +22,9 @@ Or with the settings-configured port::
 from __future__ import annotations
 
 import threading
-from typing import Any
 
 import numpy as np
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, ValidationError, field_validator
 
 try:
     from fastapi import FastAPI, HTTPException
@@ -36,9 +35,10 @@ except ImportError:
     _FASTAPI_AVAILABLE = False
 
 from forecastability.adapters.settings import InfraSettings
+from forecastability.adapters.triage_presenter import present_triage_result
 from forecastability.scorers import default_registry
-from forecastability.triage.models import AnalysisGoal, TriageRequest
-from forecastability.triage.run_triage import run_triage
+from forecastability.triage.models import AnalysisGoal, TriageRequest, TriageResult
+from forecastability.use_cases.run_triage import run_triage
 
 # ---------------------------------------------------------------------------
 # HTTP-layer Pydantic I/O models (JSON-serializable — no numpy)
@@ -80,9 +80,9 @@ class TriageHTTPRequest(BaseModel):
     @field_validator("n_surrogates")
     @classmethod
     def surrogates_min(cls, v: int) -> int:
-        """Ensure n_surrogates is at least 1."""
-        if v < 1:
-            raise ValueError("n_surrogates must be >= 1")
+        """Ensure n_surrogates meets statistical minimum for reliable p-values."""
+        if v < 99:
+            raise ValueError("n_surrogates must be >= 99 for reliable surrogate significance")
         return v
 
 
@@ -145,7 +145,7 @@ class TriageHTTPResponse(BaseModel):
 # ---------------------------------------------------------------------------
 
 
-def _build_triage_response(result: Any) -> TriageHTTPResponse:
+def _build_triage_response(result: TriageResult) -> TriageHTTPResponse:
     """Map a ``TriageResult`` to the HTTP response model.
 
     Args:
@@ -154,37 +154,21 @@ def _build_triage_response(result: Any) -> TriageHTTPResponse:
     Returns:
         :class:`TriageHTTPResponse` with all JSON-safe fields populated.
     """
-    warnings = [{"code": w.code, "message": w.message} for w in result.readiness.warnings]
-
-    if result.blocked:
-        return TriageHTTPResponse(
-            blocked=True,
-            readiness_status=result.readiness.status.value,
-            readiness_warnings=warnings,
-        )
-
-    ar = result.analyze_result
-    interp = result.interpretation
+    view = present_triage_result(result)
 
     return TriageHTTPResponse(
-        blocked=False,
-        readiness_status=result.readiness.status.value,
-        readiness_warnings=warnings,
-        route=result.method_plan.route if result.method_plan else None,
-        compute_surrogates=(result.method_plan.compute_surrogates if result.method_plan else None),
-        recommendation=result.recommendation,
-        forecastability_class=interp.forecastability_class if interp else None,
-        directness_class=interp.directness_class if interp else None,
-        modeling_regime=interp.modeling_regime if interp else None,
-        primary_lags=list(interp.primary_lags) if interp and interp.primary_lags else [],
-        n_sig_raw_lags=(
-            int(ar.sig_raw_lags.size) if ar is not None and ar.sig_raw_lags is not None else 0
-        ),
-        n_sig_partial_lags=(
-            int(ar.sig_partial_lags.size)
-            if ar is not None and ar.sig_partial_lags is not None
-            else 0
-        ),
+        blocked=view.blocked,
+        readiness_status=view.readiness_status,
+        readiness_warnings=view.readiness_warnings,
+        route=view.route,
+        compute_surrogates=view.compute_surrogates,
+        recommendation=view.recommendation,
+        forecastability_class=view.forecastability_class,
+        directness_class=view.directness_class,
+        modeling_regime=view.modeling_regime,
+        primary_lags=view.primary_lags,
+        n_sig_raw_lags=view.n_sig_raw_lags if not view.blocked else None,
+        n_sig_partial_lags=view.n_sig_partial_lags if not view.blocked else None,
     )
 
 
@@ -331,13 +315,19 @@ else:
 
         from forecastability.adapters.event_emitter import StreamingEventEmitter
 
-        request = TriageRequest(
-            series=np.asarray(parsed, dtype=np.float64),
-            goal=goal_enum,
-            max_lag=max_lag,
-            n_surrogates=n_surrogates,
-            random_state=random_state,
-        )
+        try:
+            request = TriageRequest(
+                series=np.asarray(parsed, dtype=np.float64),
+                goal=goal_enum,
+                max_lag=max_lag,
+                n_surrogates=n_surrogates,
+                random_state=random_state,
+            )
+        except (ValueError, ValidationError) as exc:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Invalid triage parameters: {exc}",
+            ) from exc
 
         emitter = StreamingEventEmitter()
 

@@ -43,10 +43,11 @@ try:
 except ImportError:
     _MCP_AVAILABLE = False
 
+from forecastability.adapters.triage_presenter import present_triage_result
 from forecastability.scorers import default_registry
-from forecastability.triage.models import AnalysisGoal, TriageRequest
+from forecastability.triage.models import AnalysisGoal, ReadinessReport, TriageRequest, TriageResult
 from forecastability.triage.readiness import assess_readiness
-from forecastability.triage.run_triage import run_triage
+from forecastability.use_cases.run_triage import run_triage
 
 # ---------------------------------------------------------------------------
 # Pure helper functions (testable without MCP runtime)
@@ -90,7 +91,7 @@ def _build_triage_request(
     )
 
 
-def _readiness_to_json(report: Any) -> str:
+def _readiness_to_json(report: ReadinessReport) -> str:
     """Serialise a ``ReadinessReport`` to a compact JSON string.
 
     Args:
@@ -108,7 +109,7 @@ def _readiness_to_json(report: Any) -> str:
     )
 
 
-def _triage_result_to_json(result: Any) -> str:
+def _triage_result_to_json(result: TriageResult) -> str:
     """Serialise a ``TriageResult`` to a compact JSON string.
 
     Large numpy arrays are excluded; summary statistics are returned instead.
@@ -119,43 +120,40 @@ def _triage_result_to_json(result: Any) -> str:
     Returns:
         Indented JSON string with analysis summary.
     """
+    view = present_triage_result(result)
     out: dict[str, Any] = {
-        "blocked": result.blocked,
+        "blocked": view.blocked,
         "readiness": {
-            "status": result.readiness.status.value,
-            "warnings": [{"code": w.code, "message": w.message} for w in result.readiness.warnings],
+            "status": view.readiness_status,
+            "warnings": view.readiness_warnings,
         },
     }
 
-    if result.method_plan is not None:
+    if view.route is not None:
         out["method_plan"] = {
-            "route": result.method_plan.route,
-            "compute_surrogates": result.method_plan.compute_surrogates,
-            "rationale": result.method_plan.rationale,
+            "route": view.route,
+            "compute_surrogates": view.compute_surrogates,
+            "rationale": view.method_plan_rationale,
         }
 
-    if result.analyze_result is not None:
-        ar = result.analyze_result
+    if view.method is not None:
         out["analyze_summary"] = {
-            "method": ar.method,
-            "recommendation": ar.recommendation,
-            "n_sig_raw_lags": (int(ar.sig_raw_lags.size) if ar.sig_raw_lags is not None else 0),
-            "n_sig_partial_lags": (
-                int(ar.sig_partial_lags.size) if ar.sig_partial_lags is not None else 0
-            ),
+            "method": view.method,
+            "recommendation": view.recommendation,
+            "n_sig_raw_lags": view.n_sig_raw_lags,
+            "n_sig_partial_lags": view.n_sig_partial_lags,
         }
 
-    if result.interpretation is not None:
-        interp = result.interpretation
+    if view.forecastability_class is not None:
         out["interpretation"] = {
-            "forecastability_class": interp.forecastability_class,
-            "directness_class": interp.directness_class,
-            "modeling_regime": interp.modeling_regime,
-            "primary_lags": list(interp.primary_lags) if interp.primary_lags else [],
+            "forecastability_class": view.forecastability_class,
+            "directness_class": view.directness_class,
+            "modeling_regime": view.modeling_regime,
+            "primary_lags": view.primary_lags,
         }
 
-    if result.recommendation is not None:
-        out["recommendation"] = result.recommendation
+    if view.recommendation is not None:
+        out["recommendation"] = view.recommendation
 
     return json.dumps(out, indent=2)
 

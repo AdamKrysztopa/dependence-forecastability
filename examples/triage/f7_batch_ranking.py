@@ -24,7 +24,7 @@ from forecastability.triage.batch_models import (
     BatchSeriesRequest,
     BatchTriageRequest,
 )
-from forecastability.triage.run_batch_triage import run_batch_triage
+from forecastability.use_cases.run_batch_triage import run_batch_triage
 
 _N_SAMPLES = 420
 

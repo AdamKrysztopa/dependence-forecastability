@@ -101,7 +101,20 @@ def assess_readiness(request: TriageRequest) -> ReadinessReport:
             )
         )
 
-    # --- 5. Exogenous goal requires exog series ---
+    # --- 5. Surrogate count ---
+    if request.n_surrogates < 99:
+        warnings.append(
+            ReadinessWarning(
+                code="LOW_SURROGATES",
+                message=(
+                    f"n_surrogates ({request.n_surrogates}) < 99. At least 99 "
+                    "surrogates are required for reliable p-values at the 5% level."
+                ),
+            )
+        )
+        block_codes.add("LOW_SURROGATES")
+
+    # --- 6. Exogenous goal requires exog series ---
     if request.goal == AnalysisGoal.exogenous and request.exog is None:
         warnings.append(
             ReadinessWarning(
@@ -114,7 +127,7 @@ def assess_readiness(request: TriageRequest) -> ReadinessReport:
         )
         block_codes.add("MISSING_EXOG")
 
-    # --- 6. Goal/exog mismatch ---
+    # --- 7. Goal/exog mismatch ---
     if request.exog is not None and request.goal == AnalysisGoal.univariate:
         warnings.append(
             ReadinessWarning(
@@ -127,7 +140,7 @@ def assess_readiness(request: TriageRequest) -> ReadinessReport:
             )
         )
 
-    # --- 7. Exogenous length mismatch ---
+    # --- 8. Exogenous length mismatch ---
     if request.exog is not None and len(request.exog) != n:
         warnings.append(
             ReadinessWarning(

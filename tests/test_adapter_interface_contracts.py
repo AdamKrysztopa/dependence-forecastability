@@ -18,7 +18,7 @@ from forecastability.adapters.settings import InfraSettings
 from forecastability.ports import CheckpointPort, EventEmitterPort, SettingsPort
 from forecastability.triage.events import TriageStageCompleted, TriageStageStarted
 from forecastability.triage.models import TriageRequest
-from forecastability.triage.run_triage import run_triage
+from forecastability.use_cases.run_triage import run_triage
 
 
 def _event_signature(emitter: CollectingEventEmitter) -> list[tuple[str, str]]:

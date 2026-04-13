@@ -39,7 +39,7 @@ from forecastability.adapters.agents.triage_summary_serializer import (
     serialise_to_json,
 )
 from forecastability.triage.models import TriageRequest, TriageResult
-from forecastability.triage.run_triage import run_triage
+from forecastability.use_cases.run_triage import run_triage
 
 _FIG_DIR = Path("outputs/figures/agent")
 _JSON_DIR = Path("outputs/json")
