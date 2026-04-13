@@ -1,26 +1,45 @@
 <!-- type: reference -->
 # Plan Docs
 
-`docs/plan/` uses explicit MoSCoW prioritization for paper-baseline preservation plus project extensions.
-
 Baseline framing, invariants, and mathematical definitions still live in the main documentation set:
 - [README.md](../../README.md)
 - [docs/theory/foundations.md](../theory/foundations.md)
 
-## Active planning surface
+## Planning surface
 
 | File | Purpose | Status |
 |---|---|---|
-| [dependence_forecastability_progress.md](dependence_forecastability_progress.md) | Branch-level tracker for dependence-forecastability backlog delivery status and commit mapping | Active |
-| [acceptance_criteria.md](acceptance_criteria.md) | Done criteria shared by all roadmap items | Active |
-| [must_have.md](must_have.md) | Non-negotiable baseline parity and highest-priority extensions | ✅ Complete |
-| [should_have.md](should_have.md) | Important improvements with clear value but not blocking parity | ✅ Complete |
-| [could_have.md](could_have.md) | Optional extensions worth doing after higher-priority work | Open |
-| [wont_have.md](wont_have.md) | Explicit exclusions for the current phase | Active |
+| [development_plan.md](development_plan.md) | Phased development plan for the triage extension epic | **Complete** |
+| [acceptance_criteria.md](acceptance_criteria.md) | Done criteria shared by all roadmap items | Complete |
+| **[cleaning_plan.md](cleaning_plan.md)** | **Hexagonal realignment, type-check cleanup, packaging** | **Active** |
+| **[pypi_release_plan.md](pypi_release_plan.md)** | **PyPI publication: naming, metadata, artifact validation, Trusted Publishing** | **Active** |
+
+## Completed — triage extension epic
+
+All nine feature groups (F1–F9) from the development plan have been implemented and verified:
+
+- **F1** Forecastability profile & complexity bands
+- **F2** Information limits & compression diagnostics
+- **F3** Entropy–complexity plane mapping
+- **F4** Spectral predictability & Lyapunov exponents
+- **F5** Predictive-information learning curves
+- **F6** Exogenous driver analysis & redundancy screening
+- **F7** Batch triage ranking & multi-signal diagnostics
+- **F8** Agent adapters (MCP server, dashboard, CLI)
+- **F9** Robustness study & benchmark panel
+
+Supporting deliverables: triage examples (`examples/triage/`), walkthrough notebooks (`notebooks/triage/`), theory docs (`docs/theory/`), and end-to-end agent integration.
+
+## Source epic
+
+The math-grounded feature backlog that fed the development plan:
+- [`not_planed/triage_extension_epic_math_grounded.md`](not_planed/triage_extension_epic_math_grounded.md)
 
 ## Planning policy
 
-- `Must Have` includes the requirement to preserve all paper functionality from arXiv:2601.10006.
-- Lower priority files cover only extensions or packaging/reporting improvements beyond the paper baseline.
-- Historical completed items do not stay in the plan unless they define an ongoing non-negotiable requirement.
-- `dependence_forecastability_detailed_backlog.md` remains the source backlog and is intentionally retained until P1-P3 implementation is complete.
+- The triage extension epic is **complete**; current focus is packaging, cleanup, and release.
+- The [cleaning plan](cleaning_plan.md) tracks hexagonal realignment and type-checker compliance.
+- The [PyPI release plan](pypi_release_plan.md) tracks naming, metadata, artifact validation, and Trusted Publishing.
+- All paper functionality from arXiv:2601.10006 is preserved as a non-negotiable baseline.
+- Extensions do not weaken or replace the paper-aligned workflow.
+- High-risk estimators remain behind explicit experimental flags.

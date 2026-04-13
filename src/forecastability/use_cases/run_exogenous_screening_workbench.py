@@ -7,6 +7,7 @@ from collections.abc import Callable
 from typing import Literal
 
 import numpy as np
+from scipy.stats import binomtest
 
 from forecastability.config import (
     ExogenousLagWindowConfig,
@@ -37,6 +38,8 @@ DRIVER_SUMMARY_TABLE_COLUMNS: tuple[str, ...] = (
     "top_horizon_usefulness_score",
     "n_horizons_above_floor",
     "warning_horizon_count",
+    "bh_significant",
+    "redundancy_score",
 )
 
 HORIZON_USEFULNESS_TABLE_COLUMNS: tuple[str, ...] = (
@@ -211,6 +214,118 @@ def map_workbench_recommendation(
     return "reject"
 
 
+def _compute_bh_significant(
+    *,
+    driver_summaries_prelim: list[tuple[str, int, int]],  # (name, n_warning, n_horizons)
+    bh_fdr_alpha: float,
+) -> dict[str, bool]:
+    """Apply Benjamini-Hochberg FDR correction to per-driver binomial tests.
+
+    For driver j: null H0 = the driver provides no predictive information
+    (proportion of informative horizons <= 0.05). Test statistic: number of
+    non-warning horizons out of total horizons. P-value: one-sided binomial
+    test comparing to a noise baseline of 5 %.
+
+    Returns dict mapping driver_name -> bh_significant.
+    """
+    if not driver_summaries_prelim:
+        return {}
+
+    names: list[str] = []
+    pvals: list[float] = []
+    for driver_name, n_warning, n_horizons in driver_summaries_prelim:
+        k_informative = n_horizons - n_warning
+        if n_horizons == 0:
+            pval = 1.0
+        else:
+            result = binomtest(k_informative, n_horizons, p=0.05, alternative="greater")
+            pval = float(result.pvalue)
+        names.append(driver_name)
+        pvals.append(pval)
+
+    m = len(pvals)
+    order = np.argsort(pvals)
+    sorted_pvals = [pvals[i] for i in order]
+    thresholds = [(rank + 1) * bh_fdr_alpha / m for rank in range(m)]
+
+    last_sig = -1
+    for k, (pv, thresh) in enumerate(zip(sorted_pvals, thresholds, strict=True)):
+        if pv <= thresh:
+            last_sig = k
+
+    significant_set: set[str] = set()
+    for k in range(last_sig + 1):
+        significant_set.add(names[order[k]])
+
+    return {name: (name in significant_set) for name in names}
+
+
+def _compute_profile_redundancy_score(
+    profile_j: np.ndarray,
+    selected_profiles: list[np.ndarray],
+) -> float:
+    """Compute max cosine similarity between profile_j and selected profiles.
+
+    Returns 0.0 when selected_profiles is empty or when a profile has zero norm.
+    """
+    if not selected_profiles:
+        return 0.0
+    norm_j = float(np.linalg.norm(profile_j))
+    if norm_j < 1e-12:
+        return 0.0
+    max_sim = 0.0
+    for sk in selected_profiles:
+        norm_k = float(np.linalg.norm(sk))
+        if norm_k < 1e-12:
+            continue
+        sim = float(np.dot(profile_j, sk) / (norm_j * norm_k))
+        if sim > max_sim:
+            max_sim = sim
+    return max_sim
+
+
+def _greedy_select_with_redundancy(
+    *,
+    drivers: list[str],
+    usefulness_profiles: dict[str, np.ndarray],
+    redundancy_alpha: float,
+) -> dict[str, tuple[float, float | None]]:
+    """Greedy select drivers with redundancy penalty.
+
+    The adjusted mean usefulness is: mean(usefulness_profile) - redundancy_alpha * R(j, S).
+    Tie-breaking by driver_name ascending.
+
+    Returns dict mapping driver_name -> (adjusted_mean_usefulness, redundancy_score | None).
+    """
+    if redundancy_alpha <= 0.0:
+        return {name: (float(np.mean(usefulness_profiles[name])), None) for name in drivers}
+
+    selected_profiles: list[np.ndarray] = []
+    result: dict[str, tuple[float, float | None]] = {}
+    remaining = list(drivers)
+
+    while remaining:
+        best_name: str | None = None
+        best_score = float("-inf")
+        best_redundancy: float = 0.0
+
+        for name in sorted(remaining):
+            profile = usefulness_profiles[name]
+            redundancy = _compute_profile_redundancy_score(profile, selected_profiles)
+            adjusted = float(np.mean(profile)) - redundancy_alpha * redundancy
+            if adjusted > best_score:
+                best_score = adjusted
+                best_name = name
+                best_redundancy = redundancy
+
+        assert best_name is not None
+        result[best_name] = (best_score, best_redundancy if selected_profiles else None)
+        selected_profiles.append(usefulness_profiles[best_name])
+        remaining.remove(best_name)
+
+    return result
+
+
 def _build_driver_summaries(
     *,
     evaluations: dict[str, ExogenousBenchmarkResult],
@@ -222,6 +337,43 @@ def _build_driver_summaries(
     for row in horizon_rows:
         rows_by_driver[row.driver_name].append(row)
 
+    # --- BH stage (runs before greedy when both are enabled) ---
+    bh_significant_map: dict[str, bool] = {}
+    if config.apply_bh_correction:
+        prelim: list[tuple[str, int, int]] = []
+        for driver_name in sorted(evaluations):
+            n_horizons = len(config.horizons)
+            n_warning = len(evaluations[driver_name].warning_horizons)
+            prelim.append((driver_name, n_warning, n_horizons))
+        bh_significant_map = _compute_bh_significant(
+            driver_summaries_prelim=prelim,
+            bh_fdr_alpha=config.bh_fdr_alpha,
+        )
+
+    # --- Usefulness profiles for greedy redundancy selection ---
+    usefulness_profiles: dict[str, np.ndarray] = {}
+    for driver_name in sorted(evaluations):
+        driver_rows = rows_by_driver.get(driver_name, [])
+        scores = [0.0] * len(config.horizons)
+        score_by_horizon = {row.horizon: row.usefulness_score for row in driver_rows}
+        for i, h in enumerate(config.horizons):
+            scores[i] = score_by_horizon.get(h, 0.0)
+        usefulness_profiles[driver_name] = np.array(scores, dtype=np.float64)
+
+    if config.apply_bh_correction and config.redundancy_alpha > 0.0:
+        greedy_candidates = [
+            name for name in sorted(evaluations) if bh_significant_map.get(name, False)
+        ]
+    else:
+        greedy_candidates = list(sorted(evaluations))
+
+    greedy_result = _greedy_select_with_redundancy(
+        drivers=greedy_candidates,
+        usefulness_profiles=usefulness_profiles,
+        redundancy_alpha=config.redundancy_alpha,
+    )
+
+    # --- Build per-driver summaries ---
     summaries: list[ExogenousDriverSummary] = []
     for driver_name in sorted(evaluations):
         driver_rows = rows_by_driver.get(driver_name, [])
@@ -255,6 +407,10 @@ def _build_driver_summaries(
             recommendation_config=config.recommendation,
         )
 
+        bh_significant = bh_significant_map.get(driver_name, False)
+        greedy_info = greedy_result.get(driver_name)
+        redundancy_score = greedy_info[1] if greedy_info is not None else None
+
         summaries.append(
             ExogenousDriverSummary(
                 overall_rank=0,
@@ -268,6 +424,8 @@ def _build_driver_summaries(
                 top_horizon_usefulness_score=top_horizon_usefulness_score,
                 n_horizons_above_floor=n_horizons_above_floor,
                 warning_horizon_count=len(evaluations[driver_name].warning_horizons),
+                bh_significant=bh_significant,
+                redundancy_score=redundancy_score,
             )
         )
 

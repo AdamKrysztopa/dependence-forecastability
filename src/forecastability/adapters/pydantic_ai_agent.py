@@ -253,7 +253,7 @@ def create_triage_agent(
     if model is None:
         model = f"openai:{settings.openai_model}"
 
-    agent: Agent[TriageDeps, TriageExplanation] = Agent(
+    agent: Agent[TriageDeps, TriageExplanation] = Agent(  # type: ignore[assignment]
         model,
         deps_type=TriageDeps,
         output_type=TriageExplanation,

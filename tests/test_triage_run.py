@@ -142,6 +142,7 @@ class TestRunTriageSignificantLagsContract:
         # when significant_lags is None, interpret_canonical_result falls back to
         # the above-mean-pAMI heuristic — this confirms the contract is respected.
         from forecastability.types import InterpretationResult
+
         assert isinstance(result.interpretation, InterpretationResult)
 
 
@@ -161,6 +162,7 @@ class TestCheckpointSemantics:
         req = TriageRequest(series=rng.standard_normal(150), max_lag=20)
 
         import warnings as _warnings
+
         with _warnings.catch_warnings(record=True) as w:
             _warnings.simplefilter("always")
             run_triage(req, checkpoint=NoopCheckpointAdapter(), checkpoint_key="default")
@@ -176,6 +178,7 @@ class TestCheckpointSemantics:
         req = TriageRequest(series=rng.standard_normal(150), max_lag=20)
 
         import warnings as _warnings
+
         with _warnings.catch_warnings(record=True) as w:
             _warnings.simplefilter("always")
             run_triage(req, checkpoint=NoopCheckpointAdapter(), checkpoint_key="run-abc-123")
@@ -207,6 +210,7 @@ class TestCheckpointSemantics:
         ckpt = TrackingCheckpoint()
 
         import warnings as _warnings
+
         with _warnings.catch_warnings():
             _warnings.simplefilter("ignore")
             result1 = run_triage(req, checkpoint=ckpt, checkpoint_key="default")
@@ -215,6 +219,7 @@ class TestCheckpointSemantics:
         def counting_readiness_gate(r: TriageRequest):
             call_log.append("readiness")
             from forecastability.triage.readiness import assess_readiness
+
             return assess_readiness(r)
 
         # Verify a second call resumes from checkpoint — readiness gate NOT called
@@ -242,7 +247,7 @@ class TestNarrativeOwnership:
         rng = np.random.default_rng(42)
         ts = 0.0 * rng.standard_normal(1)
         ts = np.zeros(1)
-        ts = np.array([0.85 ** i + rng.standard_normal() * 0.1 for i in range(150)])
+        ts = np.array([0.85**i + rng.standard_normal() * 0.1 for i in range(150)])
         req = TriageRequest(series=ts, max_lag=20, random_state=42)
         result = run_triage(req)
         assert result.narrative is None, (

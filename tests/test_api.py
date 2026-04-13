@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
+
 import numpy as np
 import pytest
-from typing import Generator
 
 # Skip the entire module if fastapi or httpx are not installed
 pytest.importorskip("fastapi")
@@ -266,9 +267,7 @@ class TestTriageStreamEndpoint:
         assert app is not None, "FastAPI app is None — fastapi not installed"
         with patch(
             "forecastability.adapters.api.InfraSettings",
-            return_value=type(
-                "_MockSettings", (), {"triage_enable_streaming": True}
-            )(),
+            return_value=type("_MockSettings", (), {"triage_enable_streaming": True})(),
         ):
             yield TestClient(app)
 
@@ -278,9 +277,7 @@ class TestTriageStreamEndpoint:
 
         with patch(
             "forecastability.adapters.api.InfraSettings",
-            return_value=type(
-                "_MockSettings", (), {"triage_enable_streaming": False}
-            )(),
+            return_value=type("_MockSettings", (), {"triage_enable_streaming": False})(),
         ):
             resp = client.get(
                 "/triage/stream",
@@ -288,9 +285,7 @@ class TestTriageStreamEndpoint:
             )
         assert resp.status_code == 503
 
-    def test_stream_invalid_json_series_returns_422(
-        self, streaming_client: TestClient
-    ) -> None:
+    def test_stream_invalid_json_series_returns_422(self, streaming_client: TestClient) -> None:
         """Malformed JSON in 'series' query param must return 422."""
         resp = streaming_client.get(
             "/triage/stream",
@@ -298,9 +293,7 @@ class TestTriageStreamEndpoint:
         )
         assert resp.status_code == 422
 
-    def test_stream_ends_with_done_sentinel(
-        self, streaming_client: TestClient
-    ) -> None:
+    def test_stream_ends_with_done_sentinel(self, streaming_client: TestClient) -> None:
         """Stream must end with a 'done' event as the final SSE data line."""
         import json as _json
 
@@ -311,7 +304,7 @@ class TestTriageStreamEndpoint:
         )
         assert resp.status_code == 200
         lines = [
-            line[len("data: "):].strip()
+            line[len("data: ") :].strip()
             for line in resp.text.splitlines()
             if line.startswith("data: ")
         ]
@@ -319,9 +312,7 @@ class TestTriageStreamEndpoint:
         last_event = _json.loads(lines[-1])
         assert last_event["event_type"] == "done"
 
-    def test_stream_events_have_event_type_field(
-        self, streaming_client: TestClient
-    ) -> None:
+    def test_stream_events_have_event_type_field(self, streaming_client: TestClient) -> None:
         """Every SSE data payload must have an 'event_type' key."""
         import json as _json
 
@@ -332,7 +323,7 @@ class TestTriageStreamEndpoint:
         )
         assert resp.status_code == 200
         data_lines = [
-            line[len("data: "):].strip()
+            line[len("data: ") :].strip()
             for line in resp.text.splitlines()
             if line.startswith("data: ")
         ]

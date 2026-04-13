@@ -370,6 +370,20 @@ class ExogenousScreeningWorkbenchConfig(BaseModel):
     )
     analysis_scope: Literal["descriptive", "guidance", "both"] = "guidance"
     project_extension: bool = True
+    redundancy_alpha: Annotated[
+        float,
+        Field(
+            ge=0.0,
+            le=1.0,
+            description=(
+                "Profile-shape similarity heuristic weight for inter-driver redundancy penalty. "
+                "0.0 disables the penalty. This is a heuristic based on horizon-usefulness "
+                "profile cosine similarity, not equivalent to MI-based redundancy."
+            ),
+        ),
+    ] = 0.0
+    apply_bh_correction: bool = False
+    bh_fdr_alpha: Annotated[float, Field(gt=0.0, lt=1.0)] = 0.10
 
     @field_validator("horizons")
     @classmethod

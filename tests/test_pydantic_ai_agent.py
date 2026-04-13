@@ -8,7 +8,7 @@ from pydantic import ValidationError
 from pydantic_ai import models
 
 # Block real model requests during tests — any accidental real call will fail.
-models.ALLOW_MODEL_REQUESTS = False
+models.ALLOW_MODEL_REQUESTS = False  # type: ignore[assignment]
 
 
 class TestCreateTriageAgent:
@@ -20,7 +20,7 @@ class TestCreateTriageAgent:
             create_triage_agent,
         )
 
-        settings = InfraSettings(_env_file=None)
+        settings = InfraSettings(_env_file=None)  # type: ignore[call-arg]
         agent = create_triage_agent(model="test", settings=settings)
         assert agent is not None
 
@@ -30,7 +30,7 @@ class TestCreateTriageAgent:
             create_triage_agent,
         )
 
-        settings = InfraSettings(_env_file=None)
+        settings = InfraSettings(_env_file=None)  # type: ignore[call-arg]
         agent = create_triage_agent(model="test", settings=settings)
         tool_names = set(agent._function_toolset.tools)
         expected = {
@@ -167,7 +167,7 @@ class TestAgentWithTestModel:
             create_triage_agent,
         )
 
-        settings = InfraSettings(_env_file=None)
+        settings = InfraSettings(_env_file=None)  # type: ignore[call-arg]
         agent = create_triage_agent(model="test", settings=settings)
 
         rng = np.random.default_rng(42)
@@ -208,7 +208,7 @@ class TestAgentWithTestModel:
         from forecastability.triage.readiness import assess_readiness
         from forecastability.triage.run_triage import run_triage
 
-        settings = InfraSettings(_env_file=None)
+        settings = InfraSettings(_env_file=None)  # type: ignore[call-arg]
         rng = np.random.default_rng(42)
         ts = rng.standard_normal(200)
 
@@ -338,7 +338,7 @@ class TestAGT027AgentQuickstart:
             create_triage_agent,
         )
 
-        settings = InfraSettings(_env_file=None)
+        settings = InfraSettings(_env_file=None)  # type: ignore[call-arg]
         agent = create_triage_agent(model="test", settings=settings)
         assert isinstance(agent, Agent)
 
@@ -349,12 +349,15 @@ class TestAGT027AgentQuickstart:
             create_triage_agent,
         )
 
-        settings = InfraSettings(_env_file=None)
+        settings = InfraSettings(_env_file=None)  # type: ignore[call-arg]
         agent = create_triage_agent(model="test", settings=settings)
         tool_names = set(agent._function_toolset.tools)
         # These four tools are described in the README agent quickstart.
         expected_tools = (
-            "validate_series", "plan_analysis", "run_full_triage", "list_available_scorers"
+            "validate_series",
+            "plan_analysis",
+            "run_full_triage",
+            "list_available_scorers",
         )
         for expected in expected_tools:
             assert expected in tool_names, f"Tool '{expected}' missing from agent"
@@ -367,7 +370,7 @@ class TestAGT027AgentQuickstart:
 
         # Deterministic path — no agent involved
         rng = np.random.default_rng(42)
-        ts = np.array([0.85 ** i + rng.standard_normal() * 0.1 for i in range(200)])
+        ts = np.array([0.85**i + rng.standard_normal() * 0.1 for i in range(200)])
         req = TriageRequest(series=ts, max_lag=20, random_state=42)
         result = run_triage(req)
         # Narrative ownership: deterministic run_triage never sets narrative

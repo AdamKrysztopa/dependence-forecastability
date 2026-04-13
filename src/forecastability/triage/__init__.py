@@ -14,12 +14,15 @@ from forecastability.triage.batch_models import (
     BatchTriageRequest,
     BatchTriageResponse,
 )
+from forecastability.triage.complexity_band import ComplexityBandResult
 from forecastability.triage.events import (
     TriageError,
     TriageEvent,
     TriageStageCompleted,
     TriageStageStarted,
 )
+from forecastability.triage.forecastability_profile import ForecastabilityProfile
+from forecastability.triage.lyapunov import LargestLyapunovExponentResult
 from forecastability.triage.models import (
     AnalysisGoal,
     MethodPlan,
@@ -29,6 +32,7 @@ from forecastability.triage.models import (
     TriageRequest,
     TriageResult,
 )
+from forecastability.triage.predictive_info_learning_curve import PredictiveInfoLearningCurve
 from forecastability.triage.readiness import assess_readiness
 from forecastability.triage.result_bundle import (
     TriageBundleProvenance,
@@ -50,6 +54,7 @@ from forecastability.triage.run_batch_triage import (
     run_batch_triage_with_details,
 )
 from forecastability.triage.run_triage import run_triage
+from forecastability.triage.spectral_predictability import SpectralPredictabilityResult
 
 __all__ = [
     "AnalysisGoal",
@@ -80,6 +85,11 @@ __all__ = [
     "TriageStageCompleted",
     "TriageError",
     "TriageEvent",
+    "ForecastabilityProfile",
+    "ComplexityBandResult",
+    "LargestLyapunovExponentResult",
+    "PredictiveInfoLearningCurve",
+    "SpectralPredictabilityResult",
     "assess_readiness",
     "plan_method",
     "rank_batch_items",

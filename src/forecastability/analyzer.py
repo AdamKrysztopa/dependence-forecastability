@@ -152,9 +152,10 @@ class ForecastabilityAnalyzer:
 
     def compute_ami(self, ts: np.ndarray, max_lag: int = 100) -> np.ndarray:
         """Compute AMI curve and cache it."""
-        self.ts = validate_time_series(ts, min_length=max_lag + 31)
+        validated = validate_time_series(ts, min_length=max_lag + 31)
+        self.ts = validated
         self._state.ami = compute_ami(
-            self.ts,
+            validated,
             max_lag=max_lag,
             n_neighbors=8,
             min_pairs=30,
@@ -164,9 +165,10 @@ class ForecastabilityAnalyzer:
 
     def compute_pami(self, ts: np.ndarray, max_lag: int = 50) -> np.ndarray:
         """Compute pAMI curve and cache it."""
-        self.ts = validate_time_series(ts, min_length=max_lag + 51)
+        validated = validate_time_series(ts, min_length=max_lag + 51)
+        self.ts = validated
         self._state.pami = compute_pami_linear_residual(
-            self.ts,
+            validated,
             max_lag=max_lag,
             n_neighbors=8,
             min_pairs=50,

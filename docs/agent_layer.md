@@ -134,8 +134,65 @@ Do not trust the agent to:
 The agent layer exists to improve communication and workflow usability.
 It is intentionally optional and must remain downstream of deterministic analysis.
 
+## Expanded Diagnostic Payloads (A1–A3)
+
+The agent payload adapters now provide structured Pydantic models for **all**
+triage extension diagnostics (F1–F8), not just the core triage fields. Three
+adapter modules compose the full serialisation pipeline:
+
+| Module | Role |
+|---|---|
+| `triage_agent_payload_models.py` | 9 typed payload models — one per diagnostic family (F1–F8 + core). |
+| `triage_summary_serializer.py` | Serialisation envelope with `schema_version` for forward-compatible agent consumption. |
+| `triage_agent_interpretation_adapter.py` | Deterministic interpretation with explicit experimental/warning flags per diagnostic. |
+
+The agent contract still applies: **agents narrate deterministic outputs, never
+invent numbers.** Experimental diagnostics (F5 Lyapunov exponent) are
+explicitly flagged in payloads so agents can include appropriate caveats.
+
+### Expanded output shape
+
+With diagnostics enabled, the full agent-ready payload extends the base output:
+
+```json
+{
+  "schema_version": "0.2.0",
+  "blocked": false,
+  "forecastability_class": "high",
+  "directness_class": "medium",
+  "modeling_regime": "compact_structured_models",
+  "primary_lags": [1, 7],
+  "recommendation": "HIGH -> Complex structured models ...",
+  "forecastability_profile": {
+    "peak_horizon": 1,
+    "informative_horizons": [1, 2, 3],
+    "summary": "Strong short-range dependence ..."
+  },
+  "theoretical_limit_diagnostics": {
+    "ceiling_summary": "Predictive ceiling is ...",
+    "compression_warning": null,
+    "dpi_warning": null
+  },
+  "complexity_band": {
+    "band": "ordered",
+    "permutation_entropy": 0.42
+  },
+  "largest_lyapunov_exponent": {
+    "exponent": 0.03,
+    "experimental": true
+  },
+  "warnings": ["Series length < 200 ..."],
+  "experimental_flags": ["largest_lyapunov_exponent"]
+}
+```
+
+> [!NOTE]
+> All diagnostic sub-objects are `null` when the series is blocked. Agents
+> must handle missing diagnostics gracefully and not hallucinate values.
+
 See also:
 
 - [production_readiness.md](production_readiness.md)
 - [quickstart.md](quickstart.md)
+- [observability.md](observability.md)
 - [versioning.md](versioning.md)

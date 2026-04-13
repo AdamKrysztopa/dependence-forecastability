@@ -1,0 +1,10 @@
+{
+  "F4": {
+    "omega": 0.06250495274725654
+  },
+  "F6": {
+    "complexity_band": "high",
+    "permutation_entropy": 0.9866737822888819,
+    "spectral_entropy": 0.9374950472527435
+  }
+}

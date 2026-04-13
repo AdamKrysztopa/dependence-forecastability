@@ -154,9 +154,7 @@ def _build_triage_response(result: Any) -> TriageHTTPResponse:
     Returns:
         :class:`TriageHTTPResponse` with all JSON-safe fields populated.
     """
-    warnings = [
-        {"code": w.code, "message": w.message} for w in result.readiness.warnings
-    ]
+    warnings = [{"code": w.code, "message": w.message} for w in result.readiness.warnings]
 
     if result.blocked:
         return TriageHTTPResponse(
@@ -173,9 +171,7 @@ def _build_triage_response(result: Any) -> TriageHTTPResponse:
         readiness_status=result.readiness.status.value,
         readiness_warnings=warnings,
         route=result.method_plan.route if result.method_plan else None,
-        compute_surrogates=(
-            result.method_plan.compute_surrogates if result.method_plan else None
-        ),
+        compute_surrogates=(result.method_plan.compute_surrogates if result.method_plan else None),
         recommendation=result.recommendation,
         forecastability_class=interp.forecastability_class if interp else None,
         directness_class=interp.directness_class if interp else None,
@@ -259,18 +255,13 @@ else:
             raise HTTPException(
                 status_code=422,
                 detail=(
-                    f"Invalid goal '{body.goal}'. "
-                    f"Valid values: {[g.value for g in AnalysisGoal]}"
+                    f"Invalid goal '{body.goal}'. Valid values: {[g.value for g in AnalysisGoal]}"
                 ),
             ) from exc
 
         request = TriageRequest(
             series=np.asarray(body.series, dtype=np.float64),
-            exog=(
-                np.asarray(body.exog, dtype=np.float64)
-                if body.exog is not None
-                else None
-            ),
+            exog=(np.asarray(body.exog, dtype=np.float64) if body.exog is not None else None),
             goal=goal,
             max_lag=body.max_lag,
             n_surrogates=body.n_surrogates,

@@ -341,3 +341,240 @@ def test_recommendation_mapping_outputs_keep_review_reject() -> None:
     assert recommendation_by_driver["alpha"] == "keep"
     assert recommendation_by_driver["beta"] == "review"
     assert recommendation_by_driver["gamma"] == "reject"
+
+
+def test_redundancy_alpha_zero_gives_same_ranking_as_default() -> None:
+    base_config = _config_with(
+        pruning_enabled=False,
+        pruning_min_mean=0.0,
+        pruning_min_peak=0.0,
+        pruning_floor=0.0,
+        pruning_min_horizons=0,
+        keep_min_mean=1.0,
+        keep_min_peak=1.0,
+        review_min_mean=0.0,
+        review_min_peak=0.0,
+    )
+    config_explicit = base_config.model_copy(update={"redundancy_alpha": 0.0})
+
+    profile = {
+        "alpha": {
+            1: (0.30, 0.24, 0.80),
+            2: (0.28, 0.21, 0.80),
+            3: (0.12, 0.08, 0.80),
+            4: (0.10, 0.06, 0.80),
+        },
+        "beta": {
+            1: (0.15, 0.10, 0.80),
+            2: (0.14, 0.09, 0.80),
+            3: (0.18, 0.14, 0.80),
+            4: (0.17, 0.12, 0.80),
+        },
+        "gamma": {
+            1: (0.08, 0.04, 0.80),
+            2: (0.07, 0.03, 0.80),
+            3: (0.06, 0.02, 0.80),
+            4: (0.05, 0.01, 0.80),
+        },
+    }
+
+    target, drivers = _dummy_panel()
+    evaluator = _build_pair_evaluator(profile)
+
+    result_default = run_exogenous_screening_workbench(
+        target, drivers, target_name="demo", config=base_config, pair_evaluator=evaluator
+    )
+    result_explicit = run_exogenous_screening_workbench(
+        target, drivers, target_name="demo", config=config_explicit, pair_evaluator=evaluator
+    )
+
+    default_order = [
+        row.driver_name
+        for row in sorted(result_default.driver_summaries, key=lambda r: r.overall_rank)
+    ]
+    explicit_order = [
+        row.driver_name
+        for row in sorted(result_explicit.driver_summaries, key=lambda r: r.overall_rank)
+    ]
+    assert default_order == explicit_order
+
+    for row in result_explicit.driver_summaries:
+        assert row.redundancy_score is None
+
+
+def test_redundancy_penalty_reduces_score_of_profile_similar_driver() -> None:
+    base_config = _config_with(
+        pruning_enabled=False,
+        pruning_min_mean=0.0,
+        pruning_min_peak=0.0,
+        pruning_floor=0.0,
+        pruning_min_horizons=0,
+        keep_min_mean=0.0,
+        keep_min_peak=0.0,
+        review_min_mean=0.0,
+        review_min_peak=0.0,
+    )
+    config = base_config.model_copy(update={"redundancy_alpha": 0.5})
+
+    identical_profile_values = {
+        1: (0.20, 0.15, 0.80),
+        2: (0.18, 0.13, 0.80),
+        3: (0.16, 0.11, 0.80),
+        4: (0.14, 0.09, 0.80),
+    }
+    profile = {
+        "alpha": identical_profile_values,
+        "beta": identical_profile_values,
+    }
+
+    target = np.linspace(0.0, 1.0, 120)
+    drivers = {
+        "alpha": np.linspace(1.0, 2.0, 120),
+        "beta": np.linspace(2.0, 3.0, 120),
+    }
+    result = run_exogenous_screening_workbench(
+        target,
+        drivers,
+        target_name="demo",
+        config=config,
+        pair_evaluator=_build_pair_evaluator(profile),
+    )
+
+    ranked = sorted(result.driver_summaries, key=lambda r: r.overall_rank)
+    first_selected = ranked[0]
+    second_selected = next(row for row in ranked if row.driver_name != first_selected.driver_name)
+
+    assert first_selected.redundancy_score is None
+    assert second_selected.redundancy_score is not None
+    assert second_selected.redundancy_score > 0.8
+
+
+def test_bh_correction_marks_informative_driver_significant() -> None:
+    base_config = _config_with(
+        pruning_enabled=False,
+        pruning_min_mean=0.0,
+        pruning_min_peak=0.0,
+        pruning_floor=0.0,
+        pruning_min_horizons=0,
+        keep_min_mean=0.0,
+        keep_min_peak=0.0,
+        review_min_mean=0.0,
+        review_min_peak=0.0,
+    )
+    config = base_config.model_copy(update={"apply_bh_correction": True, "bh_fdr_alpha": 0.10})
+
+    profile = {
+        "strong": {
+            1: (0.30, 0.24, 0.80),
+            2: (0.28, 0.21, 0.80),
+            3: (0.25, 0.18, 0.80),
+            4: (0.22, 0.15, 0.80),
+        },
+        "noise": {
+            1: (0.05, 0.02, 2.00),
+            2: (0.04, 0.01, 2.00),
+            3: (0.04, 0.01, 2.00),
+            4: (0.03, 0.01, 2.00),
+        },
+    }
+
+    target = np.linspace(0.0, 1.0, 120)
+    drivers = {
+        "strong": np.linspace(1.0, 2.0, 120),
+        "noise": np.linspace(2.0, 3.0, 120),
+    }
+    result = run_exogenous_screening_workbench(
+        target,
+        drivers,
+        target_name="demo",
+        config=config,
+        pair_evaluator=_build_pair_evaluator(profile),
+    )
+
+    summary = {row.driver_name: row for row in result.driver_summaries}
+    assert summary["strong"].bh_significant is True
+    assert summary["noise"].bh_significant is False
+
+
+def test_bh_correction_false_by_default() -> None:
+    config = _config_with(
+        pruning_enabled=False,
+        pruning_min_mean=0.0,
+        pruning_min_peak=0.0,
+        pruning_floor=0.0,
+        pruning_min_horizons=0,
+        keep_min_mean=0.0,
+        keep_min_peak=0.0,
+        review_min_mean=0.0,
+        review_min_peak=0.0,
+    )
+
+    profile = {
+        "alpha": {
+            1: (0.20, 0.15, 0.80),
+            2: (0.18, 0.13, 0.80),
+            3: (0.16, 0.11, 0.80),
+            4: (0.14, 0.09, 0.80),
+        },
+        "beta": {
+            1: (0.10, 0.06, 0.80),
+            2: (0.09, 0.05, 0.80),
+            3: (0.08, 0.04, 0.80),
+            4: (0.07, 0.03, 0.80),
+        },
+        "gamma": {
+            1: (0.04, 0.01, 0.80),
+            2: (0.03, 0.01, 0.80),
+            3: (0.03, 0.01, 0.80),
+            4: (0.02, 0.01, 0.80),
+        },
+    }
+
+    target, drivers = _dummy_panel()
+    result = run_exogenous_screening_workbench(
+        target,
+        drivers,
+        target_name="demo",
+        config=config,
+        pair_evaluator=_build_pair_evaluator(profile),
+    )
+
+    for row in result.driver_summaries:
+        assert row.bh_significant is False
+
+
+def test_new_config_fields_have_correct_defaults() -> None:
+    from forecastability.config import ExogenousScreeningWorkbenchConfig
+
+    config = ExogenousScreeningWorkbenchConfig()
+    assert config.redundancy_alpha == 0.0
+    assert config.apply_bh_correction is False
+    assert config.bh_fdr_alpha == pytest.approx(0.10)
+
+
+def test_driver_summary_has_bh_significant_field() -> None:
+    from forecastability.types import ExogenousDriverSummary
+
+    summary = ExogenousDriverSummary(
+        overall_rank=1,
+        driver_name="driver_a",
+        recommendation="keep",
+        pruned=False,
+        mean_usefulness_score=0.25,
+        peak_usefulness_score=0.40,
+        n_horizons_above_floor=4,
+        warning_horizon_count=0,
+    )
+    assert hasattr(summary, "bh_significant")
+    assert hasattr(summary, "redundancy_score")
+    assert summary.bh_significant is False
+    assert summary.redundancy_score is None
+
+
+def test_driver_summary_table_columns_includes_new_fields() -> None:
+    from forecastability.use_cases.run_exogenous_screening_workbench import (
+        DRIVER_SUMMARY_TABLE_COLUMNS,
+    )
+
+    assert "bh_significant" in DRIVER_SUMMARY_TABLE_COLUMNS
+    assert "redundancy_score" in DRIVER_SUMMARY_TABLE_COLUMNS

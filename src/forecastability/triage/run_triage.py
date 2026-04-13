@@ -13,11 +13,18 @@ from forecastability.analyzer import (
     ForecastabilityAnalyzerExog,
 )
 from forecastability.interpretation import interpret_canonical_result
+from forecastability.services.complexity_band_service import build_complexity_band
+from forecastability.services.forecastability_profile_service import build_forecastability_profile
+from forecastability.services.theoretical_limit_diagnostics_service import (
+    build_theoretical_limit_diagnostics,
+)
+from forecastability.triage.complexity_band import ComplexityBandResult
 from forecastability.triage.events import (
     TriageError,
     TriageStageCompleted,
     TriageStageStarted,
 )
+from forecastability.triage.forecastability_profile import ForecastabilityProfile
 from forecastability.triage.models import (
     AnalysisGoal,
     MethodPlan,
@@ -28,6 +35,7 @@ from forecastability.triage.models import (
 )
 from forecastability.triage.readiness import assess_readiness
 from forecastability.triage.router import plan_method
+from forecastability.triage.theoretical_limit_diagnostics import TheoreticalLimitDiagnostics
 from forecastability.types import CanonicalExampleResult, MetricCurve
 
 
@@ -250,9 +258,7 @@ def run_triage(
             event_emitter,
             timing,
             summary_fn=lambda: (
-                f"status={readiness.status.value}"
-                if "readiness" in dir()
-                else "evaluating"
+                f"status={readiness.status.value}" if "readiness" in dir() else "evaluating"
             ),
         ):
             readiness = readiness_gate(request)  # type: ignore[assignment]
@@ -384,6 +390,52 @@ def run_triage(
             },
         )
 
+    # ------------------------------------------------------------------ #
+    # Stage 5: forecastability profile                                    #
+    # ------------------------------------------------------------------ #
+    forecastability_profile: ForecastabilityProfile | None = None
+    if analyze_result is not None:
+        # sig_raw_lags in AnalyzeResult are 1-based lag numbers;
+        # build_forecastability_profile expects 0-based array indices.
+        sig_lags_0based = (
+            (analyze_result.sig_raw_lags - 1) if method_plan.compute_surrogates else None
+        )
+        forecastability_profile = build_forecastability_profile(
+            analyze_result.raw,
+            sig_raw_lags=sig_lags_0based,
+        )
+
+    # ------------------------------------------------------------------ #
+    # Stage 6: information-theoretic limit diagnostics                    #
+    # ------------------------------------------------------------------ #
+    # Guard: ceiling semantics are only valid when the metric IS mutual
+    # information.  If routing is extended to non-MI methods in future,
+    # interpreting their raw curves as an MI ceiling would be wrong.
+    theoretical_limit_diagnostics: TheoreticalLimitDiagnostics | None = None
+    if analyze_result is not None and analyze_result.method == "mi":
+        theoretical_limit_diagnostics = build_theoretical_limit_diagnostics(
+            analyze_result.raw,
+        )
+
+    # ------------------------------------------------------------------ #
+    # Stage 7: entropy-based complexity triage (F6)                      #
+    # ------------------------------------------------------------------ #
+    complexity_band: ComplexityBandResult | None = None
+    complexity_band = build_complexity_band(request.series)
+
+    # ------------------------------------------------------------------ #
+    # Stage 8: largest Lyapunov exponent (F5, experimental)              #
+    # ------------------------------------------------------------------ #
+    from forecastability.triage.lyapunov import LargestLyapunovExponentResult
+
+    largest_lyapunov_exponent: LargestLyapunovExponentResult | None = None
+    try:
+        from forecastability.services.lyapunov_service import build_largest_lyapunov_exponent
+
+        largest_lyapunov_exponent = build_largest_lyapunov_exponent(request.series)
+    except Exception:
+        pass  # experimental — never crashes triage
+
     return TriageResult(
         request=request,
         readiness=readiness,
@@ -393,4 +445,8 @@ def run_triage(
         recommendation=recommendation,
         blocked=False,
         timing=timing if timing else None,
+        forecastability_profile=forecastability_profile,
+        theoretical_limit_diagnostics=theoretical_limit_diagnostics,
+        complexity_band=complexity_band,
+        largest_lyapunov_exponent=largest_lyapunov_exponent,
     )

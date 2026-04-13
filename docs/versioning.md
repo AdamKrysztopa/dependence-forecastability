@@ -30,6 +30,12 @@ This project follows Semantic Versioning: `MAJOR.MINOR.PATCH`.
 | Surface | Stability | Notes |
 |---|---|---|
 | Domain APIs (`src/forecastability/**`) | stable | Core AMI/pAMI, validation, interpretation, and pipeline contracts are heavily tested and treated as compatibility-sensitive. |
+| Triage diagnostics (F1–F4, F6) — ForecastabilityProfile, TheoreticalLimitDiagnostics, SpectralPredictabilityResult, PredictiveInfoLearningCurve, ComplexityBandResult | stable | Deterministic, tested, with frozen regression fixtures. |
+| Triage diagnostics (F5) — LargestLyapunovExponent | experimental | Gated behind `experimental: true`; no stability guarantee. |
+| Batch triage extensions (F7) | stable | `run_batch_triage()` diagnostic columns. |
+| Exogenous screening extensions (F8) | stable | Redundancy penalty + BH FDR. |
+| `SeriesDiagnosticScorer` protocol | stable | Public protocol for univariate diagnostic scorers. |
+| Agent payload adapters (A1–A3) | stable | Pydantic payload models for agent integration. |
 | CLI (`forecastability triage`, `forecastability list-scorers`) | beta | User-facing commands are usable, but options/output details may still be refined. |
 | HTTP API (FastAPI + SSE adapters) | beta | Endpoint and stream payload details may evolve as transport adapters mature. |
 | MCP server tools | experimental | Tool names and request/response payloads may change during integration hardening. |

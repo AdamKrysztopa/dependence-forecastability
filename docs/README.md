@@ -39,6 +39,19 @@ These are the primary explanation layer; notebooks remain deep evidence.
 | [notebooks/exogenous_analysis.md](notebooks/exogenous_analysis.md) | Durable summary of the exogenous CrossAMI/pCrossAMI notebook with warning-aware driver-screening outcomes |
 | [notebooks/agentic_triage.md](notebooks/agentic_triage.md) | Durable summary of deterministic triage orchestration and optional agent narration boundary |
 
+### Triage Extension Notebooks
+
+Interactive notebooks in `notebooks/triage/` covering the extended diagnostic pipeline:
+
+| Notebook | Topic |
+|---|---|
+| `01_forecastability_profile_walkthrough.ipynb` | F1 forecastability profile walkthrough |
+| `02_information_limits_and_compression.ipynb` | F2 information-theoretic limits and compression |
+| `07_predictive_information_learning_curves.ipynb` | F3 predictive information learning curves |
+| `08_spectral_and_entropy_diagnostics.ipynb` | F4/F6 spectral predictability and entropy diagnostics |
+| `09_batch_and_exogenous_workbench.ipynb` | F7/F8 batch ranking and exogenous screening |
+| `10_agent_ready_triage_interpretation.ipynb` | Agent-ready triage interpretation pipeline |
+
 ## Operational Guidance
 
 Practical guides for choosing components and mapping diagnostics to industrial decisions.
@@ -48,6 +61,10 @@ Practical guides for choosing components and mapping diagnostics to industrial d
 | [why_use_this.md](why_use_this.md) | Component comparison matrix for AMI, pAMI, directness ratio, exogenous analysis, triage, and optional narration |
 | [use_cases_industrial.md](use_cases_industrial.md) | Manufacturing/reliability/PdM scenario matrix with recommended path, outputs, and next decisions |
 
+## Examples
+
+Self-contained scripts in [`examples/triage/`](../examples/triage/) demonstrating each diagnostic feature (F1–F8) and agent adapter integrations. Twelve scripts cover forecastability profiles (synthetic and realistic), information limits, predictive info learning curves, spectral predictability, Lyapunov exponent, entropy-complexity, batch ranking, exogenous screening, and agent payload/serialisation/interpretation adapter demos.
+
 ## Theory
 
 Conceptual background and mathematical foundations.
@@ -56,8 +73,20 @@ Conceptual background and mathematical foundations.
 |---|---|
 | [theory/README.md](theory/README.md) | Theory guide scope and paper references |
 | [theory/foundations.md](theory/foundations.md) | AMI and pAMI definitions, significance logic, rolling-origin invariants |
+| [theory/forecastability_profile.md](theory/forecastability_profile.md) | Forecastability Profile model, informative horizon set, epsilon resolution, DPI diagnostic |
 | [theory/pami_residual_backends.md](theory/pami_residual_backends.md) | Residual backend trade-offs, linear-baseline comparison workflow, and failure modes |
 | [theory/interpretation_patterns.md](theory/interpretation_patterns.md) | Pattern A–E classification logic for agentic narration |
+| [theory/spectral_predictability.md](theory/spectral_predictability.md) | Spectral predictability score Ω, PSD normalisation, and complementarity with AMI |
+| [theory/entropy_based_complexity.md](theory/entropy_based_complexity.md) | Permutation entropy, spectral entropy, complexity band classification |
+
+## Triage Methods
+
+Extended diagnostic methods beyond core AMI/pAMI.
+
+| Document | Description |
+|---|---|
+| [triage_methods/predictive_information_learning_curves.md](triage_methods/predictive_information_learning_curves.md) | EvoRate-style lookback analysis, plateau detection, reliability caveats |
+| [triage_methods/largest_lyapunov_exponent.md](triage_methods/largest_lyapunov_exponent.md) | Experimental LLE estimation, delay embedding, sample-size constraints |
 
 ## Architecture
 
@@ -96,6 +125,7 @@ Project roadmap and acceptance criteria (MoSCoW framework).
 | Document | Description |
 |---|---|
 | [plan/README.md](plan/README.md) | Planning surface overview |
+| [plan/development_plan.md](plan/development_plan.md) | Primary development plan: triage extension features F1–F8, stage gates, and delivery status |
 | [plan/dependence_forecastability_progress.md](plan/dependence_forecastability_progress.md) | Branch tracker mapping implemented dependence-forecastability backlog items to status, delivered scope, and commit hashes |
 | [plan/acceptance_criteria.md](plan/acceptance_criteria.md) | Done criteria for all roadmap items |
 | [plan/must_have.md](plan/must_have.md) | Non-negotiable items (✅ complete) |

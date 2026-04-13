@@ -28,6 +28,9 @@ from forecastability.scorers import (
     ScorerRegistry,
     default_registry,
 )
+from forecastability.triage.forecastability_profile import ForecastabilityProfile
+from forecastability.triage.predictive_info_learning_curve import PredictiveInfoLearningCurve
+from forecastability.triage.spectral_predictability import SpectralPredictabilityResult
 from forecastability.types import (
     BackendComparisonResult,
     CanonicalExampleResult,
@@ -75,5 +78,8 @@ __all__ = [
     "SeriesEvaluationResult",
     "UncertaintyConfig",
     "default_registry",
+    "ForecastabilityProfile",
+    "PredictiveInfoLearningCurve",
+    "SpectralPredictabilityResult",
     "validate_time_series",
 ]

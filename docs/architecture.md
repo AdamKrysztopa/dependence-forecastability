@@ -16,55 +16,43 @@ rules before adding, moving, or modifying code.
 ```mermaid
 flowchart TD
     subgraph Adapters["Adapters (infrastructure / transport)"]
-        CLI["cli.py\nargparse CLI"]
-        API["api.py\nFastAPI HTTP"]
-        MCP["mcp_server.py\nMCP tools"]
-        PAI["pydantic_ai_agent.py\nPydanticAI LLM adapter"]
+        Transports["cli · api · mcp_server\npydantic_ai_agent"]
         Settings["settings.py\nInfraSettings / .env"]
     end
 
     subgraph Ports["Ports (contracts — typing.Protocol)"]
-        PV["SeriesValidatorPort"]
-        PC["CurveComputePort"]
-        PS["SignificanceBandsPort"]
-        PI["InterpretationPort"]
-        PR["RecommendationPort"]
-        PRR["ReportRendererPort"]
-        PE["EventEmitterPort"]
-        PCK["CheckpointPort"]
-        PST["SettingsPort"]
+        AllPorts["SeriesValidatorPort · CurveComputePort\nSignificanceBandsPort · InterpretationPort\nEventEmitterPort · CheckpointPort · …"]
     end
 
     subgraph UseCases["Use Cases (application layer)"]
-        RunTriage["run_triage()"]
-        RollingOrigin["run_rolling_origin_evaluation()"]
-        ExogRolling["run_exogenous_rolling_origin_evaluation()"]
+        UC["run_triage() · run_batch_triage()\nrun_rolling_origin_evaluation()\nrun_exogenous_rolling_origin_evaluation()"]
+    end
+
+    subgraph Services["Services (diagnostic orchestration)"]
+        Svc["forecastability_profile_service\ntheoretical_limit_diagnostics_service\nspectral_predictability_service\npredictive_info_learning_curve_service\ncomplexity_band_service · lyapunov_service"]
     end
 
     subgraph Triage["Triage sub-domain"]
-        TModels["models.py\nTriageRequest · MethodPlan · TriageResult"]
-        TReadiness["readiness.py\nassess_readiness()"]
-        TRouter["router.py\nplan_method()"]
-        TEvents["events.py\nTriageStageStarted · Completed · Error"]
+        TCore["Routing & orchestration\nmodels · readiness · router · events\nrun_triage · run_batch_triage"]
+        TDiag["Diagnostic models F1–F6\nForecastabilityProfile · TheoreticalLimitDiagnostics\nSpectralPredictability · PredictiveInfoLearningCurve\nComplexityBand · LargestLyapunovExponent"]
+        TExtras["batch_models · comparison_report\nresult_bundle"]
     end
 
     subgraph Domain["Domain (scientific core — frozen API)"]
-        Metrics["metrics.py\nami() · pami()"]
-        Validation["validation.py\nvalidate_time_series()"]
-        Interpretation["interpretation.py\ninterpret_canonical_result()"]
-        Surrogates["surrogates.py\nphase_surrogate()"]
-        Scorers["scorers.py\nDependenceScorer · ScorerRegistry"]
-        CMI["cmi.py\nResidualBackend"]
-        Config["config.py\nForecastabilityConfig"]
-        Types["types.py\nMetricCurve · InterpretationResult"]
+        Core["metrics · validation · interpretation\nsurrogates · cmi · config · types"]
+        ScorerReg["scorers · extensions\nDependenceScorer · SeriesDiagnosticScorer\nScorerRegistry"]
+        SpUtils["spectral_utils.py\nshared PSD / FFT utilities"]
         Analyzer["analyzer.py\nForecastabilityAnalyzer"]
     end
 
     Adapters -->|depend on| Ports
     Adapters -->|depend on| UseCases
     UseCases -->|depend on| Ports
+    UseCases -->|depend on| Services
     UseCases -->|depend on| Triage
     UseCases -->|depend on| Domain
+    Services -->|depend on| Triage
+    Services -->|depend on| Domain
     Triage -->|depend on| Domain
     Ports -->|typed contracts for| Domain
 
@@ -80,11 +68,12 @@ flowchart TD
 
 | From | May depend on | Must NOT depend on |
 |---|---|---|
-| `adapters/` | `ports/`, `triage/`, `use_cases/`, `domain` | nothing outside the package |
-| `use_cases/` | `ports/`, `triage/`, `domain` | `adapters/` (any concrete adapter) |
-| `triage/` | `domain` | `adapters/`, `use_cases/` |
+| `adapters/` | `ports/`, `services/`, `triage/`, `use_cases/`, `domain` | nothing outside the package |
+| `use_cases/` | `ports/`, `services/`, `triage/`, `domain` | `adapters/` (any concrete adapter) |
+| `services/` | `triage/`, `domain` | `adapters/`, `use_cases/` |
+| `triage/` | `domain` | `adapters/`, `use_cases/`, `services/` |
 | `ports/` | `typing`, `numpy`, `pydantic`, `domain types` | `adapters/`, `framework code` |
-| `domain` | `typing`, `numpy`, `pydantic`, `scikit-learn`, `scipy`, `yaml` | `adapters/`, `use_cases/`, `pydantic_ai`, `fastapi`, `mcp`, `httpx`, `click`, `matplotlib` (except `plots.py`) |
+| `domain` | `typing`, `numpy`, `pydantic`, `scikit-learn`, `scipy`, `yaml` | `adapters/`, `use_cases/`, `services/`, `pydantic_ai`, `fastapi`, `mcp`, `httpx`, `click`, `matplotlib` (except `plots.py`) |
 
 > [!WARNING]
 > `plots.py` is the sole exception: it may import `matplotlib`.  All other
@@ -115,7 +104,9 @@ Each module has exactly one reason to change.
 ### O — Open/Closed
 
 New scorer families → implement `DependenceScorer` protocol and register with
-`ScorerRegistry`.  No orchestration code is modified.
+`ScorerRegistry`.  Univariate diagnostic scorers implement the
+`SeriesDiagnosticScorer` protocol (F1–F6 diagnostics all follow this pattern).
+No orchestration code is modified.
 
 New report formats → implement `ReportRendererPort`.  No assembler logic is
 modified.
