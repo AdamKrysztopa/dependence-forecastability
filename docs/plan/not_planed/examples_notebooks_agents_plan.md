@@ -1,6 +1,6 @@
 # Examples, Notebooks, and Improved Agents Plan  
 **Companion to:** `development_plan.md`  
-**Last reviewed:** 2026-04-12  
+**Last reviewed:** 2026-04-13  
 **Repo:** `AdamKrysztopa/dependence-forecastability`
 
 ---
@@ -192,13 +192,13 @@ This keeps agent work in adapter land, not in the deterministic core.
 ## F3 — Predictive Information Learning Curves
 
 ### Example scripts
-- [ ] `examples/triage/f3_predictive_info_learning_curve.py`
+- [x] `examples/triage/f3_predictive_info_learning_curve.py`
 
 ### Example requirements
-- [ ] short-memory process
-- [ ] longer-memory process
-- [ ] plateau detection
-- [ ] explicit reliability warning example for small sample size
+- [x] short-memory process
+- [x] longer-memory process
+- [x] plateau detection
+- [x] explicit reliability warning example for small sample size
 
 ### Notebook
 - [ ] `notebooks/triage/03_predictive_information_learning_curves.ipynb`
@@ -220,13 +220,13 @@ This keeps agent work in adapter land, not in the deterministic core.
 ## F4 — Spectral Predictability
 
 ### Example scripts
-- [ ] `examples/triage/f4_spectral_predictability.py`
+- [x] `examples/triage/f4_spectral_predictability.py`
 
 ### Example requirements
-- [ ] white-noise-like signal
-- [ ] periodic signal
-- [ ] PSD summary + score
-- [ ] note on preprocessing assumptions
+- [x] white-noise-like signal
+- [x] periodic signal
+- [x] PSD summary + score
+- [x] note on preprocessing assumptions
 
 ### Notebook
 - [ ] merged into `04_spectral_and_entropy_diagnostics.ipynb`
@@ -266,13 +266,13 @@ This keeps agent work in adapter land, not in the deterministic core.
 ## F6 — Entropy-Based Complexity Triage
 
 ### Example scripts
-- [ ] `examples/triage/f6_entropy_complexity.py`
+- [x] `examples/triage/f6_entropy_complexity.py`
 
 ### Example requirements
-- [ ] periodic signal
-- [ ] noisy signal
-- [ ] structured-irregular signal
-- [ ] complexity band result
+- [x] periodic signal
+- [x] noisy signal
+- [x] structured-irregular signal
+- [x] complexity band result
 
 ### Notebook
 - [ ] merged into `04_spectral_and_entropy_diagnostics.ipynb`
