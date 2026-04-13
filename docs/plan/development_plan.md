@@ -3,7 +3,7 @@
 
 **Replaces:** MoSCoW plan (removed)
 **Source epic:** [`not_planed/triage_extension_epic_math_grounded.md`](not_planed/triage_extension_epic_math_grounded.md)
-**Last reviewed:** 2026-04-12 (F1 implemented 2026-04-12; F2, SeriesDiagnosticScorer, PSD utility implemented 2026-04-12; F6 implemented 2026-04-12; F4 implemented 2026-04-12; F3 implemented 2026-04-12; F5 implemented 2026-04-12; F7, F8 implemented 2026-04-12)
+**Last reviewed:** 2026-04-13 (F1 implemented 2026-04-12; F2, SeriesDiagnosticScorer, PSD utility implemented 2026-04-12; F6 implemented 2026-04-12; F4 implemented 2026-04-12; F3 implemented 2026-04-12; F5 implemented 2026-04-12; F7, F8 implemented 2026-04-12; F9 elaborated 2026-04-13; F9 implemented 2026-04-13; examples/notebooks/agents plan added 2026-04-13)
 
 ---
 
@@ -60,7 +60,46 @@ Before reading the per-feature sections, note what the repo already provides:
 | F5 | Largest Lyapunov Exponent | 3 | 0 % | New experimental scorer | ✅ Done |
 | F7 | Batch Multi-Signal Ranking | 3 | ~85 % — `run_batch_triage()` exists | Incremental: add new-scorer columns | ✅ Done |
 | F8 | Enhanced Exogenous Screening | 3 | ~80 % — screening workbench exists | Incremental: add inter-driver redundancy penalty | ✅ Done |
-| F9 | Benchmark & Reproducibility Expansion | 3 | Infrastructure exists | Fixture creation for F1–F6 outputs | Not started |
+| F9 | Benchmark & Reproducibility Expansion | 3 | Infrastructure exists | Regression fixtures for F1–F6 diagnostics + F7 batch + F8 exog extensions | ✅ Done |
+
+---
+
+## Examples, notebooks & agent adapter inventory
+
+> Source: [`not_planed/examples_notebooks_agents_plan.md`](not_planed/examples_notebooks_agents_plan.md).
+> Design rules: examples are deterministic, fast, call `src/` only; notebooks never duplicate formulas inline;
+> agent adapters consume stable deterministic payloads — one shared layer, no per-feature duplication.
+
+| # | Kind | Feature(s) | Phase | Overlap | Genuine new work | Status |
+|---|------|------------|-------|---------|------------------|--------|
+| E1a | Example | F1 Profile (synthetic) | 1 | — | Seasonal non-monotone + AR decay; print horizons, informative set, recommendations | Not started |
+| E1b | Example | F1 Profile (realistic) | 1 | — | Real-data profile walkthrough | Not started |
+| E2 | Example | F2 IT Limits | 1 | ~60 % — `run_phase1_limit_diagnostics.py` | Add compressed-vs-original; "possible" vs "achieved" distinction | Not started |
+| E3 | Example | F3 Learning Curves | 2 | ~80 % — `run_predictive_info_learning_curves.py` | Add reliability-warning demo for small $n$; consolidate | Not started |
+| E4 | Example | F4 Spectral | 2 | ~90 % — `run_spectral_predictability.py` | Minimal — consolidate into examples convention | Not started |
+| E5 | Example | F5 Lyapunov | 3 | ~80 % — `run_largest_lyapunov_exponent.py` | Add parameter-sensitivity demo; mandatory experimental warning | Not started |
+| E6 | Example | F6 Entropy | 2 | ~90 % — `run_entropy_complexity.py` | Minimal — consolidate into examples convention | Not started |
+| E7 | Example | F7 Batch | 3 | ~85 % — `run_multi_signal_diagnostic_ranking.py` | Add JSON/CSV export demo; consolidate | Not started |
+| E8 | Example | F8 Exog Screening | 3 | ~80 % — `run_exogenous_driver_redundancy_screening.py` | Add strong/weak/redundant driver narrative; consolidate | Not started |
+| N1 | Notebook | F1 | 1 | — | `05_forecastability_profile_walkthrough` — profile vs scalar; non-monotone vs monotone | Not started |
+| N2 | Notebook | F2 | 1 | — | `06_information_limits_and_compression` — ceiling vs realisation; compression warnings | Not started |
+| N3 | Notebook | F3 | 2 | — | `07_predictive_information_learning_curves` — curve construction; plateau; bias-floor caveat | Not started |
+| N4 | Notebook | F4, F5, F6 | 2–3 | — | `08_spectral_and_entropy_diagnostics` — Ω, PE/SE plane, complexity bands, optional LLE | Not started |
+| N5 | Notebook | F7, F8 | 3 | — | `09_batch_and_exogenous_workbench` — batch ranking + exog screening + redundancy + BH | Not started |
+| A1 | Agent adapter | F1–F8 | 3 | — | `triage_agent_payload_models.py` — Pydantic payload models for all diagnostics | Not started |
+| A2 | Agent adapter | F1–F8 | 3 | A1 | `triage_summary_serializer.py` — result models → agent-safe payloads; schema version | Not started |
+| A3 | Agent adapter | F1–F8 | 3 | A1, A2 | `triage_agent_interpretation_adapter.py` — concise summaries; warnings; experimental flags | Not started |
+| N6 | Notebook | A1–A3 | 3 | — | `10_agent_ready_triage_interpretation` — triage → payload → summary → deterministic vs narrative | Not started |
+
+**Agent payload fields per feature:**
+F1: `profile_peak_horizon`, `profile_informative_horizons`, `profile_shape_label`, `profile_summary` ·
+F2: `theoretical_ceiling_by_horizon`, `ceiling_summary`, `compression_warning`, `dpi_warning` ·
+F3: `recommended_lookback`, `plateau_detected`, `reliability_warnings`, `lookback_summary` ·
+F4: `spectral_predictability_score`, `spectral_summary`, `spectral_reliability_notes` ·
+F5: `lyapunov_estimate`, `lyapunov_warning`, `experimental_flag_required` ·
+F6: `permutation_entropy`, `spectral_entropy`, `complexity_band`, `complexity_summary` ·
+F7: `batch_rank`, `diagnostic_vector`, `ranking_summary` ·
+F8: `driver_scores_by_horizon`, `redundancy_flags`, `driver_recommendations`, `screening_summary`
 
 ---
 
@@ -374,7 +413,7 @@ flowchart LR
 | **F5 — Largest Lyapunov Exponent** | New experimental scorer (gated behind config flag) | M–L |
 | **F7 — Batch ranking extension** | Extend `run_batch_triage` with new scorer columns | S |
 | **F8 — Exog screening extension** | Add inter-driver redundancy penalty to workbench | S |
-| **F9 — Benchmark & reproducibility expansion** | Fixtures + regression tolerances for all F1–F6 outputs | M |
+| **F9 — Benchmark & reproducibility expansion** | Diagnostic regression fixtures + batch/exog regression + rebuild/verify scripts | M–L |
 
 #### F5 — Largest Lyapunov Exponent
 
@@ -460,11 +499,145 @@ than simultaneous conditioning when $d > 5$ drivers at $n < 1000$.
 
 ---
 
+#### F9 — Benchmark & Reproducibility Expansion
+
+**Status:** Not started. Existing benchmark infrastructure covers only the original
+AMI/pAMI univariate pipeline (5 frozen CSVs under `docs/fixtures/benchmark_examples/expected/`).
+No frozen reference outputs exist for the new F1–F6 diagnostics.
+
+**Why it matters:** Without regression fixtures, any refactor, dependency upgrade, or
+estimator tweak can silently change diagnostic outputs. The repo already proves this
+model works for AMI/pAMI—F9 extends the same guarantee to every new diagnostic.
+
+##### Scope and deliverables
+
+**A. Canonical diagnostic fixture dataset**
+
+Create a small, deterministic fixture series set that exercises each diagnostic's
+interesting behaviours:
+
+| Fixture series | Primary purpose | Expected diagnostic signature |
+|---|---|---|
+| AR(1) φ=0.85, n=500 | Smooth monotone decay | F1: monotone profile, peak at h=1 |
+| Seasonal AR + period 12, n=500 | Non-monotone profile | F1: non-monotone, peak near h=12 |
+| White noise, n=500 | Null baseline | F4: Ω ≈ 0; F6: PE ≈ 1.0, band = high |
+| Sine wave, n=500 | Maximal structure | F4: Ω ≈ 1.0; F6: PE ≈ 0.0, band = low |
+| AR(2) finite-memory, n=1000 | Lookback plateau | F3: plateau at k=2–3 |
+| Logistic map r=3.9, n=2000 | Chaotic dynamics | F5: λ̂ > 0 (experimental) |
+| Mixed AR(1)+noise, n=500 | Medium complexity | F6: band = medium |
+
+All fixtures generated from deterministic seeds (`random_state=42`). Store as
+CSV or numpy `.npy` under `docs/fixtures/diagnostic_regression/inputs/`.
+
+**B. Frozen expected outputs per diagnostic**
+
+For each fixture × diagnostic combination, freeze the output fields into JSON
+under `docs/fixtures/diagnostic_regression/expected/`:
+
+| Diagnostic | Frozen fields | Tolerance |
+|---|---|---|
+| F1 ForecastabilityProfile | `horizons`, `values`, `informative_horizons`, `peak_horizon`, `is_non_monotone` | Values: `atol=1e-6`; sets: exact |
+| F2 TheoreticalLimitDiagnostics | `forecastability_ceiling_by_horizon`, `compression_warning`, `dpi_warning` | Ceiling: `atol=1e-6`; text: exact |
+| F3 PredictiveInfoLearningCurve | `window_sizes`, `information_values`, `recommended_lookback`, `plateau_detected` | Values: `atol=1e-4` (MI variance); lookback: ±1 |
+| F4 SpectralPredictability | `omega` (scalar) | `atol=1e-8` (deterministic FFT) |
+| F5 LargestLyapunovExponent | `lambda_estimate`, `is_experimental` | `atol=1e-4` (embedding sensitivity) |
+| F6 ComplexityBandResult | `permutation_entropy`, `spectral_entropy`, `complexity_band` | PE: `atol=1e-8`; SE: `atol=1e-8`; band: exact |
+
+> [!IMPORTANT]
+> F3 tolerances are deliberately wider (`atol=1e-4`) because kNN MI estimates
+> carry intrinsic variance at small sample sizes. F4 and F6 use deterministic
+> FFT pipelines and can be held to machine-precision tolerances. F5 tolerances
+> are moderate because the Rosenstein algorithm involves nearest-neighbor search
+> on embedded trajectories.
+
+**C. Regression test module**
+
+Add `tests/test_diagnostic_regression.py` with:
+
+- One parametrised test per diagnostic that loads fixture input, runs the service,
+  and compares output fields against frozen expected within tolerances.
+- A drift-detection test analogous to `test_fixture_verification_flags_drift`
+  that corrupts one expected file and confirms the test fails.
+- All tests must be deterministic (fixed seeds) and fast (< 30 s total).
+
+**D. Rebuild and verify script**
+
+Extend `scripts/rebuild_benchmark_fixture_artifacts.py` (or add a sibling
+`scripts/rebuild_diagnostic_fixture_artifacts.py`) with:
+
+- `--generate` mode: run all diagnostics on fixture inputs, write expected JSON.
+- `--verify` mode: compare generated outputs against frozen expected.
+- Print a summary table of pass/fail per fixture × diagnostic.
+
+**E. Exogenous benchmark extension**
+
+Extend the existing exogenous benchmark (`configs/benchmark_exog_panel.yaml`)
+to record F8 extension fields (`redundancy_score`, `bh_significant`) in the
+frozen outputs. Add one regression test that verifies the 7 existing case IDs
+produce stable F8 results.
+
+**F. Batch triage regression**
+
+Add a fixture batch run (5–10 synthetic series) that freezes the F7 extension
+columns (`spectral_predictability`, `permutation_entropy`, `complexity_band_label`)
+and verifies ranking stability.
+
+##### What to code
+
+- [ ] Fixture generation script: deterministic series → CSV/npy
+- [ ] Expected output generation script: run diagnostics → JSON
+- [ ] `tests/test_diagnostic_regression.py`: parametrised fixture-vs-expected tests
+- [ ] F8 regression fixture for exogenous benchmark extension fields
+- [ ] F7 regression fixture for batch triage extension columns
+- [ ] Drift-detection tests (corrupt + assert failure)
+- [ ] CI integration: regression tests run in `uv run pytest -q -ra`
+
+##### Suggested directory structure
+
+```text
+docs/fixtures/diagnostic_regression/
+  inputs/
+    ar1_smooth.csv
+    seasonal_ar.csv
+    white_noise.csv
+    sine_wave.csv
+    ar2_finite_memory.csv
+    logistic_map.csv
+    mixed_ar1_noise.csv
+  expected/
+    ar1_smooth/
+      forecastability_profile.json
+      theoretical_limit_diagnostics.json
+      spectral_predictability.json
+      complexity_band.json
+    seasonal_ar/
+      forecastability_profile.json
+      ...
+    ...
+  expected_batch/
+    batch_ranking.json
+  expected_exog/
+    exog_screening_f8.json
+```
+
+##### Acceptance criteria
+
+- [ ] Every F1–F6 diagnostic has at least 2 fixture series with frozen expected outputs
+- [ ] Regression tests detect intentional drift (tolerance-aware)
+- [ ] Rebuild script can regenerate expected outputs from scratch
+- [ ] Verify mode confirms no drift on clean checkout
+- [ ] Exogenous benchmark includes F8 extension fields
+- [ ] Batch benchmark includes F7 extension columns
+- [ ] All deterministic, all fast (< 30 s total), all CI-friendly
+
+---
+
 #### Phase 3 gate
 
 - F5 tagged as experimental with gated activation
 - F7/F8 extensions integrated and tested
-- Full regression fixture suite passing for F1–F6 outputs
+- F9: full regression fixture suite passing for F1–F6 outputs
+- F9: batch and exogenous regression fixtures passing
 - Theory docs complete for all methods
 - Architect + statistician review completed
 
@@ -503,6 +676,46 @@ All fields must be stable, deterministic, and schema-versioned.
 - Plotting and serialisation remain adapter-only
 - New domain models added to `triage/__init__.py`
 - Root `__init__.py` `__all__` updated only for stable public API
+
+---
+
+## Epic cross-reference verification
+
+Verified 2026-04-13 against source epic
+[`not_planed/triage_extension_epic_math_grounded.md`](not_planed/triage_extension_epic_math_grounded.md):
+
+| Epic item | Dev plan coverage | Notes |
+|---|---|---|
+| §1 SOLID / Hexagonal / Mathematical rules | Cross-cutting deliverables + Architecture enforcement | ✅ |
+| §2 Definition of done (A–F) | Definition of done section (trimmed; epic §2 is canonical) | ✅ |
+| §3 Implementation template (10-step) | Not duplicated; lives in epic only | ✅ By reference |
+| F1 Forecastability Profile (P0) | Phase 1 — fully elaborated | ✅ Done |
+| F2 IT Limit Diagnostics (P0) | Phase 1 — fully elaborated | ✅ Done |
+| F3 Predictive Info Learning Curves (P1) | Phase 2 — fully elaborated; adds statistical assessment | ✅ Done |
+| F4 Spectral Predictability (P1) | Phase 2 — fully elaborated; adds statistical assessment | ✅ Done |
+| F5 Largest Lyapunov Exponent (P1) | Phase 3 — fully elaborated; adds statistical assessment | ✅ Done |
+| F6 Entropy-Based Complexity (P1) | Phase 2 — fully elaborated; adds statistical assessment | ✅ Done |
+| F7 Batch Multi-Signal Ranking (P2) | Phase 3 — incremental on existing `run_batch_triage()` | ✅ Done |
+| F8 Enhanced Exog Screening (P2) | Phase 3 — incremental; adds BH FDR (beyond epic scope) | ✅ Done |
+| F9 Benchmark Expansion (P3) | Phase 3 — now fully elaborated with fixture matrix, tolerances, scripts | ✅ Planned |
+| F10 Permutation-AMI Naming (P3) | Phase 1 — documentation-only; convention already followed | ✅ Done |
+| Infra: SeriesDiagnosticScorer | Phase 1 — protocol defined | ✅ Done |
+| Infra: Shared PSD/FFT utility | Phase 1 — `spectral_utils.py` | ✅ Done |
+| Examples per feature (epic §4.x.5/6) | New "Examples, Notebooks & Agent Payloads" section | ✅ Planned |
+| Theory docs per feature (epic §4.x.7) | Cross-cutting deliverables — theory doc framework | ✅ Mostly done (F1–F6 theory docs exist) |
+
+**Implementation proposal verification against papers:**
+
+| Feature | Paper | Proposed approach | Assessment |
+|---|---|---|---|
+| F1 | Catt (2026) `arXiv:2603.27074` | Reuse AMI curve → assemble profile + informative horizon set | ✅ Correct — no new estimator needed; profile is derived from existing MI outputs |
+| F2 | Catt (2026) `arXiv:2603.27074` | MI ceiling under log loss + exploitation ratio as placeholder | ✅ Correct — exploitation ratio deferred until model layer exists (pre-model repo) |
+| F3 | Morawski et al. (2025) `arXiv:2510.10744` | EvoRate(k) via kNN MI with dimension-aware cap | ✅ Correct — mandatory reliability warnings compensate for kNN bias at high $k$ |
+| F4 | Wang et al. (2025) `arXiv:2507.13556` | Welch PSD → spectral entropy → Ω scorer | ✅ Correct — normalise by $\log(N_{\text{bins}})$ not $\log(n)$ per paper |
+| F5 | Wang et al. (2025) `arXiv:2507.13556` | Rosenstein LLE via delay embedding | ✅ Correct — experimental gating is appropriate given finite-sample instability |
+| F6 | Ponce-Flores et al. (2020), Bandt & Pompe (2002) | PE + SE → complexity band service | ✅ Correct — auto-selected embedding order with sample-size guard |
+| F7 | ForeCA-inspired, Goerg (2013) | Batch ranking with new scorer columns; ForeCA projection deferred | ✅ Correct — full ForeCA adds projection risk; incremental column extension is safer |
+| F8 | CATS-inspired, Lu et al. (2024) | Deterministic redundancy penalty + BH FDR; no attention model | ✅ Correct — CATS attention model doesn't fit pre-model deterministic core; deterministic screening is the right adaptation |
 
 ---
 
