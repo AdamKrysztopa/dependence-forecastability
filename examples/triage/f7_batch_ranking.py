@@ -238,7 +238,7 @@ def main() -> None:
             f"{float(row.get('permutation_entropy') or 0.0):<7.3f} "
             f"{directness_text:<10} "
             f"{str(row.get('complexity_band_label') or '-'):<8} "
-            f"{str(row.get('recommended_next_action') or '-') }"
+            f"{str(row.get('recommended_next_action') or '-')}"
         )
 
     tables_dir = Path("outputs/tables/examples/triage")

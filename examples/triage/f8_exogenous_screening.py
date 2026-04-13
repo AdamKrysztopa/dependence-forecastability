@@ -114,9 +114,7 @@ def _build_stub_pair_evaluator(
             exog_name=exog_name,
             horizons=horizons,
             raw_cross_mi_by_horizon={horizon: profile[horizon][0] for horizon in horizons},
-            conditioned_cross_mi_by_horizon={
-                horizon: profile[horizon][1] for horizon in horizons
-            },
+            conditioned_cross_mi_by_horizon={horizon: profile[horizon][1] for horizon in horizons},
             directness_ratio_by_horizon={horizon: profile[horizon][2] for horizon in horizons},
             origins_used_by_horizon={horizon: 6 for horizon in horizons},
             warning_horizons=warning_horizons,
@@ -270,9 +268,7 @@ def main() -> None:
     print("-" * 88)
     for summary in sorted(result.driver_summaries, key=lambda row: row.overall_rank):
         redundancy_text = (
-            f"{summary.redundancy_score:.3f}"
-            if summary.redundancy_score is not None
-            else "-"
+            f"{summary.redundancy_score:.3f}" if summary.redundancy_score is not None else "-"
         )
         print(
             f"{summary.overall_rank:<6} {summary.driver_name:<24} "
