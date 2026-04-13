@@ -262,7 +262,7 @@ def run_triage(
                 f"status={readiness.status.value}" if "readiness" in dir() else "evaluating"
             ),
         ):
-            readiness = readiness_gate(request)  # type: ignore[assignment]
+            readiness = readiness_gate(request)
 
         if checkpoint is not None:
             checkpoint.save_checkpoint(
@@ -295,9 +295,9 @@ def run_triage(
             "routing",
             event_emitter,
             timing,
-            summary_fn=lambda: f"route={method_plan.route}",  # type: ignore[possibly-undefined]
+            summary_fn=lambda: f"route={method_plan.route}",
         ):
-            method_plan = router(request, readiness)  # type: ignore[assignment]
+            method_plan = router(request, readiness)
 
         if checkpoint is not None:
             checkpoint.save_checkpoint(
@@ -319,11 +319,11 @@ def run_triage(
         event_emitter,
         timing,
         summary_fn=lambda: (
-            f"method={analyze_result.method}"  # type: ignore[possibly-undefined]
+            f"method={analyze_result.method}"
             f" raw_mean={analyze_result.raw.mean():.4f}"
         ),
     ):
-        analyze_result = _run_compute(request, method_plan)  # type: ignore[assignment]
+        analyze_result = _run_compute(request, method_plan)
 
     if checkpoint is not None:
         checkpoint.save_checkpoint(
@@ -361,11 +361,11 @@ def run_triage(
         event_emitter,
         timing,
         summary_fn=lambda: (
-            f"class={interpretation.forecastability_class}"  # type: ignore[possibly-undefined]
+            f"class={interpretation.forecastability_class}"
         ),
     ):
         is_exogenous = request.goal == AnalysisGoal.exogenous or request.exog is not None
-        interpretation = interpret_canonical_result(  # type: ignore[assignment]
+        interpretation = interpret_canonical_result(
             canonical,
             is_exogenous=is_exogenous,
         )

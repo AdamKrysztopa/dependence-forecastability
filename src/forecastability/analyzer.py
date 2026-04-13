@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import dataclasses
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 import numpy as np
 
@@ -204,8 +204,9 @@ class ForecastabilityAnalyzer:
         arr = validate_time_series(ts, min_length=max_lag + min_pairs + 1)
         self.ts = arr
         self._method = method
+        bivariate_scorer = cast(DependenceScorer, info.scorer)
         raw = _compute_raw_curve(
-            arr, max_lag, info.scorer, min_pairs=min_pairs, random_state=self.random_state
+            arr, max_lag, bivariate_scorer, min_pairs=min_pairs, random_state=self.random_state
         )
         self._state = dataclasses.replace(self._state, raw=raw)
         return raw
@@ -233,8 +234,9 @@ class ForecastabilityAnalyzer:
         arr = validate_time_series(ts, min_length=max_lag + min_pairs + 1)
         self.ts = arr
         self._method = method
+        bivariate_scorer = cast(DependenceScorer, info.scorer)
         partial = _compute_partial_curve(
-            arr, max_lag, info.scorer, min_pairs=min_pairs, random_state=self.random_state
+            arr, max_lag, bivariate_scorer, min_pairs=min_pairs, random_state=self.random_state
         )
         self._state = dataclasses.replace(self._state, partial=partial)
         return partial
@@ -575,12 +577,13 @@ class ForecastabilityAnalyzerExog(ForecastabilityAnalyzer):
         self.ts = arr
         self.exog = validated_exog
         self._method = method
+        bivariate_scorer = cast(DependenceScorer, info.scorer)
         if validated_exog is not None:
             raw = _compute_exog_raw_curve(
                 arr,
                 validated_exog,
                 max_lag,
-                info.scorer,
+                bivariate_scorer,
                 min_pairs=min_pairs,
                 random_state=self.random_state,
             )
@@ -588,7 +591,7 @@ class ForecastabilityAnalyzerExog(ForecastabilityAnalyzer):
             raw = _compute_raw_curve(
                 arr,
                 max_lag,
-                info.scorer,
+                bivariate_scorer,
                 min_pairs=min_pairs,
                 random_state=self.random_state,
             )
@@ -612,12 +615,13 @@ class ForecastabilityAnalyzerExog(ForecastabilityAnalyzer):
         self.ts = arr
         self.exog = validated_exog
         self._method = method
+        bivariate_scorer = cast(DependenceScorer, info.scorer)
         if validated_exog is not None:
             partial = _compute_exog_partial_curve(
                 arr,
                 validated_exog,
                 max_lag,
-                info.scorer,
+                bivariate_scorer,
                 min_pairs=min_pairs,
                 random_state=self.random_state,
             )
@@ -625,7 +629,7 @@ class ForecastabilityAnalyzerExog(ForecastabilityAnalyzer):
             partial = _compute_partial_curve(
                 arr,
                 max_lag,
-                info.scorer,
+                bivariate_scorer,
                 min_pairs=min_pairs,
                 random_state=self.random_state,
             )

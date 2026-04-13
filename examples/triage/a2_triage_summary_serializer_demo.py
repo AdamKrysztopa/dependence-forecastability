@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from typing import cast
 
 import numpy as np
 
@@ -161,7 +162,16 @@ def _f1_fields(serialised: SerialisedTriageSummary) -> tuple[list[int], float]:
     f1 = serialised.payload.get("f1_profile")
     if not isinstance(f1, dict):
         return [], 0.0
-    return list(f1.get("informative_horizons", [])), float(f1.get("epsilon", 0.0))
+    f1_typed = cast("dict[str, object]", f1)
+    horizons_raw = f1_typed.get("informative_horizons")
+    epsilon_raw = f1_typed.get("epsilon")
+    horizons: list[int] = (
+        [int(h) for h in horizons_raw if isinstance(h, (int, float))]
+        if isinstance(horizons_raw, list)
+        else []
+    )
+    epsilon: float = float(epsilon_raw) if isinstance(epsilon_raw, (int, float)) else 0.0
+    return horizons, epsilon
 
 
 def _plot_bar_panel(
@@ -223,7 +233,8 @@ def _plot_annotation_row(
     complexity_band: object = "N/A"
     f6 = payload.get("f6_complexity")
     if isinstance(f6, dict):
-        complexity_band = f6.get("complexity_band") or "N/A"
+        f6_typed = cast("dict[str, object]", f6)
+        complexity_band = f6_typed.get("complexity_band") or "N/A"
     lines = [
         f"fc_class: {fc_class}",
         f"complexity: {complexity_band}",

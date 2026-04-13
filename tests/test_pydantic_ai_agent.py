@@ -73,7 +73,7 @@ class TestTriageExplanationModel:
             caveats=[],
         )
         with pytest.raises(ValidationError):
-            explanation.forecastability_class = "high"  # type: ignore[misc]
+            explanation.forecastability_class = "high"  
 
 
 class TestToolSerialisation:

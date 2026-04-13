@@ -65,7 +65,7 @@ class TestTriageEvents:
 
         ev = TriageStageStarted(stage="x")
         with pytest.raises(ValidationError):
-            ev.stage = "y"  # type: ignore[misc]
+            ev.stage = "y"
 
     def test_events_are_pydantic_serialisable(self) -> None:
         from forecastability.triage.events import TriageStageCompleted
@@ -322,7 +322,7 @@ class TestDurableExecution:
 
             readiness_call_count = 0
 
-            def counting_gate(r: TriageRequest):  # type: ignore[return]
+            def counting_gate(r: TriageRequest):
                 nonlocal readiness_call_count
                 readiness_call_count += 1
                 from forecastability.triage.models import ReadinessReport, ReadinessStatus

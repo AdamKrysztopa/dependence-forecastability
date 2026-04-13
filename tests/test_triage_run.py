@@ -198,10 +198,10 @@ class TestCheckpointSemantics:
         class TrackingCheckpoint(NoopCheckpointAdapter):
             _run_state_ckpt: dict | None = None
 
-            def load_checkpoint(self, checkpoint_key: str):  # type: ignore[override]
+            def load_checkpoint(self, checkpoint_key: str): 
                 return self._run_state_ckpt
 
-            def save_checkpoint(self, checkpoint_key, stage, state):  # type: ignore[override]
+            def save_checkpoint(self, checkpoint_key, stage, state): 
                 self.__class__._run_state_ckpt = {"stage": stage, "data": state}
 
         # First run — persists routing stage state in memory

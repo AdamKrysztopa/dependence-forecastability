@@ -75,7 +75,7 @@ def test_immutable_model() -> None:
     curve = np.array([0.1, 0.05])
     result = build_theoretical_limit_diagnostics(curve)
     with pytest.raises(ValidationError):
-        result.exploitation_ratio_supported = True  # type: ignore[misc]
+        result.exploitation_ratio_supported = True
 
 
 def test_integrated_in_triage_result() -> None:
