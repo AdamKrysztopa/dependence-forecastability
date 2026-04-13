@@ -3,11 +3,11 @@
 
 **Companion to:** [development_plan.md](development_plan.md), [cleaning_plan.md](cleaning_plan.md)  
 **Builds on:** [acceptance_criteria.md](acceptance_criteria.md), [not_planed/pypi_release_plan.md](not_planed/pypi_release_plan.md) (original draft)  
-**Status:** R0–R2 complete (2026-04-13)  
+**Status:** R0–R5 complete (R3 pre-existing; R4–R5 completed 2026-04-13)  
 **Recommended delivery path:** merge the current docs/public-surface hardening PR first, then cut a dedicated release-prep branch from `main`  
 **Last reviewed:** 2026-04-13
 
-> **Verification snapshot on 2026-04-13 (R0–R2 complete):** `uv run pytest -q -ra` passed, `uv run ruff check .` passed, `uv run ty check` passed. `uv run python -m build` available via `build` + `twine` added to `dependency-groups.dev`. Distribution name set to `dependence-forecastability`. Public surface frozen: `run_triage`, `run_batch_triage`, `TriageRequest`, `TriageResult` added to root `__init__.py`; `py.typed` marker created; CHANGELOG support contract written.
+> **Verification snapshot on 2026-04-13 (R0–R5 complete):** `uv run pytest -q -ra` passed, `uv run ruff check .` passed, `uv run ty check` passed. `uv run python -m build` available via `build` + `twine` added to `dependency-groups.dev`. Distribution name set to `dependence-forecastability`. Public surface frozen: `run_triage`, `run_batch_triage`, `TriageRequest`, `TriageResult` added to root `__init__.py`; `py.typed` marker created; CHANGELOG support contract written. Equality pins relaxed to compatible ranges in `pyproject.toml`. README restructured: install + minimal example + stability table appear before architecture deep-dives.
 >
 > **Reviewability note:** keep PyPI work isolated from the current docs/public-surface hardening PR. Prefer one dedicated release-prep PR for R0-R3 and a follow-up PR for R4-R7 before any TestPyPI or publishing automation work.
 
@@ -21,8 +21,8 @@
 | R1 | PyPI package naming resolution | Choose a unique distribution name while preserving `import forecastability`. | ✅ Done (2026-04-13) |
 | R2 | Public package surface definition | Freeze what `0.1.0` supports in the deterministic core, CLI, extras, and root imports. | ✅ Done (2026-04-13) |
 | R3 | Metadata hardening | Complete release-facing metadata, URLs, and typed-package signaling. | ✅ Done (2026-04-13) |
-| R4 | Dependency policy for published wheel | Replace release-hostile equality pins with compatible external-install ranges. | Not started |
-| R5 | README / PyPI landing-page hardening | Add a PyPI-first install path and minimal example before deeper GitHub-oriented material. | Not started |
+| R4 | Dependency policy for published wheel | Replace release-hostile equality pins with compatible external-install ranges. | ✅ Done (2026-04-13) |
+| R5 | README / PyPI landing-page hardening | Add a PyPI-first install path and minimal example before deeper GitHub-oriented material. | ✅ Done (2026-04-13) |
 | R6 | Artifact contents control | Verify wheel/sdist contents and exclude notebooks, outputs, and other noise. | Not started |
 | R7 | Local release pipeline | Prove lint -> test -> build -> install -> CLI smoke from a clean environment. | Not started |
 | R8 | TestPyPI dry run | Rehearse upload, install, and verification on TestPyPI before production. | Not started |
