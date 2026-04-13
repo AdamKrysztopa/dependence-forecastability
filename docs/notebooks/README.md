@@ -36,3 +36,8 @@ This C1 policy freeze is documentation-only. It does not move, rename, or renumb
 | [canonical_forecastability.md](canonical_forecastability.md) | [../../notebooks/01_canonical_forecastability.ipynb](../../notebooks/01_canonical_forecastability.ipynb) |
 | [exogenous_analysis.md](exogenous_analysis.md) | [../../notebooks/02_exogenous_analysis.ipynb](../../notebooks/02_exogenous_analysis.ipynb) |
 | [agentic_triage.md](agentic_triage.md) | [../../notebooks/03_agentic_triage.ipynb](../../notebooks/03_agentic_triage.ipynb) |
+
+## Triage Notebook Role Split
+
+- Walkthrough consumer notebook: [../../notebooks/03_agentic_triage.ipynb](../../notebooks/03_agentic_triage.ipynb)
+- Deterministic payload/serializer/interpretation deep dive: [../../notebooks/triage/10_agent_ready_triage_interpretation.ipynb](../../notebooks/triage/10_agent_ready_triage_interpretation.ipynb)

@@ -34,10 +34,10 @@ These are the primary explanation layer; notebooks remain deep evidence.
 
 | Document | Description |
 |---|---|
-| [notebooks/README.md](notebooks/README.md) | Overview of selected notebook conversions and rationale for the top-3 coverage set |
+| [notebooks/README.md](notebooks/README.md) | Notebook taxonomy and explicit walkthrough vs deterministic deep-dive role split |
 | [notebooks/canonical_forecastability.md](notebooks/canonical_forecastability.md) | Durable summary of the canonical AMI/pAMI notebook: purpose, key figure, key result, and takeaways |
 | [notebooks/exogenous_analysis.md](notebooks/exogenous_analysis.md) | Durable summary of the exogenous CrossAMI/pCrossAMI notebook with warning-aware driver-screening outcomes |
-| [notebooks/agentic_triage.md](notebooks/agentic_triage.md) | Durable summary of deterministic triage orchestration and optional agent narration boundary |
+| [notebooks/agentic_triage.md](notebooks/agentic_triage.md) | Durable summary of the triage walkthrough surface plus link to the deterministic payload/adapter deep dive |
 
 ### Triage Extension Notebooks
 
@@ -50,7 +50,7 @@ Interactive notebooks in `notebooks/triage/` covering the extended diagnostic pi
 | `07_predictive_information_learning_curves.ipynb` | F3 predictive information learning curves |
 | `08_spectral_and_entropy_diagnostics.ipynb` | F4/F6 spectral predictability and entropy diagnostics |
 | `09_batch_and_exogenous_workbench.ipynb` | F7/F8 batch ranking and exogenous screening |
-| `10_agent_ready_triage_interpretation.ipynb` | Agent-ready triage interpretation pipeline |
+| `10_agent_ready_triage_interpretation.ipynb` | Deterministic payload/serializer/interpretation deep dive (non-walkthrough) |
 
 ## Operational Guidance
 
@@ -63,7 +63,7 @@ Practical guides for choosing components and mapping diagnostics to industrial d
 
 ## Examples
 
-Self-contained scripts in [`examples/triage/`](../examples/triage/) demonstrating each diagnostic feature (F1–F8) and agent adapter integrations. Twelve scripts cover forecastability profiles (synthetic and realistic), information limits, predictive info learning curves, spectral predictability, Lyapunov exponent, entropy-complexity, batch ranking, exogenous screening, and agent payload/serialisation/interpretation adapter demos.
+Self-contained scripts in [`examples/triage/`](../examples/triage/) demonstrating each diagnostic feature (F1–F8) and agent adapter integrations. Thirteen scripts cover forecastability profiles (synthetic and realistic), information limits, predictive info learning curves, spectral predictability, Lyapunov exponent, entropy-complexity, batch ranking, exogenous screening, agent payload/serialisation/interpretation adapter demos, and a runnable live screening-agent example with deterministic fallback.
 
 ## Theory
 

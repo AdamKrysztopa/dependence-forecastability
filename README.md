@@ -49,6 +49,7 @@ uv sync && MPLBACKEND=Agg uv run python scripts/run_canonical_examples.py
 - Results summary (evidence-first): [docs/results_summary.md](docs/results_summary.md)
 - Durable notebook narratives (primary docs layer): [docs/notebooks/README.md](docs/notebooks/README.md)
 - Agentic walkthrough notebook: [notebooks/03_agentic_triage.ipynb](notebooks/03_agentic_triage.ipynb)
+- Deterministic payload/serializer deep dive notebook: [notebooks/triage/10_agent_ready_triage_interpretation.ipynb](notebooks/triage/10_agent_ready_triage_interpretation.ipynb)
 - Full docs index: [docs/README.md](docs/README.md)
 
 ## Visual architecture summary

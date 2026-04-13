@@ -41,7 +41,7 @@ Before reading the workstream sections, note what the repo already provides:
 |---|---|
 | Deep flagship notebooks for canonical and exogenous analysis (`01`, `02`) | ✅ |
 | Top-level triage notebook `03` already consumes shared adapter code from `src/` | ✅ |
-| Top-level screening notebook `04` still embeds live agent implementation | ❌ |
+| Top-level screening notebook `04` consumes shared live adapter code from `src/` | ✅ |
 | Deterministic triage deep-dive notebooks exist under `notebooks/triage/` | ✅ |
 | `adapters/agents/` already contains A1/A2/A3 deterministic payload and interpretation layers | ✅ |
 | `use_cases/` package already exists for rolling-origin and screening workflows | ✅ |
@@ -53,7 +53,7 @@ Before reading the workstream sections, note what the repo already provides:
 | `analyzer.py` imports `matplotlib.pyplot` at module level, `plot()` calls `plt` directly | ❌ |
 | `state.py` is a mutable shared cache used by `ForecastabilityAnalyzer` | ⚠️ |
 | `services/` mixes pure computation, adapters (`plot_service.py`), and infra (`significance_service.py`) | ⚠️ |
-| `assemblers/` contains empty placeholder modules (`__all__ = []`) | ⚠️ |
+| Empty `assemblers/` placeholder modules were removed from `src/` | ✅ |
 | `run_triage()` uses `Any` for `event_emitter` and `checkpoint` instead of port protocols | ⚠️ |
 | Adapter result-shaping logic is duplicated across `api.py`, `cli.py`, `mcp_server.py`, `pydantic_ai_agent.py` | ❌ |
 | Architecture boundary tests cover 11 domain modules with an exemption for `analyzer.py` | ⚠️ |
@@ -68,9 +68,9 @@ Before reading the workstream sections, note what the repo already provides:
 
 | # | Workstream | Phase | Overlap | Genuine new work | Status |
 |---|------------|-------|---------|------------------|--------|
-| C1 | Notebook taxonomy freeze & ownership rules | 1 | ~40% — docs/notebook pages already exist | Define final notebook families and stop treating all notebooks as one class | Completed (2026-04-13, docs-only policy freeze) |
-| C2 | Screening agent extraction from notebook `04` | 1 | ~60% — triage live agent already exists in `src/` | Move screening agent factory/prompt/models/tool wiring into adapters | Not started |
-| C3 | Clarify role split: walkthrough `03` vs deep-dive agent notebook | 1 | ~70% — `03` is already mostly thin | Reposition, rename, and reduce overlap with current deep-dive agent notebook | Not started |
+| C1 | Notebook taxonomy freeze & ownership rules | 1 | ~40% — docs/notebook pages already exist | Define final notebook families and stop treating all notebooks as one class | ✅ Completed (2026-04-13, docs-only policy freeze) |
+| C2 | Screening agent extraction from notebook `04` | 1 | ~60% — triage live agent already exists in `src/` | Move screening agent factory/prompt/models/tool wiring into adapters | ✅ Completed (2026-04-13) |
+| C3 | Clarify role split: walkthrough `03` vs deep-dive agent notebook | 1 | ~70% — `03` is already mostly thin | Reposition, rename, and reduce overlap with current deep-dive agent notebook | ✅ Completed (2026-04-13: role split clarified in notebook intros + docs/index references) |
 | C4 | Walkthrough migration & triage renumbering | 3 | ~50% — notebooks already exist | Create final notebook tree and compatibility shims | Not started |
 | C5 | Move orchestration entry points into `use_cases/` | 2 | ~35% — `use_cases/` package exists | Make `run_triage` / `run_batch_triage` physically match the documented hexagon | Not started |
 | C6 | Presenter/port cleanup and typed orchestration boundaries | 2 | ~20% — ports exist, presenter layer does not | Remove adapter-side duplication and replace `Any` orchestration edges with real contracts | Not started |
@@ -81,7 +81,7 @@ Before reading the workstream sections, note what the repo already provides:
 | C11 | Extract matplotlib from `analyzer.py` | 2 | 0% | Remove `plot()` method and `matplotlib` import; delegate to adapter | Not started |
 | C12 | Reclassify `services/` layer | 2 | ~30% — services exist but mixed | Move `plot_service.py` into adapters; align remaining services with use-case or domain roles | Not started |
 | C13 | Freeze `AnalyzerState` or replace with immutable result | 2 | 0% | Convert mutable cache to frozen model or scoped immutable snapshots | Not started |
-| C14 | Remove empty `assemblers/` placeholders | 1 | 100% — no code exists | Delete dead placeholder modules or fill them | Not started |
+| C14 | Remove empty `assemblers/` placeholders | 1 | 100% — no code exists | Delete dead placeholder modules or fill them | ✅ Completed (2026-04-13) |
 | C15 | Expand architecture boundary tests | 3 | ~45% — test exists but covers 11 modules | Cover triage internals, adapter discipline, services layer, remove analyzer exemption | Not started |
 
 ---
@@ -94,13 +94,13 @@ Before reading the workstream sections, note what the repo already provides:
 |---|---------|--------------|------------------|--------|
 | N1 | `notebooks/01_canonical_forecastability.ipynb` | flagship canonical walkthrough | keep, re-home to `notebooks/walkthroughs/01_canonical_forecastability.ipynb` | Not started |
 | N2 | `notebooks/02_exogenous_analysis.ipynb` | flagship exogenous walkthrough | keep, re-home to `notebooks/walkthroughs/02_exogenous_analysis.ipynb` | Not started |
-| N3 | `notebooks/03_agentic_triage.ipynb` | end-to-end triage walkthrough | keep concept, thin further if needed, re-home to `notebooks/walkthroughs/03_triage_end_to_end.ipynb` | Not started |
-| N4 | `notebooks/04_agentic_screening.ipynb` | screening demo with embedded live implementation | extract code first, then re-home to `notebooks/walkthroughs/04_screening_end_to_end.ipynb` | Not started |
+| N3 | `notebooks/03_agentic_triage.ipynb` | end-to-end triage walkthrough | keep concept, thin further if needed, re-home to `notebooks/walkthroughs/03_triage_end_to_end.ipynb` | In progress (2026-04-13: walkthrough role clarified; re-home pending) |
+| N4 | `notebooks/04_agentic_screening.ipynb` | screening demo with embedded live implementation | extract code first, then re-home to `notebooks/walkthroughs/04_screening_end_to_end.ipynb` | In progress (runtime extraction complete; re-home pending) |
 | N5 | `notebooks/triage/01`, `02`, `07`, `08`, `09`, `10` | deterministic deep dives with numbering gaps | renumber contiguously to `01..06` | Not started |
 | D1 | `docs/notebooks/README.md` and current notebook pages | legacy top-3 durable summaries | expand to the final walkthrough + triage taxonomy | Not started |
 | A1 | `src/forecastability/adapters/agents/*` | deterministic agent-safe boundary | keep as the stable deterministic handoff layer | In progress elsewhere |
 | A2 | `src/forecastability/adapters/pydantic_ai_agent.py` | live triage agent adapter | re-home behind explicit live-LLM adapter path | Not started |
-| A3 | notebook-local screening agent in `04` | hidden second implementation surface | replace with `src/` adapter module + notebook consumer | Not started |
+| A3 | notebook-local screening agent in `04` | hidden second implementation surface | replace with `src/` adapter module + notebook consumer | ✅ Completed (2026-04-13) |
 
 ---
 
@@ -153,7 +153,9 @@ flowchart LR
 
 #### C2 — Screening agent extraction from notebook `04`
 
-**Current state.** `notebooks/04_agentic_screening.ipynb` defines runtime dependencies, output models, prompt text, threshold logic, and a bespoke `create_screening_agent()` factory inline. This is the primary notebook boundary violation in the repo.
+**Status.** Implemented on 2026-04-13 via shared adapter extraction and notebook consumer rewrite.
+
+**Prior state.** `notebooks/04_agentic_screening.ipynb` previously defined runtime dependencies, output models, prompt text, threshold logic, and a bespoke `create_screening_agent()` factory inline. The implementation now lives in `src/forecastability/adapters/llm/screening_agent.py` and notebook `04` imports it as a consumer.
 
 **Scope decision.** Do not create feature-specific agents per diagnostic. If screening keeps a live agent surface, it must be one shared screening adapter owned by `src/`.
 
@@ -170,14 +172,16 @@ flowchart LR
 - tests covering the new adapter path
 
 **Acceptance criteria:**
-- [ ] notebook `04` contains no runtime agent factory, prompt, dependency dataclass, or tool wiring
-- [ ] all live screening-agent behavior is importable from `src/forecastability/adapters/`
-- [ ] notebook `04` remains runnable as a consumer of library code
-- [ ] no authoritative screening thresholds remain hidden inside notebook cells
+- [x] notebook `04` contains no runtime agent factory, prompt, dependency dataclass, or tool wiring
+- [x] all live screening-agent behavior is importable from `src/forecastability/adapters/`
+- [x] notebook `04` remains runnable as a consumer of library code
+- [x] no authoritative screening thresholds remain hidden inside notebook cells
 
 ---
 
 #### C3 — Clarify role split: walkthrough `03` vs deep-dive agent notebook
+
+**Status.** Implemented on 2026-04-13 by clarifying notebook responsibilities in both intro markdown cells and public docs indexes.
 
 **Current state.** `03_agentic_triage.ipynb` already uses the shared triage adapter from `src/`, while the newer deep-dive notebook under `notebooks/triage/` focuses on payload/serializer/interpretation layers. Their scopes are adjacent but not yet cleanly separated.
 
@@ -193,23 +197,25 @@ flowchart LR
 - `docs/notebooks/agentic_triage.md`
 
 **Acceptance criteria:**
-- [ ] notebook `03` is positioned as walkthrough, not implementation surface
-- [ ] the deep-dive agent notebook is positioned as deterministic payload/adapter analysis
-- [ ] there is no unresolved overlap in public purpose between them
+- [x] notebook `03` is positioned as walkthrough, not implementation surface
+- [x] the deep-dive agent notebook is positioned as deterministic payload/adapter analysis
+- [x] there is no unresolved overlap in public purpose between them
 
 ---
 
 #### C14 — Remove empty `assemblers/` placeholders
 
-**Current state.** `assemblers/report_payload_assembler.py` and `assemblers/summary_assembler.py` both contain only docstrings and `__all__ = []`. They were reserved for future extraction that never materialised. Dead placeholder modules create architectural noise.
+**Status.** Implemented on 2026-04-13 by removing the dead placeholder package.
+
+**Prior state.** `assemblers/report_payload_assembler.py` and `assemblers/summary_assembler.py` contained only docstrings and `__all__ = []`. They were reserved for future extraction that never materialised, so the placeholder package was removed.
 
 **What to build:**
 - delete the placeholder files and the `assemblers/` package
 - or fill them if an immediate Phase 2 consumer is identified (unlikely — reporting and summary logic is slim)
 
 **Acceptance criteria:**
-- [ ] `assemblers/` either contains real code or is removed
-- [ ] no imports reference `assemblers` after cleanup
+- [x] `assemblers/` either contains real code or is removed
+- [x] no imports reference `assemblers` after cleanup
 
 ---
 
