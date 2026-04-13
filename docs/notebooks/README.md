@@ -1,20 +1,38 @@
 <!-- type: reference -->
-# Notebook Narrative Pages
+# Notebook Taxonomy and Ownership
 
-Durable documentation summaries for the three highest-impact notebooks.
+This repository freezes notebook policy to exactly two long-lived families:
 
-These pages are the primary narrative layer for maintainers and adopters.
-The notebooks remain deep evidence and reproducible walkthroughs.
+- `notebooks/walkthroughs/`
+- `notebooks/triage/`
 
-## Selected Notebook Conversions
+## Family Roles
 
-| Durable docs page | Covers notebook | Why it is in the top 3 |
+| Family | Ownership role | Purpose |
 |---|---|---|
-| [canonical_forecastability.md](canonical_forecastability.md) | [../../notebooks/01_canonical_forecastability.ipynb](../../notebooks/01_canonical_forecastability.ipynb) | Core AMI/pAMI baseline and interpretation across canonical series |
-| [exogenous_analysis.md](exogenous_analysis.md) | [../../notebooks/02_exogenous_analysis.ipynb](../../notebooks/02_exogenous_analysis.ipynb) | Target-driver screening and CrossAMI/pCrossAMI decision flow |
-| [agentic_triage.md](agentic_triage.md) | [../../notebooks/03_agentic_triage.ipynb](../../notebooks/03_agentic_triage.ipynb) | Deterministic triage orchestration and optional agent narration boundary |
+| `notebooks/walkthroughs/` | Curated end-to-end surfaces | Guided user and maintainer flows for canonical operational paths |
+| `notebooks/triage/` | Deterministic deep dives | Focused method analysis, diagnostics, and evidence-oriented exploration |
 
-## Positioning
+## Architecture Alignment (SOLID + Hexagonal)
 
-- Use these docs pages for fast orientation and operational decisions.
-- Use notebooks for full code, intermediate outputs, and exploratory analysis.
+- Notebooks are consumers and demonstrators, not runtime implementation surfaces.
+- Runtime logic belongs in `src/forecastability/` and follows `adapters -> use_cases -> domain` boundaries.
+- Notebook-local experimentation must not replace shared runtime orchestration, domain rules, or adapter behavior.
+
+## Deprecation Policy for Root-Level Notebook Paths
+
+- No new long-lived notebooks may be added at `notebooks/` root.
+- Root-level notebook files are transitional redirect shims only.
+- Legacy top-level [../../notebooks/03_agentic_triage.ipynb](../../notebooks/03_agentic_triage.ipynb) and [../../notebooks/04_agentic_screening.ipynb](../../notebooks/04_agentic_screening.ipynb) are explicitly transitional during migration.
+
+## Transitional Scope Note
+
+This C1 policy freeze is documentation-only. It does not move, rename, or renumber notebook files.
+
+## Durable Walkthrough Narratives
+
+| Durable docs page | Current notebook surface |
+|---|---|
+| [canonical_forecastability.md](canonical_forecastability.md) | [../../notebooks/01_canonical_forecastability.ipynb](../../notebooks/01_canonical_forecastability.ipynb) |
+| [exogenous_analysis.md](exogenous_analysis.md) | [../../notebooks/02_exogenous_analysis.ipynb](../../notebooks/02_exogenous_analysis.ipynb) |
+| [agentic_triage.md](agentic_triage.md) | [../../notebooks/03_agentic_triage.ipynb](../../notebooks/03_agentic_triage.ipynb) |

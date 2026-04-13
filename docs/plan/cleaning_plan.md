@@ -68,7 +68,7 @@ Before reading the workstream sections, note what the repo already provides:
 
 | # | Workstream | Phase | Overlap | Genuine new work | Status |
 |---|------------|-------|---------|------------------|--------|
-| C1 | Notebook taxonomy freeze & ownership rules | 1 | ~40% — docs/notebook pages already exist | Define final notebook families and stop treating all notebooks as one class | Not started |
+| C1 | Notebook taxonomy freeze & ownership rules | 1 | ~40% — docs/notebook pages already exist | Define final notebook families and stop treating all notebooks as one class | Completed (2026-04-13, docs-only policy freeze) |
 | C2 | Screening agent extraction from notebook `04` | 1 | ~60% — triage live agent already exists in `src/` | Move screening agent factory/prompt/models/tool wiring into adapters | Not started |
 | C3 | Clarify role split: walkthrough `03` vs deep-dive agent notebook | 1 | ~70% — `03` is already mostly thin | Reposition, rename, and reduce overlap with current deep-dive agent notebook | Not started |
 | C4 | Walkthrough migration & triage renumbering | 3 | ~50% — notebooks already exist | Create final notebook tree and compatibility shims | Not started |
@@ -127,6 +127,8 @@ flowchart LR
 
 #### C1 — Notebook taxonomy freeze & ownership rules
 
+**Status.** Implemented on 2026-04-13 as a docs-only taxonomy and ownership freeze. No file moves or renames were performed in C1.
+
 **Current state.** The repo currently presents four top-level notebooks as peers while also maintaining a `notebooks/triage/` deep-dive track. This makes it unclear which notebooks are flagship entry points and which are specialised method notebooks.
 
 **What to build:**
@@ -135,6 +137,7 @@ flowchart LR
   - `notebooks/triage/`
 - ownership rule: walkthrough notebooks are curated end-to-end surfaces; triage notebooks are focused deterministic deep dives
 - deprecation policy for legacy top-level notebook paths
+- architecture discipline: notebooks are consumers/demonstrators, while runtime logic remains in `src/forecastability/` with hexagonal boundaries (`adapters -> use_cases -> domain`) and SOLID responsibilities
 
 **Where it goes:**
 - `README.md`
@@ -142,9 +145,9 @@ flowchart LR
 - `docs/plan/cleaning_plan.md`
 
 **Acceptance criteria:**
-- [ ] the repo documents exactly two long-lived notebook families
-- [ ] new notebooks are not added at repo root except temporary redirect shims
-- [ ] legacy top-level `03` and `04` are explicitly marked transitional
+- [x] the repo documents exactly two long-lived notebook families
+- [x] new notebooks are not added at repo root except temporary redirect shims
+- [x] legacy top-level `03` and `04` are explicitly marked transitional
 
 ---
 
