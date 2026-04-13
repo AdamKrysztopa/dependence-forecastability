@@ -3,13 +3,15 @@
 
 **Companion to:** [development_plan.md](development_plan.md), [cleaning_plan.md](cleaning_plan.md)  
 **Builds on:** [acceptance_criteria.md](acceptance_criteria.md), [not_planed/pypi_release_plan.md](not_planed/pypi_release_plan.md) (original draft)  
-**Status:** R0–R10 complete (R3 pre-existing; R4–R8 completed 2026-04-13; R9–R10 completed 2026-04-13)  
+**Status:** R0–R11 complete (R3 pre-existing; R4–R8 completed 2026-04-13; R9–R11 completed 2026-04-13)  
 **Recommended delivery path:** merge the current docs/public-surface hardening PR first, then cut a dedicated release-prep branch from `main`  
 **Last reviewed:** 2026-04-13
 
 > **Verification snapshot on 2026-04-13 (R0–R8 complete):** `uv run pytest -q -ra` passed (0 skips — all extras installed), `uv run ruff check .` passed, `uv run ty check` passed. R6: `pyproject.toml` sdist excludes added for `notebooks/`, `.codex/`, `.vscode/`, `docs/archive/`, `docs/plan/`, `tmp/`, `outputs/`, heavy data dirs; `twine check` passes for both wheel and sdist. R7: full local pipeline proven — `pytest` → `ruff` → `ty` → `build` → `twine check` → clean-venv wheel install → `import forecastability` → `forecastability --help` all green. Command path codified in `docs/releases/release_checklist.md`. R8: TestPyPI upload commands and clean-venv install procedure documented in `docs/releases/pypi_publication.md`; upload requires maintainer TestPyPI credentials.
 >
 > **Verification snapshot on 2026-04-13 (R9–R10 complete):** R9: `publish-pypi.yml` and `release.yml` both include a `twine check dist/*` validation step in the build job; OIDC Trusted Publishing workflow is complete — build and publish jobs separated with `id-token: write` on the publish job, environment `pypi` protection in place; hotfix process documented in `docs/releases/pypi_publication.md`; packaging bug issue template added at `.github/ISSUE_TEMPLATE/packaging_bug.md`. R10: all prerequisites met — `uv run pytest -q -ra` exit 0, `uv run ruff check .` passes, `uv run ty check` passes, `python -m build` produces `dependence_forecastability-0.1.0-py3-none-any.whl` and sdist, `twine check dist/*` PASSED for both artifacts; known limitations documented in `docs/limitations.md` and `docs/production_readiness.md`; hotfix process prepared. Production PyPI publish requires maintainer to configure Trusted Publisher on pypi.org (see `docs/releases/pypi_publication.md`) then push a `v0.1.0` tag to trigger the automated workflow.
+>
+> **Verification snapshot on 2026-04-13 (R11 complete):** R11: `docs/releases/release_checklist.md` covers pre-release, execution, and post-release phases with stability decision reminders; `docs/releases/v0.1.0_release_notes.md` exists with highlights, stability matrix, 60-second golden-path example using `pip install dependence-forecastability`, and known limitations sections; `CHANGELOG.md` `[0.1.0]` section updated to 2026-04-13 and now includes all F1-F9 features, base AMI/pAMI items, and release documentation line — consistent with release notes; `[Unreleased]` section reset to empty template; no experimental feature is headlined as core.
 >
 > **Reviewability note:** keep PyPI work isolated from the current docs/public-surface hardening PR. Prefer one dedicated release-prep PR for R0-R3 and a follow-up PR for R4-R7 before any TestPyPI or publishing automation work.
 
@@ -30,7 +32,7 @@
 | R8 | TestPyPI dry run | Rehearse upload, install, and verification on TestPyPI before production. | ✅ Done (2026-04-13) |
 | R9 | GitHub Actions + Trusted Publishing | Automate publishing only after the manual path is proven. | ✅ Done (2026-04-13) |
 | R10 | First production release + stabilization | Publish `0.1.0`, verify external installation, and keep a short hotfix window. | ✅ Done (2026-04-13) |
-| R11 | PyPI release documentation | Ship release checklist, v0.1.0 release notes, and CHANGELOG entry before publishing. | Not started |
+| R11 | PyPI release documentation | Ship release checklist, v0.1.0 release notes, and CHANGELOG entry before publishing. | ✅ Done (2026-04-13) |
 
 ---
 
@@ -516,12 +518,12 @@ and a user-facing release notes document suitable for GitHub Releases and PyPI p
   it for migration detail
 
 **Acceptance criteria:**
-- [ ] `docs/releases/release_checklist.md` exists and covers pre-release, execution, and post-release phases
-- [ ] `docs/releases/v0.1.0_release_notes.md` exists with highlights, stability matrix, golden-path example, and known limitations
-- [ ] `CHANGELOG.md` has a `[0.1.0]` section consistent with the release notes
-- [ ] Release notes clearly distinguish stable, beta, and experimental surfaces
-- [ ] Golden-path example uses `pip install dependence-forecastability` (or the chosen distribution name)
-- [ ] No experimental feature is headlined as core in the release notes
+- [x] `docs/releases/release_checklist.md` exists and covers pre-release, execution, and post-release phases
+- [x] `docs/releases/v0.1.0_release_notes.md` exists with highlights, stability matrix, golden-path example, and known limitations
+- [x] `CHANGELOG.md` has a `[0.1.0]` section consistent with the release notes
+- [x] Release notes clearly distinguish stable, beta, and experimental surfaces
+- [x] Golden-path example uses `pip install dependence-forecastability` (or the chosen distribution name)
+- [x] No experimental feature is headlined as core in the release notes
 
 ---
 
