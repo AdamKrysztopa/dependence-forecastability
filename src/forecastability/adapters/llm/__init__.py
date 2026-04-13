@@ -7,6 +7,12 @@ from forecastability.adapters.llm.screening_agent import (
     create_screening_agent,
     pydantic_ai_available,
 )
+from forecastability.adapters.llm.triage_agent import (
+    TriageDeps,
+    TriageExplanation,
+    create_triage_agent,
+    run_triage_agent,
+)
 
 __all__ = [
     "FeatureRanking",
@@ -14,4 +20,8 @@ __all__ = [
     "ScreeningDeps",
     "create_screening_agent",
     "pydantic_ai_available",
+    "TriageDeps",
+    "TriageExplanation",
+    "create_triage_agent",
+    "run_triage_agent",
 ]

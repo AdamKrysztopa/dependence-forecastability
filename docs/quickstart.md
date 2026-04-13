@@ -241,6 +241,8 @@ uv run python - <<'PY'
 import asyncio
 import json
 from forecastability import generate_ar1
+# Canonical import: forecastability.adapters.llm.triage_agent
+# The path below uses the backward-compat shim and will be removed in a future release.
 from forecastability.adapters.pydantic_ai_agent import run_triage_agent
 
 async def main() -> None:

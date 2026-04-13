@@ -7,7 +7,7 @@ They exist as internal contracts for future agent integration.
 from __future__ import annotations
 
 import numpy as np
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from forecastability.config import RollingOriginConfig
 
@@ -22,7 +22,7 @@ class AnalyzeSeriesRequest(BaseModel):
     method: str = "mi"
     compute_surrogates: bool = False
     random_state: int = 42
-    n_surrogates: int = 99
+    n_surrogates: int = Field(default=99, ge=99)
 
 
 class RollingOriginRequest(BaseModel):

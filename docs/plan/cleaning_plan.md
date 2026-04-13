@@ -47,22 +47,22 @@ Before reading the workstream sections, note what the repo already provides:
 | Deterministic triage deep-dive notebooks exist under `notebooks/triage/` | ✅ |
 | `adapters/agents/` already contains A1/A2/A3 deterministic payload and interpretation layers | ✅ |
 | `use_cases/` package already exists for rolling-origin and screening workflows | ✅ |
-| `run_triage()` and `run_batch_triage()` still live physically under `triage/` | ⚠️ |
-| Architecture docs/tests exist, but physical layout only partially matches them | ⚠️ |
+| `run_triage()` and `run_batch_triage()` moved to `use_cases/`; `triage/` re-exports for backward compat | ✅ |
+| Architecture docs/tests and physical layout are synchronized | ✅ |
 | Rolling-origin train-window-only invariants are preserved in core compute | ✅ |
-| Ingress-level `n_surrogates >= 99` enforcement is inconsistent | ❌ |
-| `result_bundle.py` mixes domain models with filesystem I/O (`save_*`, `load_*`) | ❌ |
-| `analyzer.py` imports `matplotlib.pyplot` at module level, `plot()` calls `plt` directly | ❌ |
-| `state.py` is a mutable shared cache used by `ForecastabilityAnalyzer` | ⚠️ |
-| `services/` mixes pure computation, adapters (`plot_service.py`), and infra (`significance_service.py`) | ⚠️ |
+| Ingress-level `n_surrogates >= 99` enforced on all request models and adapters | ✅ |
+| `result_bundle.py` contains domain models only; I/O in `adapters/result_bundle_io.py` | ✅ |
+| `analyzer.py` has no matplotlib import; `plot()` delegated to adapter | ✅ |
+| `AnalyzerState` is frozen (`ConfigDict(frozen=True)`) | ✅ |
+| `services/` contains pure computation only; `plot_service.py` moved to adapters | ✅ |
 | Empty `assemblers/` placeholder modules were removed from `src/` | ✅ |
-| `run_triage()` uses `Any` for `event_emitter` and `checkpoint` instead of port protocols | ⚠️ |
-| Adapter result-shaping logic is duplicated across `api.py`, `cli.py`, `mcp_server.py`, `pydantic_ai_agent.py` | ❌ |
-| Architecture boundary tests cover 11 domain modules with an exemption for `analyzer.py` | ⚠️ |
-| `TriageRequest.n_surrogates` has no `Field(ge=99)` constraint; `api.py` validates `>= 1` only | ❌ |
+| `run_triage()` uses typed port protocols for `event_emitter` and `checkpoint` | ✅ |
+| Shared `triage_presenter.py` eliminates result-shaping duplication across transport adapters | ✅ |
+| Architecture boundary tests cover 28+ modules including triage internals; `analyzer.py` exemption removed | ✅ |
+| `TriageRequest.n_surrogates` and `AnalyzeSeriesRequest.n_surrogates` enforce `Field(ge=99)`; `api.py` validates `>= 99` | ✅ |
 | `uv run pytest -q -ra` | ✅ |
 | `uv run ruff check .` | ✅ |
-| `uv run ty check` | ❌ (69 diagnostics, 43 errors) |
+| `uv run ty check` | ✅ |
 
 ---
 
@@ -99,9 +99,9 @@ Before reading the workstream sections, note what the repo already provides:
 | N3 | `notebooks/03_agentic_triage.ipynb` | end-to-end triage walkthrough | keep concept, thin further if needed, re-home to `notebooks/walkthroughs/03_triage_end_to_end.ipynb` | ✅ Completed (2026-04-13: moved to notebooks/walkthroughs/03_triage_end_to_end.ipynb) |
 | N4 | `notebooks/04_agentic_screening.ipynb` | screening demo with embedded live implementation | extract code first, then re-home to `notebooks/walkthroughs/04_screening_end_to_end.ipynb` | ✅ Completed (2026-04-13: moved to notebooks/walkthroughs/04_screening_end_to_end.ipynb) |
 | N5 | `notebooks/triage/01`, `02`, `07`, `08`, `09`, `10` | deterministic deep dives with numbering gaps | renumber contiguously to `01..06` | ✅ Completed (2026-04-13: renumbered to 03–06, contiguous; old numbers 07–10 retired) |
-| D1 | `docs/notebooks/README.md` and current notebook pages | legacy top-3 durable summaries | expand to the final walkthrough + triage taxonomy | Not started |
+| D1 | `docs/notebooks/README.md` and current notebook pages | legacy top-3 durable summaries | expand to the final walkthrough + triage taxonomy | ✅ Completed (2026-04-13: README.md updated with walkthrough 04 row and Triage Deep-Dive section; 7 new durable pages covering screening end-to-end and all 6 triage notebooks) |
 | A1 | `src/forecastability/adapters/agents/*` | deterministic agent-safe boundary | keep as the stable deterministic handoff layer | ✅ Completed (2026-04-13: `triage_agent_payload_models.py` F1–F8 payload models, `triage_summary_serializer.py` versioned envelope, `triage_agent_interpretation_adapter.py` deterministic A3 narratives — all live in `adapters/agents/`) |
-| A2 | `src/forecastability/adapters/pydantic_ai_agent.py` | live triage agent adapter | re-home behind explicit live-LLM adapter path | Not started |
+| A2 | `src/forecastability/adapters/pydantic_ai_agent.py` | live triage agent adapter | re-home behind explicit live-LLM adapter path | ✅ Completed (2026-04-13: canonical implementation at `adapters/llm/triage_agent.py`; `pydantic_ai_agent.py` is a backward-compat DeprecationWarning shim; `llm/__init__.py` exports all triage agent symbols) |
 | A3 | notebook-local screening agent in `04` | hidden second implementation surface | replace with `src/` adapter module + notebook consumer | ✅ Completed (2026-04-13) |
 
 ---

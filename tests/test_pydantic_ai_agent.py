@@ -15,20 +15,16 @@ class TestCreateTriageAgent:
     """Verify agent construction and tool registration."""
 
     def test_agent_creation_succeeds(self) -> None:
-        from forecastability.adapters.pydantic_ai_agent import (
-            InfraSettings,
-            create_triage_agent,
-        )
+        from forecastability.adapters.llm.triage_agent import create_triage_agent
+        from forecastability.adapters.settings import InfraSettings
 
         settings = InfraSettings(_env_file=None)  # type: ignore[call-arg]
         agent = create_triage_agent(model="test", settings=settings)
         assert agent is not None
 
     def test_agent_has_expected_tools(self) -> None:
-        from forecastability.adapters.pydantic_ai_agent import (
-            InfraSettings,
-            create_triage_agent,
-        )
+        from forecastability.adapters.llm.triage_agent import create_triage_agent
+        from forecastability.adapters.settings import InfraSettings
 
         settings = InfraSettings(_env_file=None)  # type: ignore[call-arg]
         agent = create_triage_agent(model="test", settings=settings)
@@ -80,7 +76,7 @@ class TestToolSerialisation:
     """Verify that tool helpers serialise results correctly."""
 
     def test_readiness_to_dict(self) -> None:
-        from forecastability.adapters.pydantic_ai_agent import _readiness_to_dict
+        from forecastability.adapters.llm.triage_agent import _readiness_to_dict
         from forecastability.triage.models import (
             ReadinessReport,
             ReadinessStatus,
@@ -97,7 +93,7 @@ class TestToolSerialisation:
         assert d["warnings"][0]["code"] == "SIGNIFICANCE_FEASIBILITY"
 
     def test_method_plan_to_dict(self) -> None:
-        from forecastability.adapters.pydantic_ai_agent import _method_plan_to_dict
+        from forecastability.adapters.llm.triage_agent import _method_plan_to_dict
         from forecastability.triage.models import MethodPlan
 
         plan = MethodPlan(
@@ -111,7 +107,7 @@ class TestToolSerialisation:
         assert d["compute_surrogates"] is True
 
     def test_triage_result_to_dict_blocked(self) -> None:
-        from forecastability.adapters.pydantic_ai_agent import _triage_result_to_dict
+        from forecastability.adapters.llm.triage_agent import _triage_result_to_dict
         from forecastability.triage.models import (
             ReadinessReport,
             ReadinessStatus,
@@ -131,7 +127,7 @@ class TestToolSerialisation:
         assert "analyze_summary" not in d
 
     def test_triage_result_to_dict_complete(self) -> None:
-        from forecastability.adapters.pydantic_ai_agent import _triage_result_to_dict
+        from forecastability.adapters.llm.triage_agent import _triage_result_to_dict
         from forecastability.triage.models import TriageRequest
         from forecastability.use_cases.run_triage import run_triage
 
@@ -159,13 +155,13 @@ class TestAgentWithTestModel:
     async def test_agent_dispatches_tools_with_test_model(self) -> None:
         from pydantic_ai.models.test import TestModel
 
-        from forecastability.adapters.pydantic_ai_agent import (
-            AnalysisGoal,
-            InfraSettings,
+        from forecastability.adapters.llm.triage_agent import (
             TriageDeps,
             TriageExplanation,
             create_triage_agent,
         )
+        from forecastability.adapters.settings import InfraSettings
+        from forecastability.triage.models import AnalysisGoal
 
         settings = InfraSettings(_env_file=None)  # type: ignore[call-arg]
         agent = create_triage_agent(model="test", settings=settings)
@@ -198,13 +194,13 @@ class TestAgentWithTestModel:
     async def test_agent_tools_are_callable(self) -> None:
         """Verify that each tool can be called directly without LLM."""
 
-        from forecastability.adapters.pydantic_ai_agent import (
-            InfraSettings,
+        from forecastability.adapters.llm.triage_agent import (
             TriageDeps,
             _build_request,
             _readiness_to_dict,
             _triage_result_to_dict,
         )
+        from forecastability.adapters.settings import InfraSettings
         from forecastability.triage.readiness import assess_readiness
         from forecastability.use_cases.run_triage import run_triage
 
@@ -333,10 +329,8 @@ class TestAGT027AgentQuickstart:
         """create_triage_agent() is importable and returns an Agent instance."""
         from pydantic_ai import Agent
 
-        from forecastability.adapters.pydantic_ai_agent import (
-            InfraSettings,
-            create_triage_agent,
-        )
+        from forecastability.adapters.llm.triage_agent import create_triage_agent
+        from forecastability.adapters.settings import InfraSettings
 
         settings = InfraSettings(_env_file=None)  # type: ignore[call-arg]
         agent = create_triage_agent(model="test", settings=settings)
@@ -344,10 +338,8 @@ class TestAGT027AgentQuickstart:
 
     def test_agent_tool_count_matches_readme(self) -> None:
         """All four tools described in README are registered on the agent."""
-        from forecastability.adapters.pydantic_ai_agent import (
-            InfraSettings,
-            create_triage_agent,
-        )
+        from forecastability.adapters.llm.triage_agent import create_triage_agent
+        from forecastability.adapters.settings import InfraSettings
 
         settings = InfraSettings(_env_file=None)  # type: ignore[call-arg]
         agent = create_triage_agent(model="test", settings=settings)
