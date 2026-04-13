@@ -1,8 +1,8 @@
 """Tests that verify the notebook-facing import surface is intact.
 
 These tests mirror the exact import patterns used in
-``notebooks/01_canonical_forecastability.ipynb`` and
-``notebooks/02_exogenous_analysis.ipynb``.  They must pass without
+``notebooks/walkthroughs/01_canonical_forecastability.ipynb`` and
+``notebooks/walkthroughs/02_exogenous_analysis.ipynb``.  They must pass without
 executing any heavy computation.
 """
 

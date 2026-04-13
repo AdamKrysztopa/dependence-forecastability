@@ -25,7 +25,7 @@ This page is a compact, decision-first evidence layer. Notebooks are linked as d
 
 ## 3) Triage workflow findings
 
-- Dataset: deterministic triage regression inputs in [../tests/test_triage_regression.py](../tests/test_triage_regression.py) (AR(1), white noise, trend+seasonal, and exogenous AR(1)+noise), with broader walkthrough coverage in [../notebooks/03_agentic_triage.ipynb](../notebooks/03_agentic_triage.ipynb).
+- Dataset: deterministic triage regression inputs in [../tests/test_triage_regression.py](../tests/test_triage_regression.py) (AR(1), white noise, trend+seasonal, and exogenous AR(1)+noise), with broader walkthrough coverage in [../notebooks/walkthroughs/03_triage_end_to_end.ipynb](../notebooks/walkthroughs/03_triage_end_to_end.ipynb).
 - Evaluation protocol: one-entry-point orchestration (`run_triage`) with staged readiness, routing, compute, and interpretation checks validated in [../tests/test_triage_run.py](../tests/test_triage_run.py), [../tests/test_triage_router.py](../tests/test_triage_router.py), and [../tests/test_triage_readiness.py](../tests/test_triage_readiness.py).
 - What decision was improved: earlier go/no-go and route decisions before expensive modelling. The workflow blocks infeasible requests, routes exogenous requests separately, and preserves stable screening behavior (`AR(1) -> high`, `white_noise -> low`) in regression tests.
 - What limitation remains: when data are significance-infeasible (for example n=150 in regression tests), surrogates are skipped and decisions are route/class screening only. This workflow supports prioritisation and method selection, not guaranteed downstream forecast accuracy gains.
@@ -55,11 +55,11 @@ This page is a compact, decision-first evidence layer. Notebooks are linked as d
 - [notebooks/exogenous_analysis.md](notebooks/exogenous_analysis.md)
 - [notebooks/agentic_triage.md](notebooks/agentic_triage.md)
 - [../notebooks/triage/01_forecastability_profile_walkthrough.ipynb](../notebooks/triage/01_forecastability_profile_walkthrough.ipynb)
-- [../notebooks/triage/08_spectral_and_entropy_diagnostics.ipynb](../notebooks/triage/08_spectral_and_entropy_diagnostics.ipynb)
-- [../notebooks/triage/09_batch_and_exogenous_workbench.ipynb](../notebooks/triage/09_batch_and_exogenous_workbench.ipynb)
+- [../notebooks/triage/04_spectral_and_entropy_diagnostics.ipynb](../notebooks/triage/04_spectral_and_entropy_diagnostics.ipynb)
+- [../notebooks/triage/05_batch_and_exogenous_workbench.ipynb](../notebooks/triage/05_batch_and_exogenous_workbench.ipynb)
 
 ## Deep Evidence (Secondary)
 
-- [../notebooks/01_canonical_forecastability.ipynb](../notebooks/01_canonical_forecastability.ipynb)
-- [../notebooks/02_exogenous_analysis.ipynb](../notebooks/02_exogenous_analysis.ipynb)
-- [../notebooks/03_agentic_triage.ipynb](../notebooks/03_agentic_triage.ipynb)
+- [../notebooks/walkthroughs/01_canonical_forecastability.ipynb](../notebooks/walkthroughs/01_canonical_forecastability.ipynb)
+- [../notebooks/walkthroughs/02_exogenous_analysis.ipynb](../notebooks/walkthroughs/02_exogenous_analysis.ipynb)
+- [../notebooks/walkthroughs/03_triage_end_to_end.ipynb](../notebooks/walkthroughs/03_triage_end_to_end.ipynb)

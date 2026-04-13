@@ -209,9 +209,7 @@ def test_services_have_no_infra_imports() -> None:
 # Rule 5 — adapter utilities must not import primary transport adapters
 # ---------------------------------------------------------------------------
 
-_TRANSPORT_ADAPTER_NAMES = frozenset(
-    ["api", "cli", "dashboard", "mcp_server", "pydantic_ai_agent"]
-)
+_TRANSPORT_ADAPTER_NAMES = frozenset(["api", "cli", "dashboard", "mcp_server", "pydantic_ai_agent"])
 
 
 def test_adapter_utilities_do_not_import_transport_adapters() -> None:
@@ -248,7 +246,5 @@ def test_adapter_utilities_do_not_import_transport_adapters() -> None:
 
     assert not violations, (
         "Adapter utility modules must not import primary transport adapters "
-        "(api, cli, dashboard, mcp_server, pydantic_ai_agent).\n"
-        + "\n".join(violations)
+        "(api, cli, dashboard, mcp_server, pydantic_ai_agent).\n" + "\n".join(violations)
     )
-

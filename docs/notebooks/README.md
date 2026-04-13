@@ -22,22 +22,17 @@ This repository freezes notebook policy to exactly two long-lived families:
 ## Deprecation Policy for Root-Level Notebook Paths
 
 - No new long-lived notebooks may be added at `notebooks/` root.
-- Root-level notebook files are transitional redirect shims only.
-- Legacy top-level [../../notebooks/03_agentic_triage.ipynb](../../notebooks/03_agentic_triage.ipynb) and [../../notebooks/04_agentic_screening.ipynb](../../notebooks/04_agentic_screening.ipynb) are explicitly transitional during migration.
-
-## Transitional Scope Note
-
-This C1 policy freeze is documentation-only. It does not move, rename, or renumber notebook files.
+- Root-level notebook files are redirect shims pointing to the corresponding `notebooks/walkthroughs/` notebooks.
 
 ## Durable Walkthrough Narratives
 
-| Durable docs page | Current notebook surface |
+| Durable docs page | Notebook surface |
 |---|---|
-| [canonical_forecastability.md](canonical_forecastability.md) | [../../notebooks/01_canonical_forecastability.ipynb](../../notebooks/01_canonical_forecastability.ipynb) |
-| [exogenous_analysis.md](exogenous_analysis.md) | [../../notebooks/02_exogenous_analysis.ipynb](../../notebooks/02_exogenous_analysis.ipynb) |
-| [agentic_triage.md](agentic_triage.md) | [../../notebooks/03_agentic_triage.ipynb](../../notebooks/03_agentic_triage.ipynb) |
+| [canonical_forecastability.md](canonical_forecastability.md) | [../../notebooks/walkthroughs/01_canonical_forecastability.ipynb](../../notebooks/walkthroughs/01_canonical_forecastability.ipynb) |
+| [exogenous_analysis.md](exogenous_analysis.md) | [../../notebooks/walkthroughs/02_exogenous_analysis.ipynb](../../notebooks/walkthroughs/02_exogenous_analysis.ipynb) |
+| [agentic_triage.md](agentic_triage.md) | [../../notebooks/walkthroughs/03_triage_end_to_end.ipynb](../../notebooks/walkthroughs/03_triage_end_to_end.ipynb) |
 
 ## Triage Notebook Role Split
 
-- Walkthrough consumer notebook: [../../notebooks/03_agentic_triage.ipynb](../../notebooks/03_agentic_triage.ipynb)
-- Deterministic payload/serializer/interpretation deep dive: [../../notebooks/triage/10_agent_ready_triage_interpretation.ipynb](../../notebooks/triage/10_agent_ready_triage_interpretation.ipynb)
+- Walkthrough consumer notebook: [../../notebooks/walkthroughs/03_triage_end_to_end.ipynb](../../notebooks/walkthroughs/03_triage_end_to_end.ipynb)
+- Deterministic payload/serializer/interpretation deep dive: [../../notebooks/triage/06_agent_ready_triage_interpretation.ipynb](../../notebooks/triage/06_agent_ready_triage_interpretation.ipynb)

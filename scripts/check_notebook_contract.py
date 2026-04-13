@@ -19,9 +19,10 @@ REPO_ROOT = Path(__file__).parent.parent
 NOTEBOOKS_DIR = REPO_ROOT / "notebooks"
 
 EXPECTED_NOTEBOOKS = [
-    "01_canonical_forecastability.ipynb",
-    "02_exogenous_analysis.ipynb",
-    "03_agentic_triage.ipynb",
+    "walkthroughs/01_canonical_forecastability.ipynb",
+    "walkthroughs/02_exogenous_analysis.ipynb",
+    "walkthroughs/03_triage_end_to_end.ipynb",
+    "walkthroughs/04_screening_end_to_end.ipynb",
 ]
 
 PASS = "\u2713"

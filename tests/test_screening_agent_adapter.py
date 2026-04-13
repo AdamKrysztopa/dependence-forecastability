@@ -130,7 +130,7 @@ class TestAgentWithTestModel:
 def test_notebook_04_imports_shared_screening_adapter() -> None:
     """Notebook 04 should consume adapter code, not define runtime agent wiring."""
 
-    notebook_path = Path("notebooks/04_agentic_screening.ipynb")
+    notebook_path = Path("notebooks/walkthroughs/04_screening_end_to_end.ipynb")
     source = notebook_path.read_text(encoding="utf-8")
 
     assert "forecastability.adapters.llm.screening_agent" in source

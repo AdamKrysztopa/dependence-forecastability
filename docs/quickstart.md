@@ -94,7 +94,7 @@ uv sync --group notebook
 uv run jupyter lab
 ```
 
-Open [../notebooks/03_agentic_triage.ipynb](../notebooks/03_agentic_triage.ipynb)
+Open [../notebooks/walkthroughs/03_triage_end_to_end.ipynb](../notebooks/walkthroughs/03_triage_end_to_end.ipynb)
 and run a scratch cell:
 
 ```python

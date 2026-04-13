@@ -6,8 +6,8 @@
 Document the triage walkthrough contract in a durable, test-backed form: deterministic readiness and routing first, optional LLM narration second.
 
 Role split:
-- `notebooks/03_agentic_triage.ipynb` is the walkthrough consumer surface.
-- `notebooks/triage/10_agent_ready_triage_interpretation.ipynb` is the deterministic payload/serializer/interpretation deep dive.
+- `notebooks/walkthroughs/03_triage_end_to_end.ipynb` is the walkthrough consumer surface.
+- `notebooks/triage/06_agent_ready_triage_interpretation.ipynb` is the deterministic payload/serializer/interpretation deep dive.
 
 Scope covered:
 - run_triage one-entry workflow,
@@ -47,5 +47,5 @@ From regression tests:
 
 ## Notebook For Full Detail
 
-- Full walkthrough: [../../notebooks/03_agentic_triage.ipynb](../../notebooks/03_agentic_triage.ipynb)
-- Deterministic payload/adapter deep dive: [../../notebooks/triage/10_agent_ready_triage_interpretation.ipynb](../../notebooks/triage/10_agent_ready_triage_interpretation.ipynb)
+- Full walkthrough: [../../notebooks/walkthroughs/03_triage_end_to_end.ipynb](../../notebooks/walkthroughs/03_triage_end_to_end.ipynb)
+- Deterministic payload/adapter deep dive: [../../notebooks/triage/06_agent_ready_triage_interpretation.ipynb](../../notebooks/triage/06_agent_ready_triage_interpretation.ipynb)

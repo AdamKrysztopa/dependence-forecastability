@@ -48,8 +48,8 @@ uv sync && MPLBACKEND=Agg uv run python scripts/run_canonical_examples.py
 - Agent layer contract (deterministic-first): [docs/agent_layer.md](docs/agent_layer.md)
 - Results summary (evidence-first): [docs/results_summary.md](docs/results_summary.md)
 - Durable notebook narratives (primary docs layer): [docs/notebooks/README.md](docs/notebooks/README.md)
-- Agentic walkthrough notebook: [notebooks/03_agentic_triage.ipynb](notebooks/03_agentic_triage.ipynb)
-- Deterministic payload/serializer deep dive notebook: [notebooks/triage/10_agent_ready_triage_interpretation.ipynb](notebooks/triage/10_agent_ready_triage_interpretation.ipynb)
+- Agentic walkthrough notebook: [notebooks/walkthroughs/03_triage_end_to_end.ipynb](notebooks/walkthroughs/03_triage_end_to_end.ipynb)
+- Deterministic payload/serializer deep dive notebook: [notebooks/triage/06_agent_ready_triage_interpretation.ipynb](notebooks/triage/06_agent_ready_triage_interpretation.ipynb)
 - Full docs index: [docs/README.md](docs/README.md)
 
 ## Visual architecture summary
@@ -290,7 +290,7 @@ Any PydanticAI-compatible provider string works (e.g. `"anthropic:claude-3-5-son
 > The agent only narrates deterministic results.  It does not generate numeric
 > values.  `TriageResult.narrative` is always `None` for plain `run_triage()` calls.
 
-See [notebooks/03_agentic_triage.ipynb](notebooks/03_agentic_triage.ipynb) for a
+See [notebooks/walkthroughs/03_triage_end_to_end.ipynb](notebooks/walkthroughs/03_triage_end_to_end.ipynb) for a
 full interactive walkthrough.
 
 ## Interactive Notebooks
@@ -316,16 +316,14 @@ Ownership and architecture discipline:
 Deprecation policy for root-level notebooks:
 
 - No new long-lived notebooks may be added under `notebooks/` root.
-- Root-level notebook files are transitional redirect shims only until migration phases complete.
-- Legacy top-level `notebooks/03_agentic_triage.ipynb` and `notebooks/04_agentic_screening.ipynb` are explicitly transitional and must remain thin consumers of `src/` code.
+- Root-level notebook files are redirect shims pointing to the corresponding `notebooks/walkthroughs/` notebooks.
 
-Transitional map (C1 policy freeze only; no file moves in this phase):
+Notebook taxonomy (final):
 
-| Surface | Path(s) | Current role |
+| Surface | Path(s) | Role |
 |---|---|---|
 | Long-lived family | `notebooks/triage/` | Deterministic deep-dive track (active). |
-| Long-lived family target | `notebooks/walkthroughs/` | Curated walkthrough track (target path documented now, migration later). |
-| Transitional root shims | `notebooks/01_canonical_forecastability.ipynb`, `notebooks/02_exogenous_analysis.ipynb`, `notebooks/03_agentic_triage.ipynb`, `notebooks/04_agentic_screening.ipynb` | Transitional entry points pending later migration phases. |
+| Long-lived family | `notebooks/walkthroughs/` | Curated walkthrough track (active). |
 
 Durable narrative pages for walkthrough surfaces:
 

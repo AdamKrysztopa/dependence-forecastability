@@ -319,8 +319,7 @@ def run_triage(
         event_emitter,
         timing,
         summary_fn=lambda: (
-            f"method={analyze_result.method}"
-            f" raw_mean={analyze_result.raw.mean():.4f}"
+            f"method={analyze_result.method} raw_mean={analyze_result.raw.mean():.4f}"
         ),
     ):
         analyze_result = _run_compute(request, method_plan)
@@ -360,9 +359,7 @@ def run_triage(
         "interpretation",
         event_emitter,
         timing,
-        summary_fn=lambda: (
-            f"class={interpretation.forecastability_class}"
-        ),
+        summary_fn=lambda: f"class={interpretation.forecastability_class}",
     ):
         is_exogenous = request.goal == AnalysisGoal.exogenous or request.exog is not None
         interpretation = interpret_canonical_result(
