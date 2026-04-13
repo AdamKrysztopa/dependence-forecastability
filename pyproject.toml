@@ -88,6 +88,19 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/forecastability"]
 
+[tool.hatch.build.targets.sdist]
+exclude = [
+  "notebooks/",
+  ".codex/",
+  ".vscode/",
+  "docs/archive/",
+  "docs/plan/",
+  "tmp/",
+  "outputs/",
+  "data/raw/m4/",
+  "data/raw/causal_rivers/",
+]
+
 [tool.ruff]
 line-length = 100
 target-version = "py311"

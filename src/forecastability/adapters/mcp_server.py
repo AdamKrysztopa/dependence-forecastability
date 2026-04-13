@@ -37,7 +37,7 @@ from typing import Any
 import numpy as np
 
 try:
-    from mcp.server.fastmcp import FastMCP  # type: ignore[import-untyped]
+    from mcp.server.fastmcp import FastMCP
 
     _MCP_AVAILABLE = True
 except ImportError:

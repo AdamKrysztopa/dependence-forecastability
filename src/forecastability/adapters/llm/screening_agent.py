@@ -16,7 +16,7 @@ from forecastability.adapters.settings import InfraSettings
 from forecastability.triage import AnalysisGoal, TriageRequest, TriageResult, run_triage
 
 try:
-    from pydantic_ai import Agent, RunContext  # type: ignore[import-untyped]
+    from pydantic_ai import Agent, RunContext
 
     _PYDANTIC_AI_AVAILABLE = True
 except ImportError:  # pragma: no cover
@@ -149,7 +149,7 @@ def create_screening_agent(
     if model is None:
         model = f"openai:{settings.openai_model}"
 
-    agent: Agent[ScreeningDeps, FeatureScreeningReport] = Agent(
+    agent: Agent[ScreeningDeps, FeatureScreeningReport] = Agent(  # type: ignore[assignment]
         model,
         deps_type=ScreeningDeps,
         output_type=FeatureScreeningReport,

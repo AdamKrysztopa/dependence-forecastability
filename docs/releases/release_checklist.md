@@ -10,10 +10,43 @@
 - [ ] `CHANGELOG.md` has a new, clean section for the upcoming version (with highlights, stability changes, and migration notes if any)
 - [ ] Version bumped in `pyproject.toml` (semantic versioning)
 - [ ] `docs/versioning.md` and stability tables (in README + `docs/production_readiness.md`) are up to date
-- [ ] Package name in `pyproject.toml` is set to a conflict-free name (`dependence-forecastability` recommended)
+- [ ] Package name in `pyproject.toml` is set to `dependence-forecastability`
 - [ ] Install instructions and badges in README are correct
 - [ ] Golden-path example and smoke tests pass locally (`uv run scripts/run_canonical_examples.py` or equivalent)
 - [ ] `docs/releases/pypi_publication.md` exists and has been followed for any manual steps
+
+## Local release pipeline (R7 — run before every release)
+
+```bash
+uv sync --all-extras --group dev
+uv run pytest -q -ra
+uv run ruff check .
+uv run ty check
+rm -rf dist/ build/
+uv run python -m build
+uv run twine check dist/*
+python3.11 -m venv .venv-release-smoke
+source .venv-release-smoke/bin/activate
+pip install dist/dependence_forecastability-*.whl
+python -c "import forecastability; print('import ok')"
+forecastability --help
+deactivate
+rm -rf .venv-release-smoke
+```
+
+All steps must pass before proceeding to TestPyPI or production.
+
+## TestPyPI dry run (R8 — required before first production release)
+
+Requires TestPyPI API token in `~/.pypirc` or `TWINE_API_KEY` env var.
+Full command path: `docs/releases/pypi_publication.md` → TestPyPI Dry Run section.
+
+- [ ] `uv run twine upload --repository testpypi dist/*` succeeds
+- [ ] Install from TestPyPI in a clean venv succeeds
+- [ ] `import forecastability` works from TestPyPI-installed package
+- [ ] `forecastability --help` works
+- [ ] Project page at `https://test.pypi.org/project/dependence-forecastability/` renders correctly
+- [ ] README renders without issues; metadata is complete
 
 ## Release execution
 

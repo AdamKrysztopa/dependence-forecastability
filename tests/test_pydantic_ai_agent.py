@@ -7,10 +7,10 @@ import pytest
 from pydantic import ValidationError
 
 pydantic_ai = pytest.importorskip("pydantic_ai", reason="pydantic-ai extra not installed")
-from pydantic_ai import models  # type: ignore[import-untyped]  # noqa: E402
+from pydantic_ai import models  # noqa: E402
 
 # Block real model requests during tests — any accidental real call will fail.
-models.ALLOW_MODEL_REQUESTS = False
+models.ALLOW_MODEL_REQUESTS = False  # type: ignore[assignment]
 
 
 class TestCreateTriageAgent:
@@ -155,7 +155,7 @@ class TestAgentWithTestModel:
 
     @pytest.mark.anyio
     async def test_agent_dispatches_tools_with_test_model(self) -> None:
-        from pydantic_ai.models.test import TestModel  # type: ignore[import-untyped]
+        from pydantic_ai.models.test import TestModel
 
         from forecastability.adapters.llm.triage_agent import (
             TriageDeps,
@@ -329,7 +329,7 @@ class TestAGT027AgentQuickstart:
 
     def test_create_triage_agent_returns_agent_instance(self) -> None:
         """create_triage_agent() is importable and returns an Agent instance."""
-        from pydantic_ai import Agent  # type: ignore[import-untyped]
+        from pydantic_ai import Agent
 
         from forecastability.adapters.llm.triage_agent import create_triage_agent
         from forecastability.adapters.settings import InfraSettings

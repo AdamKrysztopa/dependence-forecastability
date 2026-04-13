@@ -24,8 +24,8 @@ import numpy as np
 from pydantic import BaseModel, ConfigDict
 
 try:
-    from fastapi import FastAPI, HTTPException  # type: ignore[import-untyped]
-    from fastapi.responses import HTMLResponse  # type: ignore[import-untyped]
+    from fastapi import FastAPI, HTTPException
+    from fastapi.responses import HTMLResponse
 
     _FASTAPI_AVAILABLE = True
 except ImportError:
@@ -453,7 +453,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         )
 
     try:
-        import uvicorn  # type: ignore[import-untyped]
+        import uvicorn
     except ImportError as exc:
         raise SystemExit(
             "uvicorn is not installed. Run 'uv sync --extra transport' before "

@@ -8,7 +8,7 @@ import pytest
 pytest.importorskip("fastapi")
 pytest.importorskip("httpx")
 
-from fastapi.testclient import TestClient  # type: ignore[import-untyped]
+from fastapi.testclient import TestClient
 
 from forecastability.adapters.dashboard import app
 

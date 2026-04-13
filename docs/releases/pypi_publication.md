@@ -15,13 +15,47 @@ PyPI API token secrets are intentionally not used.
 
 ## One-Time Maintainer Setup
 
-1. Create or claim the `forecastability` project on PyPI.
+1. Create or claim the `dependence-forecastability` project on PyPI.
 2. Add a Trusted Publisher in PyPI with these values:
    - Owner: `AdamKrysztopa`
    - Repository: `dependence-forecastability`
    - Workflow: `publish-pypi.yml`
    - Environment: `pypi`
 3. Protect the `pypi` environment in GitHub with required reviewers.
+
+## TestPyPI Dry Run (R8)
+
+Before the first production release, rehearse on TestPyPI. Requires a TestPyPI API token
+stored as `TWINE_API_KEY` (or in `~/.pypirc`).
+
+```bash
+# 1. Build fresh artifacts
+rm -rf dist/ build/
+uv run python -m build
+uv run twine check dist/*
+
+# 2. Upload to TestPyPI
+uv run twine upload --repository testpypi dist/*
+
+# 3. Install from TestPyPI in a clean environment
+python3.11 -m venv .venv-testpypi
+source .venv-testpypi/bin/activate
+pip install \
+  --index-url https://test.pypi.org/simple/ \
+  --extra-index-url https://pypi.org/simple/ \
+  dependence-forecastability
+
+# 4. Validate import and CLI entry point
+python -c "import forecastability; print('import ok')"
+forecastability --help
+
+# 5. Clean up
+deactivate
+rm -rf .venv-testpypi
+```
+
+Inspect the project page at `https://test.pypi.org/project/dependence-forecastability/`
+and confirm README renders, metadata is correct, and entry points are listed.
 
 ## Release-Time Flow
 

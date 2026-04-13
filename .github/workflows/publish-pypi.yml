@@ -42,7 +42,7 @@ jobs:
     needs: build-dist
     environment:
       name: pypi
-      url: https://pypi.org/p/forecastability
+      url: https://pypi.org/p/dependence-forecastability
     permissions:
       id-token: write
     steps:
