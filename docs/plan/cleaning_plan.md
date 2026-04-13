@@ -100,7 +100,7 @@ Before reading the workstream sections, note what the repo already provides:
 | N4 | `notebooks/04_agentic_screening.ipynb` | screening demo with embedded live implementation | extract code first, then re-home to `notebooks/walkthroughs/04_screening_end_to_end.ipynb` | ✅ Completed (2026-04-13: moved to notebooks/walkthroughs/04_screening_end_to_end.ipynb) |
 | N5 | `notebooks/triage/01`, `02`, `07`, `08`, `09`, `10` | deterministic deep dives with numbering gaps | renumber contiguously to `01..06` | ✅ Completed (2026-04-13: renumbered to 03–06, contiguous; old numbers 07–10 retired) |
 | D1 | `docs/notebooks/README.md` and current notebook pages | legacy top-3 durable summaries | expand to the final walkthrough + triage taxonomy | Not started |
-| A1 | `src/forecastability/adapters/agents/*` | deterministic agent-safe boundary | keep as the stable deterministic handoff layer | In progress elsewhere |
+| A1 | `src/forecastability/adapters/agents/*` | deterministic agent-safe boundary | keep as the stable deterministic handoff layer | ✅ Completed (2026-04-13: `triage_agent_payload_models.py` F1–F8 payload models, `triage_summary_serializer.py` versioned envelope, `triage_agent_interpretation_adapter.py` deterministic A3 narratives — all live in `adapters/agents/`) |
 | A2 | `src/forecastability/adapters/pydantic_ai_agent.py` | live triage agent adapter | re-home behind explicit live-LLM adapter path | Not started |
 | A3 | notebook-local screening agent in `04` | hidden second implementation surface | replace with `src/` adapter module + notebook consumer | ✅ Completed (2026-04-13) |
 
