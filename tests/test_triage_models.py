@@ -73,7 +73,7 @@ class TestTriageRequest:
     def test_frozen(self) -> None:
         req = self._make_request()
         with pytest.raises(ValidationError):
-            req.max_lag = 99  # type: ignore[misc]
+            req.max_lag = 99
 
 
 class TestReadinessReport:
@@ -83,7 +83,7 @@ class TestReadinessReport:
             warnings=[],
         )
         with pytest.raises(ValidationError):
-            report.status = ReadinessStatus.blocked  # type: ignore[misc]
+            report.status = ReadinessStatus.blocked
 
     def test_construction(self) -> None:
         w = ReadinessWarning(code="TEST", message="test message")
@@ -102,7 +102,7 @@ class TestMethodPlan:
             rationale="r",
         )
         with pytest.raises(ValidationError):
-            plan.route = "other"  # type: ignore[misc]
+            plan.route = "other"
 
 
 class TestTriageResult:

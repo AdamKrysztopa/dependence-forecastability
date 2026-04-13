@@ -28,7 +28,7 @@ from forecastability.services.theoretical_limit_diagnostics_service import (
 )
 from forecastability.spectral_utils import compute_normalised_psd, spectral_entropy
 from forecastability.triage.models import TriageRequest, TriageResult
-from forecastability.triage.run_triage import run_triage
+from forecastability.use_cases.run_triage import run_triage
 
 _logger = logging.getLogger(__name__)
 

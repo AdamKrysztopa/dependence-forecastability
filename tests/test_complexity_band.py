@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 import numpy as np
 import pytest
 
 from forecastability.scorers import (
+    SeriesDiagnosticScorer,
     _choose_embedding_order,
     _compute_permutation_entropy,
     _permutation_entropy_scorer,
@@ -128,7 +131,7 @@ class TestPermutationEntropyScorer:
     def test_scorer_via_registry(self, noisy_series: np.ndarray) -> None:
         registry = default_registry()
         info = registry.get("permutation_entropy")
-        score = info.scorer(noisy_series, random_state=42)
+        score = cast(SeriesDiagnosticScorer, info.scorer)(noisy_series, random_state=42)
         assert isinstance(score, float)
 
     def test_raises_for_2d_input(self) -> None:
@@ -166,7 +169,7 @@ class TestSpectralEntropyScorer:
     def test_scorer_via_registry(self, periodic_series: np.ndarray) -> None:
         registry = default_registry()
         info = registry.get("spectral_entropy")
-        score = info.scorer(periodic_series, random_state=0)
+        score = cast(SeriesDiagnosticScorer, info.scorer)(periodic_series, random_state=0)
         assert 0.0 <= score <= 1.0
 
 
@@ -280,7 +283,7 @@ class TestTriageResultComplexityBand:
 
         rng = np.random.default_rng(0)
         series = rng.standard_normal(200)
-        request = TriageRequest(series=series, max_lag=5, n_surrogates=9)
+        request = TriageRequest(series=series, max_lag=5, n_surrogates=99)
         result = run_triage(request, readiness_gate=_blocking_gate)
 
         assert result.blocked is True

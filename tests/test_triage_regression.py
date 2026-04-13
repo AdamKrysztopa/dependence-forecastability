@@ -24,7 +24,7 @@ from forecastability.triage.models import (
     ReadinessStatus,
     TriageRequest,
 )
-from forecastability.triage.run_triage import run_triage
+from forecastability.use_cases.run_triage import run_triage
 
 # ---------------------------------------------------------------------------
 # Helpers

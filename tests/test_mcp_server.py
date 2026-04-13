@@ -124,7 +124,7 @@ class TestReadinessToJson:
 
 class TestTriageResultToJson:
     def test_blocked_result_has_blocked_true(self) -> None:
-        from forecastability.triage.run_triage import run_triage
+        from forecastability.use_cases.run_triage import run_triage
 
         req = TriageRequest(series=np.asarray(_make_short()))
         result = run_triage(req)
@@ -133,7 +133,7 @@ class TestTriageResultToJson:
         assert data["blocked"] is True
 
     def test_complete_result_has_interpretation(self) -> None:
-        from forecastability.triage.run_triage import run_triage
+        from forecastability.use_cases.run_triage import run_triage
 
         req = TriageRequest(series=np.asarray(_make_ar1()), max_lag=20)
         result = run_triage(req)
@@ -144,7 +144,7 @@ class TestTriageResultToJson:
         assert data["interpretation"]["forecastability_class"] in {"high", "medium", "low"}
 
     def test_result_json_is_valid_json(self) -> None:
-        from forecastability.triage.run_triage import run_triage
+        from forecastability.use_cases.run_triage import run_triage
 
         req = TriageRequest(series=np.asarray(_make_ar1()), max_lag=20)
         result = run_triage(req)

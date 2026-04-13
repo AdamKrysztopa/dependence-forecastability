@@ -18,7 +18,7 @@ from forecastability.triage.batch_models import (
     BatchTriageResponse,
 )
 from forecastability.triage.models import TriageRequest, TriageResult
-from forecastability.triage.run_triage import run_triage
+from forecastability.use_cases.run_triage import run_triage
 
 _READINESS_RANK: dict[str, int] = {
     "clear": 0,

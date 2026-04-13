@@ -88,7 +88,7 @@ def test_profile_is_frozen() -> None:
     profile = build_forecastability_profile(raw)
 
     with pytest.raises(ValidationError):
-        profile.epsilon = 0.99  # type: ignore[misc]
+        profile.epsilon = 0.99
 
 
 # ---------------------------------------------------------------------------

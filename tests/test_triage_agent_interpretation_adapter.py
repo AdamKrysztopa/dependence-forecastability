@@ -304,7 +304,7 @@ def test_triage_agent_interpretation_model_is_frozen() -> None:
     interpreted = interpret_payload(payload)
 
     with pytest.raises(ValidationError):
-        interpreted.signal_bucket = "low"  # type: ignore[misc]
+        interpreted.signal_bucket = "low"
 
 
 def test_interpret_payload_deterministic_output_strings_and_fields() -> None:

@@ -6,10 +6,10 @@ for MI, Pearson, Spearman, Kendall, and distance correlation.
 
 from __future__ import annotations
 
+import dataclasses
 from dataclasses import dataclass
-from typing import Literal
+from typing import Any, Literal, cast
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 from forecastability.metrics import (
@@ -35,7 +35,6 @@ from forecastability.services.exog_raw_curve_service import (
 from forecastability.services.partial_curve_service import (
     compute_partial_curve as _compute_partial_curve,
 )
-from forecastability.services.plot_service import _plot_curve
 from forecastability.services.raw_curve_service import (
     compute_raw_curve as _compute_raw_curve,
 )
@@ -105,7 +104,7 @@ class ForecastabilityAnalyzer:
 
     @ts.setter
     def ts(self, value: np.ndarray | None) -> None:
-        self._state.ts = value
+        self._state = dataclasses.replace(self._state, ts=value)
 
     @property
     def _method(self) -> str:
@@ -114,7 +113,7 @@ class ForecastabilityAnalyzer:
 
     @_method.setter
     def _method(self, value: str) -> None:
-        self._state.method = value
+        self._state = dataclasses.replace(self._state, method=value)
 
     # ------------------------------------------------------------------
     # Scorer registry helpers
@@ -154,27 +153,29 @@ class ForecastabilityAnalyzer:
         """Compute AMI curve and cache it."""
         validated = validate_time_series(ts, min_length=max_lag + 31)
         self.ts = validated
-        self._state.ami = compute_ami(
+        ami = compute_ami(
             validated,
             max_lag=max_lag,
             n_neighbors=8,
             min_pairs=30,
             random_state=self.random_state,
         )
-        return self._state.ami
+        self._state = dataclasses.replace(self._state, ami=ami)
+        return ami
 
     def compute_pami(self, ts: np.ndarray, max_lag: int = 50) -> np.ndarray:
         """Compute pAMI curve and cache it."""
         validated = validate_time_series(ts, min_length=max_lag + 51)
         self.ts = validated
-        self._state.pami = compute_pami_linear_residual(
+        pami = compute_pami_linear_residual(
             validated,
             max_lag=max_lag,
             n_neighbors=8,
             min_pairs=50,
             random_state=self.random_state,
         )
-        return self._state.pami
+        self._state = dataclasses.replace(self._state, pami=pami)
+        return pami
 
     # ------------------------------------------------------------------
     # Generic scorer methods
@@ -203,10 +204,12 @@ class ForecastabilityAnalyzer:
         arr = validate_time_series(ts, min_length=max_lag + min_pairs + 1)
         self.ts = arr
         self._method = method
-        self._state.raw = _compute_raw_curve(
-            arr, max_lag, info.scorer, min_pairs=min_pairs, random_state=self.random_state
+        bivariate_scorer = cast(DependenceScorer, info.scorer)
+        raw = _compute_raw_curve(
+            arr, max_lag, bivariate_scorer, min_pairs=min_pairs, random_state=self.random_state
         )
-        return self._state.raw
+        self._state = dataclasses.replace(self._state, raw=raw)
+        return raw
 
     def compute_partial(
         self,
@@ -231,10 +234,12 @@ class ForecastabilityAnalyzer:
         arr = validate_time_series(ts, min_length=max_lag + min_pairs + 1)
         self.ts = arr
         self._method = method
-        self._state.partial = _compute_partial_curve(
-            arr, max_lag, info.scorer, min_pairs=min_pairs, random_state=self.random_state
+        bivariate_scorer = cast(DependenceScorer, info.scorer)
+        partial = _compute_partial_curve(
+            arr, max_lag, bivariate_scorer, min_pairs=min_pairs, random_state=self.random_state
         )
-        return self._state.partial
+        self._state = dataclasses.replace(self._state, partial=partial)
+        return partial
 
     # ------------------------------------------------------------------
     # Significance bands
@@ -273,9 +278,9 @@ class ForecastabilityAnalyzer:
             n_jobs=n_jobs,
         )
         if which == "ami":
-            self._state.ami_bands = bands
+            self._state = dataclasses.replace(self._state, ami_bands=bands)
         else:
-            self._state.pami_bands = bands
+            self._state = dataclasses.replace(self._state, pami_bands=bands)
         return bands
 
     def compute_significance_generic(
@@ -326,9 +331,9 @@ class ForecastabilityAnalyzer:
             n_jobs=n_jobs,
         )
         if which == "raw":
-            self._state.raw_bands = bands
+            self._state = dataclasses.replace(self._state, raw_bands=bands)
         else:
-            self._state.partial_bands = bands
+            self._state = dataclasses.replace(self._state, partial_bands=bands)
         return bands
 
     # ------------------------------------------------------------------
@@ -380,8 +385,11 @@ class ForecastabilityAnalyzer:
     # Plot
     # ------------------------------------------------------------------
 
-    def plot(self, *, method: str | None = None, show: bool = True) -> plt.Figure:
+    def plot(self, *, method: str | None = None, show: bool = True) -> Any:
         """Plot raw and partial curves with cached significance bands.
+
+        Delegates to :func:`forecastability.adapters.analyzer_plot.plot_analyzer`.
+        Requires matplotlib to be installed.
 
         Args:
             method: Label to show in titles (inferred from last ``analyze`` call
@@ -391,22 +399,22 @@ class ForecastabilityAnalyzer:
         Returns:
             The matplotlib :class:`~matplotlib.figure.Figure`.
         """
-        label = (method or self._method).upper()
+        # Return type is Any because matplotlib is lazy-imported via the adapter.
+        from forecastability.adapters.analyzer_plot import plot_analyzer
 
+        label = method or self._method
         raw, partial = self._resolve_curves_for_plot()
         raw_bands = self._state.raw_bands or self._state.ami_bands
         partial_bands = self._state.partial_bands or self._state.pami_bands
 
-        fig, axs = plt.subplots(2, 1, figsize=(11, 8))
-        _plot_curve(axs[0], raw, raw_bands, color="b", label=f"Raw {label}(h)")
-        axs[0].set_title(f"Raw dependence ({label}) + significance")
-        _plot_curve(axs[1], partial, partial_bands, color="r", label=f"Partial {label}(h)")
-        axs[1].set_title(f"Partial dependence ({label}) + significance")
-
-        plt.tight_layout()
-        if show:
-            plt.show()
-        return fig
+        return plot_analyzer(
+            raw,
+            partial,
+            raw_bands=raw_bands,
+            partial_bands=partial_bands,
+            method=label,
+            show=show,
+        )
 
     # ------------------------------------------------------------------
     # Private helpers
@@ -528,7 +536,7 @@ class ForecastabilityAnalyzerExog(ForecastabilityAnalyzer):
 
     @exog.setter
     def exog(self, value: np.ndarray | None) -> None:
-        self._state.exog = value
+        self._state = dataclasses.replace(self._state, exog=value)
 
     def compute_ami(
         self, ts: np.ndarray, max_lag: int = 100, *, exog: np.ndarray | None = None
@@ -569,24 +577,26 @@ class ForecastabilityAnalyzerExog(ForecastabilityAnalyzer):
         self.ts = arr
         self.exog = validated_exog
         self._method = method
+        bivariate_scorer = cast(DependenceScorer, info.scorer)
         if validated_exog is not None:
-            self._state.raw = _compute_exog_raw_curve(
+            raw = _compute_exog_raw_curve(
                 arr,
                 validated_exog,
                 max_lag,
-                info.scorer,
+                bivariate_scorer,
                 min_pairs=min_pairs,
                 random_state=self.random_state,
             )
         else:
-            self._state.raw = _compute_raw_curve(
+            raw = _compute_raw_curve(
                 arr,
                 max_lag,
-                info.scorer,
+                bivariate_scorer,
                 min_pairs=min_pairs,
                 random_state=self.random_state,
             )
-        return self._state.raw
+        self._state = dataclasses.replace(self._state, raw=raw)
+        return raw
 
     def compute_partial(
         self,
@@ -605,24 +615,26 @@ class ForecastabilityAnalyzerExog(ForecastabilityAnalyzer):
         self.ts = arr
         self.exog = validated_exog
         self._method = method
+        bivariate_scorer = cast(DependenceScorer, info.scorer)
         if validated_exog is not None:
-            self._state.partial = _compute_exog_partial_curve(
+            partial = _compute_exog_partial_curve(
                 arr,
                 validated_exog,
                 max_lag,
-                info.scorer,
+                bivariate_scorer,
                 min_pairs=min_pairs,
                 random_state=self.random_state,
             )
         else:
-            self._state.partial = _compute_partial_curve(
+            partial = _compute_partial_curve(
                 arr,
                 max_lag,
-                info.scorer,
+                bivariate_scorer,
                 min_pairs=min_pairs,
                 random_state=self.random_state,
             )
-        return self._state.partial
+        self._state = dataclasses.replace(self._state, partial=partial)
+        return partial
 
     def compute_significance(
         self,
@@ -677,9 +689,9 @@ class ForecastabilityAnalyzerExog(ForecastabilityAnalyzer):
             n_jobs=n_jobs,
         )
         if which == "raw":
-            self._state.raw_bands = bands
+            self._state = dataclasses.replace(self._state, raw_bands=bands)
         else:
-            self._state.partial_bands = bands
+            self._state = dataclasses.replace(self._state, partial_bands=bands)
         return bands
 
     def analyze(
@@ -729,29 +741,29 @@ class ForecastabilityAnalyzerExog(ForecastabilityAnalyzer):
             compute_surrogates=compute_surrogates,
         )
 
-    def plot(self, *, method: str | None = None, show: bool = True) -> plt.Figure:
-        """Plot raw and partial curves, labeling cross mode when exog is set."""
-        label = (method or self._method).upper()
-        is_cross = self.exog is not None
-        if is_cross:
-            label = f"Cross-{label}"
+    def plot(self, *, method: str | None = None, show: bool = True) -> Any:
+        """Plot raw and partial curves, labeling cross mode when exog is set.
 
+        Delegates to :func:`forecastability.adapters.analyzer_plot.plot_analyzer`.
+        Requires matplotlib to be installed.
+        """
+        # Return type is Any because matplotlib is lazy-imported via the adapter.
+        from forecastability.adapters.analyzer_plot import plot_analyzer
+
+        label = method or self._method
         raw, partial = self._resolve_curves_for_plot()
         raw_bands = self._state.raw_bands or self._state.ami_bands
         partial_bands = self._state.partial_bands or self._state.pami_bands
 
-        fig, axs = plt.subplots(2, 1, figsize=(11, 8))
-        _plot_curve(axs[0], raw, raw_bands, color="b", label=f"Raw {label}(h)")
-        axs[0].set_title(f"Raw {'cross-' if is_cross else ''}dependence ({label}) + significance")
-        _plot_curve(axs[1], partial, partial_bands, color="r", label=f"Partial {label}(h)")
-        axs[1].set_title(
-            f"Partial {'cross-' if is_cross else ''}dependence ({label}) + significance"
+        return plot_analyzer(
+            raw,
+            partial,
+            raw_bands=raw_bands,
+            partial_bands=partial_bands,
+            method=label,
+            is_cross=self.exog is not None,
+            show=show,
         )
-
-        plt.tight_layout()
-        if show:
-            plt.show()
-        return fig
 
     def _analyze_generic_exog(
         self,
@@ -793,6 +805,7 @@ class ForecastabilityAnalyzerExog(ForecastabilityAnalyzer):
         )
 
 
-# _compute_raw_curve, _compute_partial_curve, _plot_curve, _triage_recommendation,
+# _compute_raw_curve, _compute_partial_curve, _triage_recommendation,
 # _TRIAGE_THRESHOLDS, and _validate_exog_for_target are imported at the top of this
 # module from the services package and remain accessible here for backward compat.
+# _plot_curve moved to forecastability.adapters.plot_service (C11/C12).

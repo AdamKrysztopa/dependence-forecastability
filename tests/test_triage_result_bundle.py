@@ -6,14 +6,16 @@ from pathlib import Path
 
 import numpy as np
 
+from forecastability.adapters.result_bundle_io import (
+    load_result_bundle,
+    save_result_bundle,
+)
 from forecastability.triage.models import TriageRequest
 from forecastability.triage.result_bundle import (
     TriageResultBundle,
     build_triage_result_bundle,
-    load_result_bundle,
-    save_result_bundle,
 )
-from forecastability.triage.run_triage import run_triage
+from forecastability.use_cases.run_triage import run_triage
 
 
 def _make_result_bundle() -> tuple[np.ndarray, TriageResultBundle]:

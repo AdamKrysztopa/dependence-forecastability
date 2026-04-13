@@ -1,15 +1,22 @@
 <!-- type: reference -->
-# AMI -> pAMI Forecastability Analysis
+# Forecastability Triage Toolkit
+
+> A deterministic pre-model triage toolkit for time series.
+> Assess whether dependence is strong, direct, and exploitable *before* costly model search.
 
 [![CI](https://img.shields.io/github/check-runs/AdamKrysztopa/dependence-forecastability/main?label=CI)](https://github.com/AdamKrysztopa/dependence-forecastability/actions)
 [![Version](https://img.shields.io/github/v/tag/AdamKrysztopa/dependence-forecastability?label=version&sort=semver)](https://github.com/AdamKrysztopa/dependence-forecastability/releases)
 [![Docs](https://img.shields.io/github/deployments/AdamKrysztopa/dependence-forecastability/github-pages?label=docs)](https://github.com/AdamKrysztopa/dependence-forecastability/tree/main/docs)
 [![Python 3.11-3.12](https://img.shields.io/badge/python-3.11%20to%203.12-blue.svg)](https://python.org)
-[![arXiv](https://img.shields.io/badge/arXiv-2601.10006-b31b1b.svg)](https://doi.org/10.48550/arXiv.2601.10006)
+[![Based on arXiv:2601.10006](https://img.shields.io/badge/based%20on-arXiv%3A2601.10006-b31b1b.svg)](https://doi.org/10.48550/arXiv.2601.10006)
 
-## Value proposition
+## What it does
 
-A deterministic pre-model triage toolkit for time series. Starting from AMI (Catt 2026) it now packages **nine diagnostic families** drawn from multiple papers — forecastability profiles, information-theoretic ceilings, predictive-information learning curves, spectral predictability, Lyapunov stability, entropy-based complexity, batch multi-signal ranking, and exogenous screening — behind a single `run_triage()` / `run_batch_triage()` entry point. Assess whether dependence is strong, direct, and exploitable *before* costly model search.
+Built on AMI (Catt 2026) as the paper-aligned foundation, extended with pAMI and **nine diagnostic families** drawn from multiple papers — forecastability profiles, information-theoretic ceilings, predictive-information learning curves, spectral predictability, Lyapunov stability, entropy-based complexity, batch multi-signal ranking, and exogenous screening — all behind a single `run_triage()` / `run_batch_triage()` entry point.
+
+> [!NOTE]
+> AMI is the paper-aligned core. pAMI and all F1–F9 diagnostics are project extensions.
+> See [docs/wording_policy.md](docs/wording_policy.md) for the canonical product description.
 
 ## Quickstart ladder (recommended)
 
@@ -48,7 +55,8 @@ uv sync && MPLBACKEND=Agg uv run python scripts/run_canonical_examples.py
 - Agent layer contract (deterministic-first): [docs/agent_layer.md](docs/agent_layer.md)
 - Results summary (evidence-first): [docs/results_summary.md](docs/results_summary.md)
 - Durable notebook narratives (primary docs layer): [docs/notebooks/README.md](docs/notebooks/README.md)
-- Agentic walkthrough notebook: [notebooks/03_agentic_triage.ipynb](notebooks/03_agentic_triage.ipynb)
+- Agentic walkthrough notebook: [notebooks/walkthroughs/03_triage_end_to_end.ipynb](notebooks/walkthroughs/03_triage_end_to_end.ipynb)
+- Deterministic payload/serializer deep dive notebook: [notebooks/triage/06_agent_ready_triage_interpretation.ipynb](notebooks/triage/06_agent_ready_triage_interpretation.ipynb)
 - Full docs index: [docs/README.md](docs/README.md)
 
 ## Visual architecture summary
@@ -289,7 +297,7 @@ Any PydanticAI-compatible provider string works (e.g. `"anthropic:claude-3-5-son
 > The agent only narrates deterministic results.  It does not generate numeric
 > values.  `TriageResult.narrative` is always `None` for plain `run_triage()` calls.
 
-See [notebooks/03_agentic_triage.ipynb](notebooks/03_agentic_triage.ipynb) for a
+See [notebooks/walkthroughs/03_triage_end_to_end.ipynb](notebooks/walkthroughs/03_triage_end_to_end.ipynb) for a
 full interactive walkthrough.
 
 ## Interactive Notebooks
@@ -301,30 +309,34 @@ uv sync --group notebook
 uv run python -m ipykernel install --user --name forecastability
 ```
 
-### Core notebooks (`notebooks/`)
+Notebook taxonomy is frozen to exactly two long-lived families:
 
-Primary narrative docs for the three most important notebooks:
+- `notebooks/walkthroughs/` — curated end-to-end user and maintainer surfaces.
+- `notebooks/triage/` — deterministic deep dives for specific diagnostic methods.
+
+Ownership and architecture discipline:
+
+- Notebooks are consumer and demonstrator surfaces, not runtime implementation surfaces.
+- Runtime logic must live in `src/forecastability/` and follow hexagonal boundaries (`adapters -> use_cases -> domain`) with SOLID responsibilities.
+- Notebook cells may orchestrate examples and visual explanations, but they must not become authoritative runtime paths.
+
+Deprecation policy for root-level notebooks:
+
+- No new long-lived notebooks may be added under `notebooks/` root.
+- Root-level notebook files are redirect shims pointing to the corresponding `notebooks/walkthroughs/` notebooks.
+
+Notebook taxonomy (final):
+
+| Surface | Path(s) | Role |
+|---|---|---|
+| Long-lived family | `notebooks/triage/` | Deterministic deep-dive track (active). |
+| Long-lived family | `notebooks/walkthroughs/` | Curated walkthrough track (active). |
+
+Durable narrative pages for walkthrough surfaces:
+
 - [docs/notebooks/canonical_forecastability.md](docs/notebooks/canonical_forecastability.md)
 - [docs/notebooks/exogenous_analysis.md](docs/notebooks/exogenous_analysis.md)
 - [docs/notebooks/agentic_triage.md](docs/notebooks/agentic_triage.md)
-
-| Notebook | File | Description |
-|---|---|---|
-| 1 · Canonical Forecastability Cases | [`notebooks/01_canonical_forecastability.ipynb`](notebooks/01_canonical_forecastability.ipynb) | AMI vs pAMI on five synthetic/real series. Surrogate bands, directness ratios, pattern interpretation, Markdown report generation. |
-| 2 · Exogenous Analysis | [`notebooks/02_exogenous_analysis.ipynb`](notebooks/02_exogenous_analysis.ipynb) | CrossAMI + pCrossAMI across seven benchmark pairs. Rolling-origin evaluation, heatmaps, directness-ratio triage, driver ranking. |
-| 3 · Agentic Triage | [`notebooks/03_agentic_triage.ipynb`](notebooks/03_agentic_triage.ipynb) | `run_triage()` entry point, readiness gate, univariate + exogenous triage, event emission, optional PydanticAI narration. |
-| 4 · Agentic Feature Screening | [`notebooks/04_agentic_screening.ipynb`](notebooks/04_agentic_screening.ipynb) | Deterministic vs agentic driver screening on bike-sharing data (temp, humidity, windspeed → cnt). |
-
-### Triage extension notebooks (`notebooks/triage/`)
-
-| Notebook | File | Description |
-|---|---|---|
-| 01 · Forecastability Profile Walkthrough | [`notebooks/triage/01_forecastability_profile_walkthrough.ipynb`](notebooks/triage/01_forecastability_profile_walkthrough.ipynb) | Horizon-wise $F(h)$ profile, peak horizon, informative horizon set, non-monotonicity detection (F1). |
-| 02 · Information Limits & Compression | [`notebooks/triage/02_information_limits_and_compression.ipynb`](notebooks/triage/02_information_limits_and_compression.ipynb) | Theoretical MI ceiling, compression / DPI warnings, exploitation ratio (F2). |
-| 07 · Predictive Info Learning Curves | [`notebooks/triage/07_predictive_information_learning_curves.ipynb`](notebooks/triage/07_predictive_information_learning_curves.ipynb) | kNN MI vs embedding dimension, plateau detection, recommended lookback (F3). |
-| 08 · Spectral & Entropy Diagnostics | [`notebooks/triage/08_spectral_and_entropy_diagnostics.ipynb`](notebooks/triage/08_spectral_and_entropy_diagnostics.ipynb) | Spectral predictability $\Omega$, permutation entropy, complexity band (F4, F6). |
-| 09 · Batch & Exogenous Workbench | [`notebooks/triage/09_batch_and_exogenous_workbench.ipynb`](notebooks/triage/09_batch_and_exogenous_workbench.ipynb) | Multi-signal ranking with all diagnostics, enhanced exogenous screening (F7, F8). |
-| 10 · Agent-Ready Triage Interpretation | [`notebooks/triage/10_agent_ready_triage_interpretation.ipynb`](notebooks/triage/10_agent_ready_triage_interpretation.ipynb) | Structured Pydantic payloads, summary serializer, interpretation adapter for agent integration. |
 
 ## Documentation map
 

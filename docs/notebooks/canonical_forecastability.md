@@ -38,4 +38,4 @@ These outcomes preserve the notebook-level interpretation while making the decis
 
 ## Notebook For Full Detail
 
-- Full walkthrough: [../../notebooks/01_canonical_forecastability.ipynb](../../notebooks/01_canonical_forecastability.ipynb)
+- Full walkthrough: [../../notebooks/walkthroughs/01_canonical_forecastability.ipynb](../../notebooks/walkthroughs/01_canonical_forecastability.ipynb)

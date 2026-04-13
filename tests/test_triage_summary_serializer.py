@@ -275,7 +275,7 @@ def test_serialised_triage_summary_is_frozen(f1_payload: F1ProfilePayload) -> No
     """SerialisedTriageSummary is frozen and raises on attempted attribute mutation."""
     result = serialise_payload(f1_payload)
     with pytest.raises(Exception):  # noqa: B017 — frozen Pydantic raises ValidationError
-        result.schema_version = "2"  # type: ignore[misc]
+        result.schema_version = "2"
 
 
 def test_serialise_payload_composite_triage_agent_payload(

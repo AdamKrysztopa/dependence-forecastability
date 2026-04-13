@@ -239,6 +239,8 @@ def _pearson_scorer(
     del random_state
     if len(past) < 2:
         return 0.0
+    if past.std() == 0.0 or future.std() == 0.0:  # constant array guard
+        return 0.0
     result = np.corrcoef(past, future)[0, 1]
     return 0.0 if np.isnan(result) else float(abs(result))
 
@@ -251,6 +253,8 @@ def _spearman_scorer(
 ) -> float:
     """Absolute Spearman rank correlation."""
     del random_state
+    if past.std() == 0.0 or future.std() == 0.0:  # constant array guard
+        return 0.0
     rho, _ = spearmanr(past, future)
     return 0.0 if np.isnan(rho) else float(abs(rho))
 

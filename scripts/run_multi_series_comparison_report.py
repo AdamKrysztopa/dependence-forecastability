@@ -18,7 +18,7 @@ from forecastability.triage.comparison_report import (
     build_multi_series_comparison_report,
     write_multi_series_comparison_artifacts,
 )
-from forecastability.triage.run_triage import run_triage
+from forecastability.use_cases.run_triage import run_triage
 
 _logger = logging.getLogger(__name__)
 

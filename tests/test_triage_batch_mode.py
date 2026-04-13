@@ -18,8 +18,8 @@ from forecastability.triage.batch_models import (
     BatchTriageRequest,
 )
 from forecastability.triage.models import TriageRequest, TriageResult
-from forecastability.triage.run_batch_triage import rank_batch_items, run_batch_triage
-from forecastability.triage.run_triage import run_triage
+from forecastability.use_cases.run_batch_triage import rank_batch_items, run_batch_triage
+from forecastability.use_cases.run_triage import run_triage
 
 
 def _make_ar1(n: int = 150, *, phi: float = 0.85, seed: int = 42) -> list[float]:

@@ -35,4 +35,4 @@ From [../../outputs/tables/exog_benchmark/case_summary.csv](../../outputs/tables
 
 ## Notebook For Full Detail
 
-- Full walkthrough: [../../notebooks/02_exogenous_analysis.ipynb](../../notebooks/02_exogenous_analysis.ipynb)
+- Full walkthrough: [../../notebooks/walkthroughs/02_exogenous_analysis.ipynb](../../notebooks/walkthroughs/02_exogenous_analysis.ipynb)

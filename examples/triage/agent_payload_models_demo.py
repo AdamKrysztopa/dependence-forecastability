@@ -38,12 +38,12 @@ from forecastability.adapters.agents.triage_agent_payload_models import (
 from forecastability.config import ExogenousScreeningWorkbenchConfig
 from forecastability.triage.batch_models import BatchSeriesRequest, BatchTriageRequest
 from forecastability.triage.models import TriageRequest
-from forecastability.triage.run_batch_triage import run_batch_triage
-from forecastability.triage.run_triage import run_triage
 from forecastability.types import ExogenousBenchmarkResult
+from forecastability.use_cases.run_batch_triage import run_batch_triage
 from forecastability.use_cases.run_exogenous_screening_workbench import (
     run_exogenous_screening_workbench,
 )
+from forecastability.use_cases.run_triage import run_triage
 
 _HORIZONS = [1, 2, 3, 4, 5]
 

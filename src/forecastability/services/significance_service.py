@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import os
 from concurrent.futures import ThreadPoolExecutor
+from typing import cast
 
 import numpy as np
 
-from forecastability.scorers import ScorerInfo
+from forecastability.scorers import DependenceScorer, ScorerInfo
 from forecastability.services.partial_curve_service import compute_partial_curve
 from forecastability.services.raw_curve_service import compute_raw_curve
 from forecastability.surrogates import phase_surrogates
@@ -48,11 +49,12 @@ def compute_significance_bands_generic(
     surr = phase_surrogates(series, n_surrogates=n_surrogates, random_state=random_state)
     compute_fn = compute_raw_curve if which == "raw" else compute_partial_curve
     n_workers = (os.cpu_count() or 1) if n_jobs == -1 else n_jobs
+    bivariate_scorer = cast(DependenceScorer, info.scorer)
 
     def _eval(idx: int) -> np.ndarray:
         seed = random_state + idx + 1
         return compute_fn(
-            surr[idx], max_lag, info.scorer, exog=exog, min_pairs=min_pairs, random_state=seed
+            surr[idx], max_lag, bivariate_scorer, exog=exog, min_pairs=min_pairs, random_state=seed
         )
 
     if n_workers == 1:

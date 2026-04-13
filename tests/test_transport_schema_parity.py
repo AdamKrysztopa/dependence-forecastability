@@ -16,7 +16,7 @@ from forecastability.adapters.api import TriageHTTPResponse, app
 from forecastability.adapters.cli import build_parser, cmd_triage
 from forecastability.adapters.mcp_server import _triage_result_to_json
 from forecastability.triage.models import TriageRequest, TriageResult
-from forecastability.triage.run_triage import run_triage
+from forecastability.use_cases.run_triage import run_triage
 
 
 @pytest.fixture(scope="module")

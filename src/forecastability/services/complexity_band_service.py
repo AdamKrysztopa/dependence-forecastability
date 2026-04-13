@@ -142,7 +142,7 @@ def build_complexity_band(
         permutation_entropy=pe,
         spectral_entropy=se,
         embedding_order=m,
-        complexity_band=band,  # type: ignore[arg-type]
+        complexity_band=band,
         interpretation=_build_interpretation(band, pe, se),
         pe_reliability_warning=_reliability_warning(n, m),
     )

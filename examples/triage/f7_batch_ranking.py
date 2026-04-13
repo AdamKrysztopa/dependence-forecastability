@@ -24,7 +24,7 @@ from forecastability.triage.batch_models import (
     BatchSeriesRequest,
     BatchTriageRequest,
 )
-from forecastability.triage.run_batch_triage import run_batch_triage
+from forecastability.use_cases.run_batch_triage import run_batch_triage
 
 _N_SAMPLES = 420
 
@@ -132,6 +132,12 @@ def _write_csv(
             writer.writerow({column: row.get(column) for column in columns})
 
 
+def _get_float(row: dict[str, object], key: str) -> float:
+    """Safely extract a float from a dict[str, object] value."""
+    val = row.get(key)
+    return float(val) if isinstance(val, (int, float)) else 0.0
+
+
 def _plot_diagnostic_heatmap(
     *,
     summary_rows: list[dict[str, object]],
@@ -145,9 +151,9 @@ def _plot_diagnostic_heatmap(
     matrix = np.array(
         [
             [
-                float(row.get("spectral_predictability") or 0.0),
-                float(row.get("permutation_entropy") or 0.0),
-                float(row.get("directness_ratio") or 0.0),
+                _get_float(row, "spectral_predictability"),
+                _get_float(row, "permutation_entropy"),
+                _get_float(row, "directness_ratio"),
                 forecastability_map.get(str(row.get("forecastability_class") or ""), 0.0),
                 complexity_map.get(str(row.get("complexity_band_label") or ""), 0.0),
             ]
@@ -179,9 +185,9 @@ def _plot_diagnostic_heatmap(
     for row_index, row in enumerate(ordered):
         for col_index in range(5):
             if col_index == 0:
-                text = f"{float(row.get('spectral_predictability') or 0.0):.2f}"
+                text = f"{_get_float(row, 'spectral_predictability'):.2f}"
             elif col_index == 1:
-                text = f"{float(row.get('permutation_entropy') or 0.0):.2f}"
+                text = f"{_get_float(row, 'permutation_entropy'):.2f}"
             elif col_index == 2:
                 value = row.get("directness_ratio")
                 text = f"{float(value):.2f}" if isinstance(value, int | float) else "-"

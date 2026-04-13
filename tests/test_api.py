@@ -216,6 +216,10 @@ class TestTriageHTTPRequest:
         with pytest.raises(ValueError):
             TriageHTTPRequest(series=[1.0], n_surrogates=0)
 
+    def test_low_surrogates_raises(self) -> None:
+        with pytest.raises(ValueError):
+            TriageHTTPRequest(series=[1.0], n_surrogates=50)
+
     def test_default_goal_is_univariate(self) -> None:
         req = TriageHTTPRequest(series=[1.0])
         assert req.goal == "univariate"
@@ -300,7 +304,7 @@ class TestTriageStreamEndpoint:
         series = _make_ar1(n=50)
         resp = streaming_client.get(
             "/triage/stream",
-            params={"series": _json.dumps(series), "max_lag": 10, "n_surrogates": 10},
+            params={"series": _json.dumps(series), "max_lag": 10, "n_surrogates": 99},
         )
         assert resp.status_code == 200
         lines = [
@@ -319,7 +323,7 @@ class TestTriageStreamEndpoint:
         series = _make_ar1(n=50)
         resp = streaming_client.get(
             "/triage/stream",
-            params={"series": _json.dumps(series), "max_lag": 10, "n_surrogates": 10},
+            params={"series": _json.dumps(series), "max_lag": 10, "n_surrogates": 99},
         )
         assert resp.status_code == 200
         data_lines = [

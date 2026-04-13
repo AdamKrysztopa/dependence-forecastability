@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 import numpy as np
 import pytest
 
-from forecastability.scorers import ScorerRegistry, default_registry
+from forecastability.scorers import DependenceScorer, ScorerRegistry, default_registry
 
 
 @pytest.fixture()
@@ -35,7 +37,7 @@ class TestDefaultScorers:
     ) -> None:
         info = registry.get(name)
         past, future = sine_pair
-        score = info.scorer(past, future, random_state=42)
+        score = cast(DependenceScorer, info.scorer)(past, future, random_state=42)
         assert isinstance(score, float)
         assert score >= 0.0
 
@@ -88,7 +90,7 @@ class TestMIReproducibility:
         registry: ScorerRegistry,
         sine_pair: tuple[np.ndarray, np.ndarray],
     ) -> None:
-        mi = registry.get("mi").scorer
+        mi = cast(DependenceScorer, registry.get("mi").scorer)
         past, future = sine_pair
         a = mi(past, future, random_state=123)
         b = mi(past, future, random_state=123)
@@ -99,7 +101,7 @@ class TestMIReproducibility:
         registry: ScorerRegistry,
         sine_pair: tuple[np.ndarray, np.ndarray],
     ) -> None:
-        mi = registry.get("mi").scorer
+        mi = cast(DependenceScorer, registry.get("mi").scorer)
         past, future = sine_pair
         a = mi(past, future, random_state=1)
         b = mi(past, future, random_state=9999)
@@ -151,7 +153,8 @@ class TestDistanceCorrelationBounded:
         past: np.ndarray,
         future: np.ndarray,
     ) -> None:
-        score = registry.get("distance").scorer(past, future, random_state=42)
+        scorer = cast(DependenceScorer, registry.get("distance").scorer)
+        score = scorer(past, future, random_state=42)
         assert 0.0 <= score <= 1.0
 
     def test_distance_family_is_bounded_nonlinear(self, registry: ScorerRegistry) -> None:
@@ -164,11 +167,13 @@ class TestConstantArrayReturnsZero:
     def test_pearson_constant_array_returns_zero(self, registry: ScorerRegistry) -> None:
         past = np.ones(50)
         future = np.linspace(0, 1, 50)
-        score = registry.get("pearson").scorer(past, future, random_state=42)
+        scorer = cast(DependenceScorer, registry.get("pearson").scorer)
+        score = scorer(past, future, random_state=42)
         assert score == 0.0
 
     def test_spearman_constant_array_returns_zero(self, registry: ScorerRegistry) -> None:
         past = np.ones(50)
         future = np.linspace(0, 1, 50)
-        score = registry.get("spearman").scorer(past, future, random_state=42)
+        scorer = cast(DependenceScorer, registry.get("spearman").scorer)
+        score = scorer(past, future, random_state=42)
         assert score == 0.0

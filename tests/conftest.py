@@ -7,7 +7,7 @@ import pytest
 
 from forecastability.datasets import generate_ar1
 from forecastability.triage.models import TriageRequest, TriageResult
-from forecastability.triage.run_triage import run_triage
+from forecastability.use_cases.run_triage import run_triage
 
 _TRIAGE_AR1_PHI = 0.85
 _TRIAGE_MAX_LAG = 20

@@ -99,7 +99,7 @@ Each module has exactly one reason to change.
 | `adapters/cli.py` | CLI transport wiring |
 | `adapters/api.py` | HTTP transport wiring |
 | `adapters/mcp_server.py` | MCP tool exposure |
-| `adapters/pydantic_ai_agent.py` | LLM orchestration over deterministic core |
+| `adapters/llm/triage_agent.py` | LLM orchestration over deterministic core |
 
 ### O — Open/Closed
 

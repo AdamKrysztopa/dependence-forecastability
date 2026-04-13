@@ -78,7 +78,7 @@ class TestLargestLyapunovExponentResult:
 
         result = self._make()
         with pytest.raises((TypeError, ValidationError)):
-            result.lambda_estimate = 0.0  # type: ignore[misc]
+            result.lambda_estimate = 0.0
 
     def test_all_fields_present(self) -> None:
         result = self._make()

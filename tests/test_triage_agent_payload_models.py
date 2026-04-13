@@ -371,10 +371,10 @@ def test_f8_exog_driver_recommendation_summary() -> None:
 
 
 def test_triage_agent_payload_from_blocked_result(
-    deterministic_blocked_request,  # type: ignore[no-untyped-def]
+    deterministic_blocked_request,
 ) -> None:
     """Blocked TriageResult → payload has blocked=True and all diagnostics None."""
-    from forecastability.triage.run_triage import run_triage
+    from forecastability.use_cases.run_triage import run_triage
 
     result = run_triage(deterministic_blocked_request)
     payload = triage_agent_payload(result, series_id="blocked_series")
@@ -386,7 +386,7 @@ def test_triage_agent_payload_from_blocked_result(
 
 
 def test_triage_agent_payload_schema_version(
-    deterministic_triage_result,  # type: ignore[no-untyped-def]
+    deterministic_triage_result,
 ) -> None:
     """All nested payloads that are not None carry schema_version='1'."""
     payload = triage_agent_payload(deterministic_triage_result, series_id="test")
@@ -402,7 +402,7 @@ def test_triage_agent_payload_schema_version(
 
 
 def test_payload_json_serializable(
-    deterministic_triage_result,  # type: ignore[no-untyped-def]
+    deterministic_triage_result,
 ) -> None:
     """TriageAgentPayload.model_dump() must contain no numpy types."""
     import json
@@ -414,7 +414,7 @@ def test_payload_json_serializable(
 
 
 def test_triage_agent_payload_series_id_propagated(
-    deterministic_triage_result,  # type: ignore[no-untyped-def]
+    deterministic_triage_result,
 ) -> None:
     """series_id keyword arg is stored in the payload."""
     payload = triage_agent_payload(deterministic_triage_result, series_id="my_series")
@@ -422,7 +422,7 @@ def test_triage_agent_payload_series_id_propagated(
 
 
 def test_triage_agent_payload_no_series_id(
-    deterministic_triage_result,  # type: ignore[no-untyped-def]
+    deterministic_triage_result,
 ) -> None:
     """Omitting series_id yields series_id=None."""
     payload = triage_agent_payload(deterministic_triage_result)
