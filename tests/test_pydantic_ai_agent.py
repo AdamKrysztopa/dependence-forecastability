@@ -44,7 +44,7 @@ class TestTriageExplanationModel:
     """Verify the structured output model."""
 
     def test_model_validates(self) -> None:
-        from forecastability.adapters.pydantic_ai_agent import TriageExplanation
+        from forecastability.adapters.llm.triage_agent import TriageExplanation
 
         explanation = TriageExplanation(
             forecastability_class="high",
@@ -59,7 +59,7 @@ class TestTriageExplanationModel:
         assert len(explanation.caveats) == 1
 
     def test_model_is_frozen(self) -> None:
-        from forecastability.adapters.pydantic_ai_agent import TriageExplanation
+        from forecastability.adapters.llm.triage_agent import TriageExplanation
 
         explanation = TriageExplanation(
             forecastability_class="low",

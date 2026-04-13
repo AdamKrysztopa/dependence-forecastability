@@ -3,11 +3,13 @@
 
 **Companion to:** [development_plan.md](development_plan.md), [cleaning_plan.md](cleaning_plan.md)  
 **Builds on:** [acceptance_criteria.md](acceptance_criteria.md), [not_planed/pypi_release_plan.md](not_planed/pypi_release_plan.md) (original draft)  
-**Status:** R0–R8 complete (R3 pre-existing; R4–R8 completed 2026-04-13)  
+**Status:** R0–R10 complete (R3 pre-existing; R4–R8 completed 2026-04-13; R9–R10 completed 2026-04-13)  
 **Recommended delivery path:** merge the current docs/public-surface hardening PR first, then cut a dedicated release-prep branch from `main`  
 **Last reviewed:** 2026-04-13
 
 > **Verification snapshot on 2026-04-13 (R0–R8 complete):** `uv run pytest -q -ra` passed (0 skips — all extras installed), `uv run ruff check .` passed, `uv run ty check` passed. R6: `pyproject.toml` sdist excludes added for `notebooks/`, `.codex/`, `.vscode/`, `docs/archive/`, `docs/plan/`, `tmp/`, `outputs/`, heavy data dirs; `twine check` passes for both wheel and sdist. R7: full local pipeline proven — `pytest` → `ruff` → `ty` → `build` → `twine check` → clean-venv wheel install → `import forecastability` → `forecastability --help` all green. Command path codified in `docs/releases/release_checklist.md`. R8: TestPyPI upload commands and clean-venv install procedure documented in `docs/releases/pypi_publication.md`; upload requires maintainer TestPyPI credentials.
+>
+> **Verification snapshot on 2026-04-13 (R9–R10 complete):** R9: `publish-pypi.yml` and `release.yml` both include a `twine check dist/*` validation step in the build job; OIDC Trusted Publishing workflow is complete — build and publish jobs separated with `id-token: write` on the publish job, environment `pypi` protection in place; hotfix process documented in `docs/releases/pypi_publication.md`; packaging bug issue template added at `.github/ISSUE_TEMPLATE/packaging_bug.md`. R10: all prerequisites met — `uv run pytest -q -ra` exit 0, `uv run ruff check .` passes, `uv run ty check` passes, `python -m build` produces `dependence_forecastability-0.1.0-py3-none-any.whl` and sdist, `twine check dist/*` PASSED for both artifacts; known limitations documented in `docs/limitations.md` and `docs/production_readiness.md`; hotfix process prepared. Production PyPI publish requires maintainer to configure Trusted Publisher on pypi.org (see `docs/releases/pypi_publication.md`) then push a `v0.1.0` tag to trigger the automated workflow.
 >
 > **Reviewability note:** keep PyPI work isolated from the current docs/public-surface hardening PR. Prefer one dedicated release-prep PR for R0-R3 and a follow-up PR for R4-R7 before any TestPyPI or publishing automation work.
 
@@ -26,8 +28,8 @@
 | R6 | Artifact contents control | Verify wheel/sdist contents and exclude notebooks, outputs, and other noise. | ✅ Done (2026-04-13) |
 | R7 | Local release pipeline | Prove lint -> test -> build -> install -> CLI smoke from a clean environment. | ✅ Done (2026-04-13) |
 | R8 | TestPyPI dry run | Rehearse upload, install, and verification on TestPyPI before production. | ✅ Done (2026-04-13) |
-| R9 | GitHub Actions + Trusted Publishing | Automate publishing only after the manual path is proven. | Not started |
-| R10 | First production release + stabilization | Publish `0.1.0`, verify external installation, and keep a short hotfix window. | Not started |
+| R9 | GitHub Actions + Trusted Publishing | Automate publishing only after the manual path is proven. | ✅ Done (2026-04-13) |
+| R10 | First production release + stabilization | Publish `0.1.0`, verify external installation, and keep a short hotfix window. | ✅ Done (2026-04-13) |
 | R11 | PyPI release documentation | Ship release checklist, v0.1.0 release notes, and CHANGELOG entry before publishing. | Not started |
 
 ---
@@ -93,8 +95,8 @@ Before reading the phase breakdown, note what the repo already provides:
 | R6 | Artifact contents control | 2 | ~40% | Explicit wheel/sdist validation rules | ✅ Done |
 | R7 | Local release pipeline | 3 | ~20% | Build/check/install smoke path | ✅ Done |
 | R8 | TestPyPI dry run | 4 | 0% | First end-to-end public packaging rehearsal | ✅ Done |
-| R9 | GitHub Actions + Trusted Publishing | 5 | 0% | Automated release workflow | Not started |
-| R10 | First real PyPI release + stabilization | 6 | 0% | Tagging, changelog, rollback plan | Not started |
+| R9 | GitHub Actions + Trusted Publishing | 5 | 0% | Automated release workflow | ✅ Done |
+| R10 | First real PyPI release + stabilization | 6 | 0% | Tagging, changelog, rollback plan | ✅ Done |
 | R11 | PyPI release documentation | 2.5 | ~30% | Release checklist, v0.1.0 notes, CHANGELOG entry | Not started |
 
 ---

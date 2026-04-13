@@ -65,6 +65,56 @@ and confirm README renders, metadata is correct, and entry points are listed.
 4. `Release` workflow creates or updates the GitHub release and attaches artifacts.
 5. `Publish to PyPI` workflow publishes the same distributions to PyPI.
 
+## Hotfix Process
+
+A hotfix release follows the same publication flow as a normal release, but uses a
+patch-version increment and a short targeted branch.
+
+### When to issue a hotfix
+
+- Installation fails from PyPI (import error, missing files, broken entry points)
+- Critical bug in the deterministic core that produces wrong results silently
+- Security issue identified post-release
+
+### Hotfix steps
+
+1. **Create a hotfix branch** from the affected release tag:
+   ```bash
+   git checkout -b hotfix/vX.Y.Z vX.Y.Z
+   ```
+2. **Apply the minimal fix.** Do not bundle unrelated changes.
+3. **Bump the patch version** in `pyproject.toml` (e.g. `0.1.0` → `0.1.1`).
+4. **Add a `[X.Y.Z]` CHANGELOG section** with a brief "Fixed" entry.
+5. **Add release notes** in `docs/releases/vX.Y.Z.md`.
+6. **Run the full local pipeline** (see `docs/releases/release_checklist.md`):
+   ```bash
+   uv run pytest -q -ra
+   uv run ruff check .
+   uv run ty check
+   uv run python -m build
+   uv run twine check dist/*
+   ```
+7. **Create a pull request** to `main` and merge after review.
+8. **Push the hotfix tag** from `main`:
+   ```bash
+   git tag vX.Y.Z
+   git push origin vX.Y.Z
+   ```
+9. The `Release` workflow creates the GitHub Release and the `Publish to PyPI` workflow
+   publishes the hotfix to PyPI.
+
+> [!WARNING]
+> Never push a hotfix tag from a feature or development branch. Always tag from `main`
+> after the hotfix PR has been merged and verified.
+
+### Post-hotfix checks
+
+- [ ] `pip install dependence-forecastability==X.Y.Z` installs cleanly in a fresh venv
+- [ ] `python -c "import forecastability; print(forecastability.__version__)"` returns `X.Y.Z`
+- [ ] `forecastability --help` succeeds
+- [ ] Close any related packaging bug issues on GitHub
+- [ ] Update badges in `README.md` if the latest stable version changed
+
 ## Security Notes
 
 - No long-lived `PYPI_API_TOKEN` is stored in repository secrets.
