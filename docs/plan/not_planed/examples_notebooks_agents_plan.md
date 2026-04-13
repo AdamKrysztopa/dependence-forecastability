@@ -1,6 +1,6 @@
 # Examples, Notebooks, and Improved Agents Plan  
 **Companion to:** `development_plan.md`  
-**Last reviewed:** 2026-04-13 (N3/N4/N5 notebooks implemented and executed)
+**Last reviewed:** 2026-04-13 (N3/N4/N5 notebooks implemented, executed, and revalidated)
 **Repo:** `AdamKrysztopa/dependence-forecastability`
 
 ---
@@ -202,6 +202,7 @@ This keeps agent work in adapter land, not in the deterministic core.
 
 ### Notebook
 - [x] `notebooks/triage/07_predictive_information_learning_curves.ipynb`
+- [x] end-to-end execution revalidated on 2026-04-13
 
 ### Notebook sections
 - [x] why “how much history?” differs from “is horizon forecastable?”
@@ -230,6 +231,7 @@ This keeps agent work in adapter land, not in the deterministic core.
 
 ### Notebook
 - [x] merged into `08_spectral_and_entropy_diagnostics.ipynb`
+- [x] end-to-end execution revalidated on 2026-04-13
 
 ### Agent payload additions
 - [ ] `spectral_predictability_score`
@@ -276,6 +278,7 @@ This keeps agent work in adapter land, not in the deterministic core.
 
 ### Notebook
 - [x] merged into `08_spectral_and_entropy_diagnostics.ipynb`
+- [x] end-to-end execution revalidated on 2026-04-13
 
 ### Agent payload additions
 - [ ] `permutation_entropy`
@@ -298,6 +301,7 @@ This keeps agent work in adapter land, not in the deterministic core.
 
 ### Notebook
 - [x] `notebooks/triage/09_batch_and_exogenous_workbench.ipynb`
+- [x] end-to-end execution revalidated on 2026-04-13
 
 ### Agent payload additions
 - [ ] `batch_rank`
@@ -319,6 +323,7 @@ This keeps agent work in adapter land, not in the deterministic core.
 
 ### Notebook
 - [x] shared inside `09_batch_and_exogenous_workbench.ipynb`
+- [x] end-to-end execution revalidated on 2026-04-13
 
 ### Agent payload additions
 - [ ] `driver_scores_by_horizon`
