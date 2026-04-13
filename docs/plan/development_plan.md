@@ -3,7 +3,7 @@
 
 **Replaces:** MoSCoW plan (removed)
 **Source epic:** [`not_planed/triage_extension_epic_math_grounded.md`](not_planed/triage_extension_epic_math_grounded.md)
-**Last reviewed:** 2026-04-13 (F1 implemented 2026-04-12; F2, SeriesDiagnosticScorer, PSD utility implemented 2026-04-12; F6 implemented 2026-04-12; F4 implemented 2026-04-12; F3 implemented 2026-04-12; F5 implemented 2026-04-12; F7, F8 implemented 2026-04-12; F9 elaborated 2026-04-13; F9 implemented 2026-04-13; examples/notebooks/agents plan added 2026-04-13; E3/E4/E6 examples marked done 2026-04-13)
+**Last reviewed:** 2026-04-13 (F1 implemented 2026-04-12; F2, SeriesDiagnosticScorer, PSD utility implemented 2026-04-12; F6 implemented 2026-04-12; F4 implemented 2026-04-12; F3 implemented 2026-04-12; F5 implemented 2026-04-12; F7, F8 implemented 2026-04-12; F9 elaborated 2026-04-13; F9 implemented 2026-04-13; examples/notebooks/agents plan added 2026-04-13; E3/E4/E6 examples marked done 2026-04-13; E5/E7/E8 examples marked done 2026-04-13)
 
 ---
 
@@ -77,10 +77,10 @@ Before reading the per-feature sections, note what the repo already provides:
 | E2 | Example | F2 IT Limits | 1 | ~60 % — `run_phase1_limit_diagnostics.py` | Add compressed-vs-original; "possible" vs "achieved" distinction | ✅ Done |
 | E3 | Example | F3 Learning Curves | 2 | ~80 % — `run_predictive_info_learning_curves.py` | Add reliability-warning demo for small $n$; consolidate | ✅ Done |
 | E4 | Example | F4 Spectral | 2 | ~90 % — `run_spectral_predictability.py` | Minimal — consolidate into examples convention | ✅ Done |
-| E5 | Example | F5 Lyapunov | 3 | ~80 % — `run_largest_lyapunov_exponent.py` | Add parameter-sensitivity demo; mandatory experimental warning | Not started |
+| E5 | Example | F5 Lyapunov | 3 | ~80 % — `run_largest_lyapunov_exponent.py` | Add parameter-sensitivity demo; mandatory experimental warning | ✅ Done |
 | E6 | Example | F6 Entropy | 2 | ~90 % — `run_entropy_complexity.py` | Minimal — consolidate into examples convention | ✅ Done |
-| E7 | Example | F7 Batch | 3 | ~85 % — `run_multi_signal_diagnostic_ranking.py` | Add JSON/CSV export demo; consolidate | Not started |
-| E8 | Example | F8 Exog Screening | 3 | ~80 % — `run_exogenous_driver_redundancy_screening.py` | Add strong/weak/redundant driver narrative; consolidate | Not started |
+| E7 | Example | F7 Batch | 3 | ~85 % — `run_multi_signal_diagnostic_ranking.py` | Add JSON/CSV export demo; consolidate | ✅ Done |
+| E8 | Example | F8 Exog Screening | 3 | ~80 % — `run_exogenous_driver_redundancy_screening.py` | Add strong/weak/redundant driver narrative; consolidate | ✅ Done |
 | N1 | Notebook | F1 | 1 | — | `05_forecastability_profile_walkthrough` — profile vs scalar; non-monotone vs monotone | Not started |
 | N2 | Notebook | F2 | 1 | — | `06_information_limits_and_compression` — ceiling vs realisation; compression warnings | Not started |
 | N3 | Notebook | F3 | 2 | — | `07_predictive_information_learning_curves` — curve construction; plateau; bias-floor caveat | Not started |

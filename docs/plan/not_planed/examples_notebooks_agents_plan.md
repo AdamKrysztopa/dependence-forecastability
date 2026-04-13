@@ -241,13 +241,13 @@ This keeps agent work in adapter land, not in the deterministic core.
 ## F5 — Largest Lyapunov Exponent
 
 ### Example scripts
-- [ ] `examples/triage/f5_lle_experimental.py`
+- [x] `examples/triage/f5_lle_experimental.py`
 
 ### Example requirements
-- [ ] chaotic toy system
-- [ ] smoother non-chaotic example
-- [ ] parameter sensitivity demonstration
-- [ ] explicit experimental warning in output
+- [x] chaotic toy system
+- [x] smoother non-chaotic example
+- [x] parameter sensitivity demonstration
+- [x] explicit experimental warning in output
 
 ### Notebook
 - [ ] optional section inside `04_spectral_and_entropy_diagnostics.ipynb`
@@ -288,13 +288,13 @@ This keeps agent work in adapter land, not in the deterministic core.
 ## F7 — Batch Multi-Signal Ranking
 
 ### Example scripts
-- [ ] `examples/triage/f7_batch_ranking.py`
+- [x] `examples/triage/f7_batch_ranking.py`
 
 ### Example requirements
-- [ ] 10+ signals
-- [ ] ranking output
-- [ ] show individual diagnostic columns, not only composite rank
-- [ ] export JSON/CSV example
+- [x] 10+ signals
+- [x] ranking output
+- [x] show individual diagnostic columns, not only composite rank
+- [x] export JSON/CSV example
 
 ### Notebook
 - [ ] `notebooks/triage/05_batch_and_exogenous_workbench.ipynb`
@@ -309,13 +309,13 @@ This keeps agent work in adapter land, not in the deterministic core.
 ## F8 — Enhanced Exogenous Screening
 
 ### Example scripts
-- [ ] `examples/triage/f8_exogenous_screening.py`
+- [x] `examples/triage/f8_exogenous_screening.py`
 
 ### Example requirements
-- [ ] strong driver
-- [ ] weak driver
-- [ ] redundant driver
-- [ ] keep/review/reject table
+- [x] strong driver
+- [x] weak driver
+- [x] redundant driver
+- [x] keep/review/reject table
 
 ### Notebook
 - [ ] shared inside `05_batch_and_exogenous_workbench.ipynb`
