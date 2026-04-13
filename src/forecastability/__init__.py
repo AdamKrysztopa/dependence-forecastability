@@ -29,6 +29,10 @@ from forecastability.scorers import (
     default_registry,
 )
 from forecastability.triage.forecastability_profile import ForecastabilityProfile
+from forecastability.triage.models import (
+    TriageRequest,
+    TriageResult,
+)
 from forecastability.triage.predictive_info_learning_curve import PredictiveInfoLearningCurve
 from forecastability.triage.spectral_predictability import SpectralPredictabilityResult
 from forecastability.types import (
@@ -44,6 +48,7 @@ from forecastability.types import (
     SampleSizeStressResult,
     SeriesEvaluationResult,
 )
+from forecastability.use_cases import run_batch_triage, run_triage
 from forecastability.validation import validate_time_series
 
 __all__ = [
@@ -59,6 +64,7 @@ __all__ = [
     "ExogenousBenchmarkResult",
     "ForecastabilityAnalyzer",
     "ForecastabilityAnalyzerExog",
+    "ForecastabilityProfile",
     "ForecastResult",
     "generate_ar1",
     "generate_white_noise",
@@ -68,18 +74,21 @@ __all__ = [
     "MetricCurve",
     "ModelConfig",
     "OutputConfig",
+    "PredictiveInfoLearningCurve",
     "RobustnessStudyConfig",
     "RobustnessStudyResult",
     "RollingOriginConfig",
+    "run_batch_triage",
+    "run_triage",
     "SampleSizeStressResult",
     "ScorerInfo",
     "ScorerRegistry",
     "SensitivityConfig",
     "SeriesEvaluationResult",
+    "SpectralPredictabilityResult",
+    "TriageRequest",
+    "TriageResult",
     "UncertaintyConfig",
     "default_registry",
-    "ForecastabilityProfile",
-    "PredictiveInfoLearningCurve",
-    "SpectralPredictabilityResult",
     "validate_time_series",
 ]

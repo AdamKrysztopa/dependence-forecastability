@@ -7,7 +7,9 @@ from pathlib import Path
 import numpy as np
 import pytest
 from pydantic import ValidationError
-from pydantic_ai import models
+
+pydantic_ai = pytest.importorskip("pydantic_ai", reason="pydantic-ai extra not installed")
+from pydantic_ai import models  # noqa: E402
 
 # Block real model requests during tests.
 models.ALLOW_MODEL_REQUESTS = False  # type: ignore[assignment]

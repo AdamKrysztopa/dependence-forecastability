@@ -5,7 +5,9 @@ from __future__ import annotations
 import numpy as np
 import pytest
 from pydantic import ValidationError
-from pydantic_ai import models
+
+pydantic_ai = pytest.importorskip("pydantic_ai", reason="pydantic-ai extra not installed")
+from pydantic_ai import models  # noqa: E402
 
 # Block real model requests during tests — any accidental real call will fail.
 models.ALLOW_MODEL_REQUESTS = False  # type: ignore[assignment]
@@ -42,7 +44,7 @@ class TestTriageExplanationModel:
     """Verify the structured output model."""
 
     def test_model_validates(self) -> None:
-        from forecastability.adapters.pydantic_ai_agent import TriageExplanation
+        from forecastability.adapters.llm.triage_agent import TriageExplanation
 
         explanation = TriageExplanation(
             forecastability_class="high",
@@ -57,7 +59,7 @@ class TestTriageExplanationModel:
         assert len(explanation.caveats) == 1
 
     def test_model_is_frozen(self) -> None:
-        from forecastability.adapters.pydantic_ai_agent import TriageExplanation
+        from forecastability.adapters.llm.triage_agent import TriageExplanation
 
         explanation = TriageExplanation(
             forecastability_class="low",

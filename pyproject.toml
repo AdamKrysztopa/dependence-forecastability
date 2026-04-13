@@ -1,9 +1,11 @@
 [project]
-name = "forecastability"
+name = "dependence-forecastability"
 version = "0.1.0"
 description = "Paper-aligned AMI and extension pAMI diagnostics for forecastability triage"
 readme = "README.md"
 license = { file = "LICENSE" }
+authors = [{ name = "Adam Krysztopa" }]
+maintainers = [{ name = "Adam Krysztopa" }]
 requires-python = ">=3.11,<3.13"
 keywords = [
   "forecasting",
@@ -17,23 +19,25 @@ classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Science/Research",
   "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Topic :: Scientific/Engineering",
   "Topic :: Scientific/Engineering :: Information Analysis",
+  "Typing :: Typed",
 ]
 dependencies = [
-  "matplotlib==3.10.8",
-  "numpy==2.4.3",
-  "pandas==3.0.1",
+  "matplotlib>=3.9,<4",
+  "numpy>=2.0,<3",
+  "pandas>=2.1,<4",
   "scikit-learn>=1.5",
   "scipy>=1.13",
   "statsmodels>=0.14",
   "pyyaml>=6.0",
   "yfinance>=0.2",
-  "pydantic>=2.12.5",
-  "pydantic-settings>=2.7",
+  "pydantic>=2.12,<3",
+  "pydantic-settings>=2.7,<3",
 ]
 
 [project.urls]
@@ -60,10 +64,12 @@ forecastability-dashboard = "forecastability.adapters.dashboard:main"
 [dependency-groups]
 dev = [
   "anyio>=4.12.1",
+  "build>=1.0",
   "httpx>=0.27",
   "pytest>=8.4.0",
   "pytest-anyio>=0.0.0",
   "ruff>=0.11.0",
+  "twine>=5.0",
   "ty==0.0.22",
 ]
 notebook = [
@@ -82,6 +88,19 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/forecastability"]
 
+[tool.hatch.build.targets.sdist]
+exclude = [
+  "notebooks/",
+  ".codex/",
+  ".vscode/",
+  "docs/archive/",
+  "docs/plan/",
+  "tmp/",
+  "outputs/",
+  "data/raw/m4/",
+  "data/raw/causal_rivers/",
+]
+
 [tool.ruff]
 line-length = 100
 target-version = "py311"
@@ -93,6 +112,9 @@ select = ["E", "F", "I", "B", "UP"]
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
+
+[tool.ty.src]
+exclude = ["notebooks/"]
 
 [tool.pytest.ini_options]
 addopts = "-q"

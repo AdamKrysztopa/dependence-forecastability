@@ -8,6 +8,39 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Fixed
+
+### Deprecated
+
+### Removed
+
+## [0.1.0] - 2026-04-13
+
+### Release support contract
+
+First PyPI release: `pip install dependence-forecastability` (distribution name `dependence-forecastability`; import namespace `forecastability` is unchanged).
+
+| Surface | Support status |
+|---|---|
+| Deterministic core (`run_triage`, `run_batch_triage`, `ForecastabilityAnalyzer`, scorers) | **Stable** — primary public API |
+| CLI (`forecastability triage`, `forecastability list-scorers`) | Supported |
+| Dashboard (`forecastability-dashboard`) | Supported (optional) |
+| FastAPI transport (`[transport]` extra) | Beta |
+| Agent narration (`[agent]` extra) | Experimental |
+| MCP server (`[transport]` extra) | Experimental |
+
+pAMI and all F1–F9 diagnostics are project extensions, not paper-native guarantees.
+F5 (Largest Lyapunov Exponent) is gated behind `experimental: true` and excluded from composite triage scores.
+
+### Added
+- Core AMI and pAMI forecastability analysis package with horizon-specific dependence curves and surrogate significance bands.
+- Canonical and benchmark execution scripts with report artifact generation.
+- Deterministic interpretation pipeline with Pattern A-E classification and recommendation outputs.
+- Exogenous dependence analysis and scorer registry for multiple dependence metrics.
+- Optional adapter surface for CLI, HTTP API/SSE, MCP server, and agent-based narration.
 - **F1 — Forecastability Profile & Informative Horizon Set**: `ForecastabilityProfile` model and `ForecastabilityProfileService` — horizon-wise profile from AMI curve, surrogate-anchored informative horizons, non-monotone shape detection, model-selection recommendations (Catt 2026, arXiv:2603.27074).
 - **F2 — Information-Theoretic Limit Diagnostics**: `TheoreticalLimitDiagnostics` model and service — MI ceiling under log loss, compression and DPI warnings; exploitation ratio reserved as schema placeholder (`supported: False`) (Catt 2026, arXiv:2603.27074).
 - **F3 — Predictive Information Learning Curves**: `PredictiveInfoLearningCurve` model and `PredictiveInfoLearningCurveService` — EvoRate-style lookback curve via kNN MI in embedding dimension k, plateau detection, lookback recommendation, reliability warnings (Morawski et al. 2025, arXiv:2510.10744).
@@ -23,34 +56,15 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - Triage extension notebooks (`notebooks/triage/`): 6 Jupyter notebooks — forecastability profile walkthrough, information limits, predictive info learning curves, spectral & entropy diagnostics, batch & exogenous workbench, agent-ready triage interpretation.
 - Agent payload adapters: `triage_agent_payload_models.py` (9 Pydantic payload models + 9 factory functions), `triage_summary_serializer.py` (serialisation envelope with schema version), `triage_agent_interpretation_adapter.py` (deterministic interpretation + warning/experimental handling).
 - Theory documentation for forecastability profiles, spectral predictability, entropy-based complexity, predictive information learning curves, and largest Lyapunov exponent.
+- Release documentation: repeatable release checklist, v0.1.0 user-facing release notes, and PyPI publication flow guide.
 
 ### Changed
+- Established the initial project baseline around paper-aligned AMI plus project-extension pAMI workflows.
 - `run_triage()` output now includes forecastability profile, theoretical limit diagnostics, and (when enabled) spectral/entropy/learning-curve diagnostics.
 - `TriageResult` model extended with optional diagnostic fields for F1-F6 outputs.
 - `ScorerRegistry` now supports both `DependenceScorer` and `SeriesDiagnosticScorer` types with a `kind` discriminator.
 - `BatchSummaryRow` extended with optional columns for new diagnostic scorers.
 - `ExogenousScreeningWorkbenchConfig` extended with `redundancy_alpha` parameter.
-
-### Fixed
-- No fixes in this release.
-
-### Deprecated
-- No deprecations in this release.
-
-### Removed
-- No removals in this release.
-
-## [0.1.0] - 2026-04-12
-
-### Added
-- Core AMI and pAMI forecastability analysis package with horizon-specific dependence curves and surrogate significance bands.
-- Canonical and benchmark execution scripts with report artifact generation.
-- Deterministic interpretation pipeline with Pattern A-E classification and recommendation outputs.
-- Exogenous dependence analysis and scorer registry for multiple dependence metrics.
-- Optional adapter surface for CLI, HTTP API/SSE, MCP server, and agent-based narration.
-
-### Changed
-- Established the initial project baseline around paper-aligned AMI plus project-extension pAMI workflows.
 
 ### Fixed
 - No fixes in the initial release.

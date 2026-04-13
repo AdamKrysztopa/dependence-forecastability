@@ -10,6 +10,44 @@
 [![Python 3.11-3.12](https://img.shields.io/badge/python-3.11%20to%203.12-blue.svg)](https://python.org)
 [![Based on arXiv:2601.10006](https://img.shields.io/badge/based%20on-arXiv%3A2601.10006-b31b1b.svg)](https://doi.org/10.48550/arXiv.2601.10006)
 
+## Install
+
+```bash
+pip install dependence-forecastability
+```
+
+With optional extras:
+
+```bash
+pip install "dependence-forecastability[transport]"   # FastAPI, MCP transport
+pip install "dependence-forecastability[agent]"       # PydanticAI narration
+```
+
+## Minimal example
+
+```python
+import numpy as np
+from forecastability.triage import run_triage, TriageRequest
+
+rng = np.random.default_rng(42)
+ts = rng.standard_normal(300)
+
+result = run_triage(TriageRequest(series=ts, goal="univariate", random_state=42))
+print(result.interpretation.forecastability_class)
+print(result.recommendation)
+```
+
+## Stability
+
+| Surface | Status |
+|---|---|
+| Core deterministic triage (`run_triage`, `run_batch_triage`, analyzers, scorers) | **Stable** |
+| CLI (`forecastability triage`) | **Beta** |
+| HTTP API (FastAPI + SSE) | **Beta** |
+| Dashboard | Optional |
+| Agent layer (PydanticAI) | Experimental |
+| MCP server | Experimental |
+
 ## What it does
 
 Built on AMI (Catt 2026) as the paper-aligned foundation, extended with pAMI and **nine diagnostic families** drawn from multiple papers — forecastability profiles, information-theoretic ceilings, predictive-information learning curves, spectral predictability, Lyapunov stability, entropy-based complexity, batch multi-signal ranking, and exogenous screening — all behind a single `run_triage()` / `run_batch_triage()` entry point.
@@ -31,7 +69,7 @@ HTTP API, then optional agent/MCP surfaces:
 - Data scientists comparing direct vs mediated dependence across horizons.
 - Teams building production triage flows (CLI, API, or notebooks) around deterministic metrics.
 
-## Fastest quickstart (single executable path)
+## Fastest quickstart (repo / contributor path)
 
 ```bash
 uv sync && MPLBACKEND=Agg uv run python scripts/run_canonical_examples.py
@@ -115,10 +153,8 @@ The package follows hexagonal (ports-and-adapters) architecture. Domain code has
 
 ## Versioning and stability
 
-- Release history: [CHANGELOG.md](CHANGELOG.md)
-- Policy and stability matrix: [docs/versioning.md](docs/versioning.md)
-
-Current snapshot: core domain APIs are stable; CLI and HTTP API adapters are beta; MCP and agent layers are experimental.
+See the [Stability](#stability) table above. Full release history: [CHANGELOG.md](CHANGELOG.md).
+Versioning policy: [docs/versioning.md](docs/versioning.md).
 
 ## Production readiness
 
@@ -209,13 +245,13 @@ Project invariants:
 
 ## Installation matrix
 
-| Profile | Install command | Includes |
-|---|---|---|
-| Core | `uv sync` | Base package dependencies |
-| Transport | `uv sync --extra transport` | FastAPI, Uvicorn, and MCP transport adapters |
-| Agent | `uv sync --extra agent` | PydanticAI narration adapter |
-| Dev | `uv sync --group dev` | Test, lint, and type-check toolchain |
-| Notebook (optional) | `uv sync --group notebook` | Jupyter and notebook execution tooling |
+| Profile | PyPI install | Repo / dev install | Includes |
+|---|---|---|---|
+| Core | `pip install dependence-forecastability` | `uv sync` | Base package dependencies |
+| Transport | `pip install "dependence-forecastability[transport]"` | `uv sync --extra transport` | FastAPI, Uvicorn, and MCP transport adapters |
+| Agent | `pip install "dependence-forecastability[agent]"` | `uv sync --extra agent` | PydanticAI narration adapter |
+| Dev | — | `uv sync --group dev` | Test, lint, and type-check toolchain |
+| Notebook (optional) | — | `uv sync --group notebook` | Jupyter and notebook execution tooling |
 
 Python compatibility notes:
 - Project metadata declares `requires-python = ">=3.11,<3.13"`.
@@ -240,7 +276,8 @@ deterministic tools — the agent never invents numeric values.
 ### Prerequisites
 
 ```bash
-uv sync --extra agent  # installs pydantic-ai
+pip install "dependence-forecastability[agent]"  # PyPI
+# or, in the repo: uv sync --extra agent
 ```
 
 Configure in `.env` (see `.env.example`):
@@ -382,26 +419,29 @@ Paper finding used as anchor:
 | F6 — Entropy-Based Complexity | Ponce-Flores et al. (2020); Bandt & Pompe (2002) | — |
 | F7 — Batch Ranking | Goerg (2013) — ForeCA inspiration | — |
 
-## Time-series applicability (paper + implementation)
+### Time-series applicability (paper + implementation)
 
-From the paper:
+**From the paper:**
 - Very short, sparse, or degenerate series can make MI estimates unstable.
 - Hourly/Weekly/Quarterly/Yearly showed clearer AMI-error discrimination than Daily.
 - Frequency-specific horizon caps are required to avoid infeasible or noisy long-horizon evaluation.
 
-From this implementation:
-- AMI minimum length constraint:
-    $$N \ge \texttt{max\_lag} + \texttt{min\_pairs\_ami} + 1$$
-- pAMI minimum length constraint (linear residual backend):
-    $$N \ge \max\left(\texttt{max\_lag} + \texttt{min\_pairs\_pami} + 1,\ 2\,\texttt{max\_lag}\right)$$
-- Defaults (`max_lag=100`, `min_pairs_ami=30`, `min_pairs_pami=50`) imply:
-    - AMI: $N \ge 131$
-    - pAMI: $N \ge 201$
+**From this implementation:**
 
-Operational guidance:
-- Detrend or difference before AMI/pAMI when strong trend exists.
-- Avoid interpreting sparse intermittent-demand series with many structural zeros as if they were dense continuous processes.
-- Keep lags modest for short yearly/quarterly histories.
+**AMI minimum length constraint:**
+- \( N \ge \max(\texttt{max\_lag} + \texttt{min\_pairs\_ami} + 1, 30) \)
+
+**pAMI minimum length constraint** (linear residual backend):
+- \( N \ge \max(\texttt{max\_lag} + \texttt{min\_pairs\_pami} + 1, 2, \texttt{max\_lag}) \)
+
+**Defaults** (`max_lag=100`, `min_pairs_ami=30`, `min_pairs_pami=50`) imply:
+- AMI: \( N \ge 131 \)
+- pAMI: \( N \ge 201 \)
+
+**Operational guidance:**
+- Use series with at least 200–300 observations for reliable results.
+- For very short series (< 150 points), consider downsampling or frequency aggregation first.
+- Always validate minimum length before calling `run_triage()`.
 
 ## Extension disclosure
 
