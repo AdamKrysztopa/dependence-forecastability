@@ -6,6 +6,8 @@
 **Last reviewed:** 2026-04-13 (deep architecture audit applied 2026-04-13)
 
 > **Verification snapshot on 2026-04-13:** `uv run pytest -q -ra` passed, `uv run ruff check .` passed, `uv run ty check` failed with 69 diagnostics / 43 errors across 26 files. This plan assumes cleanup work must end with all three gates green.
+>
+> **Verification update 2026-04-13 (C9 complete):** All three gates green — `uv run pytest -q -ra` passed, `uv run ruff check .` passed, `uv run ty check` passed (0 errors).
 
 ---
 
@@ -76,13 +78,13 @@ Before reading the workstream sections, note what the repo already provides:
 | C6 | Presenter/port cleanup and typed orchestration boundaries | 2 | ~20% — ports exist, presenter layer does not | Remove adapter-side duplication and replace `Any` orchestration edges with real contracts | ✅ Completed (2026-04-13: centralised presenter, `Any` → `TriageResult`/`ReadinessReport` in all adapters) |
 | C7 | Statistical ingress guardrails & significance provenance | 2 | ~50% — core compute already enforces most rules | Enforce invariants at request/adapter ingress and preserve horizon-wise significance traceability | ✅ Completed (2026-04-13: `Field(ge=99)` on `TriageRequest`, adapters, readiness gate defense-in-depth) |
 | C8 | Docs, notebook contracts, and architecture enforcement sync | 3 | ~45% — README/docs/tests already exist | Make docs/tests reflect the new notebook and adapter structure | Not started |
-| C9 | Verification gate recovery (`ty`) | 3 | 0% | Fix existing typing debt so stage gates can actually close | Not started |
+| C9 | Verification gate recovery (`ty`) | 3 | 0% | Fix existing typing debt so stage gates can actually close | ✅ Completed (2026-04-13: cast fixes, unused ignores removed, notebook JSON fixes, constant-array guards, E501 fixes — all three gates green) |
 | C10 | Split `result_bundle.py` domain models from I/O | 2 | 0% | Move `save_*`/`load_*`/`from_json_file`/`to_json_file` into adapter module | ✅ Completed (2026-04-13: I/O moved to `adapters/result_bundle_io.py`, domain models stay in `triage/result_bundle.py`) |
 | C11 | Extract matplotlib from `analyzer.py` | 2 | 0% | Remove `plot()` method and `matplotlib` import; delegate to adapter | ✅ Completed (2026-04-13: `plot()` removed, matplotlib import removed from `analyzer.py`) |
 | C12 | Reclassify `services/` layer | 2 | ~30% — services exist but mixed | Move `plot_service.py` into adapters; align remaining services with use-case or domain roles | ✅ Completed (2026-04-13: `plot_service.py` removed, plotting delegated to adapters) |
 | C13 | Freeze `AnalyzerState` or replace with immutable result | 2 | 0% | Convert mutable cache to frozen model or scoped immutable snapshots | ✅ Completed (2026-04-13: `AnalyzerState` frozen with `model_config = ConfigDict(frozen=True)`) |
 | C14 | Remove empty `assemblers/` placeholders | 1 | 100% — no code exists | Delete dead placeholder modules or fill them | ✅ Completed (2026-04-13) |
-| C15 | Expand architecture boundary tests | 3 | ~45% — test exists but covers 11 modules | Cover triage internals, adapter discipline, services layer, remove analyzer exemption | Not started |
+| C15 | Expand architecture boundary tests | 3 | ~45% — test exists but covers 11 modules | Cover triage internals, adapter discipline, services layer, remove analyzer exemption | ✅ Completed (2026-04-13: 12 triage modules added to domain coverage, Rule 4 services→adapters/matplotlib, Rule 5 utilities→transport; 28 boundary tests passing) |
 
 ---
 

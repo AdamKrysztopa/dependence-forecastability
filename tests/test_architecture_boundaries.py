@@ -35,6 +35,20 @@ _DOMAIN_MODULES = [
     "src/forecastability/reporting.py",
     # C11: analyzer.py no longer imports matplotlib at module level
     "src/forecastability/analyzer.py",
+    # C15: triage domain models must not import infrastructure
+    "src/forecastability/triage/models.py",
+    "src/forecastability/triage/events.py",
+    "src/forecastability/triage/batch_models.py",
+    "src/forecastability/triage/result_bundle.py",
+    "src/forecastability/triage/forecastability_profile.py",
+    "src/forecastability/triage/readiness.py",
+    "src/forecastability/triage/router.py",
+    "src/forecastability/triage/complexity_band.py",
+    "src/forecastability/triage/lyapunov.py",
+    "src/forecastability/triage/spectral_predictability.py",
+    "src/forecastability/triage/theoretical_limit_diagnostics.py",
+    "src/forecastability/triage/predictive_info_learning_curve.py",
+    # C15: TODO — comparison_report.py imports matplotlib; excluded until fixed
 ]
 
 _DOMAIN_FORBIDDEN = frozenset(
@@ -143,3 +157,98 @@ def test_use_cases_do_not_import_adapters() -> None:
     assert not violations, "use_cases/ modules must not import from adapters/.\n" + "\n".join(
         violations
     )
+
+
+# ---------------------------------------------------------------------------
+# Rule 4 — services/ modules must not import adapters/ or matplotlib
+# ---------------------------------------------------------------------------
+
+_SERVICES_FORBIDDEN_INFRA = frozenset(
+    ["pydantic_ai", "fastapi", "mcp", "httpx", "click", "typer", "matplotlib"]
+)
+
+
+def test_services_do_not_import_adapters() -> None:
+    services_dir = ROOT / "src/forecastability/services"
+    py_files = sorted(p for p in services_dir.glob("*.py") if p.name != "__init__.py")
+    assert py_files, "No .py files found under src/forecastability/services/"
+
+    violations: list[str] = []
+    for py_file in py_files:
+        full_imports = _get_full_imports(py_file)
+        for dotted in full_imports:
+            if dotted.startswith("forecastability.adapters"):
+                relative = str(py_file.relative_to(ROOT))
+                violations.append(f"{relative}: imports '{dotted}'")
+
+    assert not violations, "services/ modules must not import from adapters/.\n" + "\n".join(
+        violations
+    )
+
+
+def test_services_have_no_infra_imports() -> None:
+    services_dir = ROOT / "src/forecastability/services"
+    py_files = sorted(p for p in services_dir.glob("*.py") if p.name != "__init__.py")
+    assert py_files, "No .py files found under src/forecastability/services/"
+
+    violations: list[str] = []
+    for py_file in py_files:
+        imported = _get_imports(py_file)
+        bad = [pkg for pkg in imported if pkg in _SERVICES_FORBIDDEN_INFRA]
+        if bad:
+            relative = str(py_file.relative_to(ROOT))
+            violations.append(f"{relative}: {sorted(set(bad))}")
+
+    assert not violations, (
+        "services/ modules must not import infrastructure or presentation packages.\n"
+        + "\n".join(violations)
+    )
+
+
+# ---------------------------------------------------------------------------
+# Rule 5 — adapter utilities must not import primary transport adapters
+# ---------------------------------------------------------------------------
+
+_TRANSPORT_ADAPTER_NAMES = frozenset(
+    ["api", "cli", "dashboard", "mcp_server", "pydantic_ai_agent"]
+)
+
+
+def test_adapter_utilities_do_not_import_transport_adapters() -> None:
+    """Shared adapter utilities must not reverse-couple to primary transport adapters.
+
+    Primary transport adapters (api, cli, dashboard, mcp_server, pydantic_ai_agent)
+    may use shared utilities, but shared utilities must not depend back on them.
+    """
+    adapters_dir = ROOT / "src/forecastability/adapters"
+    utility_files: list[Path] = [
+        p
+        for p in adapters_dir.glob("*.py")
+        if p.stem not in _TRANSPORT_ADAPTER_NAMES and p.name != "__init__.py"
+    ]
+    # include agents/ sub-package
+    agents_dir = adapters_dir / "agents"
+    if agents_dir.exists():
+        utility_files += [p for p in agents_dir.glob("*.py") if p.name != "__init__.py"]
+
+    violations: list[str] = []
+    for py_file in utility_files:
+        full_imports = _get_full_imports(py_file)
+        for dotted in full_imports:
+            parts = dotted.split(".")
+            # e.g. forecastability.adapters.api  -> parts[2] = "api"
+            if (
+                len(parts) >= 3
+                and parts[0] == "forecastability"
+                and parts[1] == "adapters"
+                and parts[2] in _TRANSPORT_ADAPTER_NAMES
+            ):
+                relative = str(py_file.relative_to(ROOT))
+                violations.append(f"{relative}: imports '{dotted}'")
+
+    assert not violations, (
+        "Adapter utility modules must not import primary transport adapters "
+        "(api, cli, dashboard, mcp_server, pydantic_ai_agent).\n"
+        + "\n".join(violations)
+    )
+
