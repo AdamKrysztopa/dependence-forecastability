@@ -1,45 +1,51 @@
 <!-- type: reference -->
 # Documentation
 
-Navigation hub for the AMI → pAMI Forecastability Analysis documentation.
+A deterministic forecastability triage toolkit with AMI as the paper-aligned foundation and pAMI as a project extension.
 
-## Quickstart
+CLI, API, notebooks, MCP, and agents are optional access or narration layers around the same deterministic outputs.
 
-Task-oriented first-run entry points.
+---
+
+## Start here
+
+First-time user path: install, run one deterministic triage, read the result.
 
 | Document | Description |
 |---|---|
 | [quickstart.md](quickstart.md) | Laddered quickstart: 60s CLI, 5m notebook, 10m Python API, 15m HTTP API, plus optional agent and MCP routes using one shared signal |
+| [golden_path.md](golden_path.md) | Opinionated path from install to first trustworthy output — the recommended starting point |
+| [executive_summary.md](executive_summary.md) | One-page visual summary for non-specialists: problem, AMI/pAMI value, readiness, and next steps |
 
-## Executive Overview
+---
 
-High-level, low-jargon project framing for non-specialists and stakeholder sharing.
+## Learn the methods
 
-| Document | Description |
-|---|---|
-| [executive_summary.md](executive_summary.md) | One-page visual summary of problem, novelty, AMI/pAMI triage value, readiness today, and next steps |
-
-## Results
-
-Decision-focused evidence summary.
+Conceptual background and mathematical foundations.
 
 | Document | Description |
 |---|---|
-| [results_summary.md](results_summary.md) | Compact evidence-first summary of univariate AMI/pAMI, exogenous screening, and triage workflow findings, with explicit limitations |
+| [theory/foundations.md](theory/foundations.md) | AMI and pAMI definitions, significance logic, rolling-origin invariants |
+| [theory/forecastability_profile.md](theory/forecastability_profile.md) | Forecastability Profile model, informative horizon set, epsilon resolution, DPI diagnostic |
+| [theory/pami_residual_backends.md](theory/pami_residual_backends.md) | Residual backend trade-offs, linear-baseline comparison workflow, and failure modes |
+| [theory/interpretation_patterns.md](theory/interpretation_patterns.md) | Pattern A–E classification logic for agentic narration |
+| [theory/spectral_predictability.md](theory/spectral_predictability.md) | Spectral predictability score Ω, PSD normalisation, and complementarity with AMI |
+| [theory/entropy_based_complexity.md](theory/entropy_based_complexity.md) | Permutation entropy, spectral entropy, complexity band classification |
+| [triage_methods/predictive_information_learning_curves.md](triage_methods/predictive_information_learning_curves.md) | EvoRate-style lookback analysis, plateau detection, reliability caveats |
+| [triage_methods/largest_lyapunov_exponent.md](triage_methods/largest_lyapunov_exponent.md) | Experimental LLE estimation, delay embedding, sample-size constraints |
 
-## Notebook Narratives
+### Notebook narratives
 
 Durable narrative pages distilled from the most important notebooks.
-These are the primary explanation layer; notebooks remain deep evidence.
 
 | Document | Description |
 |---|---|
-| [notebooks/README.md](notebooks/README.md) | Notebook taxonomy and explicit walkthrough vs deterministic deep-dive role split |
-| [notebooks/canonical_forecastability.md](notebooks/canonical_forecastability.md) | Durable summary of the canonical AMI/pAMI notebook: purpose, key figure, key result, and takeaways |
-| [notebooks/exogenous_analysis.md](notebooks/exogenous_analysis.md) | Durable summary of the exogenous CrossAMI/pCrossAMI notebook with warning-aware driver-screening outcomes |
-| [notebooks/agentic_triage.md](notebooks/agentic_triage.md) | Durable summary of the triage walkthrough surface plus link to the deterministic payload/adapter deep dive |
+| [notebooks/README.md](notebooks/README.md) | Notebook taxonomy and walkthrough vs deterministic deep-dive role split |
+| [notebooks/canonical_forecastability.md](notebooks/canonical_forecastability.md) | AMI/pAMI notebook: purpose, key figure, key result, takeaways |
+| [notebooks/exogenous_analysis.md](notebooks/exogenous_analysis.md) | CrossAMI/pCrossAMI notebook with warning-aware driver-screening outcomes |
+| [notebooks/agentic_triage.md](notebooks/agentic_triage.md) | Triage walkthrough surface and deterministic payload/adapter deep dive |
 
-### Triage Extension Notebooks
+#### Triage extension notebooks
 
 Interactive notebooks in `notebooks/triage/` covering the extended diagnostic pipeline:
 
@@ -52,63 +58,44 @@ Interactive notebooks in `notebooks/triage/` covering the extended diagnostic pi
 | `09_batch_and_exogenous_workbench.ipynb` | F7/F8 batch ranking and exogenous screening |
 | `10_agent_ready_triage_interpretation.ipynb` | Deterministic payload/serializer/interpretation deep dive (non-walkthrough) |
 
-## Operational Guidance
+---
 
-Practical guides for choosing components and mapping diagnostics to industrial decisions.
+## Use in practice
+
+Operational guides, scenario maps, and diagnostic reference.
 
 | Document | Description |
 |---|---|
 | [why_use_this.md](why_use_this.md) | Component comparison matrix for AMI, pAMI, directness ratio, exogenous analysis, triage, and optional narration |
 | [use_cases_industrial.md](use_cases_industrial.md) | Manufacturing/reliability/PdM scenario matrix with recommended path, outputs, and next decisions |
+| [results_summary.md](results_summary.md) | Evidence-first summary of univariate AMI/pAMI, exogenous screening, and triage workflow findings, with explicit limitations |
+| [diagnostics_matrix.md](diagnostics_matrix.md) | Single evaluator-facing index for all F1–F8 diagnostics with stability and caveat columns |
+| [surface_guide.md](surface_guide.md) | Explanation of the surface model: deterministic core, CLI/API, MCP/agents, what most users can safely ignore |
 
-## Examples
+### Examples
 
-Self-contained scripts in [`examples/triage/`](../examples/triage/) demonstrating each diagnostic feature (F1–F8) and agent adapter integrations. Thirteen scripts cover forecastability profiles (synthetic and realistic), information limits, predictive info learning curves, spectral predictability, Lyapunov exponent, entropy-complexity, batch ranking, exogenous screening, agent payload/serialisation/interpretation adapter demos, and a runnable live screening-agent example with deterministic fallback.
+Self-contained scripts in [`examples/triage/`](../examples/triage/) covering F1–F8, agent adapter integrations, and a runnable live screening-agent example with deterministic fallback.
 
-## Theory
+---
 
-Conceptual background and mathematical foundations.
+## Policy / release / architecture
 
-| Document | Description |
-|---|---|
-| [theory/README.md](theory/README.md) | Theory guide scope and paper references |
-| [theory/foundations.md](theory/foundations.md) | AMI and pAMI definitions, significance logic, rolling-origin invariants |
-| [theory/forecastability_profile.md](theory/forecastability_profile.md) | Forecastability Profile model, informative horizon set, epsilon resolution, DPI diagnostic |
-| [theory/pami_residual_backends.md](theory/pami_residual_backends.md) | Residual backend trade-offs, linear-baseline comparison workflow, and failure modes |
-| [theory/interpretation_patterns.md](theory/interpretation_patterns.md) | Pattern A–E classification logic for agentic narration |
-| [theory/spectral_predictability.md](theory/spectral_predictability.md) | Spectral predictability score Ω, PSD normalisation, and complementarity with AMI |
-| [theory/entropy_based_complexity.md](theory/entropy_based_complexity.md) | Permutation entropy, spectral entropy, complexity band classification |
-
-## Triage Methods
-
-Extended diagnostic methods beyond core AMI/pAMI.
+Stability, supported surfaces, API contract, and project governance.
 
 | Document | Description |
 |---|---|
-| [triage_methods/predictive_information_learning_curves.md](triage_methods/predictive_information_learning_curves.md) | EvoRate-style lookback analysis, plateau detection, reliability caveats |
-| [triage_methods/largest_lyapunov_exponent.md](triage_methods/largest_lyapunov_exponent.md) | Experimental LLE estimation, delay embedding, sample-size constraints |
-
-## Architecture
-
-| Document | Description |
-|---|---|
-| [architecture.md](architecture.md) | Hexagonal architecture guide, SOLID principles, layer boundaries, enforcement |
-
-## Project Policy
-
-| Document | Description |
-|---|---|
-| [../CHANGELOG.md](../CHANGELOG.md) | Repository release and change history using Keep a Changelog sections |
+| [wording_policy.md](wording_policy.md) | Frozen canonical wording lines and banned claims for all docs and surface text |
 | [versioning.md](versioning.md) | Semantic versioning policy, stability levels, and migration-note requirements |
-| [releases/v0.1.0.md](releases/v0.1.0.md) | Explicit upgrade notes artifact for release `v0.1.0` |
-| [api_contract.md](api_contract.md) | FastAPI and SSE transport contract: request/response schemas, validation and readiness semantics, event sequence, and integration examples |
-| [observability.md](observability.md) | Operational observability and auditability guide: event payload contract, checkpoint replay boundaries, logging fields, and failure triage workflow |
+| [public_api.md](public_api.md) | Stable import paths, schema stability notes, and what is not in the public API |
+| [api_contract.md](api_contract.md) | FastAPI and SSE transport contract: request/response schemas, validation and readiness semantics |
+| [architecture.md](architecture.md) | Hexagonal architecture guide, SOLID principles, layer boundaries, enforcement |
 | [production_readiness.md](production_readiness.md) | Production maturity zones, safe default deterministic path, and failure/non-goal contract for CLI/API/agent surfaces |
 | [agent_layer.md](agent_layer.md) | Deterministic-first contract for optional LLM narration, strict mode behavior, and numeric-grounding checks |
+| [observability.md](observability.md) | Operational observability and auditability guide: event payload contract, checkpoint replay boundaries, logging fields |
+| [../CHANGELOG.md](../CHANGELOG.md) | Repository release and change history |
+| [releases/v0.1.0.md](releases/v0.1.0.md) | Upgrade notes for release `v0.1.0` |
 
-## Code Reference
-
-API documentation and module maps.
+### Code reference
 
 | Document | Description |
 |---|---|
@@ -118,24 +105,21 @@ API documentation and module maps.
 | [code/exog_analyzer_real_data.md](code/exog_analyzer_real_data.md) | `ForecastabilityAnalyzerExog` user manual (real-world data) |
 | [code/exog_benchmark_workflow.md](code/exog_benchmark_workflow.md) | Fixed exogenous benchmark slice workflow |
 
-## Planning
-
-Project roadmap and acceptance criteria (MoSCoW framework).
+### Planning
 
 | Document | Description |
 |---|---|
 | [plan/README.md](plan/README.md) | Planning surface overview |
 | [plan/development_plan.md](plan/development_plan.md) | Primary development plan: triage extension features F1–F8, stage gates, and delivery status |
-| [plan/dependence_forecastability_progress.md](plan/dependence_forecastability_progress.md) | Branch tracker mapping implemented dependence-forecastability backlog items to status, delivered scope, and commit hashes |
 | [plan/acceptance_criteria.md](plan/acceptance_criteria.md) | Done criteria for all roadmap items |
-| [plan/must_have.md](plan/must_have.md) | Non-negotiable items (✅ complete) |
-| [plan/should_have.md](plan/should_have.md) | High-value improvements (✅ complete) |
-| [plan/could_have.md](plan/could_have.md) | Optional extensions (open) |
+| [plan/must_have.md](plan/must_have.md) | Non-negotiable items |
+| [plan/should_have.md](plan/should_have.md) | High-value improvements |
+| [plan/could_have.md](plan/could_have.md) | Optional extensions |
 | [plan/wont_have.md](plan/wont_have.md) | Explicit exclusions |
 
 ## Archive
 
 Historical completed development documentation from the build-out phase.
-These files are reference-only and not part of the active roadmap.
+Reference-only; not part of the active roadmap.
 
-Located in [archive/](archive/) — 27 documents covering repository setup, core types, config objects, validation, datasets, pipeline design, rolling-origin evaluation, models, reporting, and more.
+Located in [archive/](archive/)

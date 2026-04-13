@@ -101,13 +101,13 @@ After this plan is complete:
 
 | # | Follow-on item | Phase | Primary outputs | Status |
 |---|---|---|---|---|
-| D1 | Canonical wording freeze | 1 | wording rules reused across docs and public surfaces | Not started |
-| D2 | Docs landing page | 1 | `docs/README.md` | Not started |
-| D3 | Golden path | 1 | `docs/golden_path.md` | Not started |
-| D4 | Diagnostics matrix | 2 | `docs/diagnostics_matrix.md` | Not started |
-| D5 | Surface guide | 2 | `docs/surface_guide.md` | Not started |
-| D6 | Evidence scan and limitations | 2 | `docs/implementation_status.md`, `docs/limitations.md` | Not started |
-| D7 | Public API and release-facing docs sync | 3 | `docs/public_api.md`, aligned docs wording | Not started |
+| D1 | Canonical wording freeze | 1 | wording rules reused across docs and public surfaces | ✅ Completed (2026-04-13) |
+| D2 | Docs landing page | 1 | `docs/README.md` | ✅ Completed (2026-04-13) |
+| D3 | Golden path | 1 | `docs/golden_path.md` | ✅ Completed (2026-04-13) |
+| D4 | Diagnostics matrix | 2 | `docs/diagnostics_matrix.md` | ✅ Completed (2026-04-13) |
+| D5 | Surface guide | 2 | `docs/surface_guide.md` | ✅ Completed (2026-04-13) |
+| D6 | Evidence scan and limitations | 2 | `docs/implementation_status.md`, `docs/limitations.md` | ✅ Completed (2026-04-13) |
+| D7 | Public API and release-facing docs sync | 3 | `docs/public_api.md`, aligned docs wording | ✅ Completed (2026-04-13) |
 
 ---
 

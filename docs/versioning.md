@@ -3,6 +3,8 @@
 
 ## Semantic Versioning policy
 
+For a listing of stable import paths and schema stability notes, see [Public API Guide](public_api.md).
+
 This project follows Semantic Versioning: `MAJOR.MINOR.PATCH`.
 
 - **MAJOR**: backward-incompatible changes to public behavior or interfaces.
