@@ -1,15 +1,22 @@
 <!-- type: reference -->
-# AMI -> pAMI Forecastability Analysis
+# Forecastability Triage Toolkit
+
+> A deterministic pre-model triage toolkit for time series.
+> Assess whether dependence is strong, direct, and exploitable *before* costly model search.
 
 [![CI](https://img.shields.io/github/check-runs/AdamKrysztopa/dependence-forecastability/main?label=CI)](https://github.com/AdamKrysztopa/dependence-forecastability/actions)
 [![Version](https://img.shields.io/github/v/tag/AdamKrysztopa/dependence-forecastability?label=version&sort=semver)](https://github.com/AdamKrysztopa/dependence-forecastability/releases)
 [![Docs](https://img.shields.io/github/deployments/AdamKrysztopa/dependence-forecastability/github-pages?label=docs)](https://github.com/AdamKrysztopa/dependence-forecastability/tree/main/docs)
 [![Python 3.11-3.12](https://img.shields.io/badge/python-3.11%20to%203.12-blue.svg)](https://python.org)
-[![arXiv](https://img.shields.io/badge/arXiv-2601.10006-b31b1b.svg)](https://doi.org/10.48550/arXiv.2601.10006)
+[![Based on arXiv:2601.10006](https://img.shields.io/badge/based%20on-arXiv%3A2601.10006-b31b1b.svg)](https://doi.org/10.48550/arXiv.2601.10006)
 
-## Value proposition
+## What it does
 
-A deterministic pre-model triage toolkit for time series. Starting from AMI (Catt 2026) it now packages **nine diagnostic families** drawn from multiple papers — forecastability profiles, information-theoretic ceilings, predictive-information learning curves, spectral predictability, Lyapunov stability, entropy-based complexity, batch multi-signal ranking, and exogenous screening — behind a single `run_triage()` / `run_batch_triage()` entry point. Assess whether dependence is strong, direct, and exploitable *before* costly model search.
+Built on AMI (Catt 2026) as the paper-aligned foundation, extended with pAMI and **nine diagnostic families** drawn from multiple papers — forecastability profiles, information-theoretic ceilings, predictive-information learning curves, spectral predictability, Lyapunov stability, entropy-based complexity, batch multi-signal ranking, and exogenous screening — all behind a single `run_triage()` / `run_batch_triage()` entry point.
+
+> [!NOTE]
+> AMI is the paper-aligned core. pAMI and all F1–F9 diagnostics are project extensions.
+> See [docs/wording_policy.md](docs/wording_policy.md) for the canonical product description.
 
 ## Quickstart ladder (recommended)
 
