@@ -1,5 +1,11 @@
 """Agent adapters package for the AMI → pAMI triage system."""
 
+from forecastability.adapters.agents.triage_agent_interpretation_adapter import (
+    InterpretationEvidence,
+    TriageAgentInterpretation,
+    interpret_batch,
+    interpret_payload,
+)
 from forecastability.adapters.agents.triage_agent_payload_models import (
     F1ProfilePayload,
     F2LimitsPayload,
@@ -30,6 +36,11 @@ __all__ = [
     "F7BatchRankPayload",
     "F8ExogDriverPayload",
     "TriageAgentPayload",
+    # A3 interpretation adapter
+    "InterpretationEvidence",
+    "TriageAgentInterpretation",
+    "interpret_payload",
+    "interpret_batch",
     # A2 serialiser
     "SerialisedTriageSummary",
     "serialise_payload",
