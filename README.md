@@ -9,7 +9,7 @@
 
 ## Value proposition
 
-This package reproduces the paper's horizon-specific AMI workflow and extends it with pAMI and deterministic triage tooling so you can quickly assess whether dependence is strong, direct, and likely useful before costly model search.
+A deterministic pre-model triage toolkit for time series. Starting from AMI (Catt 2026) it now packages **nine diagnostic families** drawn from multiple papers — forecastability profiles, information-theoretic ceilings, predictive-information learning curves, spectral predictability, Lyapunov stability, entropy-based complexity, batch multi-signal ranking, and exogenous screening — behind a single `run_triage()` / `run_batch_triage()` entry point. Assess whether dependence is strong, direct, and exploitable *before* costly model search.
 
 ## Quickstart ladder (recommended)
 
@@ -59,27 +59,33 @@ flowchart TD
         CLI["CLI"]
         API["FastAPI + SSE"]
         MCP["MCP Server"]
-        Agent["PydanticAI Agent"]
+        Agent["PydanticAI Agent + Payload Adapters"]
     end
     subgraph Ports["Ports (9 Protocols)"]
         P["Validator · CurveCompute · Significance · Interpretation · Recommendation · ReportRenderer · Settings · EventEmitter · Checkpoint"]
     end
     subgraph UseCases["Use Cases"]
-        UC1["run_triage()"]
+        UC1["run_triage() · run_batch_triage()"]
         UC2["Rolling-Origin Evaluation"]
     end
+    subgraph Services["Diagnostic Services"]
+        S1["Profile · IT Limits · Learning Curves"]
+        S2["Spectral · Complexity Band · Lyapunov"]
+    end
     subgraph Triage["Triage Sub-domain"]
-        T1["Readiness Gate"]
-        T2["Method Router"]
-        T3["Event Emitter"]
+        T1["Readiness Gate · Method Router"]
+        T2["F1–F6 Diagnostic Models"]
+        T3["Batch Ranking · Events · Result Bundle"]
     end
     subgraph Domain
         D1["metrics · validation · interpretation"]
-        D2["surrogates · scorers · config · types"]
+        D2["surrogates · scorers · spectral_utils · config · types"]
     end
 
     Adapters --> Ports
     Ports --> UseCases
+    UseCases --> Services
+    Services --> Triage
     UseCases --> Triage
     Triage --> Domain
 ```
@@ -88,10 +94,16 @@ The package follows hexagonal (ports-and-adapters) architecture. Domain code has
 
 ## Common use cases
 
-- Signal triage: quickly classify whether a series is likely forecastable at useful horizons.
-- Lookback/horizon screening: identify lag ranges where AMI and pAMI remain informative.
-- Exogenous driver screening: rank candidate external drivers with CrossAMI and pCrossAMI.
-- Industrial/PdM context: prioritize sensors or telemetry channels before full model pipelines.
+- **Signal triage** — classify whether a series is likely forecastable at useful horizons.
+- **Lookback / horizon screening** — identify lag ranges where AMI and pAMI remain informative.
+- **Forecastability profiling** — compute the horizon-wise $h \to F(h)$ profile, peak horizon, and informative horizon set (F1).
+- **Compression / ceiling detection** — check whether theoretical MI limits are violated or nearly saturated (F2).
+- **Lookback selection** — use predictive-information learning curves to pick optimal embedding dimension (F3).
+- **Spectral vs MI divergence** — compare spectral predictability $\Omega$ with AMI to flag nonlinearity (F4).
+- **Complexity screening** — classify signals into low / medium / high complexity bands via permutation + spectral entropy (F6).
+- **Batch diagnostic ranking** — rank 50+ signals on all diagnostics in one call (F7).
+- **Exogenous driver screening** — rank candidate external drivers with CrossAMI/pCrossAMI plus FDR correction (F8).
+- **Industrial / PdM context** — prioritize sensors or telemetry channels before full model pipelines.
 
 ## Versioning and stability
 
@@ -107,20 +119,30 @@ Current snapshot: core domain APIs are stable; CLI and HTTP API adapters are bet
 
 ## What this project adds beyond the paper
 
-The paper validates AMI as a frequency-conditional triage signal for model selection. This project adds diagnostics and infrastructure the paper does not provide:
+The original paper validates AMI as a frequency-conditional triage signal for model selection. This project adds diagnostics drawn from multiple papers and infrastructure the original paper does not provide:
 
-| Extension | What it adds |
-|---|---|
-| **pAMI** (partial AMI) | Separates direct lag links from mediated lag chains via linear residualisation |
-| **`directness_ratio`** | `AUC(pAMI) / AUC(AMI)` — summarises how much total dependence remains direct |
-| **Exogenous analysis** | `ForecastabilityAnalyzerExog` computes CrossAMI + pCrossAMI between target and driver series |
-| **Scorer registry** | Method-independent pipeline: MI, Pearson, Spearman, Kendall, Distance Correlation — extensible via `DependenceScorer` protocol |
-| **Triage pipeline** | `run_triage()` — readiness gate → method routing → compute → interpretation → recommendation |
-| **Agentic interpretation** | PydanticAI agent narrates deterministic numeric results in plain language — never invents numbers |
-| **MCP server** | Model Context Protocol integration for IDE-integrated assistants |
-| **CLI** | `forecastability triage`, `forecastability list-scorers` |
-| **HTTP API** | FastAPI endpoints + SSE streaming for stage progress |
-| **Pattern classification** | Deterministic A–E modeling regime assignment |
+| Extension | What it adds | Paper basis |
+|---|---|---|
+| **pAMI** (partial AMI) | Separates direct lag links from mediated lag chains via linear residualisation | Project extension |
+| **`directness_ratio`** | `AUC(pAMI) / AUC(AMI)` — how much total dependence remains direct | Project extension |
+| **F1 — Forecastability Profile** | Horizon-wise $h \to F(h)$ curve, peak horizon, informative horizon set, non-monotonicity detection | Catt (2026), [arXiv:2603.27074](https://arxiv.org/abs/2603.27074) |
+| **F2 — IT Limit Diagnostics** | Theoretical MI ceiling under log loss, compression / DPI warnings | Catt (2026), [arXiv:2603.27074](https://arxiv.org/abs/2603.27074) |
+| **F3 — Predictive Info Learning Curves** | EvoRate-inspired lookback analysis via kNN MI in embedding dim $k$, plateau detection, recommended lookback | Morawski et al. (2025), [arXiv:2510.10744](https://arxiv.org/abs/2510.10744) |
+| **F4 — Spectral Predictability** | Welch PSD → spectral entropy → normalised predictability $\Omega$; divergence with AMI signals nonlinearity | Wang et al. (2025), [arXiv:2507.13556](https://arxiv.org/abs/2507.13556) |
+| **F5 — Largest Lyapunov Exponent** | Experimental Rosenstein LLE via delay embedding; gated behind `experimental: true` | Wang et al. (2025), [arXiv:2507.13556](https://arxiv.org/abs/2507.13556) |
+| **F6 — Entropy-Based Complexity** | Permutation entropy + spectral entropy → complexity band (low / medium / high) | Ponce-Flores et al. (2020); Bandt & Pompe (2002) |
+| **F7 — Batch Multi-Signal Ranking** | `run_batch_triage()` with all diagnostics; handles 50+ signals | Project extension |
+| **F8 — Enhanced Exogenous Screening** | Inter-driver redundancy penalty + Benjamini-Hochberg FDR correction | Project extension |
+| **F9 — Benchmark & Reproducibility** | Full diagnostic regression fixtures for F1–F6, batch and exogenous regression, rebuild / verify scripts | Project extension |
+| **Exogenous analysis** | `ForecastabilityAnalyzerExog` — CrossAMI + pCrossAMI between target and driver series | Project extension |
+| **Scorer registry** | MI, Pearson, Spearman, Kendall, dCor — extensible via `DependenceScorer` protocol | Project extension |
+| **Triage pipeline** | `run_triage()` — readiness gate → method routing → compute → interpretation → recommendation | Project extension |
+| **Agent adapters** | Structured Pydantic payloads for all diagnostics (`triage_agent_payload_models`, `triage_summary_serializer`, `triage_agent_interpretation_adapter`) | Project extension |
+| **Agentic interpretation** | PydanticAI agent narrates deterministic numeric results — never invents numbers | Project extension |
+| **MCP server** | Model Context Protocol integration for IDE-integrated assistants | Project extension |
+| **CLI** | `forecastability triage`, `forecastability list-scorers` | Project extension |
+| **HTTP API** | FastAPI endpoints + SSE streaming for stage progress | Project extension |
+| **Pattern classification** | Deterministic A–E modeling regime assignment | Project extension |
 
 > [!IMPORTANT]
 > All extensions are clearly separated from the paper baseline.
@@ -132,13 +154,23 @@ The paper validates AMI as a frequency-conditional triage signal for model selec
 |---|---|
 | AMI curves | Horizon-specific mutual information with kNN estimator |
 | pAMI curves | Partial AMI via linear residualisation — direct lag links |
-| Surrogate significance | Phase-randomised FFT surrogates (\(n \ge 99\)) with 95% bands |
+| Surrogate significance | Phase-randomised FFT surrogates ($n \ge 99$) with 95% bands |
 | Directness ratio | `AUC(pAMI) / AUC(AMI)` — how much dependence is direct |
+| Forecastability profile (F1) | Horizon-wise $h \to F(h)$ profile, peak horizon, informative horizon set, non-monotonicity flag |
+| IT limit diagnostics (F2) | Theoretical MI ceiling, compression / DPI warnings, exploitation ratio |
+| Predictive info learning curves (F3) | kNN MI vs embedding dim $k$, plateau detection, recommended lookback, small-$n$ warnings |
+| Spectral predictability (F4) | Welch PSD → spectral entropy → normalised predictability $\Omega$ |
+| Largest Lyapunov exponent (F5) | Experimental Rosenstein LLE via delay embedding (gated: `experimental: true`) |
+| Entropy-based complexity (F6) | Permutation entropy + spectral entropy → complexity band (low / medium / high) |
+| Batch multi-signal ranking (F7) | `run_batch_triage()` with all diagnostic columns; handles 50+ signals |
+| Exogenous screening (F8) | CrossAMI + pCrossAMI with redundancy penalty and Benjamini-Hochberg FDR correction |
+| Benchmark & reproducibility (F9) | Diagnostic regression fixtures for F1–F6, rebuild and verify scripts |
 | Exogenous analysis | CrossAMI + pCrossAMI between target and driver series |
 | Scorer registry | 5 built-in scorers (MI, Pearson, Spearman, Kendall, dCor); extensible via `DependenceScorer` protocol |
 | Triage pipeline | `run_triage()` — readiness → routing → compute → interpretation |
 | Pattern classification | Deterministic A–E modeling regime assignment |
 | Rolling-origin evaluation | Expanding-window backtest with train-only diagnostics |
+| Agent adapters | Structured Pydantic payloads for all diagnostics (payload models, serializer, interpretation adapter) |
 | Agentic interpretation | PydanticAI agent that narrates deterministic results (optional `agent` extra) |
 | CLI | `forecastability triage`, `forecastability list-scorers` |
 | HTTP API | FastAPI endpoints + SSE streaming (`transport` extra) |
@@ -262,13 +294,14 @@ full interactive walkthrough.
 
 ## Interactive Notebooks
 
-Four self-contained Jupyter notebooks are provided in `notebooks/`.
 Install extras and register the kernel once:
 
 ```bash
 uv sync --group notebook
 uv run python -m ipykernel install --user --name forecastability
 ```
+
+### Core notebooks (`notebooks/`)
 
 Primary narrative docs for the three most important notebooks:
 - [docs/notebooks/canonical_forecastability.md](docs/notebooks/canonical_forecastability.md)
@@ -277,10 +310,21 @@ Primary narrative docs for the three most important notebooks:
 
 | Notebook | File | Description |
 |---|---|---|
-| 1 · Canonical Forecastability Cases — AMI vs pAMI + Full Report | [`notebooks/01_canonical_forecastability.ipynb`](notebooks/01_canonical_forecastability.ipynb) | End-to-end walk-through on five synthetic/real series (White Noise, AR(1), Logistic Map, Sine+Noise, Hénon Map).  Computes AMI and pAMI curves, surrogate bands, directness ratios, pattern interpretation, and generates a full Markdown report. |
-| 2 · Exogenous Analysis — CrossAMI + pCrossAMI + Full Report | [`notebooks/02_exogenous_analysis.ipynb`](notebooks/02_exogenous_analysis.ipynb) | Multivariate lead-lag diagnosis across seven benchmark pairs (bike-sharing, AAPL/SPY, BTC/ETH, plus noise controls).  Demonstrates `ForecastabilityAnalyzerExog`, rolling-origin evaluation, heatmaps, directness-ratio triage, and driver ranking. |
-| 3 · Agentic Triage — AMI · pAMI · CrossAMI · PydanticAI | [`notebooks/03_agentic_triage.ipynb`](notebooks/03_agentic_triage.ipynb) | One-cell `run_triage()` entry point, readiness gate demo, univariate triage across five canonical series, exogenous CrossAMI triage, event emission and timing, curve visualisation, and optional PydanticAI agent narration. |
-| 4 · Agentic Feature Screening — Which Drivers Matter? | [`notebooks/04_agentic_screening.ipynb`](notebooks/04_agentic_screening.ipynb) | Feature screening via deterministic triage vs agentic interpretation. Manual per-feature CrossAMI/pCrossAMI computation compared with single-prompt agent-driven ranked recommendations. Uses bike-sharing hourly data (temp, humidity, windspeed → cnt). |
+| 1 · Canonical Forecastability Cases | [`notebooks/01_canonical_forecastability.ipynb`](notebooks/01_canonical_forecastability.ipynb) | AMI vs pAMI on five synthetic/real series. Surrogate bands, directness ratios, pattern interpretation, Markdown report generation. |
+| 2 · Exogenous Analysis | [`notebooks/02_exogenous_analysis.ipynb`](notebooks/02_exogenous_analysis.ipynb) | CrossAMI + pCrossAMI across seven benchmark pairs. Rolling-origin evaluation, heatmaps, directness-ratio triage, driver ranking. |
+| 3 · Agentic Triage | [`notebooks/03_agentic_triage.ipynb`](notebooks/03_agentic_triage.ipynb) | `run_triage()` entry point, readiness gate, univariate + exogenous triage, event emission, optional PydanticAI narration. |
+| 4 · Agentic Feature Screening | [`notebooks/04_agentic_screening.ipynb`](notebooks/04_agentic_screening.ipynb) | Deterministic vs agentic driver screening on bike-sharing data (temp, humidity, windspeed → cnt). |
+
+### Triage extension notebooks (`notebooks/triage/`)
+
+| Notebook | File | Description |
+|---|---|---|
+| 01 · Forecastability Profile Walkthrough | [`notebooks/triage/01_forecastability_profile_walkthrough.ipynb`](notebooks/triage/01_forecastability_profile_walkthrough.ipynb) | Horizon-wise $F(h)$ profile, peak horizon, informative horizon set, non-monotonicity detection (F1). |
+| 02 · Information Limits & Compression | [`notebooks/triage/02_information_limits_and_compression.ipynb`](notebooks/triage/02_information_limits_and_compression.ipynb) | Theoretical MI ceiling, compression / DPI warnings, exploitation ratio (F2). |
+| 07 · Predictive Info Learning Curves | [`notebooks/triage/07_predictive_information_learning_curves.ipynb`](notebooks/triage/07_predictive_information_learning_curves.ipynb) | kNN MI vs embedding dimension, plateau detection, recommended lookback (F3). |
+| 08 · Spectral & Entropy Diagnostics | [`notebooks/triage/08_spectral_and_entropy_diagnostics.ipynb`](notebooks/triage/08_spectral_and_entropy_diagnostics.ipynb) | Spectral predictability $\Omega$, permutation entropy, complexity band (F4, F6). |
+| 09 · Batch & Exogenous Workbench | [`notebooks/triage/09_batch_and_exogenous_workbench.ipynb`](notebooks/triage/09_batch_and_exogenous_workbench.ipynb) | Multi-signal ranking with all diagnostics, enhanced exogenous screening (F7, F8). |
+| 10 · Agent-Ready Triage Interpretation | [`notebooks/triage/10_agent_ready_triage_interpretation.ipynb`](notebooks/triage/10_agent_ready_triage_interpretation.ipynb) | Structured Pydantic payloads, summary serializer, interpretation adapter for agent integration. |
 
 ## Documentation map
 
@@ -290,27 +334,41 @@ Full documentation index: [docs/README.md](docs/README.md)
 |---|---|
 | **Executive overview** | [docs/executive_summary.md](docs/executive_summary.md) |
 | **Architecture** | [docs/architecture.md](docs/architecture.md) |
-| **Theory** | [docs/theory/foundations.md](docs/theory/foundations.md) · [docs/theory/interpretation_patterns.md](docs/theory/interpretation_patterns.md) |
+| **Theory — foundations** | [docs/theory/foundations.md](docs/theory/foundations.md) · [docs/theory/interpretation_patterns.md](docs/theory/interpretation_patterns.md) · [docs/theory/pami_residual_backends.md](docs/theory/pami_residual_backends.md) |
+| **Theory — triage diagnostics** | [docs/theory/forecastability_profile.md](docs/theory/forecastability_profile.md) · [docs/theory/spectral_predictability.md](docs/theory/spectral_predictability.md) · [docs/theory/entropy_based_complexity.md](docs/theory/entropy_based_complexity.md) |
+| **Triage methods** | [docs/triage_methods/predictive_information_learning_curves.md](docs/triage_methods/predictive_information_learning_curves.md) · [docs/triage_methods/largest_lyapunov_exponent.md](docs/triage_methods/largest_lyapunov_exponent.md) |
 | **Code reference** | [docs/code/module_map.md](docs/code/module_map.md) · [docs/code/exog_analyzer.md](docs/code/exog_analyzer.md) |
+| **Examples** | [examples/triage/](examples/triage/) — 12 standalone scripts covering F1–F8 features and agent adapter demos |
 | **Planning** | [docs/plan/README.md](docs/plan/README.md) · [docs/plan/acceptance_criteria.md](docs/plan/acceptance_criteria.md) |
 | **Archive** | [docs/archive/](docs/archive/) (27 historical build-phase documents) |
 
 ## Paper baseline (what we are based on)
 
-Source paper:
-- Peter Maurice Catt, *The Knowable Future: Mapping the Decay of Past-Future Mutual Information Across Forecast Horizons*, arXiv:2601.10006 (January 2026; v3 February 2026)
-- PDF: https://arxiv.org/pdf/2601.10006
-- DOI: https://doi.org/10.48550/arXiv.2601.10006
+### Primary paper (AMI triage signal)
+
+- Peter Maurice Catt, *The Knowable Future: Mapping the Decay of Past-Future Mutual Information Across Forecast Horizons*, [arXiv:2601.10006](https://doi.org/10.48550/arXiv.2601.10006) (January 2026; v3 February 2026)
 
 Paper setup reproduced here:
 - M4 frequencies: Yearly, Quarterly, Monthly, Weekly, Daily, Hourly
 - Horizon caps by frequency (paper Section 3.1): 6, 8, 18, 13, 14, 48 respectively
 - Rolling-origin protocol with train-only diagnostics and post-origin forecast scoring
-- Surrogate significance logic with \(n_{surrogates} \ge 99\) and 95% bands
+- Surrogate significance logic with $n_{\text{surrogates}} \ge 99$ and 95% bands
 
 Paper finding used as anchor:
 - AMI is a frequency-conditional triage signal for model selection.
 - Strongest negative AMI-sMAPE rank association appears in higher-information regimes (Hourly/Weekly/Quarterly/Yearly), weaker for Daily and moderate for Monthly.
+
+### Extended paper references (triage diagnostics F1–F6)
+
+| Feature | Paper | Reference |
+|---|---|---|
+| F1 — Forecastability Profile | Catt (2026) | [arXiv:2603.27074](https://arxiv.org/abs/2603.27074) |
+| F2 — IT Limit Diagnostics | Catt (2026) | [arXiv:2603.27074](https://arxiv.org/abs/2603.27074) |
+| F3 — Predictive Info Learning Curves | Morawski et al. (2025) | [arXiv:2510.10744](https://arxiv.org/abs/2510.10744) |
+| F4 — Spectral Predictability | Wang et al. (2025) | [arXiv:2507.13556](https://arxiv.org/abs/2507.13556) |
+| F5 — Largest Lyapunov Exponent | Wang et al. (2025) | [arXiv:2507.13556](https://arxiv.org/abs/2507.13556) |
+| F6 — Entropy-Based Complexity | Ponce-Flores et al. (2020); Bandt & Pompe (2002) | — |
+| F7 — Batch Ranking | Goerg (2013) — ForeCA inspiration | — |
 
 ## Time-series applicability (paper + implementation)
 
@@ -321,16 +379,12 @@ From the paper:
 
 From this implementation:
 - AMI minimum length constraint:
-    \[
-    N \ge \texttt{max\_lag} + \texttt{min\_pairs\_ami} + 1
-    \]
+    $$N \ge \texttt{max\_lag} + \texttt{min\_pairs\_ami} + 1$$
 - pAMI minimum length constraint (linear residual backend):
-    \[
-    N \ge \max\left(\texttt{max\_lag} + \texttt{min\_pairs\_pami} + 1,\ 2\,\texttt{max\_lag}\right)
-    \]
+    $$N \ge \max\left(\texttt{max\_lag} + \texttt{min\_pairs\_pami} + 1,\ 2\,\texttt{max\_lag}\right)$$
 - Defaults (`max_lag=100`, `min_pairs_ami=30`, `min_pairs_pami=50`) imply:
-    - AMI: \(N \ge 131\)
-    - pAMI: \(N \ge 201\)
+    - AMI: $N \ge 131$
+    - pAMI: $N \ge 201$
 
 Operational guidance:
 - Detrend or difference before AMI/pAMI when strong trend exists.
@@ -339,4 +393,14 @@ Operational guidance:
 
 ## Extension disclosure
 
-AMI is paper-native (arXiv:2601.10006). The following are project extensions not present in the original paper: pAMI, exogenous cross-dependence (CrossAMI/pCrossAMI), scorer-registry generalization, deterministic triage pipeline (`run_triage()`), agentic interpretation layer (PydanticAI), CLI, HTTP API (FastAPI + SSE), and MCP server.
+AMI is paper-native ([arXiv:2601.10006](https://doi.org/10.48550/arXiv.2601.10006)). The following are **project extensions** not present in the original paper:
+
+- **pAMI**, exogenous cross-dependence (CrossAMI / pCrossAMI), scorer-registry generalisation
+- **F1–F2** (forecastability profile, IT limits) — based on [arXiv:2603.27074](https://arxiv.org/abs/2603.27074)
+- **F3** (predictive info learning curves) — based on [arXiv:2510.10744](https://arxiv.org/abs/2510.10744)
+- **F4–F5** (spectral predictability, Lyapunov exponent) — based on [arXiv:2507.13556](https://arxiv.org/abs/2507.13556)
+- **F6** (entropy-based complexity) — based on Ponce-Flores et al. (2020) and Bandt & Pompe (2002)
+- **F7** (batch multi-signal ranking), **F8** (enhanced exogenous screening), **F9** (benchmark & reproducibility)
+- Deterministic triage pipeline (`run_triage()`, `run_batch_triage()`)
+- Agent adapters (payload models, summary serialiser, interpretation adapter)
+- Agentic interpretation layer (PydanticAI), CLI, HTTP API (FastAPI + SSE), MCP server

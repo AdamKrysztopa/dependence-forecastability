@@ -30,6 +30,16 @@ This page is a compact, decision-first evidence layer. Notebooks are linked as d
 - What decision was improved: earlier go/no-go and route decisions before expensive modelling. The workflow blocks infeasible requests, routes exogenous requests separately, and preserves stable screening behavior (`AR(1) -> high`, `white_noise -> low`) in regression tests.
 - What limitation remains: when data are significance-infeasible (for example n=150 in regression tests), surrogates are skipped and decisions are route/class screening only. This workflow supports prioritisation and method selection, not guaranteed downstream forecast accuracy gains.
 
+## 4) Triage extension diagnostics
+
+- The triage pipeline now includes multiple diagnostic families beyond AMI/pAMI, providing complementary information-theoretic and complexity-theory views of forecastability.
+- **Stable diagnostics (F1–F4, F6–F8):** forecastability profiles (F1), theoretical information ceilings (F2), predictive-information learning curves (F3), spectral predictability indices (F4), permutation-entropy and spectral-entropy complexity bands (F6), batch diagnostic ranking (F7), and enhanced exogenous screening with redundancy detection (F8).
+- **Experimental diagnostic (F5):** largest Lyapunov exponent estimation — gated behind `experimental: true` in config, not included in automated triage decisions.
+- **Agent payload adapters (A1–A3):** structured Pydantic result models for deterministic consumption by agents, API consumers, or downstream pipelines.
+- **Diagnostic regression fixtures (F9):** golden-value snapshot tests ensure reproducibility across all new diagnostics.
+- Worked examples are available in `examples/triage/` and `notebooks/triage/` (see Primary Narrative Pages below).
+- These extensions draw on multiple papers beyond the original AMI work: Catt (2026, arXiv:2603.27074), Morawski et al. (2025, arXiv:2510.10744), Wang et al. (2025, arXiv:2507.13556), Ponce-Flores et al. (2020), Bandt & Pompe (2002).
+
 ## Decision-Relevant Outcomes
 
 | Area | Dataset | Evaluation protocol | Decision improved | Limitation remains |
@@ -37,12 +47,16 @@ This page is a compact, decision-first evidence layer. Notebooks are linked as d
 | Univariate AMI/pAMI | 8 canonical series | Horizon-specific AMI/pAMI pipeline summary | Separate high/medium/low forecastability candidates before model search; identify mediated vs direct structure via `directness_ratio` | Current canonical summary has zero significant lags, so lag-level claims stay conservative |
 | Exogenous screening | 7 target-driver pairs | Rolling-origin CrossMI and conditioned pCrossAMI across fixed horizons | Prioritise drivers with persistent conditioned signal (e.g., `bike_cnt_temp`) and deprioritise noise controls | `directness_ratio > 1.0` appears in warning cases; treat as diagnostic instability |
 | Triage workflow | Canonical + exogenous triage regression inputs | Deterministic staged orchestration (`readiness -> routing -> compute -> interpretation`) | Early stop/routing reduces wasted modelling effort and enforces consistent screening paths | Route/class outputs are triage diagnostics, not direct proof of forecast error improvement |
+| Triage extension diagnostics | Canonical series + synthetic benchmarks | Deterministic F1–F8 diagnostics with regression fixtures (F9); spectral, entropy, and complexity scorers | Richer pre-modelling evidence: theoretical ceilings, lookback selection, complexity regime, batch ranking, and redundancy-aware exogenous screening | F5 (Lyapunov) is experimental and excluded from automated decisions; new scorers inherit kNN estimation noise on short series |
 
 ## Primary Narrative Pages
 
 - [notebooks/canonical_forecastability.md](notebooks/canonical_forecastability.md)
 - [notebooks/exogenous_analysis.md](notebooks/exogenous_analysis.md)
 - [notebooks/agentic_triage.md](notebooks/agentic_triage.md)
+- [../notebooks/triage/01_forecastability_profile_walkthrough.ipynb](../notebooks/triage/01_forecastability_profile_walkthrough.ipynb)
+- [../notebooks/triage/08_spectral_and_entropy_diagnostics.ipynb](../notebooks/triage/08_spectral_and_entropy_diagnostics.ipynb)
+- [../notebooks/triage/09_batch_and_exogenous_workbench.ipynb](../notebooks/triage/09_batch_and_exogenous_workbench.ipynb)
 
 ## Deep Evidence (Secondary)
 

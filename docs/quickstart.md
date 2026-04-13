@@ -327,3 +327,42 @@ Expected tool output snippet:
   "recommendation": "HIGH -> Complex structured models (deep AR, nonlinear, LSTM)"
 }
 ```
+
+## Triage Extension Diagnostics
+
+Beyond the core triage output, `run_triage()` populates optional diagnostic
+fields (F1–F6) when the series is not blocked. These give deeper insight into
+*why* the series is forecastable and *where* the information ceiling lies.
+
+```python
+from forecastability.triage import run_triage, TriageRequest
+import numpy as np
+
+rng = np.random.default_rng(42)
+ts = np.array([0.85 ** i + rng.standard_normal() * 0.1 for i in range(300)])
+
+result = run_triage(TriageRequest(series=ts, goal="univariate", random_state=42))
+
+# F1: Forecastability profile — informative horizons and peak lag
+if result.forecastability_profile:
+    print(f"Peak horizon: {result.forecastability_profile.peak_horizon}")
+    print(f"Informative horizons: {result.forecastability_profile.informative_horizons}")
+
+# F2: IT limit diagnostics — ceiling and data-processing warnings
+if result.theoretical_limit_diagnostics:
+    print(f"Compression warning: {result.theoretical_limit_diagnostics.compression_warning}")
+
+# F5: Largest Lyapunov exponent (experimental)
+if result.largest_lyapunov_exponent:
+    print(f"Lyapunov exponent: {result.largest_lyapunov_exponent.exponent}")
+
+# F6: Complexity band
+if result.complexity_band:
+    print(f"Complexity band: {result.complexity_band.band}")
+```
+
+All diagnostic fields are `None` when the series is blocked by readiness gates.
+
+> [!TIP]
+> For interactive walkthroughs of each diagnostic family, see the triage
+> extension notebooks in [`notebooks/triage/`](../notebooks/triage/).

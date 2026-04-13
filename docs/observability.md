@@ -232,3 +232,22 @@ Record in the audit artifact:
 - Replay semantics rationale: [architecture.md](architecture.md)
 - Stability policy for adapters: [versioning.md](versioning.md)
 - Production boundaries and non-goals: [production_readiness.md](production_readiness.md)
+
+## Triage Extension Diagnostics in Observability
+
+Triage extension diagnostics (F1–F6) produce structured Pydantic result
+payloads that are included in the event and checkpoint trail alongside the
+core triage output. When a diagnostic is computed, its result model is
+serialised into the same `stage_completed` event for the `compute` stage
+and persisted in the checkpoint summary.
+
+The agent payload adapters (A1–A3) serialise all diagnostic outputs to
+schema-versioned Pydantic models for observability and downstream consumption:
+
+- **A1** (`triage_agent_payload_models.py`) — 9 typed payload models, one per diagnostic family.
+- **A2** (`triage_summary_serializer.py`) — serialisation envelope with `schema_version` for forward compatibility.
+- **A3** (`triage_agent_interpretation_adapter.py`) — deterministic interpretation with experimental and warning flags.
+
+Experimental diagnostics (e.g. F5 Lyapunov exponent) are explicitly tagged
+with `experimental=True` in the serialised payload so that observability
+pipelines can filter or annotate accordingly.
