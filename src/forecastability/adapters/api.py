@@ -27,8 +27,8 @@ import numpy as np
 from pydantic import BaseModel, ConfigDict, ValidationError, field_validator
 
 try:
-    from fastapi import FastAPI, HTTPException
-    from fastapi.responses import StreamingResponse
+    from fastapi import FastAPI, HTTPException  # type: ignore[import-untyped]
+    from fastapi.responses import StreamingResponse  # type: ignore[import-untyped]
 
     _FASTAPI_AVAILABLE = True
 except ImportError:

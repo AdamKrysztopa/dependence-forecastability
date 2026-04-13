@@ -1,9 +1,11 @@
 [project]
-name = "forecastability"
+name = "dependence-forecastability"
 version = "0.1.0"
 description = "Paper-aligned AMI and extension pAMI diagnostics for forecastability triage"
 readme = "README.md"
 license = { file = "LICENSE" }
+authors = [{ name = "Adam Krysztopa" }]
+maintainers = [{ name = "Adam Krysztopa" }]
 requires-python = ">=3.11,<3.13"
 keywords = [
   "forecasting",
@@ -17,11 +19,13 @@ classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Science/Research",
   "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Topic :: Scientific/Engineering",
   "Topic :: Scientific/Engineering :: Information Analysis",
+  "Typing :: Typed",
 ]
 dependencies = [
   "matplotlib==3.10.8",
@@ -60,10 +64,12 @@ forecastability-dashboard = "forecastability.adapters.dashboard:main"
 [dependency-groups]
 dev = [
   "anyio>=4.12.1",
+  "build>=1.0",
   "httpx>=0.27",
   "pytest>=8.4.0",
   "pytest-anyio>=0.0.0",
   "ruff>=0.11.0",
+  "twine>=5.0",
   "ty==0.0.22",
 ]
 notebook = [
@@ -93,6 +99,9 @@ select = ["E", "F", "I", "B", "UP"]
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
+
+[tool.ty.src]
+exclude = ["notebooks/"]
 
 [tool.pytest.ini_options]
 addopts = "-q"

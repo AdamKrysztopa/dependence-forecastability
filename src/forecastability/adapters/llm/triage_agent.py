@@ -38,7 +38,7 @@ from forecastability.triage.router import plan_method
 from forecastability.use_cases.run_triage import run_triage
 
 try:
-    from pydantic_ai import Agent, RunContext
+    from pydantic_ai import Agent, RunContext  # type: ignore[import-untyped]
 
     _PYDANTIC_AI_AVAILABLE = True
 except ImportError:  # pragma: no cover
@@ -263,7 +263,7 @@ def create_triage_agent(
     if model is None:
         model = f"openai:{settings.openai_model}"
 
-    agent: Agent[TriageDeps, TriageExplanation] = Agent(  # type: ignore[assignment]
+    agent: Agent[TriageDeps, TriageExplanation] = Agent(
         model,
         deps_type=TriageDeps,
         output_type=TriageExplanation,

@@ -42,6 +42,22 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [0.1.0] - 2026-04-12
 
+### Release support contract
+
+First PyPI release: `pip install dependence-forecastability` (distribution name `dependence-forecastability`; import namespace `forecastability` is unchanged).
+
+| Surface | Support status |
+|---|---|
+| Deterministic core (`run_triage`, `run_batch_triage`, `ForecastabilityAnalyzer`, scorers) | **Stable** — primary public API |
+| CLI (`forecastability triage`, `forecastability list-scorers`) | Supported |
+| Dashboard (`forecastability-dashboard`) | Supported (optional) |
+| FastAPI transport (`[transport]` extra) | Beta |
+| Agent narration (`[agent]` extra) | Experimental |
+| MCP server (`[transport]` extra) | Experimental |
+
+pAMI and all F1–F9 diagnostics are project extensions, not paper-native guarantees.
+F5 (Largest Lyapunov Exponent) is gated behind `experimental: true` and excluded from composite triage scores.
+
 ### Added
 - Core AMI and pAMI forecastability analysis package with horizon-specific dependence curves and surrogate significance bands.
 - Canonical and benchmark execution scripts with report artifact generation.

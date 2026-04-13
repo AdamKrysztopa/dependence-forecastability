@@ -7,10 +7,12 @@ from pathlib import Path
 import numpy as np
 import pytest
 from pydantic import ValidationError
-from pydantic_ai import models
+
+pydantic_ai = pytest.importorskip("pydantic_ai", reason="pydantic-ai extra not installed")
+from pydantic_ai import models  # type: ignore[import-untyped]  # noqa: E402
 
 # Block real model requests during tests.
-models.ALLOW_MODEL_REQUESTS = False  # type: ignore[assignment]
+models.ALLOW_MODEL_REQUESTS = False
 
 
 class TestCreateScreeningAgent:
@@ -92,7 +94,7 @@ class TestAgentWithTestModel:
 
     @pytest.mark.anyio
     async def test_agent_run_returns_structured_report(self) -> None:
-        from pydantic_ai.models.test import TestModel
+        from pydantic_ai.models.test import TestModel  # type: ignore[import-untyped]
 
         from forecastability.adapters.llm.screening_agent import (
             FeatureScreeningReport,

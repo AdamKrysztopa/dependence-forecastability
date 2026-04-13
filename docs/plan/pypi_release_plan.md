@@ -1,12 +1,34 @@
 <!-- type: reference -->
 # Release Plan — PyPI Publication
 
-**Companion to:** [development_plan.md](development_plan.md), [cleaning_plan.md](cleaning_plan.md)
-**Builds on:** [acceptance_criteria.md](acceptance_criteria.md), [not_planed/pypi_release_plan.md](not_planed/pypi_release_plan.md) (original draft)
-**Source branch:** `docs/functionality-improvement`
+**Companion to:** [development_plan.md](development_plan.md), [cleaning_plan.md](cleaning_plan.md)  
+**Builds on:** [acceptance_criteria.md](acceptance_criteria.md), [not_planed/pypi_release_plan.md](not_planed/pypi_release_plan.md) (original draft)  
+**Status:** R0–R2 complete (2026-04-13)  
+**Recommended delivery path:** merge the current docs/public-surface hardening PR first, then cut a dedicated release-prep branch from `main`  
 **Last reviewed:** 2026-04-13
 
-> **Verification snapshot on 2026-04-13:** `uv run pytest -q -ra` passed, `uv run ruff check .` passed, `uv run ty check` passed with diagnostics. `uv run python -m build` not yet verified. This plan assumes Phase 1 must resolve naming before any build/upload gate can be attempted.
+> **Verification snapshot on 2026-04-13 (R0–R2 complete):** `uv run pytest -q -ra` passed, `uv run ruff check .` passed, `uv run ty check` passed. `uv run python -m build` available via `build` + `twine` added to `dependency-groups.dev`. Distribution name set to `dependence-forecastability`. Public surface frozen: `run_triage`, `run_batch_triage`, `TriageRequest`, `TriageResult` added to root `__init__.py`; `py.typed` marker created; CHANGELOG support contract written.
+>
+> **Reviewability note:** keep PyPI work isolated from the current docs/public-surface hardening PR. Prefer one dedicated release-prep PR for R0-R3 and a follow-up PR for R4-R7 before any TestPyPI or publishing automation work.
+
+---
+
+## Release summary at a glance
+
+| ID | Item | Short description | Status |
+|---|---|---|---|
+| R0 | Release tooling bootstrap | Make `build` and `twine` available from the documented `uv` workflow so later gate commands are executable as written. | ✅ Done (2026-04-13) |
+| R1 | PyPI package naming resolution | Choose a unique distribution name while preserving `import forecastability`. | ✅ Done (2026-04-13) |
+| R2 | Public package surface definition | Freeze what `0.1.0` supports in the deterministic core, CLI, extras, and root imports. | ✅ Done (2026-04-13) |
+| R3 | Metadata hardening | Complete release-facing metadata, URLs, and typed-package signaling. | ✅ Done (2026-04-13) |
+| R4 | Dependency policy for published wheel | Replace release-hostile equality pins with compatible external-install ranges. | Not started |
+| R5 | README / PyPI landing-page hardening | Add a PyPI-first install path and minimal example before deeper GitHub-oriented material. | Not started |
+| R6 | Artifact contents control | Verify wheel/sdist contents and exclude notebooks, outputs, and other noise. | Not started |
+| R7 | Local release pipeline | Prove lint -> test -> build -> install -> CLI smoke from a clean environment. | Not started |
+| R8 | TestPyPI dry run | Rehearse upload, install, and verification on TestPyPI before production. | Not started |
+| R9 | GitHub Actions + Trusted Publishing | Automate publishing only after the manual path is proven. | Not started |
+| R10 | First production release + stabilization | Publish `0.1.0`, verify external installation, and keep a short hotfix window. | Not started |
+| R11 | PyPI release documentation | Ship release checklist, v0.1.0 release notes, and CHANGELOG entry before publishing. | Not started |
 
 ---
 
@@ -50,10 +72,11 @@ Before reading the phase breakdown, note what the repo already provides:
 | Optional extras for `agent` and `transport` | ✅ |
 | Dev and notebook dependency groups | ✅ |
 | Rich README with architecture, quickstart, and install matrix | ✅ |
+| Documented `uv` toolchain already includes `build` and `twine` | ✅ |
 | Documented release command path | ❌ |
 | TestPyPI or PyPI upload ever attempted | ❌ |
 | CI publishing workflow | ❌ |
-| Unique PyPI distribution name chosen | ❌ |
+| Unique PyPI distribution name chosen | ✅ (`dependence-forecastability`) |
 
 ---
 
@@ -61,9 +84,10 @@ Before reading the phase breakdown, note what the repo already provides:
 
 | # | Release item | Phase | Overlap | Genuine new work | Status |
 |---|---|---|---|---|---|
-| R1 | PyPI package naming resolution | 1 | 0% | Mandatory release blocker removal | Not started |
-| R2 | Public package surface definition | 1 | ~40% | Scope tightening, not new code | Not started |
-| R3 | Metadata hardening | 1 | ~70% | Incremental `pyproject.toml` cleanup | Not started |
+| R0 | Release tooling bootstrap | 0 | 0% | Make `build` and `twine` executable from the documented toolchain | ✅ Done |
+| R1 | PyPI package naming resolution | 1 | 0% | Mandatory release blocker removal | ✅ Done |
+| R2 | Public package surface definition | 1 | ~40% | Scope tightening, not new code | ✅ Done |
+| R3 | Metadata hardening | 1 | ~70% | Incremental `pyproject.toml` cleanup | ✅ Done |
 | R4 | Dependency policy for published wheel | 2 | ~30% | Relax runtime pins, preserve dev lock | Not started |
 | R5 | README / PyPI landing-page hardening | 2 | ~50% | Re-order and simplify public install docs | Not started |
 | R6 | Artifact contents control | 2 | ~40% | Explicit wheel/sdist validation rules | Not started |
@@ -71,14 +95,70 @@ Before reading the phase breakdown, note what the repo already provides:
 | R8 | TestPyPI dry run | 4 | 0% | First end-to-end public packaging rehearsal | Not started |
 | R9 | GitHub Actions + Trusted Publishing | 5 | 0% | Automated release workflow | Not started |
 | R10 | First real PyPI release + stabilization | 6 | 0% | Tagging, changelog, rollback plan | Not started |
+| R11 | PyPI release documentation | 2.5 | ~30% | Release checklist, v0.1.0 notes, CHANGELOG entry | Not started |
 
 ---
 
 ## Phased delivery
 
+### Phase 0 — Tooling Bootstrap
+
+> Tiny scope · Blocks every later gate · No public release surface change yet
+
+```mermaid
+flowchart LR
+    A["Documented `uv` workflow"] --> B["Add `build` + `twine`"]
+    B --> C["`uv run python -m build` works"]
+    C --> D["Later phase gates become executable"]
+```
+
+| Item | Type | Effort |
+|---|---|---|
+| **R0 — Release tooling bootstrap** | Toolchain prerequisite | S |
+
+#### R0 — Release tooling bootstrap
+
+**Current state.** The plan's build and upload gates assume `uv run python -m build`
+and `uv run twine ...` are available. Today `uv run python -m build` fails because
+`build` is not installed in the documented environment, and `twine` is also not part
+of the declared toolchain.
+
+**What to build:**
+- Add `build` and `twine` to the documented release toolchain
+- Recommended path: extend `dependency-groups.dev` so later `uv sync --group dev`
+  commands remain true as written
+- Alternative if preferred: create a dedicated `release` group and update every gate
+  command accordingly
+- Prove `uv run python -m build` and `uv run twine check --help` start successfully
+- Record the chosen toolchain rule in the release guide / plan
+
+**Where it goes:**
+- `pyproject.toml`
+- `uv.lock`
+- release guide / plan command snippets
+
+**Acceptance criteria:**
+- [ ] `build` and `twine` are available from the documented `uv` toolchain
+- [ ] Later phase commands are executable as written
+- [ ] `uv run python -m build` starts successfully
+- [ ] `uv run twine check --help` starts successfully
+
+#### Phase 0 gate
+
+```bash
+uv sync --group dev
+uv run python -m build --help
+uv run twine check --help
+```
+
+- Documented toolchain includes release-build utilities
+- Later phase gates are executable as written
+
+---
+
 ### Phase 1 — Identity, Scope, and Metadata Lock
 
-> Highest priority · Low implementation risk · Removes release blockers
+> Highest content priority after Phase 0 · Low implementation risk · Removes release blockers
 
 ```mermaid
 flowchart LR
@@ -139,12 +219,15 @@ the Python package namespace as `forecastability`.
 CLI, HTTP API, agent layer, MCP server, dashboard script, and notebook workflows. The
 README already distinguishes stability levels, stating that core domain APIs are stable,
 CLI/HTTP are beta, and MCP/agent layers are experimental. However, there is no formal
-release-scope freeze for the first PyPI version.
+release-scope freeze for the first PyPI version, and `src/forecastability/__init__.py`
+currently re-exports analyzers, config models, datasets, scorers, result types, and
+selected triage models without an explicit release support contract.
 
 **What to build:**
 - Stability matrix in README
 - Explicit "core install" and "extras install" sections
-- Public API audit of `__init__.py` exports
+- Item-by-item audit of `src/forecastability/__init__.py` exports with explicit keep /
+  deprecate / internal decisions
 - Mark experimental surfaces in docs and changelog
 
 **Decision:** first PyPI release should expose and document this support model clearly:
@@ -170,7 +253,8 @@ them the headline.
 **Acceptance criteria:**
 - [ ] Core vs extra vs experimental surfaces documented
 - [ ] No experimental feature required for base install
-- [ ] Root package exports reviewed for accidental public API leakage
+- [ ] `src/forecastability/__init__.py` exports reviewed item by item; every supported
+      root import for `0.1.0` is intentional
 - [ ] Changelog states first-release support contract
 
 ---
@@ -180,14 +264,15 @@ them the headline.
 **Current state.** Metadata is already decent: description, readme, license file, Python
 range, keywords, classifiers, project URLs, extras, scripts, and build backend are
 present. However, `authors` is missing, some classifiers are absent (`Typing :: Typed`,
-`Operating System :: OS Independent`), and the source branch name carries a typo
-(`imrovement` → `improvement`).
+`Operating System :: OS Independent`), the public documentation URL should be reviewed
+as a release-facing surface, and there is currently no `py.typed` marker if typed-package
+claims are kept.
 
 **What to build:**
 - Add `authors` and optionally `maintainers`
 - Add `Typing :: Typed` and `Operating System :: OS Independent` classifiers
-- Ensure `Documentation` URL points to the correct branch/release location
-- Fix branch naming typo before it becomes release-facing
+- Ensure `Documentation` URL points to the correct public docs location for the release
+- Add `src/forecastability/py.typed` and ensure it ships if `Typing :: Typed` is claimed
 
 **Recommended target:**
 ```toml
@@ -213,11 +298,16 @@ classifiers = [
 **Where it goes:**
 - `pyproject.toml`
 - Project URLs
+- `src/forecastability/py.typed` if typed-package claims are kept
+
+> [!NOTE]
+> If `Typing :: Typed` remains in the release metadata, ship `py.typed` in the wheel so
+> the claim matches the artifact.
 
 **Acceptance criteria:**
 - [ ] Release metadata is complete and consistent
 - [ ] Project URLs point to real public locations
-- [ ] Branch typo removed from release pathing
+- [ ] `py.typed` is shipped if `Typing :: Typed` is claimed
 - [ ] `twine check` passes later without metadata/render warnings
 
 ---
@@ -296,15 +386,19 @@ dependencies = [
 
 #### R5 — README / PyPI landing-page hardening
 
-**Current state.** The README is strong technically, but the current top section is
-optimized more for GitHub than for PyPI. It starts with a dense badge block and a long
-architecture-heavy story before the simplest `pip install` path.
+**Current state.** The README is stronger than earlier drafts: it now opens with a short
+value proposition, quickstart ladder, and stability guidance. But it is still
+GitHub-first rather than PyPI-first. The first screen still leads with badges and
+`uv`-based repo workflows, there is no canonical `pip install ...` path, there is no
+minimal base-install import example, and Mermaid-heavy architecture content would render
+poorly on PyPI if kept too high in the page.
 
 **What to build:**
 - Add `pip install dependence-forecastability`
 - Add a minimal API example using deterministic core
-- Move architecture deep-dives lower
+- Move architecture deep-dives and Mermaid-heavy content lower
 - Keep the paper alignment, but lead with user value
+- Show the `uv` contributor workflow later, not as the only install story
 - Ensure long sections still render cleanly in package index pages
 
 **Recommended top order:**
@@ -321,6 +415,8 @@ architecture-heavy story before the simplest `pip install` path.
 - [ ] First screen of README answers what it is and how to install
 - [ ] Minimal example runs on base install
 - [ ] Core/extra/experimental surfaces are clearly marked
+- [ ] No architecture or Mermaid-heavy block appears above install + minimal example on
+      the PyPI path
 - [ ] Render-friendly for both GitHub and PyPI
 
 ---
@@ -363,6 +459,76 @@ python -c "import forecastability; print('ok')"
 - README renders without issues
 - Artifact contents are clean
 - Published dependency ranges are sane
+
+---
+
+### Phase 2.5 — PyPI Release Documentation
+
+> Must be completed before Phase 4 (TestPyPI) · Ships the release checklist and v0.1.0 notes
+
+```mermaid
+flowchart LR
+    A["Phase 2 artifacts clean"] --> B["R11 Release documentation"]
+    B --> C["Release checklist"]
+    B --> D["v0.1.0 release notes"]
+    B --> E["CHANGELOG entry"]
+    C --> F["Phase 3 local pipeline"]
+    D --> F
+    E --> F
+```
+
+| Item | Type | Effort |
+|---|---|---|
+| **R11 — PyPI release documentation** | Release-facing docs | S–M |
+
+#### R11 — PyPI release documentation
+
+**Current state.** The repo has `docs/releases/pypi_publication.md` (publishing flow)
+and `docs/releases/v0.1.0.md` (upgrade notes), but lacks a repeatable release checklist
+and a user-facing release notes document suitable for GitHub Releases and PyPI pages.
+
+**What to build:**
+
+1. **Release checklist** (`docs/releases/release_checklist.md`) — a reusable pre-release,
+   execution, and post-release checklist that the maintainer follows before every release.
+   Covers version bump, CHANGELOG, smoke tests, GitHub Release creation, PyPI verification,
+   badge updates, and stability decision reminders.
+
+2. **v0.1.0 release notes** (`docs/releases/v0.1.0_release_notes.md`) — a detailed,
+   user-facing document covering highlights, stable/beta/experimental surfaces, a
+   60-second golden-path install example, project positioning, and known limitations.
+   This serves as the base content for the GitHub Release description and CHANGELOG.
+
+3. **CHANGELOG entry** — update `CHANGELOG.md` with a `## [0.1.0] — 2026-04-13` section
+   derived from the release notes.
+
+**Where it goes:**
+- `docs/releases/release_checklist.md`
+- `docs/releases/v0.1.0_release_notes.md`
+- `CHANGELOG.md`
+
+**Relationship to existing docs:**
+- `docs/releases/pypi_publication.md` — documents the publishing workflow (OIDC trusted
+  publishing); the checklist references it for manual steps
+- `docs/releases/v0.1.0.md` — upgrade notes; the release notes document cross-references
+  it for migration detail
+
+**Acceptance criteria:**
+- [ ] `docs/releases/release_checklist.md` exists and covers pre-release, execution, and post-release phases
+- [ ] `docs/releases/v0.1.0_release_notes.md` exists with highlights, stability matrix, golden-path example, and known limitations
+- [ ] `CHANGELOG.md` has a `[0.1.0]` section consistent with the release notes
+- [ ] Release notes clearly distinguish stable, beta, and experimental surfaces
+- [ ] Golden-path example uses `pip install dependence-forecastability` (or the chosen distribution name)
+- [ ] No experimental feature is headlined as core in the release notes
+
+---
+
+#### Phase 2.5 gate
+
+- Release checklist is complete and actionable
+- v0.1.0 release notes are ready for GitHub Release and CHANGELOG use
+- CHANGELOG has been updated
+- Stability boundaries are consistent across release notes, README, and `docs/production_readiness.md`
 
 ---
 
@@ -711,16 +877,20 @@ A phase is complete when:
 
 ## Recommended execution order
 
-1. Resolve package name (R1).
-2. Freeze first-release scope (R2).
-3. Harden metadata (R3).
-4. Relax published dependency pins (R4).
-5. Rewrite top of README for PyPI (R5).
-6. Validate wheel / sdist contents (R6).
-7. Prove the full local release pipeline (R7).
-8. Publish to TestPyPI (R8).
-9. Add GitHub Actions + Trusted Publishing (R9).
-10. Tag and publish the first real PyPI release (R10).
+1. Merge the current docs/public-surface hardening PR to `main`.
+2. Cut a dedicated release-prep branch from `main`.
+3. Bootstrap release tooling (R0).
+4. Resolve package name (R1).
+5. Freeze first-release scope (R2).
+6. Harden metadata (R3).
+7. Relax published dependency pins (R4).
+8. Rewrite top of README for PyPI (R5).
+9. Validate wheel / sdist contents (R6).
+10. Ship release documentation: checklist, v0.1.0 release notes, CHANGELOG entry (R11).
+11. Prove the full local release pipeline (R7).
+12. Publish to TestPyPI (R8).
+13. Add GitHub Actions + Trusted Publishing (R9).
+14. Tag and publish the first real PyPI release (R10).
 
 ---
 
@@ -729,7 +899,11 @@ A phase is complete when:
 This repo is already close enough to publish that the job is now mostly **release
 engineering**, not package creation.
 
-The two most important decisions are:
+The three most important early decisions are:
 
 1. **Do not publish under `forecastability`**, because that PyPI name is already taken.
 2. **Make the deterministic core the star of v0.1.0**, while keeping transport / agent / MCP surfaces clearly optional and clearly less stable.
+3. **Make `build` and `twine` available from the documented `uv` toolchain** before treating any later artifact gate as real.
+
+Operationally, implement this from a dedicated release-prep PR cut from `main`, not by
+expanding the current docs/public-surface hardening PR.

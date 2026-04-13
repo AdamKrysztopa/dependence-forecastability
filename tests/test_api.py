@@ -11,7 +11,7 @@ import pytest
 pytest.importorskip("fastapi")
 pytest.importorskip("httpx")
 
-from fastapi.testclient import TestClient
+from fastapi.testclient import TestClient  # type: ignore[import-untyped]
 
 from forecastability.adapters.api import (
     TriageHTTPRequest,
