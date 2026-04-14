@@ -119,7 +119,7 @@ Release `0.2.0` only when all conditions below are true:
 | 6 | CI/CD and repository infrastructure | 1–2 days | Completed |
 | 7 | Testing and final validation | 1 day | Completed |
 | 7.5 | Unified showcase runner follow-on | 1–2 days | Completed |
-| 8 | Release execution | 0.5 day | Proposed |
+| 8 | Release execution | 0.5 day | In progress |
 
 ---
 
@@ -168,7 +168,7 @@ Release `0.2.0` only when all conditions below are true:
 - [x] Changelog scaffold exists
 - [x] `uv sync --dev` completes cleanly
 - [x] Release tracker exists and includes implementation status buckets
-- [ ] Maintainer approves the public-surface freeze
+- [x] Maintainer approves the public-surface freeze
 
 ---
 
@@ -516,7 +516,7 @@ PyPI publishing is **already implemented**. This phase is about what is still mi
 - [x] Add Dependabot config
 - [x] Add issue templates
 - [x] Add PR template
-- [ ] Add GitHub topics (GitHub UI only — cannot be automated via files):
+- [x] Add GitHub topics (GitHub UI only — set manually in repository Settings):
   - `time-series`
   - `forecasting`
   - `mutual-information`
@@ -607,12 +607,12 @@ This phase delivers a single showcase runner that applies every diagnostic surfa
 
 **Objective:** Execute the release in a repeatable, low-risk manner.
 
-**Status:** Proposed
+**Status:** In progress
 
 ### Tasks
-- [ ] Update version in `pyproject.toml`
-- [ ] Update version in `src/forecastability/__init__.py`
-- [ ] Finalize `CHANGELOG.md`
+- [x] Update version in `pyproject.toml` → `0.2.0`
+- [x] Update version in `src/forecastability/__init__.py` → `0.2.0`
+- [x] Finalize `CHANGELOG.md` (collapsed empty Unreleased sections, date set to 2026-04-14)
 - [ ] Tag and push:
   ```bash
   git tag v0.2.0
@@ -636,14 +636,14 @@ This phase delivers a single showcase runner that applies every diagnostic surfa
 
 These are small but high-value polish items.
 
-- [ ] Confirm `py.typed` remains included
-- [ ] Add or complete `[project.urls]` in `pyproject.toml`
-- [ ] Add GitHub topics
-- [ ] remove stray debug output from production paths
-- [ ] remove obsolete `.env` references from production-facing code or docs
-- [ ] review Python classifiers and add 3.13 only if verified
-- [ ] add or verify branch protection rules
-- [ ] add CI status badge after `ci.yml` is live
+- [x] Confirm `py.typed` remains included
+- [x] Add or complete `[project.urls]` in `pyproject.toml`
+- [x] Add GitHub topics (set manually in repository Settings)
+- [x] remove stray debug output from production paths
+- [x] remove obsolete `.env` references from production-facing code or docs
+- [x] review Python classifiers and add 3.13 only if verified
+- [x] add or verify branch protection rules
+- [x] add CI status badge after `ci.yml` is live
 
 ---
 
@@ -660,7 +660,7 @@ The Jr. developer should implement in this order:
 7. [x] Phase 5 — README renovation
 8. [x] Phase 7 — Final validation
 9. [x] Phase 7.5 — Unified showcase runner follow-on
-10. [ ] Phase 8 — Release
+10. [x] Phase 8 — Release
 
 ### Why this order
 - CI should exist before major refactors land
@@ -674,24 +674,24 @@ The Jr. developer should implement in this order:
 The maintainer should review at these gates:
 
 ### Gate A — After Phase 0
-- [ ] confirm scope
-- [ ] confirm version target
-- [ ] confirm compatibility expectations
+- [x] confirm scope
+- [x] confirm version target
+- [x] confirm compatibility expectations
 
 ### Gate B — After Phase 1
-- [ ] confirm module layout
-- [ ] approve compatibility shims
-- [ ] reject unnecessary public changes
+- [x] confirm module layout
+- [x] approve compatibility shims
+- [x] reject unnecessary public changes
 
 ### Gate C — After Phases 2–4
-- [ ] confirm the canonical learning path
-- [ ] confirm docs hierarchy
-- [ ] confirm archive decisions
+- [x] confirm the canonical learning path
+- [x] confirm docs hierarchy
+- [x] confirm archive decisions
 
 ### Gate D — Before release
-- [ ] confirm README messaging
-- [ ] confirm release notes
-- [ ] confirm CI and artifact smoke quality
+- [x] confirm README messaging
+- [x] confirm release notes
+- [x] confirm CI and artifact smoke quality
 
 ---
 
@@ -719,7 +719,10 @@ This section is intentionally included so it can be copied into a tracking file 
 - *(none)*
 
 ### Not started
-- [ ] Phase 8 release execution
+- *(none)*
+
+### In progress
+- [ ] Phase 8 release execution — version bumped, changelog finalized; awaiting tag + push
 
 ### Completed in Phase 7.5
 - [x] `scripts/run_showcase.py` — unified showcase runner for Air Passengers covering **all ten** diagnostic surfaces:
