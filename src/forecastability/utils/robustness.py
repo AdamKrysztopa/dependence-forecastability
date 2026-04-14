@@ -199,6 +199,9 @@ def _pairwise_rank_correlation(arrays: list[np.ndarray]) -> float:
     correlations: list[float] = []
     for i in range(len(arrays)):
         for j in range(i + 1, len(arrays)):
+            if np.std(arrays[i]) == 0.0 or np.std(arrays[j]) == 0.0:
+                correlations.append(0.0)
+                continue
             rho, _ = spearmanr(arrays[i], arrays[j])
             correlations.append(float(np.nan_to_num(rho, nan=0.0)))
     return float(np.mean(correlations))
