@@ -1,11 +1,25 @@
 """Forecastability package implementing AMI and pAMI analysis."""
 
-from forecastability.analyzer import (
+from forecastability.metrics.scorers import (
+    DependenceScorer,
+    ScorerInfo,
+    ScorerRegistry,
+    default_registry,
+)
+from forecastability.pipeline.analyzer import (
     AnalyzeResult,
     ForecastabilityAnalyzer,
     ForecastabilityAnalyzerExog,
 )
-from forecastability.config import (
+from forecastability.triage.forecastability_profile import ForecastabilityProfile
+from forecastability.triage.models import (
+    TriageRequest,
+    TriageResult,
+)
+from forecastability.triage.predictive_info_learning_curve import PredictiveInfoLearningCurve
+from forecastability.triage.spectral_predictability import SpectralPredictabilityResult
+from forecastability.use_cases import run_batch_triage, run_triage
+from forecastability.utils.config import (
     BenchmarkDataConfig,
     CMIConfig,
     ExogenousBenchmarkConfig,
@@ -17,25 +31,12 @@ from forecastability.config import (
     SensitivityConfig,
     UncertaintyConfig,
 )
-from forecastability.datasets import (
+from forecastability.utils.datasets import (
     ar1_theoretical_ami,
     generate_ar1,
     generate_white_noise,
 )
-from forecastability.scorers import (
-    DependenceScorer,
-    ScorerInfo,
-    ScorerRegistry,
-    default_registry,
-)
-from forecastability.triage.forecastability_profile import ForecastabilityProfile
-from forecastability.triage.models import (
-    TriageRequest,
-    TriageResult,
-)
-from forecastability.triage.predictive_info_learning_curve import PredictiveInfoLearningCurve
-from forecastability.triage.spectral_predictability import SpectralPredictabilityResult
-from forecastability.types import (
+from forecastability.utils.types import (
     BackendComparisonResult,
     CanonicalExampleResult,
     CanonicalSummary,
@@ -48,8 +49,9 @@ from forecastability.types import (
     SampleSizeStressResult,
     SeriesEvaluationResult,
 )
-from forecastability.use_cases import run_batch_triage, run_triage
-from forecastability.validation import validate_time_series
+from forecastability.utils.validation import validate_time_series
+
+__version__ = "0.2.0"
 
 __all__ = [
     "AnalyzeResult",

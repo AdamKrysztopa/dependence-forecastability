@@ -20,21 +20,21 @@ ROOT = Path(__file__).parent.parent
 # Helpers
 # ---------------------------------------------------------------------------
 
-_DOMAIN_MODULES = [
-    "src/forecastability/metrics.py",
-    "src/forecastability/validation.py",
-    "src/forecastability/interpretation.py",
-    "src/forecastability/types.py",
-    "src/forecastability/config.py",
-    "src/forecastability/scorers.py",
-    "src/forecastability/cmi.py",
-    "src/forecastability/surrogates.py",
+DOMAIN_MODULE_PATHS = [
+    "src/forecastability/metrics/metrics.py",
+    "src/forecastability/utils/validation.py",
+    "src/forecastability/reporting/interpretation.py",
+    "src/forecastability/utils/types.py",
+    "src/forecastability/utils/config.py",
+    "src/forecastability/metrics/scorers.py",
+    "src/forecastability/diagnostics/cmi.py",
+    "src/forecastability/diagnostics/surrogates.py",
     # AGT-026: additional domain-like modules added to coverage
-    "src/forecastability/aggregation.py",  # pure domain: numpy/pandas/scipy only
+    "src/forecastability/utils/aggregation.py",  # pure domain: numpy/pandas/scipy only
     # reporting.py: output transformation, not domain compute; no forbidden imports
-    "src/forecastability/reporting.py",
+    "src/forecastability/reporting/reporting.py",
     # C11: analyzer.py no longer imports matplotlib at module level
-    "src/forecastability/analyzer.py",
+    "src/forecastability/pipeline/analyzer.py",
     # C15: triage domain models must not import infrastructure
     "src/forecastability/triage/models.py",
     "src/forecastability/triage/events.py",
@@ -107,7 +107,7 @@ def _get_full_imports(path: Path) -> list[str]:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("module_path", _DOMAIN_MODULES)
+@pytest.mark.parametrize("module_path", DOMAIN_MODULE_PATHS)
 def test_domain_modules_have_no_infra_imports(module_path: str) -> None:
     path = ROOT / module_path
     imported = _get_imports(path)

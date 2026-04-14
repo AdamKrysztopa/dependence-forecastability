@@ -300,15 +300,10 @@ class TestBoundaryEnforcement:
         import ast
         from pathlib import Path
 
+        from test_architecture_boundaries import DOMAIN_MODULE_PATHS
+
         root = Path(__file__).parent.parent
-        domain_files = [
-            "src/forecastability/metrics.py",
-            "src/forecastability/validation.py",
-            "src/forecastability/interpretation.py",
-            "src/forecastability/types.py",
-            "src/forecastability/scorers.py",
-        ]
-        for rel in domain_files:
+        for rel in DOMAIN_MODULE_PATHS:
             path = root / rel
             tree = ast.parse(path.read_text(encoding="utf-8"))
             for node in ast.walk(tree):

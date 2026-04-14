@@ -215,3 +215,49 @@ def test_exogenous_rolling_origin_pipeline_requires_matching_shapes() -> None:
             n_origins=3,
             random_state=42,
         )
+
+
+def test_rolling_origin_pipeline_skips_horizon_when_no_valid_split_survives() -> None:
+    ts = np.sin(np.linspace(0.0, 20.0, 90))
+
+    result = run_rolling_origin_evaluation(
+        ts,
+        series_id="short",
+        frequency="monthly",
+        horizons=[20],
+        n_origins=3,
+        seasonal_period=12,
+        random_state=7,
+    )
+
+    assert result.ami_by_horizon == {}
+    assert result.pami_by_horizon == {}
+    assert all(not forecast.smape_by_horizon for forecast in result.forecast_results)
+
+
+def test_rolling_origin_pipeline_skips_undersized_splits_and_is_deterministic() -> None:
+    ts = np.sin(np.linspace(0.0, 30.0, 130))
+
+    first = run_rolling_origin_evaluation(
+        ts,
+        series_id="mixed",
+        frequency="monthly",
+        horizons=[20],
+        n_origins=4,
+        seasonal_period=12,
+        random_state=21,
+    )
+    second = run_rolling_origin_evaluation(
+        ts,
+        series_id="mixed",
+        frequency="monthly",
+        horizons=[20],
+        n_origins=4,
+        seasonal_period=12,
+        random_state=21,
+    )
+
+    assert 20 in first.ami_by_horizon
+    assert 20 in first.pami_by_horizon
+    assert first.ami_by_horizon[20] == second.ami_by_horizon[20]
+    assert first.pami_by_horizon[20] == second.pami_by_horizon[20]

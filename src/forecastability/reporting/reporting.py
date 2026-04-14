@@ -11,9 +11,9 @@ from typing import Any, cast
 import pandas as pd
 from pydantic import BaseModel, ConfigDict
 
-from forecastability.aggregation import summarize_canonical_result
-from forecastability.interpretation import interpret_canonical_result
-from forecastability.types import CanonicalExampleResult
+from forecastability.reporting.interpretation import interpret_canonical_result
+from forecastability.utils.aggregation import summarize_canonical_result
+from forecastability.utils.types import CanonicalExampleResult
 
 _logger = logging.getLogger(__name__)
 

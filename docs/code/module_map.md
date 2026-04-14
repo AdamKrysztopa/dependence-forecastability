@@ -1,23 +1,28 @@
+<!-- type: reference -->
 # Library Reference (`src/forecastability`)
 
-This is the code-level map of modules in `src/forecastability`, using exact module naming.
+This is the code-level map of modules in `src/forecastability`, using current post-reorganization module paths.
 
 ## `__init__.py`
-- Package exports for core configs, types, and class API.
+- Package-level public API exports.
 
-## `analyzer.py`
+## Root-level compatibility shims (planned removal in 0.3.0)
+- Root-level shim modules currently preserve legacy imports and re-export implementations from subpackages (`utils`, `diagnostics`, `metrics`, `pipeline`, `reporting`).
+- These shims are compatibility-only and include TODO notes for planned removal in `0.3.0`.
+
+## `pipeline/analyzer.py`
 - `ForecastabilityAnalyzer`: method-independent analyzer with scorer registry. Backward-compatible AMI/pAMI methods plus generic `compute_raw()`, `compute_partial()`, and `compute_significance_generic()`. Exposes `list_scorers()` and `register_scorer()` for runtime introspection and custom scorer registration.
 - `ForecastabilityAnalyzerExog`: extension of `ForecastabilityAnalyzer` that adds optional exogenous-series support. With `exog=None`, behavior matches ACF-style auto-dependence; with `exog=...`, raw/partial curves become CCF-style cross-dependence (`exog_t -> target_{t+h}`).
 - `AnalyzeResult`: structured return object with fields `raw`, `partial`, `sig_raw_lags`, `sig_partial_lags`, `recommendation`, and `method`.
 
-## `scorers.py`
+## `metrics/scorers.py`
 - `DependenceScorer`: Protocol for dependence scoring functions (`past`, `future` → non-negative scalar).
 - `ScorerInfo`: Metadata dataclass for registered scorers (`name`, `scorer`, `family`, `description`).
 - `ScorerRegistry`: Named registry with `register()`, `get()`, `list_scorers()`, and `register_scorer()` decorator.
 - `default_registry()`: Factory returning a pre-populated registry with five built-in scorers.
 - Built-in scorers: `mi` (kNN MI), `pearson` (abs. Pearson), `spearman` (abs. Spearman), `kendall` (abs. Kendall τ-b), `distance` (Székely/Rizzo energy-distance correlation).
 
-## `config.py`
+## `utils/config.py`
 - `MetricConfig`: AMI/pAMI metric settings (`k`, surrogates, lags, seeds).
 - `RollingOriginConfig`: rolling-origin defaults (`n_origins=10`, horizons).
 - `OutputConfig`: output directory creation and management.
@@ -27,17 +32,17 @@ This is the code-level map of modules in `src/forecastability`, using exact modu
 - `UncertaintyConfig`: bootstrap uncertainty settings.
 - `SensitivityConfig`: `k`-grid sensitivity settings.
 
-## `types.py`
+## `utils/types.py`
 - `MetricCurve`
 - `CanonicalExampleResult`
 - `ForecastResult`
 - `SeriesEvaluationResult`
 - `InterpretationResult`
 
-## `validation.py`
+## `utils/validation.py`
 - `validate_time_series`: validates length, finite values, non-constant behavior.
 
-## `datasets.py`
+## `utils/datasets.py`
 - Canonical generators/loaders:
   - `generate_sine_wave`
   - `load_air_passengers`
@@ -47,21 +52,21 @@ This is the code-level map of modules in `src/forecastability`, using exact modu
   - `m4_seasonal_period`
   - `load_m4_subset`
 
-## `metrics.py`
+## `metrics/metrics.py`
 - `compute_ami`: horizon-specific AMI curve.
 - `compute_pami_linear_residual`: baseline pAMI estimator (linear residualization + MI).
 
-## `cmi.py`
+## `diagnostics/cmi.py`
 - Residualization backends:
   - `LinearResidualBackend`
   - `RandomForestResidualBackend`
 - `compute_pami_with_backend`: pluggable pAMI computation (`linear_residual`, `rf_residual`).
 
-## `surrogates.py`
+## `diagnostics/surrogates.py`
 - `phase_surrogates`: phase-randomized surrogate generation.
 - `compute_significance_bands`: surrogate significance intervals.
 
-## `rolling_origin.py`
+## `pipeline/rolling_origin.py`
 - `RollingSplit`
 - `build_expanding_window_splits`: expanding-window rolling-origin splits.
 
@@ -78,11 +83,11 @@ This is the code-level map of modules in `src/forecastability`, using exact modu
 - Lightweight fallback/auxiliary:
   - `forecast_linear_autoreg`
 
-## `pipeline.py`
+## `pipeline/pipeline.py`
 - `run_canonical_example`: AMI/pAMI + significance for a canonical series.
 - `run_rolling_origin_evaluation`: train-only diagnostics and holdout-only scoring.
 
-## `aggregation.py`
+## `utils/aggregation.py`
 - `summarize_canonical_result`
 - `build_horizon_table`
 - `compute_rank_associations`
@@ -90,10 +95,10 @@ This is the code-level map of modules in `src/forecastability`, using exact modu
 - `summarize_terciles`
 - `summarize_frequency_panels`
 
-## `interpretation.py`
+## `reporting/interpretation.py`
 - `interpret_canonical_result`: deterministic Pattern A-E interpretation logic.
 
-## `plots.py`
+## `utils/plots.py`
 - Canonical plots:
   - `plot_ami_with_band`
   - `plot_pami_with_band`
@@ -109,7 +114,7 @@ This is the code-level map of modules in `src/forecastability`, using exact modu
 - `compute_k_sensitivity`
 - `bootstrap_descriptor_uncertainty`
 
-## `reporting.py`
+## `reporting/reporting.py`
 - Canonical outputs:
   - `save_canonical_result_json`
   - `build_canonical_markdown`

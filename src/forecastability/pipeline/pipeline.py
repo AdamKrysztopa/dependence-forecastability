@@ -4,21 +4,21 @@ from __future__ import annotations
 
 import numpy as np
 
-from forecastability.analyzer import ForecastabilityAnalyzerExog
-from forecastability.cmi import compute_pami_with_backend
-from forecastability.metrics import compute_ami, compute_pami_linear_residual
-from forecastability.surrogates import compute_significance_bands
-from forecastability.types import (
-    CanonicalExampleResult,
-    ExogenousBenchmarkResult,
-    MetricCurve,
-    SeriesEvaluationResult,
-)
+from forecastability.diagnostics.cmi import compute_pami_with_backend
+from forecastability.diagnostics.surrogates import compute_significance_bands
+from forecastability.metrics.metrics import compute_ami, compute_pami_linear_residual
+from forecastability.pipeline.analyzer import ForecastabilityAnalyzerExog
 from forecastability.use_cases.run_exogenous_rolling_origin_evaluation import (
     run_exogenous_rolling_origin_evaluation as _impl_exog,
 )
 from forecastability.use_cases.run_rolling_origin_evaluation import (
     run_rolling_origin_evaluation as _impl_rolling,
+)
+from forecastability.utils.types import (
+    CanonicalExampleResult,
+    ExogenousBenchmarkResult,
+    MetricCurve,
+    SeriesEvaluationResult,
 )
 
 

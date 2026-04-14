@@ -7,7 +7,7 @@ from sklearn.feature_selection import mutual_info_regression
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler
 
-from forecastability.validation import validate_time_series
+from forecastability.utils.validation import validate_time_series
 
 
 def _scale_series(ts: np.ndarray) -> np.ndarray:
