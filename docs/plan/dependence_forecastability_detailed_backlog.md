@@ -506,18 +506,19 @@ The strongest marketable story is no longer only “AMI replication + extension.
 **Why:** The project already has CLI, API, and MCP exposure. More transports are unlikely to be the current bottleneck. citeturn247678view0
 
 ### Actions
-- [ ] Do not add more transports by default.
-- [ ] Revisit only if concrete user demand emerges.
+- [x] Keep the default transport surface fixed (CLI, API, MCP); do not add more transports by default.
+- [x] Revisit transport expansion only if concrete user demand is documented.
 
 ### Acceptance criteria
-- [ ] Effort remains focused on adoption quality rather than interface sprawl.
+- [x] Effort remains focused on adoption quality rather than interface sprawl.
+- [x] Any future transport proposal requires concrete demand evidence before implementation.
 
 ---
 
 # Recommended execution order
 
 ## Phase 1 — Trust and onboarding
-- [ ] Release/versioning story
+- [x] Release/versioning story
 - [x] Production-readiness page
 - [x] README first-screen rewrite
 - [x] Quickstart ladder
@@ -526,8 +527,8 @@ The strongest marketable story is no longer only “AMI replication + extension.
 ## Phase 2 — Evidence and contracts
 - [x] Results summary page
 - [x] API contract page
-- [ ] Interface contract tests
-- [ ] Reproducibility fixtures
+- [x] Interface contract tests
+- [x] Reproducibility fixtures
 - [x] Observability and auditability guide
 
 ## Phase 3 — Productization
@@ -549,7 +550,7 @@ The strongest marketable story is no longer only “AMI replication + extension.
 
 These are the items I would deliberately postpone:
 
-- [ ] adding more transports,
+- [x] adding more transports (default stays CLI/API/MCP unless concrete user demand appears),
 - [ ] inflating the agent story beyond its optional interpretive role,
 - [ ] adding many new scorers before the current ones are better packaged and benchmarked,
 - [ ] spending too much time on UI before contracts and reproducibility are solid.
