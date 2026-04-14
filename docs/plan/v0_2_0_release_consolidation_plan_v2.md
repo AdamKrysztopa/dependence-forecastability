@@ -108,13 +108,13 @@ Release `0.2.0` only when all conditions below are true:
 
 | Phase | Title | Duration | Status |
 |---|---:|---:|---|
-| 0 | Preparation | 1 day | Proposed |
+| 0 | Preparation | 1 day | In progress |
 | 1 | Source layout cleanup | 2–3 days | Proposed |
 | 2 | Examples and scripts cleanup | 1–2 days | Proposed |
 | 3 | Notebook rationalization | 0.5 day | Proposed |
 | 4 | Documentation-code alignment | 2 days | Proposed |
 | 5 | README total renovation | 1 day | Proposed |
-| 6 | CI/CD and repository infrastructure | 1–2 days | Proposed |
+| 6 | CI/CD and repository infrastructure | 1–2 days | In progress |
 | 7 | Testing and final validation | 1 day | Proposed |
 | 8 | Release execution | 0.5 day | Proposed |
 
@@ -124,14 +124,14 @@ Release `0.2.0` only when all conditions below are true:
 
 **Objective:** Freeze release intent, create branch, and establish the release baseline.
 
-**Status:** Proposed
+**Status:** In progress
 
 ### Tasks
-- [ ] Create release branch:
+- [x] Create release branch:
   ```bash
   git checkout -b release-0.2.0-cleanup
   ```
-- [ ] Update `CHANGELOG.md` at the top:
+- [x] Update `CHANGELOG.md` at the top:
   ```markdown
   ## [0.2.0] - YYYY-MM-DD
   ### Changed
@@ -141,30 +141,30 @@ Release `0.2.0` only when all conditions below are true:
   - README total renovation (multi-paper triage focus)
   - CI/CD hardened for PyPI releases
   ```
-- [ ] Run dependency sync and confirm the repo installs cleanly:
+- [x] Run dependency sync and confirm the repo installs cleanly:
   ```bash
   uv sync --dev
   ```
-- [ ] Create a release tracker document:
+- [x] Create a release tracker document:
   - `docs/plan/release_0_2_0_tracking.md`
-- [ ] Add a section in the tracker with three buckets:
+- [x] Add a section in the tracker with three buckets:
   - Implemented
   - In progress
   - Not started
-- [ ] Freeze the supported product surfaces for this release:
+- [x] Freeze the supported product surfaces for this release:
   - deterministic core
   - CLI
   - HTTP API
   - agent layer
   - dashboard
   - transport/MCP layer
-- [ ] Define public-surface compatibility expectations in the tracker.
+- [x] Define public-surface compatibility expectations in the tracker.
 
 ### Acceptance criteria
-- [ ] Branch exists
-- [ ] Changelog scaffold exists
-- [ ] `uv sync --dev` completes cleanly
-- [ ] Release tracker exists and includes implementation status buckets
+- [x] Branch exists
+- [x] Changelog scaffold exists
+- [x] `uv sync --dev` completes cleanly
+- [x] Release tracker exists and includes implementation status buckets
 - [ ] Maintainer approves the public-surface freeze
 
 ---
@@ -432,7 +432,7 @@ It should clearly say that the project started from Catt’s AMI paper, but has 
 
 **Objective:** Add the missing standard CI and complete the release engineering story.
 
-**Status:** Proposed
+**Status:** In progress
 
 ### Important clarification
 PyPI publishing is **already implemented**. This phase is about what is still missing:
@@ -442,28 +442,28 @@ PyPI publishing is **already implemented**. This phase is about what is still mi
 - templates and automation around repository maintenance
 
 ### Standard CI
-- [ ] Create `.github/workflows/ci.yml`
-- [ ] Trigger on push and PR to `main`
-- [ ] Run:
+- [x] Create `.github/workflows/ci.yml`
+- [x] Trigger on push and PR to `main`
+- [x] Run:
   - tests
   - ruff
   - mypy or current type-check command
   - build
 
 ### Release workflow tightening
-- [ ] Update `publish-pypi.yml` to trigger only from a release tag such as `v0.2.0`
-- [ ] Use the preferred build path consistently:
+- [x] Update `publish-pypi.yml` to trigger only from a release tag such as `v0.2.0`
+- [x] Use the preferred build path consistently:
   - `uv build` + trusted publishing, or
   - current equivalent if already aligned
-- [ ] Ensure release job depends on green CI where possible
+- [x] Ensure release job depends on green CI where possible
 
 ### Pre-commit
-- [ ] Add `.pre-commit-config.yaml`
+- [x] Add `.pre-commit-config.yaml`
 - [ ] Install locally:
   ```bash
   pre-commit install
   ```
-- [ ] Include hooks such as:
+- [x] Include hooks such as:
   - ruff
   - black if still used, otherwise do not duplicate formatter responsibility
   - mypy if practical
@@ -472,20 +472,20 @@ PyPI publishing is **already implemented**. This phase is about what is still mi
   - trailing-whitespace
 
 ### Project config hardening
-- [ ] Review and complete config sections in `pyproject.toml`:
+- [x] Review and complete config sections in `pyproject.toml`:
   - `[tool.ruff]`
   - `[tool.mypy]`
   - `[tool.pytest.ini_options]`
-- [ ] Add `[project.urls]` if incomplete:
+- [x] Add `[project.urls]` if incomplete:
   - GitHub
   - Issues
   - Documentation
   - PyPI
 
 ### Repository professionalism
-- [ ] Add Dependabot config
-- [ ] Add issue templates
-- [ ] Add PR template
+- [x] Add Dependabot config
+- [x] Add issue templates
+- [x] Add PR template
 - [ ] Add GitHub topics:
   - `time-series`
   - `forecasting`
@@ -494,10 +494,10 @@ PyPI publishing is **already implemented**. This phase is about what is still mi
   - `diagnostics`
 
 ### Acceptance criteria
-- [ ] PR CI exists and runs on every push/PR to `main`
-- [ ] release workflow is more explicit and safer
-- [ ] pre-commit exists and is usable
-- [ ] project metadata feels complete and professional
+- [x] PR CI exists and runs on every push/PR to `main`
+- [x] release workflow is more explicit and safer
+- [x] pre-commit exists and is usable
+- [x] project metadata feels complete and professional
 
 ---
 
@@ -638,6 +638,8 @@ This section is intentionally included so it can be copied into a tracking file 
 - [x] release/publish workflow exists
 - [x] deterministic core exists
 - [x] typed package marker exists
+- [x] standard CI workflow for PRs/pushes
+- [x] issue/PR templates and Dependabot
 
 ### Partially implemented
 - [ ] README pivot to multi-paper triage exists but needs full renovation
@@ -646,11 +648,9 @@ This section is intentionally included so it can be copied into a tracking file 
 - [ ] notebook coverage exists but canonical path is unclear
 
 ### Not started
-- [ ] standard CI workflow for PRs/pushes
 - [ ] release artifact smoke validation
 - [ ] source-layout cleanup plan execution
 - [ ] docs maintenance guide
-- [ ] issue/PR templates and Dependabot
 
 ---
 

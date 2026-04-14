@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Lint, type-check, test, and build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Sync development dependencies
+        run: |
+          set -euo pipefail
+          uv sync --dev --all-extras
+
+      - name: Lint with ruff
+        run: uv run ruff check .
+
+      - name: Type check with ty
+        run: uv run ty check
+
+      - name: Run test suite
+        run: uv run pytest -q -ra
+
+      - name: Build package artifacts
+        run: uv build
