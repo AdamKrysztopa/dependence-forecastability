@@ -14,7 +14,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import spearmanr
 
-from forecastability.types import SeriesEvaluationResult
+from forecastability.utils.types import SeriesEvaluationResult
 
 
 def build_horizon_table(

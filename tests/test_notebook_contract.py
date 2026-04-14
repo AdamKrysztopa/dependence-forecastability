@@ -73,13 +73,13 @@ def test_import_run_exogenous_rolling_origin_evaluation() -> None:
 
 
 def test_import_metric_config() -> None:
-    from forecastability.config import MetricConfig  # noqa: F401
+    from forecastability.utils.config import MetricConfig  # noqa: F401
 
     assert MetricConfig is not None
 
 
 def test_import_rolling_origin_config() -> None:
-    from forecastability.config import RollingOriginConfig  # noqa: F401
+    from forecastability.utils.config import RollingOriginConfig  # noqa: F401
 
     assert RollingOriginConfig is not None
 
@@ -90,7 +90,7 @@ def test_import_rolling_origin_config() -> None:
 
 
 def test_import_generate_ar1_from_datasets() -> None:
-    from forecastability.datasets import generate_ar1  # noqa: F401
+    from forecastability.utils.datasets import generate_ar1  # noqa: F401
 
     assert callable(generate_ar1)
 

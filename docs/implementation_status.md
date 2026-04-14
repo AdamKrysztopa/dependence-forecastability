@@ -32,7 +32,7 @@ experimental, and where the evidence lives — without reading the source code.
 | Regression fixtures | ✅ | `tests/` (diagnostic regression suite) |
 | Theory doc | ✅ | [theory/forecastability_profile.md](theory/forecastability_profile.md), [theory/foundations.md](theory/foundations.md) |
 | Notebook | ✅ | `notebooks/triage/01_forecastability_profile_walkthrough.ipynb` |
-| Script | ✅ | `scripts/run_canonical_examples.py` |
+| Script | ✅ | `scripts/run_canonical_triage.py` |
 
 **Known-partial / caveats.**
 - Surrogate significance bands are unavailable for series shorter than the minimum
@@ -51,7 +51,7 @@ experimental, and where the evidence lives — without reading the source code.
 | Regression fixtures | ✅ | `tests/` (diagnostic regression suite) |
 | Theory doc | ✅ | [theory/foundations.md](theory/foundations.md) |
 | Notebook | ✅ | `notebooks/triage/02_information_limits_and_compression.ipynb` |
-| Script | ✅ | `scripts/run_phase1_limit_diagnostics.py` |
+| Script | ✅ | `scripts/archive/run_phase1_limit_diagnostics.py` |
 
 **Known-partial / caveats.**
 - Limit estimates inherit kNN MI finite-sample bias; short series inflate the
@@ -68,7 +68,7 @@ experimental, and where the evidence lives — without reading the source code.
 | Regression fixtures | ✅ | `tests/` (diagnostic regression suite) |
 | Theory doc | ✅ | [triage_methods/predictive_information_learning_curves.md](triage_methods/predictive_information_learning_curves.md) |
 | Notebook | ✅ | `notebooks/triage/03_predictive_information_learning_curves.ipynb` |
-| Script | ✅ | `scripts/run_predictive_info_learning_curves.py` |
+| Script | ✅ | `scripts/archive/run_predictive_info_learning_curves.py` |
 
 **Known-partial / caveats.**
 - A hard cap $k_{\max} = 8$ is enforced to limit kNN curse of dimensionality.
@@ -85,7 +85,7 @@ experimental, and where the evidence lives — without reading the source code.
 | Regression fixtures | ✅ | `tests/` (diagnostic regression suite) |
 | Theory doc | ✅ | [theory/spectral_predictability.md](theory/spectral_predictability.md) |
 | Notebook | ✅ | `notebooks/triage/04_spectral_and_entropy_diagnostics.ipynb` |
-| Script | ✅ | `scripts/run_spectral_predictability.py` |
+| Script | ✅ | `scripts/archive/run_spectral_predictability.py` |
 
 **Known-partial / caveats.**
 - Ω values are unreliable for $n < 128$; treat as coarse indicator only.
@@ -107,7 +107,7 @@ experimental, and where the evidence lives — without reading the source code.
 | Regression fixtures | ⚠️ partial | Basic sanity checks only; no paper-aligned benchmark fixture |
 | Theory doc | ✅ | [triage_methods/largest_lyapunov_exponent.md](triage_methods/largest_lyapunov_exponent.md) |
 | Notebook | — | Not yet included in triage notebook set |
-| Script | ✅ | `scripts/run_largest_lyapunov_exponent.py` |
+| Script | ✅ | `scripts/archive/run_largest_lyapunov_exponent.py` |
 
 **Known-partial / caveats.**
 - Numerically fragile for $n < 1000$; estimates are indicative only.
@@ -127,7 +127,7 @@ experimental, and where the evidence lives — without reading the source code.
 | Regression fixtures | ✅ | `tests/` (diagnostic regression suite) |
 | Theory doc | ✅ | [theory/entropy_based_complexity.md](theory/entropy_based_complexity.md) |
 | Notebook | ✅ | `notebooks/triage/04_spectral_and_entropy_diagnostics.ipynb` |
-| Script | ✅ | `scripts/run_entropy_complexity.py` |
+| Script | ✅ | `scripts/archive/run_entropy_complexity.py` |
 
 **Known-partial / caveats.**
 - Pattern frequency estimates require adequate $n$; for embedding order $m = 5$
@@ -144,7 +144,7 @@ experimental, and where the evidence lives — without reading the source code.
 | Regression fixtures | ✅ | `tests/` (benchmark panel regression suite) |
 | Theory doc | — | (batch orchestration, no separate theory doc needed) |
 | Notebook | ✅ | `notebooks/triage/05_batch_and_exogenous_workbench.ipynb` |
-| Script | ✅ | `scripts/run_benchmark_panel.py`, `scripts/run_multi_signal_diagnostic_ranking.py` |
+| Script | ✅ | `scripts/run_benchmark_panel.py`, `scripts/archive/run_multi_signal_diagnostic_ranking.py` |
 
 **Known-partial / caveats.**
 - F5 (LLE) is intentionally excluded from the ranking table.
@@ -160,9 +160,9 @@ experimental, and where the evidence lives — without reading the source code.
 | Implemented | ✅ | `src/forecastability/extensions.py` (+ scoring infrastructure) |
 | Tested | ✅ | `tests/test_extensions.py`, `tests/test_benchmark_exog_panel.py` |
 | Regression fixtures | ✅ | `tests/` (exogenous benchmark fixture) |
-| Theory doc | ✅ | [notebooks/exogenous_analysis.md](notebooks/exogenous_analysis.md) |
+| Theory doc | — | No dedicated theory page; use the walkthrough notebook and script evidence |
 | Notebook | ✅ | `notebooks/triage/05_batch_and_exogenous_workbench.ipynb` |
-| Script | ✅ | `scripts/run_exog_analysis.py`, `scripts/run_benchmark_exog_panel.py` |
+| Script | ✅ | `scripts/run_exog_analysis.py`, `scripts/archive/run_benchmark_exog_panel.py` |
 
 **Known-partial / caveats.**
 - CrossAMI inherits all kNN MI finite-sample limitations.
@@ -178,11 +178,11 @@ each feature.
 
 | Feature | Theory doc | Notebook | Script | Test file |
 |---|---|---|---|---|
-| F1 | [forecastability_profile.md](theory/forecastability_profile.md) | `01_forecastability_profile_walkthrough.ipynb` | `run_canonical_examples.py` | `test_forecastability_profile.py` |
-| F2 | [foundations.md](theory/foundations.md) | `02_information_limits_and_compression.ipynb` | `run_phase1_limit_diagnostics.py` | `test_metrics.py` |
-| F3 | [predictive_information_learning_curves.md](triage_methods/predictive_information_learning_curves.md) | `03_predictive_information_learning_curves.ipynb` | `run_predictive_info_learning_curves.py` | `test_metrics.py` |
-| F4 | [spectral_predictability.md](theory/spectral_predictability.md) | `04_spectral_and_entropy_diagnostics.ipynb` | `run_spectral_predictability.py` | `test_metrics.py` |
-| F5 ⚠️ | [largest_lyapunov_exponent.md](triage_methods/largest_lyapunov_exponent.md) | — | `run_largest_lyapunov_exponent.py` | `test_lyapunov.py` |
-| F6 | [entropy_based_complexity.md](theory/entropy_based_complexity.md) | `04_spectral_and_entropy_diagnostics.ipynb` | `run_entropy_complexity.py` | `test_complexity_band.py` |
+| F1 | [forecastability_profile.md](theory/forecastability_profile.md) | `01_forecastability_profile_walkthrough.ipynb` | `scripts/run_canonical_triage.py` | `test_forecastability_profile.py` |
+| F2 | [foundations.md](theory/foundations.md) | `02_information_limits_and_compression.ipynb` | `scripts/archive/run_phase1_limit_diagnostics.py` | `test_metrics.py` |
+| F3 | [predictive_information_learning_curves.md](triage_methods/predictive_information_learning_curves.md) | `03_predictive_information_learning_curves.ipynb` | `scripts/archive/run_predictive_info_learning_curves.py` | `test_metrics.py` |
+| F4 | [spectral_predictability.md](theory/spectral_predictability.md) | `04_spectral_and_entropy_diagnostics.ipynb` | `scripts/archive/run_spectral_predictability.py` | `test_metrics.py` |
+| F5 ⚠️ | [largest_lyapunov_exponent.md](triage_methods/largest_lyapunov_exponent.md) | — | `scripts/archive/run_largest_lyapunov_exponent.py` | `test_lyapunov.py` |
+| F6 | [entropy_based_complexity.md](theory/entropy_based_complexity.md) | `04_spectral_and_entropy_diagnostics.ipynb` | `scripts/archive/run_entropy_complexity.py` | `test_complexity_band.py` |
 | F7 | — | `05_batch_and_exogenous_workbench.ipynb` | `run_benchmark_panel.py` | `test_batch_triage_f7.py` |
-| F8 | [notebooks/exogenous_analysis.md](notebooks/exogenous_analysis.md) | `05_batch_and_exogenous_workbench.ipynb` | `run_exog_analysis.py` | `test_extensions.py` |
+| F8 | — | `05_batch_and_exogenous_workbench.ipynb` | `run_exog_analysis.py` | `test_extensions.py` |

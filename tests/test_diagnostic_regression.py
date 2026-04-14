@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from forecastability.diagnostic_regression import (
+from forecastability.diagnostics.diagnostic_regression import (
     FIXTURE_SERIES,
     verify_diagnostic_regression_outputs,
     write_diagnostic_regression_outputs,

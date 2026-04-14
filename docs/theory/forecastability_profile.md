@@ -188,7 +188,7 @@ choosing a better-matched `n_neighbors`) propagates automatically to the profile
 
 ```python
 import numpy as np
-from forecastability.datasets import generate_ar1
+from forecastability.utils.datasets import generate_ar1
 from forecastability.triage import TriageRequest, run_triage
 
 series = generate_ar1(n=300, phi=0.7, random_state=0)

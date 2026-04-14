@@ -16,7 +16,7 @@ from sklearn.feature_selection import mutual_info_regression
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler
 
-from forecastability.validation import validate_time_series
+from forecastability.utils.validation import validate_time_series
 
 
 def _scale_series(ts: np.ndarray) -> np.ndarray:
@@ -155,7 +155,7 @@ import numpy as np
 from scipy.fftpack import fft, ifft
 
 from forecastability.metrics import compute_ami, compute_pami_linear_residual
-from forecastability.validation import validate_time_series
+from forecastability.utils.validation import validate_time_series
 
 
 def phase_surrogates(

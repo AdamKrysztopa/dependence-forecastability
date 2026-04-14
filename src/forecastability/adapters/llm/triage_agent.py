@@ -335,7 +335,7 @@ def create_triage_agent(
 
         Returns scorer names, families, and descriptions.
         """
-        from forecastability.scorers import default_registry
+        from forecastability.metrics.scorers import default_registry
 
         registry = default_registry()
         return [

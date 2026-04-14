@@ -21,8 +21,8 @@ from pydantic import BaseModel, ConfigDict
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402 — must follow matplotlib.use()
 
-from forecastability.analyzer import ForecastabilityAnalyzerExog
-from forecastability.io_models import ExogCaseRecord
+from forecastability.pipeline.analyzer import ForecastabilityAnalyzerExog
+from forecastability.utils.io_models import ExogCaseRecord
 
 _logger = logging.getLogger(__name__)
 

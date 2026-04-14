@@ -6,12 +6,12 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from forecastability.analyzer import ForecastabilityAnalyzerExog as _DefaultAnalyzer
-from forecastability.rolling_origin import build_expanding_window_splits
-from forecastability.types import ExogenousBenchmarkResult
+from forecastability.pipeline.analyzer import ForecastabilityAnalyzerExog as _DefaultAnalyzer
+from forecastability.pipeline.rolling_origin import build_expanding_window_splits
+from forecastability.utils.types import ExogenousBenchmarkResult
 
 if TYPE_CHECKING:
-    from forecastability.analyzer import ForecastabilityAnalyzerExog
+    from forecastability.pipeline.analyzer import ForecastabilityAnalyzerExog
 
 
 def run_exogenous_rolling_origin_evaluation(

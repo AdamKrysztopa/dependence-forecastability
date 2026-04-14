@@ -13,8 +13,24 @@ from forecastability.models import (
     forecast_seasonal_naive,
     smape,
 )
-from forecastability.rolling_origin import build_expanding_window_splits
-from forecastability.types import ForecastResult, SeriesEvaluationResult
+from forecastability.pipeline.rolling_origin import build_expanding_window_splits
+from forecastability.utils.types import ForecastResult, SeriesEvaluationResult
+
+_AMI_MIN_PAIRS = 30
+_PAMI_MIN_PAIRS = 50
+
+
+def _effective_n_origins(*, series_size: int, requested_n_origins: int, horizon: int) -> int | None:
+    """Return feasible rolling origins or None when horizon is infeasible."""
+    max_feasible_origins = (series_size - 21) // horizon
+    if max_feasible_origins < 3:
+        return None
+    return min(requested_n_origins, max_feasible_origins)
+
+
+def _min_train_window_size(*, horizon: int) -> int:
+    """Return minimum train size needed for strict AMI and pAMI floors."""
+    return horizon + _PAMI_MIN_PAIRS + 1
 
 
 def run_rolling_origin_evaluation(
@@ -57,16 +73,24 @@ def run_rolling_origin_evaluation(
         # Adapt n_origins downward when the series is too short for the
         # requested horizon so short-but-valid series (e.g. M4 Yearly with
         # n≈30–50) are not silently skipped.  Keep at least 3 origins.
-        n_series = len(ts)
-        n_origins_eff = max(3, min(n_origins, (n_series - 21) // horizon))
-        if n_origins_eff < 3:
-            continue  # horizon truly infeasible for this series — skip it
-
-        splits = build_expanding_window_splits(
-            ts,
-            n_origins=n_origins_eff,
+        n_origins_eff = _effective_n_origins(
+            series_size=len(ts),
+            requested_n_origins=n_origins,
             horizon=horizon,
         )
+        if n_origins_eff is None:
+            continue  # horizon truly infeasible for this series — skip it
+
+        try:
+            splits = build_expanding_window_splits(
+                ts,
+                n_origins=n_origins_eff,
+                horizon=horizon,
+            )
+        except ValueError:
+            continue
+
+        min_train_size = _min_train_window_size(horizon=horizon)
 
         ami_vals: list[float] = []
         pami_vals: list[float] = []
@@ -80,19 +104,22 @@ def run_rolling_origin_evaluation(
             train = split.train
             test = split.test
 
+            if train.size < min_train_size:
+                continue
+
             # Horizon-specific diagnostics are computed on train windows only.
             ami_curve = compute_ami(
                 train,
                 max_lag=horizon,
                 n_neighbors=8,
-                min_pairs=20,
+                min_pairs=_AMI_MIN_PAIRS,
                 random_state=random_state + idx,
             )
             pami_curve = compute_pami_linear_residual(
                 train,
                 max_lag=horizon,
                 n_neighbors=8,
-                min_pairs=30,
+                min_pairs=_PAMI_MIN_PAIRS,
                 random_state=random_state + idx,
             )
 
@@ -121,6 +148,9 @@ def run_rolling_origin_evaluation(
             if include_nbeats:
                 pred_nbeats = forecast_nbeats(train, horizon, input_size=max(2 * horizon, 24))
                 nbeats_vals.append(smape(test, pred_nbeats))
+
+        if not ami_vals:
+            continue
 
         ami_by_horizon[horizon] = float(np.mean(ami_vals))
         pami_by_horizon[horizon] = float(np.mean(pami_vals))

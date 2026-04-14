@@ -1,6 +1,6 @@
 """Runtime bootstrap: prepare output directories from an OutputConfig."""
 
-from forecastability.config import OutputConfig
+from forecastability.utils.config import OutputConfig
 
 
 def prepare_output_dirs(config: OutputConfig) -> None:
@@ -8,7 +8,7 @@ def prepare_output_dirs(config: OutputConfig) -> None:
 
     This is the only place that performs filesystem side effects for
     output path preparation. Call once at script entry-points (e.g.,
-    scripts/run_canonical_examples.py) before writing any artifacts.
+    scripts/run_canonical_triage.py) before writing any artifacts.
 
     Args:
         config: Validated output configuration.

@@ -9,22 +9,22 @@ from typing import Literal
 import numpy as np
 from scipy.stats import binomtest
 
-from forecastability.config import (
+from forecastability.use_cases.run_exogenous_rolling_origin_evaluation import (
+    run_exogenous_rolling_origin_evaluation,
+)
+from forecastability.utils.config import (
     ExogenousLagWindowConfig,
     ExogenousScreeningRecommendationConfig,
     ExogenousScreeningWorkbenchConfig,
 )
-from forecastability.types import (
+from forecastability.utils.types import (
     ExogenousBenchmarkResult,
     ExogenousDriverSummary,
     ExogenousHorizonUsefulnessRow,
     ExogenousLagWindowSummaryRow,
     ExogenousScreeningWorkbenchResult,
 )
-from forecastability.use_cases.run_exogenous_rolling_origin_evaluation import (
-    run_exogenous_rolling_origin_evaluation,
-)
-from forecastability.validation import validate_time_series
+from forecastability.utils.validation import validate_time_series
 
 DRIVER_SUMMARY_TABLE_COLUMNS: tuple[str, ...] = (
     "overall_rank",

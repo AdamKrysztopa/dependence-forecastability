@@ -3,8 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from forecastability.io_models import CanonicalPayload, CanonicalSummaryBundle, ExogCaseRecord
-from forecastability.types import CanonicalSummary, Diagnostics, InterpretationResult
+from forecastability.utils.io_models import CanonicalPayload, CanonicalSummaryBundle, ExogCaseRecord
+from forecastability.utils.types import CanonicalSummary, Diagnostics, InterpretationResult
 
 
 def test_canonical_payload_from_summary_interpretation_excludes_narrative_when_disabled() -> None:

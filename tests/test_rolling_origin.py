@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from forecastability.rolling_origin import build_expanding_window_splits
+from forecastability.pipeline.rolling_origin import build_expanding_window_splits
 
 
 def test_build_expanding_window_splits_properties() -> None:

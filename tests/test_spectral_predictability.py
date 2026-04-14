@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from forecastability.scorers import (
+from forecastability.metrics.scorers import (
     ScorerInfo,
     _spectral_predictability_scorer,
     default_registry,

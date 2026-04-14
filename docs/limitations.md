@@ -26,13 +26,14 @@ short series lengths and large lag indices.
   high-dimensional lag spaces (F3 at large $k$) are most affected.
 - **Surrogate-band availability.** Phase-randomized surrogate significance bands
   require a minimum series length to produce stable quantile estimates. When the
-  series is too short, surrogates are not computed and the significance boundary is
-  unavailable. This is distinct from "computed, none significant" — the two outcomes
+  series is too short, significance may be unavailable and the surrogate bands are
+  omitted. This is distinct from "computed, none significant" — the two outcomes
   must not be conflated.
 
 > [!WARNING]
-> "Surrogates not computed" means the sample size did not permit reliable band
-> estimation. It does not mean nothing is significant.
+> When `compute_surrogates` is `false`, significance was not assessed for that run.
+> That does not mean the series has no significant lags; it means the run did not
+> produce surrogate bands that support a significance claim.
 
 ---
 
@@ -69,10 +70,11 @@ implies specific assumptions.
 - **Minimum surrogate count.** At least `n_surrogates = 99` is required for a valid
   two-sided 95% band. Fewer than 99 surrogates are not sufficient and must not be
   used as a significance threshold.
-- **Unavailability vs absence.** When surrogates are not computed (sample size too
-  short, or `n_surrogates=0` set deliberately), the resulting state is "significance
-  not assessed", not "no significant lags found". Always check the
-  `surrogates_computed` flag before interpreting significance results.
+- **Unavailability vs absence.** "Significance not assessed" is different from
+  "surrogates were computed and no lags cleared the band." Use
+  `compute_surrogates` to distinguish those states. Only interpret
+  `n_sig_raw_lags`, `n_sig_partial_lags`, or other significant-lag fields as
+  evidence about absent significance when `compute_surrogates` is `true`.
 - **One-sided interpretation.** The upper band is operationally informative for
   detecting non-null dependence. The lower band is usually near zero for MI and is
   not typically operationally useful.

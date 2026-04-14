@@ -14,13 +14,13 @@ from __future__ import annotations
 from pathlib import Path
 import pandas as pd
 
-from forecastability.aggregation import (
+from forecastability.utils.aggregation import (
     add_terciles,
     build_horizon_table,
     compute_rank_associations,
     summarize_terciles,
 )
-from forecastability.datasets import load_air_passengers
+from forecastability.utils.datasets import load_air_passengers
 from forecastability.pipeline import run_rolling_origin_evaluation
 
 

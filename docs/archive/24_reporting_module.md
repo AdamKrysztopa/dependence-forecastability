@@ -10,9 +10,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from forecastability.aggregation import summarize_canonical_result
-from forecastability.interpretation import interpret_canonical_result
-from forecastability.types import CanonicalExampleResult
+from forecastability.utils.aggregation import summarize_canonical_result
+from forecastability.reporting.interpretation import interpret_canonical_result
+from forecastability.utils.types import CanonicalExampleResult
 
 
 def save_canonical_result_json(

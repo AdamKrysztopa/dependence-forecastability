@@ -41,7 +41,7 @@ uv run python scripts/download_data.py
 ```python
 import numpy as np
 import pandas as pd
-from forecastability.analyzer import ForecastabilityAnalyzerExog
+from forecastability.pipeline.analyzer import ForecastabilityAnalyzerExog
 
 df = pd.read_csv("data/raw/exog/bike_sharing_hour.csv")
 y_bike    = df["cnt"].values.astype(float)
@@ -61,7 +61,7 @@ print("SNR:", res_temp.mean_raw_20 / res_noise.mean_raw_20)
 ```python
 import numpy as np
 import pandas as pd
-from forecastability.analyzer import ForecastabilityAnalyzerExog
+from forecastability.pipeline.analyzer import ForecastabilityAnalyzerExog
 
 aapl = pd.read_csv("data/raw/canonical/aapl_returns.csv", index_col=0, parse_dates=True)
 spy  = pd.read_csv("data/raw/exog/spy_returns.csv",       index_col=0, parse_dates=True)

@@ -9,9 +9,9 @@ import numpy as np
 import pandas as pd
 import yaml
 
-from forecastability.config import ExogenousBenchmarkConfig
 from forecastability.pipeline import run_exogenous_rolling_origin_evaluation
-from forecastability.plots import plot_exog_benchmark_curves
+from forecastability.utils.config import ExogenousBenchmarkConfig
+from forecastability.utils.plots import plot_exog_benchmark_curves
 
 _logger = logging.getLogger(__name__)
 

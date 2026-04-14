@@ -19,7 +19,7 @@ from pathlib import Path
 import matplotlib
 import numpy as np
 
-from forecastability.diagnostic_regression import (
+from forecastability.diagnostics.diagnostic_regression import (
     build_diagnostic_regression_outputs,
     verify_diagnostic_regression_outputs,
     write_diagnostic_regression_outputs,

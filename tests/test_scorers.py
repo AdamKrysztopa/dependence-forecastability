@@ -7,7 +7,7 @@ from typing import cast
 import numpy as np
 import pytest
 
-from forecastability.scorers import DependenceScorer, ScorerRegistry, default_registry
+from forecastability.metrics.scorers import DependenceScorer, ScorerRegistry, default_registry
 
 
 @pytest.fixture()

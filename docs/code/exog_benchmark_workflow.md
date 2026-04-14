@@ -33,7 +33,7 @@ Noise controls use the local `data/raw/exog/noise_control.csv` series, tail-alig
 Run:
 
 ```bash
-MPLBACKEND=Agg uv run python scripts/run_benchmark_exog_panel.py
+MPLBACKEND=Agg uv run python scripts/archive/run_benchmark_exog_panel.py
 ```
 
 Artifacts:

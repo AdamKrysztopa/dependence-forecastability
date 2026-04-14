@@ -6,7 +6,7 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 
 from forecastability.metrics import _scale_series
-from forecastability.scorers import DependenceScorer
+from forecastability.metrics.scorers import DependenceScorer
 
 
 def _residualize(

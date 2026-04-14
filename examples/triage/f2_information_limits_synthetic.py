@@ -21,15 +21,15 @@ os.environ.setdefault("MPLBACKEND", "Agg")
 
 import matplotlib.pyplot as plt
 
-from forecastability.datasets import generate_ar1
 from forecastability.models import forecast_linear_autoreg, forecast_naive, smape
-from forecastability.rolling_origin import build_expanding_window_splits
+from forecastability.pipeline.rolling_origin import build_expanding_window_splits
 from forecastability.services.theoretical_limit_diagnostics_service import (
     build_theoretical_limit_diagnostics,
 )
 from forecastability.triage.models import TriageRequest
 from forecastability.triage.theoretical_limit_diagnostics import TheoreticalLimitDiagnostics
 from forecastability.use_cases.run_triage import run_triage
+from forecastability.utils.datasets import generate_ar1
 
 
 def _generate_source_signal(*, random_state: int, n_samples: int = 1200) -> np.ndarray:

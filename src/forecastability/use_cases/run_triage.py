@@ -7,13 +7,13 @@ import warnings
 from collections.abc import Callable
 from typing import Any
 
-from forecastability.analyzer import (
+from forecastability.pipeline.analyzer import (
     AnalyzeResult,
     ForecastabilityAnalyzer,
     ForecastabilityAnalyzerExog,
 )
-from forecastability.interpretation import interpret_canonical_result
 from forecastability.ports import CheckpointPort, EventEmitterPort
+from forecastability.reporting.interpretation import interpret_canonical_result
 from forecastability.services.complexity_band_service import build_complexity_band
 from forecastability.services.forecastability_profile_service import build_forecastability_profile
 from forecastability.services.theoretical_limit_diagnostics_service import (
@@ -37,7 +37,7 @@ from forecastability.triage.models import (
 from forecastability.triage.readiness import assess_readiness
 from forecastability.triage.router import plan_method
 from forecastability.triage.theoretical_limit_diagnostics import TheoreticalLimitDiagnostics
-from forecastability.types import CanonicalExampleResult, MetricCurve
+from forecastability.utils.types import CanonicalExampleResult, MetricCurve
 
 
 def _run_compute(request: TriageRequest, method_plan: MethodPlan) -> AnalyzeResult:

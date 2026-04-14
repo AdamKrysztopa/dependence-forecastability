@@ -9,8 +9,8 @@ PyPI API token secrets are intentionally not used.
 ## Workflow
 
 - Workflow file: `.github/workflows/publish-pypi.yml`
-- Trigger: `release.published` events for version tags that start with `v`
-- Build output: wheel and sdist from `python -m build`
+- Trigger: `push: tags: v*` (version tags starting with `v`)
+- Build output: wheel and sdist via `uv build`
 - Publish action: `pypa/gh-action-pypi-publish@release/v1` with `id-token: write`
 
 ## One-Time Maintainer Setup
@@ -31,7 +31,7 @@ stored as `TWINE_API_KEY` (or in `~/.pypirc`).
 ```bash
 # 1. Build fresh artifacts
 rm -rf dist/ build/
-uv run python -m build
+uv build
 uv run twine check dist/*
 
 # 2. Upload to TestPyPI
@@ -61,9 +61,9 @@ and confirm README renders, metadata is correct, and entry points are listed.
 
 1. Bump package version in `pyproject.toml`.
 2. Add release notes in `docs/releases/vX.Y.Z.md`.
-3. Push tag `vX.Y.Z`.
-4. `Release` workflow creates or updates the GitHub release and attaches artifacts.
-5. `Publish to PyPI` workflow publishes the same distributions to PyPI.
+3. Push tag `vX.Y.Z` — both `release.yml` and `publish-pypi.yml` trigger in parallel.
+4. `release.yml` builds artifacts and creates the GitHub release with dist assets attached.
+5. `publish-pypi.yml` builds artifacts independently and publishes them to PyPI via trusted publishing.
 
 ## Hotfix Process
 
@@ -91,7 +91,7 @@ patch-version increment and a short targeted branch.
    uv run pytest -q -ra
    uv run ruff check .
    uv run ty check
-   uv run python -m build
+   uv build
    uv run twine check dist/*
    ```
 7. **Create a pull request** to `main` and merge after review.
@@ -119,4 +119,4 @@ patch-version increment and a short targeted branch.
 
 - No long-lived `PYPI_API_TOKEN` is stored in repository secrets.
 - Publishing is constrained to signed GitHub OIDC identity plus environment protections.
-- Restricting to release publication reduces accidental package pushes from branch builds.
+- Restricting to tag pushes only (not every branch push) reduces accidental package pushes from branch builds.

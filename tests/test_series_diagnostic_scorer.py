@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from forecastability.scorers import (
+from forecastability.metrics.scorers import (
     DependenceScorer,
     ScorerInfo,
     ScorerRegistry,

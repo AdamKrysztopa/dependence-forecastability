@@ -107,7 +107,7 @@ from urllib.request import urlretrieve
 import numpy as np
 import pandas as pd
 
-from forecastability.datasets import (
+from forecastability.utils.datasets import (
     generate_gaussian_returns,
     generate_henon_map,
     generate_sine_wave,

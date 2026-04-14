@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from forecastability.spectral_utils import compute_normalised_psd, spectral_entropy
+from forecastability.diagnostics.spectral_utils import compute_normalised_psd, spectral_entropy
 
 
 def test_psd_sums_to_one() -> None:

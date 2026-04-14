@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from forecastability.datasets import load_m4_subset, m4_seasonal_period
+from forecastability.utils.datasets import load_m4_subset, m4_seasonal_period
 
 
 def test_m4_seasonal_period_mapping() -> None:

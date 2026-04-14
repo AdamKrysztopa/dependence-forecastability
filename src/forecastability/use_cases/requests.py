@@ -9,7 +9,7 @@ from __future__ import annotations
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field
 
-from forecastability.config import RollingOriginConfig
+from forecastability.utils.config import RollingOriginConfig
 
 
 class AnalyzeSeriesRequest(BaseModel):

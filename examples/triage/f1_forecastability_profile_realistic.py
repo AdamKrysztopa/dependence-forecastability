@@ -19,10 +19,10 @@ os.environ.setdefault("MPLBACKEND", "Agg")
 
 import matplotlib.pyplot as plt
 
-from forecastability.datasets import load_air_passengers
 from forecastability.triage.forecastability_profile import ForecastabilityProfile
 from forecastability.triage.models import TriageRequest
 from forecastability.use_cases.run_triage import run_triage
+from forecastability.utils.datasets import load_air_passengers
 
 
 def _compute_realistic_profile(

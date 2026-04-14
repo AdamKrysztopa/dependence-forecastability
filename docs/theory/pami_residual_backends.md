@@ -22,7 +22,7 @@ This page explains how residual backends affect pAMI estimates in this project.
 Use the robustness study pipeline to compare all configured backends against `linear_residual`.
 
 1. Configure backends in `configs/robustness_study.yaml`.
-2. Run `MPLBACKEND=Agg uv run python scripts/run_robustness_study.py`.
+2. Run `MPLBACKEND=Agg uv run python scripts/archive/run_robustness_study.py`.
 3. Inspect `outputs/tables/robustness_backend_comparison.csv`.
 
 The backend table includes direct deltas versus linear baseline:

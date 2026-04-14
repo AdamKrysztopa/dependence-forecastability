@@ -49,11 +49,11 @@ This page is a compact, decision-first evidence layer. Notebooks are linked as d
 | Triage workflow | Canonical + exogenous triage regression inputs | Deterministic staged orchestration (`readiness -> routing -> compute -> interpretation`) | Early stop/routing reduces wasted modelling effort and enforces consistent screening paths | Route/class outputs are triage diagnostics, not direct proof of forecast error improvement |
 | Triage extension diagnostics | Canonical series + synthetic benchmarks | Deterministic F1–F8 diagnostics with regression fixtures (F9); spectral, entropy, and complexity scorers | Richer pre-modelling evidence: theoretical ceilings, lookback selection, complexity regime, batch ranking, and redundancy-aware exogenous screening | F5 (Lyapunov) is experimental and excluded from automated decisions; new scorers inherit kNN estimation noise on short series |
 
-## Primary Narrative Pages
+## Primary Notebook Evidence
 
-- [notebooks/canonical_forecastability.md](notebooks/canonical_forecastability.md)
-- [notebooks/exogenous_analysis.md](notebooks/exogenous_analysis.md)
-- [notebooks/agentic_triage.md](notebooks/agentic_triage.md)
+- [../notebooks/walkthroughs/01_canonical_forecastability.ipynb](../notebooks/walkthroughs/01_canonical_forecastability.ipynb)
+- [../notebooks/walkthroughs/02_exogenous_analysis.ipynb](../notebooks/walkthroughs/02_exogenous_analysis.ipynb)
+- [../notebooks/walkthroughs/03_triage_end_to_end.ipynb](../notebooks/walkthroughs/03_triage_end_to_end.ipynb)
 - [../notebooks/triage/01_forecastability_profile_walkthrough.ipynb](../notebooks/triage/01_forecastability_profile_walkthrough.ipynb)
 - [../notebooks/triage/04_spectral_and_entropy_diagnostics.ipynb](../notebooks/triage/04_spectral_and_entropy_diagnostics.ipynb)
 - [../notebooks/triage/05_batch_and_exogenous_workbench.ipynb](../notebooks/triage/05_batch_and_exogenous_workbench.ipynb)

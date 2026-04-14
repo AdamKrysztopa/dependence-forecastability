@@ -44,7 +44,7 @@ except ImportError:
     _MCP_AVAILABLE = False
 
 from forecastability.adapters.triage_presenter import present_triage_result
-from forecastability.scorers import default_registry
+from forecastability.metrics.scorers import default_registry
 from forecastability.triage.models import AnalysisGoal, ReadinessReport, TriageRequest, TriageResult
 from forecastability.triage.readiness import assess_readiness
 from forecastability.use_cases.run_triage import run_triage

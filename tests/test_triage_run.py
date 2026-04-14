@@ -54,8 +54,8 @@ class TestRunTriageUnivariate:
 
     def test_result_types_are_correct(self) -> None:
         """TriageResult fields have expected types."""
-        from forecastability.analyzer import AnalyzeResult
-        from forecastability.types import InterpretationResult
+        from forecastability.pipeline.analyzer import AnalyzeResult
+        from forecastability.utils.types import InterpretationResult
 
         rng = np.random.default_rng(1)
         ts = rng.standard_normal(150)
@@ -141,7 +141,7 @@ class TestRunTriageSignificantLagsContract:
         # Retrieve the canonical result indirectly via the interpretation path:
         # when significant_lags is None, interpret_canonical_result falls back to
         # the above-mean-pAMI heuristic — this confirms the contract is respected.
-        from forecastability.types import InterpretationResult
+        from forecastability.utils.types import InterpretationResult
 
         assert isinstance(result.interpretation, InterpretationResult)
 

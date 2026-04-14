@@ -1,6 +1,6 @@
 # 25. Canonical Examples Runner
 
-- [x] `scripts/run_canonical_examples.py` must:
+- [x] `scripts/run_canonical_triage.py` must:
   - [ ] run all four canonical examples
   - [ ] save figures
   - [ ] save JSON summaries
@@ -11,16 +11,16 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from forecastability.aggregation import summarize_canonical_result
-from forecastability.datasets import (
+from forecastability.utils.aggregation import summarize_canonical_result
+from forecastability.utils.datasets import (
     generate_henon_map,
     generate_simulated_stock_returns,
     generate_sine_wave,
     load_air_passengers,
 )
-from forecastability.interpretation import interpret_canonical_result
+from forecastability.reporting.interpretation import interpret_canonical_result
 from forecastability.pipeline import run_canonical_example
-from forecastability.plots import plot_canonical_result
+from forecastability.utils.plots import plot_canonical_result
 from forecastability.reporting import save_canonical_result_json
 
 

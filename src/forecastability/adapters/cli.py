@@ -34,7 +34,7 @@ import numpy as np
 from pydantic import ValidationError
 
 from forecastability.adapters.triage_presenter import present_triage_result
-from forecastability.scorers import default_registry
+from forecastability.metrics.scorers import default_registry
 from forecastability.triage.batch_models import (
     FAILURE_TABLE_COLUMNS,
     SUMMARY_TABLE_COLUMNS,

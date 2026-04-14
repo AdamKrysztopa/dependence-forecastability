@@ -1,125 +1,97 @@
 <!-- type: reference -->
-# Documentation
+# Documentation Map
 
 A deterministic forecastability triage toolkit with AMI as the paper-aligned foundation and pAMI as a project extension.
 
-CLI, API, notebooks, MCP, and agents are optional access or narration layers around the same deterministic outputs.
+_Last verified for release 0.2.0 consolidation on 2026-04-14._
 
----
+Use this index to get to the right surface quickly. The live repository is the source of truth for package entry points, scripts, notebooks, and checked-in artifacts.
 
-## Start here
+> [!IMPORTANT]
+> The primary learning path starts with the package/API docs and the live notebooks under `notebooks/walkthroughs/`. Historical planning and archive material is retained, but it is not part of the primary docs path.
 
-First-time user path: install, run one deterministic triage, read the result.
+## Users
 
-| Document | Description |
-|---|---|
-| [quickstart.md](quickstart.md) | Laddered quickstart: 60s CLI, 5m notebook, 10m Python API, 15m HTTP API, plus optional agent and MCP routes using one shared signal |
-| [golden_path.md](golden_path.md) | Opinionated path from install to first trustworthy output — the recommended starting point |
-| [executive_summary.md](executive_summary.md) | One-page visual summary for non-specialists: problem, AMI/pAMI value, readiness, and next steps |
+Use this path if you want to install the package, run deterministic triage, and inspect the current artifact surfaces.
 
----
+| Start here | Why |
+| --- | --- |
+| [../README.md](../README.md) | Package-level overview: install, Python quickstart, CLI, API, scripts, notebooks, and artifact surfaces |
+| [golden_path.md](golden_path.md) | Shortest route from install to a trustworthy first result |
+| [quickstart.md](quickstart.md) | Surface-by-surface quickstart for Python, CLI, HTTP API, dashboard, and optional extras |
+| [public_api.md](public_api.md) | Stable imports from `forecastability` and `forecastability.triage` |
+| [api_contract.md](api_contract.md) | HTTP request, response, and SSE contract for `forecastability.adapters.api:app` |
 
-## Learn the methods
+### Canonical notebook path
 
-Conceptual background and mathematical foundations.
+Use the live notebooks directly rather than notebook narrative proxies.
 
-| Document | Description |
-|---|---|
-| [theory/foundations.md](theory/foundations.md) | AMI and pAMI definitions, significance logic, rolling-origin invariants |
-| [theory/forecastability_profile.md](theory/forecastability_profile.md) | Forecastability Profile model, informative horizon set, epsilon resolution, DPI diagnostic |
-| [theory/pami_residual_backends.md](theory/pami_residual_backends.md) | Residual backend trade-offs, linear-baseline comparison workflow, and failure modes |
-| [theory/interpretation_patterns.md](theory/interpretation_patterns.md) | Pattern A–E classification logic for agentic narration |
-| [theory/spectral_predictability.md](theory/spectral_predictability.md) | Spectral predictability score Ω, PSD normalisation, and complementarity with AMI |
-| [theory/entropy_based_complexity.md](theory/entropy_based_complexity.md) | Permutation entropy, spectral entropy, complexity band classification |
-| [triage_methods/predictive_information_learning_curves.md](triage_methods/predictive_information_learning_curves.md) | EvoRate-style lookback analysis, plateau detection, reliability caveats |
-| [triage_methods/largest_lyapunov_exponent.md](triage_methods/largest_lyapunov_exponent.md) | Experimental LLE estimation, delay embedding, sample-size constraints |
+1. [notebooks/README.md](notebooks/README.md) for the notebook map.
+2. [../notebooks/walkthroughs/00_air_passengers_showcase.ipynb](../notebooks/walkthroughs/00_air_passengers_showcase.ipynb) for the first-stop walkthrough.
+3. [../notebooks/walkthroughs/01_canonical_forecastability.ipynb](../notebooks/walkthroughs/01_canonical_forecastability.ipynb) through [../notebooks/walkthroughs/04_screening_end_to_end.ipynb](../notebooks/walkthroughs/04_screening_end_to_end.ipynb) for expanded walkthroughs.
+4. [../notebooks/triage/01_forecastability_profile_walkthrough.ipynb](../notebooks/triage/01_forecastability_profile_walkthrough.ipynb) through [../notebooks/triage/06_agent_ready_triage_interpretation.ipynb](../notebooks/triage/06_agent_ready_triage_interpretation.ipynb) for deep-dive method notebooks.
 
-### Notebook narratives
+## Contributors
 
-Durable narrative pages distilled from the most important notebooks.
+Use this path if you are changing code, docs, scripts, or release-facing surfaces.
 
-| Document | Description |
-|---|---|
-| [notebooks/README.md](notebooks/README.md) | Notebook taxonomy and walkthrough vs deterministic deep-dive role split |
-| [notebooks/canonical_forecastability.md](notebooks/canonical_forecastability.md) | AMI/pAMI notebook: purpose, key figure, key result, takeaways |
-| [notebooks/exogenous_analysis.md](notebooks/exogenous_analysis.md) | CrossAMI/pCrossAMI notebook with warning-aware driver-screening outcomes |
-| [notebooks/agentic_triage.md](notebooks/agentic_triage.md) | Triage walkthrough surface and deterministic payload/adapter deep dive |
+| Document | Why |
+| --- | --- |
+| [maintenance/developer_guide.md](maintenance/developer_guide.md) | Maintainer workflow for source layout, scripts, configs, notebooks, and artifacts |
+| [maintenance/doc_coverage_matrix.md](maintenance/doc_coverage_matrix.md) | Which docs own which repo surfaces, and what is archived vs active |
+| [code/module_map.md](code/module_map.md) | Current `src/forecastability/` package map by layer and subpackage |
+| [architecture.md](architecture.md) | Actual layered architecture and dependency direction |
+| [versioning.md](versioning.md) | Stability levels for package, CLI, API, dashboard, agent, and MCP surfaces |
 
-#### Triage extension notebooks
+## Operators And Maintainers
 
-Interactive notebooks in `notebooks/triage/` covering the extended diagnostic pipeline:
+Use this path if you operate the CLI/API/dashboard surfaces, regenerate outputs, or maintain release hygiene.
 
-| Notebook | Topic |
-|---|---|
-| `01_forecastability_profile_walkthrough.ipynb` | F1 forecastability profile walkthrough |
-| `02_information_limits_and_compression.ipynb` | F2 information-theoretic limits and compression |
-| `07_predictive_information_learning_curves.ipynb` | F3 predictive information learning curves |
-| `08_spectral_and_entropy_diagnostics.ipynb` | F4/F6 spectral predictability and entropy diagnostics |
-| `09_batch_and_exogenous_workbench.ipynb` | F7/F8 batch ranking and exogenous screening |
-| `10_agent_ready_triage_interpretation.ipynb` | Deterministic payload/serializer/interpretation deep dive (non-walkthrough) |
+| Document | Why |
+| --- | --- |
+| [surface_guide.md](surface_guide.md) | Which surfaces are stable, beta, or experimental, and what most users can ignore |
+| [observability.md](observability.md) | Event, checkpoint, and auditability contracts |
+| [production_readiness.md](production_readiness.md) | Operational boundaries and non-goals |
+| [agent_layer.md](agent_layer.md) | Contract for optional LLM narration over deterministic outputs |
+| [wording_policy.md](wording_policy.md) | Canonical wording and banned claims for release-facing copy |
 
----
+## Researchers And Reference Readers
 
-## Use in practice
+Use this path for method background, caveats, and evidence summaries.
 
-Operational guides, scenario maps, and diagnostic reference.
+| Document | Why |
+| --- | --- |
+| [theory/foundations.md](theory/foundations.md) | AMI, pAMI, surrogate significance, and rolling-origin boundaries |
+| [theory/pami_residual_backends.md](theory/pami_residual_backends.md) | Linear-residual pAMI assumptions and backend caveats |
+| [theory/forecastability_profile.md](theory/forecastability_profile.md) | Forecastability profile model and informative-horizon summary logic |
+| [theory/spectral_predictability.md](theory/spectral_predictability.md) | Spectral predictability interpretation and complementarity with AMI |
+| [theory/entropy_based_complexity.md](theory/entropy_based_complexity.md) | Entropy-based complexity interpretation |
+| [triage_methods/predictive_information_learning_curves.md](triage_methods/predictive_information_learning_curves.md) | Predictive-information learning curves |
+| [triage_methods/largest_lyapunov_exponent.md](triage_methods/largest_lyapunov_exponent.md) | Experimental Lyapunov diagnostic caveats |
+| [diagnostics_matrix.md](diagnostics_matrix.md) | Cross-diagnostic index |
+| [results_summary.md](results_summary.md) | Evidence-oriented output summary |
+| [limitations.md](limitations.md) | Statistical and operational limitations |
 
-| Document | Description |
-|---|---|
-| [why_use_this.md](why_use_this.md) | Component comparison matrix for AMI, pAMI, directness ratio, exogenous analysis, triage, and optional narration |
-| [use_cases_industrial.md](use_cases_industrial.md) | Manufacturing/reliability/PdM scenario matrix with recommended path, outputs, and next decisions |
-| [results_summary.md](results_summary.md) | Evidence-first summary of univariate AMI/pAMI, exogenous screening, and triage workflow findings, with explicit limitations |
-| [diagnostics_matrix.md](diagnostics_matrix.md) | Single evaluator-facing index for all F1–F8 diagnostics with stability and caveat columns |
-| [surface_guide.md](surface_guide.md) | Explanation of the surface model: deterministic core, CLI/API, MCP/agents, what most users can safely ignore |
+## Live Repo Surfaces
 
-### Examples
+These paths are part of the maintained repository workflow and are referenced by the active docs.
 
-Self-contained scripts in [`examples/triage/`](../examples/triage/) covering F1–F8, agent adapter integrations, and a runnable live screening-agent example with deterministic fallback.
+| Surface | Current role |
+| --- | --- |
+| [../scripts/run_canonical_triage.py](../scripts/run_canonical_triage.py) | Canonical single-series maintainer workflow |
+| [../scripts/run_benchmark_panel.py](../scripts/run_benchmark_panel.py) | Benchmark-panel maintainer workflow |
+| [../scripts/build_report_artifacts.py](../scripts/build_report_artifacts.py) | Report and summary artifact builder |
+| [../scripts/run_exog_analysis.py](../scripts/run_exog_analysis.py) | Exogenous-analysis workflow |
+| [../outputs/json/canonical_examples_summary.json](../outputs/json/canonical_examples_summary.json) | Checked-in summary artifact example |
+| [../outputs/tables/benchmark_panel_summary.csv](../outputs/tables/benchmark_panel_summary.csv) | Checked-in tabular artifact example |
+| [../outputs/reports/summary.md](../outputs/reports/summary.md) | Checked-in report artifact example |
 
----
+> [!NOTE]
+> Checked-in outputs are reference artifacts, not a guarantee that every file is freshly regenerated for the current working tree.
 
-## Policy / release / architecture
+## Historical Material
 
-Stability, supported surfaces, API contract, and project governance.
+These areas remain available for reference, but they are intentionally outside the main docs path.
 
-| Document | Description |
-|---|---|
-| [wording_policy.md](wording_policy.md) | Frozen canonical wording lines and banned claims for all docs and surface text |
-| [versioning.md](versioning.md) | Semantic versioning policy, stability levels, and migration-note requirements |
-| [public_api.md](public_api.md) | Stable import paths, schema stability notes, and what is not in the public API |
-| [api_contract.md](api_contract.md) | FastAPI and SSE transport contract: request/response schemas, validation and readiness semantics |
-| [architecture.md](architecture.md) | Hexagonal architecture guide, SOLID principles, layer boundaries, enforcement |
-| [production_readiness.md](production_readiness.md) | Production maturity zones, safe default deterministic path, and failure/non-goal contract for CLI/API/agent surfaces |
-| [agent_layer.md](agent_layer.md) | Deterministic-first contract for optional LLM narration, strict mode behavior, and numeric-grounding checks |
-| [observability.md](observability.md) | Operational observability and auditability guide: event payload contract, checkpoint replay boundaries, logging fields |
-| [../CHANGELOG.md](../CHANGELOG.md) | Repository release and change history |
-| [releases/v0.1.0.md](releases/v0.1.0.md) | Upgrade notes for release `v0.1.0` |
-
-### Code reference
-
-| Document | Description |
-|---|---|
-| [code/README.md](code/README.md) | Code reference overview |
-| [code/module_map.md](code/module_map.md) | Module-by-module public symbol reference |
-| [code/exog_analyzer.md](code/exog_analyzer.md) | `ForecastabilityAnalyzerExog` user manual (synthetic data) |
-| [code/exog_analyzer_real_data.md](code/exog_analyzer_real_data.md) | `ForecastabilityAnalyzerExog` user manual (real-world data) |
-| [code/exog_benchmark_workflow.md](code/exog_benchmark_workflow.md) | Fixed exogenous benchmark slice workflow |
-
-### Planning
-
-| Document | Description |
-|---|---|
-| [plan/README.md](plan/README.md) | Planning surface overview |
-| [plan/development_plan.md](plan/development_plan.md) | Primary development plan: triage extension features F1–F8, stage gates, and delivery status |
-| [plan/acceptance_criteria.md](plan/acceptance_criteria.md) | Done criteria for all roadmap items |
-| [plan/must_have.md](plan/must_have.md) | Non-negotiable items |
-| [plan/should_have.md](plan/should_have.md) | High-value improvements |
-| [plan/could_have.md](plan/could_have.md) | Optional extensions |
-| [plan/wont_have.md](plan/wont_have.md) | Explicit exclusions |
-
-## Archive
-
-Historical completed development documentation from the build-out phase.
-Reference-only; not part of the active roadmap.
-
-Located in [archive/](archive/)
+- [archive/](archive/) contains superseded or historical documentation.
+- [plan/](plan/) contains release planning and tracking documents.

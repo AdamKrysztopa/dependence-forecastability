@@ -7,12 +7,12 @@ from enum import StrEnum
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field
 
-from forecastability.analyzer import AnalyzeResult
+from forecastability.pipeline.analyzer import AnalyzeResult
 from forecastability.triage.complexity_band import ComplexityBandResult
 from forecastability.triage.forecastability_profile import ForecastabilityProfile
 from forecastability.triage.lyapunov import LargestLyapunovExponentResult
 from forecastability.triage.theoretical_limit_diagnostics import TheoreticalLimitDiagnostics
-from forecastability.types import InterpretationResult
+from forecastability.utils.types import InterpretationResult
 
 
 class AnalysisGoal(StrEnum):
@@ -110,9 +110,9 @@ class TriageResult(BaseModel):
         request: Original triage request.
         readiness: Readiness gate outcome.
         method_plan: Selected compute path; ``None`` when blocked.
-        analyze_result: :class:`~forecastability.analyzer.AnalyzeResult` from
+        analyze_result: :class:`~forecastability.pipeline.analyzer.AnalyzeResult` from
             the analyzer; ``None`` when blocked (AGT-025).
-        interpretation: :class:`~forecastability.types.InterpretationResult`;
+        interpretation: :class:`~forecastability.utils.types.InterpretationResult`;
             ``None`` when blocked (AGT-025).
         recommendation: Human-readable triage recommendation string.
         blocked: Convenience flag, ``True`` when readiness status is blocked.

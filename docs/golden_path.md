@@ -1,144 +1,119 @@
 <!-- type: how-to -->
 # Golden Path
 
-The opinionated path from install to first trustworthy forecastability output.
+The opinionated path from install to a trustworthy first result in the live repository.
 
-A deterministic forecastability triage toolkit with AMI as the paper-aligned foundation and pAMI as a project extension.
-CLI, API, notebooks, MCP, and agents are optional access or narration layers around the same deterministic outputs.
-Follow this path first before exploring those layers.
+_Last verified for release 0.2.0 consolidation on 2026-04-14._
 
----
+Follow this path before you reach for the CLI, API, dashboard, MCP, or agent layers.
 
-## 1. Install
+## 1. Choose The Right Install Context
 
-Install and sync the project using `uv`. Full install details are in [quickstart.md](quickstart.md) and the top-level [README](../README.md).
+If you want the published package surface, install from PyPI.
+
+```bash
+pip install dependence-forecastability
+```
+
+If you are working in the repository, sync the local environment.
 
 ```bash
 uv sync
 ```
 
-> [!NOTE]
-> This path uses the `forecastability` package already present in the repo.
-> Do not set up a separate install until the PyPI release is available.
+## 2. Run One Deterministic Triage Call
 
----
-
-## 2. Run one deterministic example
-
-Run the canonical AR(1) signal through `run_triage()`. This is the primary deterministic path.
+Use the stable package facade and a simple generated series.
 
 ```python
-import numpy as np
-from forecastability import generate_ar1
-from forecastability.triage import TriageRequest, run_triage
+from forecastability import TriageRequest, generate_ar1, run_triage
 
-# Canonical AR(1) signal: n=150, phi=0.85, random_state=42
-series = generate_ar1(n_samples=150, phi=0.85, random_state=42)
-
+series = generate_ar1(n_samples=300, phi=0.8, random_state=42)
 result = run_triage(
     TriageRequest(
         series=series,
         goal="univariate",
         max_lag=20,
-        n_surrogates=99,        # minimum for significance bands
+        n_surrogates=99,
         random_state=42,
     )
 )
 ```
 
 > [!IMPORTANT]
-> Surrogate significance is optional, conditional on feasible sample size, and requires at least 99 surrogates.
-> Setting `n_surrogates=0` skips significance bands — that is a valid choice, not a shortcut.
+> AMI is computed per horizon. pAMI is a project extension that uses a linear-residual approximation rather than exact conditional mutual information.
 
----
+## 3. Read The Minimum Trust Fields
 
-## 3. Understand the result
-
-The triage result is a structured deterministic payload. Extract the key fields:
+Start with the fields that tell you whether the result is usable and whether significance was actually computed.
 
 ```python
 summary = {
     "blocked": result.blocked,
     "readiness_status": result.readiness.status.value,
-    "forecastability_class": result.interpretation.forecastability_class,
-    "modeling_regime": result.interpretation.modeling_regime,
-    "primary_lags": list(result.interpretation.primary_lags),
+    "compute_surrogates": None if result.method_plan is None else result.method_plan.compute_surrogates,
+    "forecastability_class": None if result.interpretation is None else result.interpretation.forecastability_class,
+    "primary_lags": [] if result.interpretation is None else list(result.interpretation.primary_lags),
     "recommendation": result.recommendation,
 }
 print(summary)
 ```
 
-Expected output for the canonical AR(1) setup:
+Interpret those fields in this order.
 
-```json
-{
-  "blocked": false,
-  "readiness_status": "warning",
-  "forecastability_class": "high",
-  "modeling_regime": "compact_structured_models",
-  "primary_lags": [1, 7],
-  "recommendation": "HIGH -> Complex structured models (deep AR, nonlinear, LSTM)"
-}
-```
-
-### Field guide
-
-| Field | Meaning |
-|---|---|
-| `blocked` | `true` if triage could not complete (e.g. series too short, degenerate) |
-| `readiness_status` | Data readiness for forecasting: `ok`, `warning`, or `blocked` |
-| `forecastability_class` | AMI-based triage outcome: `high`, `medium`, `low`, or `none` |
-| `modeling_regime` | Recommended model family based on lag structure and strength |
-| `primary_lags` | Informative lag indices with significant AMI |
-| `recommendation` | Human-readable recommendation string |
+| Field | What it tells you |
+| --- | --- |
+| `blocked` | Whether triage completed at all |
+| `readiness_status` | Whether the data is clear, warning-level, or blocked |
+| `compute_surrogates` | Whether significance was actually computed |
+| `forecastability_class` | High-level interpretation when triage completed |
+| `primary_lags` | Informative lags identified by the deterministic workflow |
 
 > [!NOTE]
-> `blocked=true` is a distinct outcome from `forecastability_class="none"`. A blocked result means triage
-> could not run; a `none` class means triage ran and found no forecastable structure.
+> `blocked` is different from “no forecastable structure.” A blocked result means the workflow could not support the requested computation.
+> [!NOTE]
+> When `compute_surrogates` is `false`, significance was skipped or suppressed. That is different from a run where surrogates were computed and no lags were significant.
+> [!CAUTION]
+> Phase-randomized FFT surrogates preserve the power spectrum. For highly periodic series, they can make significance tests conservative or uninformative even when the underlying series is obviously structured.
 
----
+## 4. Follow The Canonical Notebook Path
 
-## 4. Explore deeper
+Use the live notebooks directly.
 
-Once you have a trustworthy first result, explore the walkthrough notebooks to understand the
-AMI horizon profile, pAMI (project extension) as approximate direct-dependence diagnostic,
-and the full triage chain.
+1. Read [notebooks/README.md](notebooks/README.md).
+2. Run [../notebooks/walkthroughs/00_air_passengers_showcase.ipynb](../notebooks/walkthroughs/00_air_passengers_showcase.ipynb).
+3. Continue through walkthrough notebooks `01` to `04`.
+4. Use the `notebooks/triage/` notebooks only after the walkthroughs; they are deep dives, not first-stop onboarding.
 
-**Recommended next step:**
+## 5. Use The Maintainer Workflows When You Need Repo Outputs
 
-```bash
-uv sync --group notebook
-uv run jupyter lab
-```
+These are the repository workflows that align with the current codebase.
 
-Open `notebooks/triage/01_forecastability_profile_walkthrough.ipynb`.
+| Workflow | Command |
+| --- | --- |
+| Canonical triage artifacts | `uv run python scripts/run_canonical_triage.py` |
+| Benchmark panel | `uv run python scripts/run_benchmark_panel.py` |
+| Report artifacts | `uv run python scripts/build_report_artifacts.py` |
 
-For a full end-to-end triage walkthrough, see `notebooks/walkthroughs/03_triage_end_to_end.ipynb`.
+The main checked-in artifact surfaces are:
 
-For the multi-surface comparison (CLI / API / notebook / MCP), see [quickstart.md](quickstart.md).
+- `outputs/json/canonical_examples_summary.json` and related canonical JSON outputs
+- `outputs/tables/*.csv`
+- `outputs/reports/*.md`
 
----
+Treat those as reference artifacts, not guaranteed-fresh build outputs.
 
-## 5. Optional integrations (not the default path)
+## 6. Add Optional Surfaces Only After The Core Path Is Clear
 
-Use these only after the deterministic path is clear.
-
-| Surface | Stability | When to use |
-|---|---|---|
-| **CLI** (`forecastability triage`) | beta | Scripting, one-off runs, shell pipelines |
-| **HTTP API** (`uvicorn forecastability.server:app`) | beta | Service integration, remote calls |
-| **MCP server** | experimental | Agent orchestration, LLM-tool integrations |
-| **Agent layer** | experimental | LLM narration over deterministic outputs |
+| Surface | Entry point | Stability |
+| --- | --- | --- |
+| CLI | `forecastability` | Beta |
+| HTTP API | `forecastability.adapters.api:app` | Beta |
+| Dashboard | `forecastability-dashboard` | Beta |
+| MCP server | adapter surface | Experimental |
+| Agent narration | adapter surface | Experimental |
 
 > [!WARNING]
-> Largest Lyapunov exponent is experimental and excluded from automated triage decisions.
-> It appears in F5 diagnostics and extended notebooks but must not influence triage outcomes.
+> In rolling-origin evaluation, diagnostics are computed on train windows only and scoring on post-origin holdout only.
 
-> [!WARNING]
-> In rolling-origin evaluation, diagnostics are computed on train windows only and scoring
-> on post-origin holdout only. Do not compute diagnostics on the full series and claim
-> out-of-sample validity.
-
-For CLI and HTTP API usage, see [quickstart.md](quickstart.md).
-For MCP and agent integration, see [agent_layer.md](agent_layer.md) and [api_contract.md](api_contract.md).
-For stability guarantees on each surface, see [versioning.md](versioning.md).
+For the multi-surface walkthrough, see [quickstart.md](quickstart.md). For the exact HTTP contract, see [api_contract.md](api_contract.md).

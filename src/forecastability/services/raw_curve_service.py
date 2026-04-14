@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 
 from forecastability.metrics import _scale_series
-from forecastability.scorers import DependenceScorer
+from forecastability.metrics.scorers import DependenceScorer
 
 
 def compute_raw_curve(

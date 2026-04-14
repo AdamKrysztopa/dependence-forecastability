@@ -19,8 +19,6 @@ os.environ.setdefault("MPLBACKEND", "Agg")
 
 import matplotlib.pyplot as plt
 
-from forecastability.config import ExogenousScreeningWorkbenchConfig
-from forecastability.types import ExogenousBenchmarkResult, ExogenousScreeningWorkbenchResult
 from forecastability.use_cases.run_exogenous_screening_workbench import (
     DRIVER_SUMMARY_TABLE_COLUMNS,
     HORIZON_USEFULNESS_TABLE_COLUMNS,
@@ -28,6 +26,8 @@ from forecastability.use_cases.run_exogenous_screening_workbench import (
     horizon_usefulness_table_rows,
     run_exogenous_screening_workbench,
 )
+from forecastability.utils.config import ExogenousScreeningWorkbenchConfig
+from forecastability.utils.types import ExogenousBenchmarkResult, ExogenousScreeningWorkbenchResult
 
 _HORIZONS = list(range(1, 11))
 

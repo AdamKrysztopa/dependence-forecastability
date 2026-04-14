@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from forecastability.datasets import generate_sine_wave
 from forecastability.extensions import (
     bootstrap_descriptor_uncertainty,
     compute_k_sensitivity,
 )
 from forecastability.pipeline import run_canonical_example
+from forecastability.utils.datasets import generate_sine_wave
 
 
 def test_compute_k_sensitivity_returns_all_k_values() -> None:

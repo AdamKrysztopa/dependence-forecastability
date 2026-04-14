@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from forecastability.scorers import DependenceScorer
+from forecastability.metrics.scorers import DependenceScorer
 from forecastability.services.raw_curve_service import compute_raw_curve
 
 

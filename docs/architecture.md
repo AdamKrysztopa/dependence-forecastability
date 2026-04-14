@@ -1,339 +1,85 @@
 <!-- type: explanation -->
-# Architecture Guide — AMI → pAMI Forecastability Analysis
+# Architecture
 
-This document describes the hexagonal architecture and SOLID principles that
-govern the `forecastability` package.  All contributors must understand these
-rules before adding, moving, or modifying code.
+This page describes the current repository architecture and the intended dependency direction for future changes.
 
-> [!IMPORTANT]
-> This guide captures decisions that are enforced by automated tests in
-> `tests/test_architecture_boundaries.py`.  Violations cause CI failures.
+_Last verified for release 0.2.0 consolidation on 2026-04-14._
 
----
+The live repository is layered, but it is also pragmatic: the stable public contract is small, while the internal package tree is deliberately split across triage models, use cases, analyzers, metrics, diagnostics, reporting, utils, adapters, services, ports, and bootstrap helpers.
 
-## Layer Overview
+## Current Architecture Shape
 
 ```mermaid
 flowchart TD
-    subgraph Adapters["Adapters (infrastructure / transport)"]
-        Transports["cli · api · mcp_server\npydantic_ai_agent"]
-        Settings["settings.py\nInfraSettings / .env"]
-    end
-
-    subgraph Ports["Ports (contracts — typing.Protocol)"]
-        AllPorts["SeriesValidatorPort · CurveComputePort\nSignificanceBandsPort · InterpretationPort\nEventEmitterPort · CheckpointPort · …"]
-    end
-
-    subgraph UseCases["Use Cases (application layer)"]
-        UC["run_triage() · run_batch_triage()\nrun_rolling_origin_evaluation()\nrun_exogenous_rolling_origin_evaluation()"]
-    end
-
-    subgraph Services["Services (diagnostic orchestration)"]
-        Svc["forecastability_profile_service\ntheoretical_limit_diagnostics_service\nspectral_predictability_service\npredictive_info_learning_curve_service\ncomplexity_band_service · lyapunov_service"]
-    end
-
-    subgraph Triage["Triage sub-domain"]
-        TCore["Routing & orchestration\nmodels · readiness · router · events\nrun_triage · run_batch_triage"]
-        TDiag["Diagnostic models F1–F6\nForecastabilityProfile · TheoreticalLimitDiagnostics\nSpectralPredictability · PredictiveInfoLearningCurve\nComplexityBand · LargestLyapunovExponent"]
-        TExtras["batch_models · comparison_report\nresult_bundle"]
-    end
-
-    subgraph Domain["Domain (scientific core — frozen API)"]
-        Core["metrics · validation · interpretation\nsurrogates · cmi · config · types"]
-        ScorerReg["scorers · extensions\nDependenceScorer · SeriesDiagnosticScorer\nScorerRegistry"]
-        SpUtils["spectral_utils.py\nshared PSD / FFT utilities"]
-        Analyzer["analyzer.py\nForecastabilityAnalyzer"]
-    end
-
-    Adapters -->|depend on| Ports
-    Adapters -->|depend on| UseCases
-    UseCases -->|depend on| Ports
-    UseCases -->|depend on| Services
-    UseCases -->|depend on| Triage
-    UseCases -->|depend on| Domain
-    Services -->|depend on| Triage
-    Services -->|depend on| Domain
-    Triage -->|depend on| Domain
-    Ports -->|typed contracts for| Domain
-
-    %% Forbidden directions (dotted = must NOT exist)
-    Domain -.->|FORBIDDEN| Adapters
-    Domain -.->|FORBIDDEN| UseCases
-    Triage -.->|FORBIDDEN| Adapters
+    E["Entrypoints\nPython facade · scripts · notebooks\nCLI · dashboard · HTTP API"] --> F["Public facades\nforecastability\nforecastability.triage"]
+    F --> U["Use cases\nrun_triage\nrun_batch_triage"]
+    U --> T["Triage package\nmodels · readiness · router · events\nresult bundles · diagnostic result models"]
+    U --> P["Pipeline and services\nanalyzer · rolling_origin\ninternal builder services"]
+    T --> D["Core support packages\nmetrics · diagnostics · reporting · utils"]
+    P --> D
+    U --> O["Ports and bootstrap\nprotocol seams · output dirs"]
 ```
 
----
+## Public Facades And Entrypoints
 
-## Allowed vs. Forbidden Dependencies
+These are the surfaces that external users should anchor on.
 
-| From | May depend on | Must NOT depend on |
-|---|---|---|
-| `adapters/` | `ports/`, `services/`, `triage/`, `use_cases/`, `domain` | nothing outside the package |
-| `use_cases/` | `ports/`, `services/`, `triage/`, `domain` | `adapters/` (any concrete adapter) |
-| `services/` | `triage/`, `domain` | `adapters/`, `use_cases/` |
-| `triage/` | `domain` | `adapters/`, `use_cases/`, `services/` |
-| `ports/` | `typing`, `numpy`, `pydantic`, `domain types` | `adapters/`, `framework code` |
-| `domain` | `typing`, `numpy`, `pydantic`, `scikit-learn`, `scipy`, `yaml` | `adapters/`, `use_cases/`, `services/`, `pydantic_ai`, `fastapi`, `mcp`, `httpx`, `click`, `matplotlib` (except `plots.py`) |
+| Surface | Live location |
+| --- | --- |
+| Stable package facade | `src/forecastability/__init__.py` |
+| Advanced triage namespace | `src/forecastability/triage/__init__.py` |
+| CLI command | `forecastability.adapters.cli:main` |
+| Dashboard command | `forecastability.adapters.dashboard:main` |
+| HTTP API | `forecastability.adapters.api:app` |
 
-> [!WARNING]
-> `plots.py` is the sole exception: it may import `matplotlib`.  All other
-> domain modules must not.
+Everything else in `src/forecastability/` exists to support those facades and repo workflows.
 
----
+## Internal Package Roles
 
-## SOLID Principles Applied
+| Package | Role |
+| --- | --- |
+| `triage/` | Triage-domain models, readiness/router logic, diagnostic result types, events, and result bundles |
+| `use_cases/` | Main orchestration entry points for deterministic triage and batch triage |
+| `pipeline/` | Analyzer facade, canonical workflow helpers, and rolling-origin support |
+| `metrics/` | Core AMI/pAMI computation and scorer registry |
+| `diagnostics/` | Surrogates, CMI backends, spectral helpers, and regression utilities |
+| `reporting/` | Deterministic interpretation and Markdown/report builders |
+| `utils/` | Config models, typed containers, datasets, validation, plotting, and repo workflow support |
+| `adapters/` | CLI, dashboard, API, MCP, agent, settings, event, checkpoint, and presenter adapters |
+| `services/` | Internal builder/orchestration helpers used by analyzers and use cases |
+| `ports/` | Protocol-oriented seams for the architecture direction |
+| `bootstrap/` | Bootstrap helpers such as output directory setup |
 
-### S — Single Responsibility
+## Dependency Direction
 
-Each module has exactly one reason to change.
+The practical dependency direction is:
 
-| Module | Single responsibility |
-|---|---|
-| `validation.py` | Input sanity checks for time-series arrays |
-| `metrics.py` | kNN mutual-information curve computation |
-| `surrogates.py` | Phase-randomised FFT surrogate generation |
-| `interpretation.py` | Pattern A–E classification and diagnostics |
-| `triage/readiness.py` | Readiness gate policy |
-| `triage/router.py` | Compute-path selection policy |
-| `triage/run_triage.py` | Triage orchestration (single use-case entry point) |
-| `adapters/cli.py` | CLI transport wiring |
-| `adapters/api.py` | HTTP transport wiring |
-| `adapters/mcp_server.py` | MCP tool exposure |
-| `adapters/llm/triage_agent.py` | LLM orchestration over deterministic core |
-
-### O — Open/Closed
-
-New scorer families → implement `DependenceScorer` protocol and register with
-`ScorerRegistry`.  Univariate diagnostic scorers implement the
-`SeriesDiagnosticScorer` protocol (F1–F6 diagnostics all follow this pattern).
-No orchestration code is modified.
-
-New report formats → implement `ReportRendererPort`.  No assembler logic is
-modified.
-
-New transport (e.g., gRPC) → add a new file under `adapters/`.  No use-case
-code is modified.
-
-### L — Liskov Substitution
-
-Alternative implementations of any port are substitutable:
-
-```python
-# inject a test double — no behavior changes in run_triage()
-result = run_triage(req, readiness_gate=my_mock_gate, router=my_mock_router)
-```
-
-### I — Interface Segregation
-
-Ports are narrow.  The CLI adapter depends only on `SeriesValidatorPort` and
-the use-case callable — it does not pull in `SignificanceBandsPort` or any MCP
-interface.
-
-### D — Dependency Inversion
-
-`run_triage()` depends on `assess_readiness` and `plan_method` as *callables*
-(injected at call time, defaulted to concrete implementations).  The use case
-never imports from `adapters/`.
-
----
-
-## Configuration Ownership
-
-| Config type | Location | Access pattern |
-|---|---|---|
-| Scientific params (`n_neighbors`, `n_surrogates`, `alpha`, `random_state`) | `configs/*.yaml` | `ForecastabilityConfig` Pydantic model |
-| Infrastructure secrets and feature flags | `.env` | `InfraSettings(BaseSettings)` in `adapters/settings.py` |
-| Test overrides | — | `InfraSettings(_env_file=None, ...)` in test fixtures |
-
-> [!CAUTION]
-> Never read environment variables directly inside domain code.  All `.env`
-> access is mediated by `InfraSettings`.
-
----
-
-## Triage Pipeline Flow
-
-```mermaid
-sequenceDiagram
-    participant Caller as Caller (CLI / API / Agent)
-    participant UC as run_triage()
-    participant Gate as assess_readiness()
-    participant Router as plan_method()
-    participant Analyzer as ForecastabilityAnalyzer
-    participant Interp as interpret_canonical_result()
-    participant Emitter as EventEmitterPort
-
-    Caller->>UC: TriageRequest
-    UC->>Emitter: TriageStageStarted("readiness")
-    UC->>Gate: request
-    Gate-->>UC: ReadinessReport
-    UC->>Emitter: TriageStageCompleted("readiness")
-
-    alt blocked
-        UC-->>Caller: TriageResult(blocked=True)
-    else clear / warning
-        UC->>Emitter: TriageStageStarted("routing")
-        UC->>Router: request, readiness
-        Router-->>UC: MethodPlan
-        UC->>Emitter: TriageStageCompleted("routing")
-
-        UC->>Emitter: TriageStageStarted("compute")
-        UC->>Analyzer: series, max_lag, ...
-        Analyzer-->>UC: AnalyzeResult
-        UC->>Emitter: TriageStageCompleted("compute")
-
-        UC->>Emitter: TriageStageStarted("interpretation")
-        UC->>Interp: CanonicalExampleResult
-        Interp-->>UC: InterpretationResult
-        UC->>Emitter: TriageStageCompleted("interpretation")
-
-        UC-->>Caller: TriageResult(blocked=False)
-    end
-```
-
----
-
-## Module Inventory
-
-<details>
-<summary>Click to expand: complete module role table</summary>
-
-| Module | Layer | Imports framework? | Public in `__all__`? |
-|---|---|---|---|
-| `types.py` | domain | no | yes |
-| `config.py` | domain | no | yes |
-| `validation.py` | domain | no | yes |
-| `metrics.py` | domain | no | yes |
-| `surrogates.py` | domain | no | yes |
-| `cmi.py` | domain | no | yes |
-| `scorers.py` | domain | no | yes |
-| `interpretation.py` | domain | no | yes |
-| `analyzer.py` | domain | matplotlib (legacy `.plot()` method — exempted, AGT-026) | yes |
-| `reporting.py` | domain output | no | yes |
-| `plots.py` | domain (exception) | matplotlib | yes |
-| `recommendation_service.py` | domain service | no | partial |
-| `triage/models.py` | triage sub-domain | no | no |
-| `triage/readiness.py` | triage sub-domain | no | no |
-| `triage/router.py` | triage sub-domain | no | no |
-| `triage/events.py` | triage sub-domain | no | no |
-| `triage/run_triage.py` | use case | no | no |
-| `use_cases/` | use cases | no | partial |
-| `ports/__init__.py` | ports | typing + pydantic only | yes |
-| `adapters/settings.py` | adapter | pydantic-settings | no |
-| `adapters/cli.py` | adapter | argparse | no |
-| `adapters/api.py` | adapter | fastapi | no |
-| `adapters/mcp_server.py` | adapter | mcp | no |
-| `adapters/pydantic_ai_agent.py` | adapter | pydantic_ai | no |
-
-</details>
-
----
-
-## Adding New Capabilities
-
-### New scorer backend
-
-1. Implement `DependenceScorer` protocol in a new file under `src/forecastability/`.
-2. Register via `ScorerRegistry.register()`.
-3. No existing orchestration code changes.
-
-### New transport adapter
-
-1. Create `src/forecastability/adapters/<transport>.py`.
-2. Import from `ports/`, `triage/`, and `use_cases/` only.
-3. Add an entry-point in `pyproject.toml` if needed.
-
-### New port
-
-1. Add a `@runtime_checkable Protocol` to `ports/__init__.py`.
-2. Update `tests/test_ports_are_protocols.py` to include the new port.
-3. Update this document's module inventory.
-
----
-
-## Enforcement
-
-Architecture boundaries are tested statically using AST-level import analysis
-in `tests/test_architecture_boundaries.py`.  The test file asserts:
-
-- Domain modules do not import `pydantic_ai`, `fastapi`, `mcp`, `httpx`,
-  `click`, or `typer`.
-- `ports/` modules import only `typing`, `numpy`, `pydantic`, and domain types.
-- `use_cases/` do not import concrete adapter modules.
-
-Run `uv run pytest tests/test_architecture_boundaries.py -v` to verify locally.
-
----
-
-## References
-
-- Planning surface: [docs/plan/README.md](plan/README.md)
-- Agent workflow: [.github/AGENT_FLOW.md](../.github/AGENT_FLOW.md)
-
----
-
-## Narrative ownership (AGT-028)
-
-Explanatory prose about triage results belongs to exactly one layer.
-
-| Layer | Owns | Does not own |
-|---|---|---|
-| `run_triage()` use case | scientific outputs (`analyze_result`, `interpretation`, `recommendation`) | explanatory prose or LLM-written text |
-| PydanticAI adapter (`pydantic_ai_agent.py`) | `TriageExplanation.narrative` and `caveats` | numeric values (all numbers come from tool calls) |
-
-**Rule:** `TriageResult.narrative` is always `None` for deterministic `run_triage()` calls.
-Only the agent adapter layer may populate it after an LLM interaction.
-
-This separation ensures:
-- Deterministic behaviour is testable without any LLM or network call.
-- LLM narration can be disabled or replaced without breaking the scientific pipeline.
-- Downstream consumers that only need structured outputs can ignore `narrative` entirely.
+1. Entrypoints and adapters call the package facades or use cases.
+2. Use cases orchestrate triage models, pipeline helpers, and internal services.
+3. Triage, pipeline, and services consume metrics, diagnostics, reporting, and utils.
+4. Ports and bootstrap remain support seams rather than primary business-logic owners.
 
 > [!IMPORTANT]
-> Never let a tool, use case, or domain module set `TriageResult.narrative`.
-> That field is the agent adapter's responsibility.
+> The architecture goal is still inward dependency flow. Adapters should not become a second business-logic layer.
 
----
+## What Is Stable vs Internal
 
-## Checkpoint semantics (AGT-023)
+| Area | Expectation |
+| --- | --- |
+| `forecastability` and `forecastability.triage` | Stable import contract |
+| `adapters/` runtime entry points | Supported runtime surfaces, but transport details may evolve |
+| `services/`, `utils/`, `pipeline/`, `metrics/`, `diagnostics/`, `reporting/` | Internal structure that may continue to move during consolidation |
 
-Checkpoints implement **orchestration-state replay**, not full-artifact resume.
+## Design Rules For Contributors
 
-| Checkpoint persists | Checkpoint does NOT persist |
-|---|---|
-| Readiness report (JSON-friendly dict) | Numpy arrays from compute stage |
-| Method plan (JSON-friendly dict) | `AnalyzeResult` objects |
-| Stage name (last completed stage) | `InterpretationResult` objects |
+- Add new user-facing imports through `forecastability` or `forecastability.triage` only when you want to commit to compatibility.
+- Put transport concerns in `adapters/`, not in use cases or metrics code.
+- Keep deterministic orchestration in `use_cases/` and `pipeline/` rather than notebooks or scripts.
+- Treat `services/` as internal helpers, not as a third public API layer.
+- Use `ports/` for protocol-style seams when a collaborator needs to be substituted or isolated.
 
-On resume, stages up to and including the last committed stage are skipped;
-**compute always re-runs from scratch** because numpy arrays are not JSON-safe.
+## Architectural Caveat
 
-To avoid correctness issues in multi-run contexts, always pass a unique
-`checkpoint_key` (e.g. a UUID) to `run_triage()`.  Using the default key
-`"default"` when a checkpoint adapter is active emits a :class:`UserWarning`.
+This repository is already substantially layered, but it is not pretending that every historical helper has been perfectly normalized into a textbook hexagon. The important point for current documentation is simpler: the live codebase is not a flat module layout anymore, and the supported public surfaces are the package facades plus the declared runtime entry points.
 
----
-
-## Streaming transport (AGT-024)
-
-Stage progress is exposed as Server-Sent Events (SSE) via `GET /triage/stream`.
-
-The transport path is:
-
-```
-run_triage() → StreamingEventEmitter.emit() → Queue → SSE generator → HTTP client
-```
-
-`StreamingEventEmitter` is an adapter in `adapters/event_emitter.py`.
-It is gated by the `triage_enable_streaming` settings flag.
-
-SSE event types emitted in order:
-
-| Event type | Payload |
-|---|---|
-| `stage_started` | `stage`, `timestamp` |
-| `stage_completed` | `stage`, `duration_ms`, `result_summary` |
-| `stage_error` | `stage`, `error` |
-| `done` | (no payload) |
-
-The endpoint is contract-tested in `tests/test_api.py`.
+For the current module-level map, see [code/module_map.md](code/module_map.md). For compatibility scope, see [public_api.md](public_api.md).

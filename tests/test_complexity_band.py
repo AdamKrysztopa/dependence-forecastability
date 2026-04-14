@@ -7,7 +7,7 @@ from typing import cast
 import numpy as np
 import pytest
 
-from forecastability.scorers import (
+from forecastability.metrics.scorers import (
     SeriesDiagnosticScorer,
     _choose_embedding_order,
     _compute_permutation_entropy,
