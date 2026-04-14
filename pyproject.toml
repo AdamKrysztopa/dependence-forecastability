@@ -72,7 +72,7 @@ dev = [
   "pytest-anyio>=0.0.0",
   "ruff>=0.11.0",
   "twine>=5.0",
-  "ty==0.0.22",
+  "ty==0.0.30",
 ]
 notebook = [
   "jupyter>=1.1.1",
