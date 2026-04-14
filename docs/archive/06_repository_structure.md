@@ -36,7 +36,7 @@ project/
 │     ├─ reporting.py
 │     └─ pipeline.py
 ├─ scripts/
-│  ├─ run_canonical_examples.py
+│  ├─ run_canonical_triage.py
 │  ├─ run_benchmark_panel.py
 │  └─ build_report_artifacts.py
 └─ tests/

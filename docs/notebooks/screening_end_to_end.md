@@ -50,7 +50,7 @@ is a thin consumer that wires inputs and renders outputs. No business logic live
 - Run deterministic CrossAMI/pCrossAMI screening first; the agentic layer reads those results, it does not replace them.
 - Directness warnings on exogenous pairs indicate mediation risk — treat as a conditional rather than a disqualifier.
 - SOLID separation is enforced: domain compute in `src/`, narration in the agent adapter, notebook as display surface.
-- The same screening pipeline is the foundation for the `run_exogenous_screening_workbench.py` script.
+- The same screening pipeline is the foundation for `scripts/archive/run_exogenous_screening_workbench.py`.
 
 ## Notebook For Full Detail
 

@@ -72,7 +72,7 @@ HTTP API, then optional agent/MCP surfaces:
 ## Fastest quickstart (repo / contributor path)
 
 ```bash
-uv sync && MPLBACKEND=Agg uv run python scripts/run_canonical_examples.py
+uv sync && MPLBACKEND=Agg uv run python scripts/run_canonical_triage.py
 ```
 
 ## What result you get

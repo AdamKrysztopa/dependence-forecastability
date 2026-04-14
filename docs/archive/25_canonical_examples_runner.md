@@ -1,6 +1,6 @@
 # 25. Canonical Examples Runner
 
-- [x] `scripts/run_canonical_examples.py` must:
+- [x] `scripts/run_canonical_triage.py` must:
   - [ ] run all four canonical examples
   - [ ] save figures
   - [ ] save JSON summaries

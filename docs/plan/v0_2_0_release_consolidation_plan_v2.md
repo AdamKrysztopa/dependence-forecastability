@@ -289,7 +289,7 @@ For each move:
 
 **Objective:** Give each repo surface one clear purpose.
 
-**Status:** Proposed
+**Status:** Completed
 
 ### Rules
 - `examples/` = minimal user-facing runnable examples
@@ -297,34 +297,34 @@ For each move:
 - `notebooks/` = narrative tutorials and walkthroughs
 
 ### Examples
-- [ ] Keep only `examples/triage/` as the curated user-facing example family
-- [ ] Review for duplication against canonical runners
-- [ ] Delete or move duplicates into `examples/archive/`
-- [ ] If archiving, decide whether archive should remain tracked or be ignored
-- [ ] Add short purpose statements at the top of each kept example
+- [x] Keep only `examples/triage/` as the curated user-facing example family
+- [x] Review for duplication against canonical runners
+- [x] Delete or move duplicates into `examples/archive/` (none found; no archive move required)
+- [x] If archiving, decide whether archive should remain tracked or be ignored (N/A for examples in this phase)
+- [x] Add short purpose statements at the top of each kept example
 
 ### Scripts
 Keep these as development tools:
-- [ ] `run_canonical_examples.py`
-- [ ] `run_benchmark_panel.py`
-- [ ] `run_exog_analysis.py`
-- [ ] `rebuild_*_fixtures.py` (both)
-- [ ] `build_report_artifacts.py`
+- [x] `run_canonical_triage.py`
+- [x] `run_benchmark_panel.py`
+- [x] `run_exog_analysis.py`
+- [x] `rebuild_*_fixtures.py` (both)
+- [x] `build_report_artifacts.py`
 
 ### Rename for consistency
-- [ ] Rename:
-  - `run_canonical_examples.py` → `run_canonical_triage.py`
+- [x] Rename:
+  - canonical examples runner → `run_canonical_triage.py`
 
 ### Archive or remove the rest
-- [ ] Move obsolete or redundant `run_*` scripts into `scripts/archive/` or delete them if confirmed obsolete
-- [ ] Update all references in docs and README
-- [ ] Update `pyproject.toml`, tool configs, or docs if any command names are referenced
+- [x] Move obsolete or redundant `run_*` scripts into `scripts/archive/` (tracked)
+- [x] Update all references in docs and README
+- [x] Update tool/docs command references affected by script renames and moves
 
 ### Acceptance criteria
-- [ ] examples are concise and non-duplicative
-- [ ] scripts folder has a clear maintainer-only identity
-- [ ] no broken documentation links after renames
-- [ ] there is one obvious canonical runner for triage examples
+- [x] examples are concise and non-duplicative
+- [x] scripts folder has a clear maintainer-only identity
+- [x] no broken documentation links after renames
+- [x] there is one obvious canonical runner for triage examples
 
 ---
 
@@ -387,7 +387,7 @@ Keep these as development tools:
 - [ ] Use grep or equivalent to catch stale names and paths:
   ```bash
   grep -R "old_function_name" docs/
-  grep -R "run_canonical_examples" docs/
+  grep -R "run_canonical_triage" docs/
   grep -R "examples/archive" docs/
   ```
 

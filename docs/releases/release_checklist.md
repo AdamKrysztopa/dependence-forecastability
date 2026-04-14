@@ -12,7 +12,7 @@
 - [ ] `docs/versioning.md` and stability tables (in README + `docs/production_readiness.md`) are up to date
 - [ ] Package name in `pyproject.toml` is set to `dependence-forecastability`
 - [ ] Install instructions and badges in README are correct
-- [ ] Golden-path example and smoke tests pass locally (`uv run scripts/run_canonical_examples.py` or equivalent)
+- [ ] Golden-path example and smoke tests pass locally (`uv run python scripts/run_canonical_triage.py` or equivalent)
 - [ ] `docs/releases/pypi_publication.md` exists and has been followed for any manual steps
 
 ## Local release pipeline (R7 — run before every release)
