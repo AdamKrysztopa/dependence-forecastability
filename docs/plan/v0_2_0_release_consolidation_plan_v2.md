@@ -117,7 +117,7 @@ Release `0.2.0` only when all conditions below are true:
 | 4 | Documentation-code alignment | 2 days | Completed |
 | 5 | README total renovation | 1 day | Completed |
 | 6 | CI/CD and repository infrastructure | 1–2 days | Completed |
-| 7 | Testing and final validation | 1 day | In progress |
+| 7 | Testing and final validation | 1 day | Completed |
 | 7.5 | Unified showcase runner follow-on | 1–2 days | Completed |
 | 8 | Release execution | 0.5 day | Proposed |
 
@@ -536,9 +536,9 @@ PyPI publishing is **already implemented**. This phase is about what is still mi
 
 **Objective:** Validate the hardened canonical runner and close the remaining repo-level release gate.
 
-**Status:** In progress
+**Status:** Completed
 
-The recent canonical runner hardening is implemented and validated. The full repo-wide release gate is not yet closed.
+The canonical runner hardening is implemented and validated. The full repo-wide release gate is closed.
 
 ### Tasks
 - [x] Parallelize the canonical runner at dataset level while preserving deterministic artifact write order
@@ -546,20 +546,20 @@ The recent canonical runner hardening is implemented and validated. The full rep
 - [x] Keep an explicit `--full-bands` option for all-dataset significance runs
 - [x] Emit the merged panel summary figure and deterministic human-readable summary/recommendation output
 - [x] Validate a default canonical run in about 100s on the recent release-check pass
-- [ ] Run the full test suite
+- [x] Run the full test suite
 - [x] Run the hardened canonical runner on the default path
 - [x] Build package locally:
   ```bash
   uv build
   ```
-- [ ] Create a clean environment and install from `dist/`
-- [ ] Smoke-test:
+- [x] Create a clean environment and install from `dist/`
+- [x] Smoke-test:
   - package import
   - `run_triage`
   - CLI help
-- [ ] Update `docs/quickstart.md` and `README.md` if any API details changed during cleanup
-- [ ] Run a release checklist against the built wheel and sdist
-- [ ] Confirm no debug `print()` statements or obsolete `.env` assumptions remain in production code
+- [x] Update `docs/quickstart.md` and `README.md` if any API details changed during cleanup
+- [x] Run a release checklist against the built wheel and sdist
+- [x] Confirm no debug `print()` statements or obsolete `.env` assumptions remain in production code
 
 ### Recommended smoke commands
 ```bash
@@ -571,11 +571,11 @@ forecastability --help
 - [x] canonical runner hardening is validated for the default path and the explicit full-bands control surface
 - [x] merged panel summary artifacts and deterministic recommendation output exist
 - [x] recent validation shows the default canonical run completing in about 100s
-- [ ] full test suite passes
-- [ ] built artifacts install cleanly
-- [ ] smoke tests pass from installed artifacts
-- [ ] quickstart instructions are verified, not theoretical
-- [ ] repo-wide Phase 7 release gate is explicitly closed
+- [x] full test suite passes
+- [x] built artifacts install cleanly
+- [x] smoke tests pass from installed artifacts
+- [x] quickstart instructions are verified, not theoretical
+- [x] repo-wide Phase 7 release gate is explicitly closed
 
 ---
 
@@ -658,7 +658,7 @@ The Jr. developer should implement in this order:
 5. [x] Phase 3 — Notebook rationalization
 6. [x] Phase 4 — Documentation sync
 7. [x] Phase 5 — README renovation
-8. [ ] Phase 7 — Final validation
+8. [x] Phase 7 — Final validation
 9. [x] Phase 7.5 — Unified showcase runner follow-on
 10. [ ] Phase 8 — Release
 
@@ -716,7 +716,7 @@ This section is intentionally included so it can be copied into a tracking file 
 - [x] canonical runner hardening validated: dataset-level parallel execution, mixed default mode, merged panel summary artifacts, deterministic recommendation output, and explicit `--full-bands` support
 
 ### Partially implemented
-- [ ] repo-wide release artifact smoke validation and installed-wheel smoke checks (Phase 7)
+- *(none)*
 
 ### Not started
 - [ ] Phase 8 release execution
