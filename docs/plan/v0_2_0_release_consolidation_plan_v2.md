@@ -118,7 +118,7 @@ Release `0.2.0` only when all conditions below are true:
 | 5 | README total renovation | 1 day | Completed |
 | 6 | CI/CD and repository infrastructure | 1–2 days | Completed |
 | 7 | Testing and final validation | 1 day | In progress |
-| 7.5 | Unified showcase runner follow-on | 1–2 days | Proposed |
+| 7.5 | Unified showcase runner follow-on | 1–2 days | Completed |
 | 8 | Release execution | 0.5 day | Proposed |
 
 ---
@@ -588,16 +588,18 @@ forecastability --help
 This phase is the follow-on for “one script runs all methods shown in the Air Passengers showcase notebook.” Full notebook parity remains out of scope for the immediate Phase 7 hardening.
 
 ### Tasks
-- [ ] Design a unified showcase/all-method runner that can execute the methods surfaced in the Air Passengers showcase notebook from one entry point
-- [ ] Produce separate per-method figures as well as merged comparison figures across methods
-- [ ] Add a deterministic but human-sounding summary/recommendation surface across methods
-- [ ] Define notebook-parity acceptance criteria explicitly instead of treating parity as already covered by Phase 7
+- [x] Design a unified showcase/all-method runner that can execute the methods surfaced in the Air Passengers showcase notebook from one entry point
+- [x] Produce separate per-method figures as well as merged comparison figures across methods
+- [x] Add a deterministic but human-sounding summary/recommendation surface across methods
+- [x] Run agentic interpretation and expose it - show it as bonus - translation of hard topics to human language. We must show-off a little with agentic part.
+- [x] Define notebook-parity acceptance criteria explicitly instead of treating parity as already covered by Phase 7
+- [x] Document
 
 ### Acceptance criteria
-- [ ] one showcase runner covers the intended multi-method surface
-- [ ] both separate and merged method-comparison figures are generated
-- [ ] summary and recommendation output reads like a human-facing showcase while remaining deterministic
-- [ ] full notebook parity is tracked as follow-on scope, not implied by Phase 7 hardening
+- [x] one showcase runner covers the intended multi-method surface
+- [x] both separate and merged method-comparison figures are generated
+- [x] summary and recommendation output reads like a human-facing showcase while remaining deterministic
+- [x] full notebook parity is tracked as follow-on scope, not implied by Phase 7 hardening
 
 ---
 
@@ -717,8 +719,14 @@ This section is intentionally included so it can be copied into a tracking file 
 - [ ] repo-wide release artifact smoke validation and installed-wheel smoke checks (Phase 7)
 
 ### Not started
-- [ ] Phase 7.5 unified showcase/all-method runner follow-on
 - [ ] Phase 8 release execution
+
+### Completed in Phase 7.5
+- [x] `scripts/run_showcase.py` — unified showcase runner for Air Passengers covering all four deterministic methods (run_triage, run_canonical_example, ForecastabilityAnalyzer, run_rolling_origin_evaluation) plus agentic LLM interpretation as guarded BONUS surface (--agent flag)
+- [x] Per-method figures: triage_summary.png, canonical_result.png, analyzer_comparison.png, rolling_origin.png
+- [x] Merged 2×2 comparison figure: showcase_merged.png
+- [x] Human-readable markdown report: outputs/reports/showcase/showcase_report.md
+- [x] LLM narrative exposed as opt-in bonus with graceful fallback when API key is absent
 
 ---
 
