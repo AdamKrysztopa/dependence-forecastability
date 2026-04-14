@@ -17,6 +17,15 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### Removed
 
+## [0.2.0] - 2026-04-14
+
+### Changed
+- Major source layout cleanup (hexagonal architecture preserved)
+- Examples/scripts/notebooks reorganized and de-duplicated
+- Full documentation sync with current code
+- README total renovation (multi-paper triage focus)
+- CI/CD hardened for PyPI releases
+
 ## [0.1.0] - 2026-04-13
 
 ### Release support contract
