@@ -26,7 +26,7 @@ Outputs
 
 Usage
 -----
-    uv run python scripts/run_multi_signal_diagnostic_ranking.py
+    uv run python scripts/archive/run_multi_signal_diagnostic_ranking.py
 """
 
 from __future__ import annotations

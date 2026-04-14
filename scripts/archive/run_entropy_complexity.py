@@ -17,7 +17,7 @@ Outputs
 
 Usage
 -----
-    uv run python scripts/run_entropy_complexity.py
+    uv run python scripts/archive/run_entropy_complexity.py
 """
 
 from __future__ import annotations

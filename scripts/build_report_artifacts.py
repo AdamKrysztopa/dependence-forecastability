@@ -350,7 +350,7 @@ def main() -> None:
     except (FileNotFoundError, ValueError) as exc:
         _logger.error("Cannot build report artifacts: %s", exc)
         _logger.error(
-            "Run scripts/run_canonical_examples.py and scripts/run_benchmark_panel.py first."
+            "Run scripts/run_canonical_triage.py and scripts/run_benchmark_panel.py first."
         )
         raise SystemExit(2) from exc
 

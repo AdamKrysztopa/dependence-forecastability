@@ -37,7 +37,7 @@ Outputs
 
 Usage
 -----
-    uv run python scripts/run_exogenous_driver_redundancy_screening.py
+    uv run python scripts/archive/run_exogenous_driver_redundancy_screening.py
 """
 
 from __future__ import annotations

@@ -8,7 +8,7 @@ Demonstrates the newly implemented Phase 1 features on four synthetic series:
 * Downsampled AR(1)  — lossy compression simulation
 
 Usage:
-    uv run python scripts/run_phase1_limit_diagnostics.py
+    uv run python scripts/archive/run_phase1_limit_diagnostics.py
 """
 
 from __future__ import annotations

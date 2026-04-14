@@ -17,7 +17,7 @@ Outputs
 
 Usage
 -----
-    uv run python scripts/run_spectral_predictability.py
+    uv run python scripts/archive/run_spectral_predictability.py
 """
 
 from __future__ import annotations

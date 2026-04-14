@@ -6,7 +6,7 @@ Produces two figures in outputs/figures/lyapunov/:
 
 Usage::
 
-    uv run python scripts/run_largest_lyapunov_exponent.py
+    uv run python scripts/archive/run_largest_lyapunov_exponent.py
 """
 
 from __future__ import annotations
