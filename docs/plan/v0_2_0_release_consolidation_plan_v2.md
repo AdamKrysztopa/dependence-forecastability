@@ -1,3 +1,4 @@
+<!-- type: reference -->
 # dependence-forecastability — Release 0.2.0 Consolidation Plan v2
 
 **Plan Type:** Actionable release plan  
@@ -116,7 +117,8 @@ Release `0.2.0` only when all conditions below are true:
 | 4 | Documentation-code alignment | 2 days | Completed |
 | 5 | README total renovation | 1 day | Completed |
 | 6 | CI/CD and repository infrastructure | 1–2 days | Completed |
-| 7 | Testing and final validation | 1 day | Proposed |
+| 7 | Testing and final validation | 1 day | In progress |
+| 7.5 | Unified showcase runner follow-on | 1–2 days | Proposed |
 | 8 | Release execution | 0.5 day | Proposed |
 
 ---
@@ -532,14 +534,21 @@ PyPI publishing is **already implemented**. This phase is about what is still mi
 
 ## Phase 7 — Testing and final validation
 
-**Objective:** Validate the repo from both source and built artifacts.
+**Objective:** Validate the hardened canonical runner and close the remaining repo-level release gate.
 
-**Status:** Proposed
+**Status:** In progress
+
+The recent canonical runner hardening is implemented and validated. The full repo-wide release gate is not yet closed.
 
 ### Tasks
+- [x] Parallelize the canonical runner at dataset level while preserving deterministic artifact write order
+- [x] Validate the default mixed mode: bands for core canonical examples, descriptive mode for extended financial series
+- [x] Keep an explicit `--full-bands` option for all-dataset significance runs
+- [x] Emit the merged panel summary figure and deterministic human-readable summary/recommendation output
+- [x] Validate a default canonical run in about 100s on the recent release-check pass
 - [ ] Run the full test suite
-- [ ] Run canonical examples
-- [ ] Build package locally:
+- [x] Run the hardened canonical runner on the default path
+- [x] Build package locally:
   ```bash
   uv build
   ```
@@ -559,10 +568,36 @@ forecastability --help
 ```
 
 ### Acceptance criteria
+- [x] canonical runner hardening is validated for the default path and the explicit full-bands control surface
+- [x] merged panel summary artifacts and deterministic recommendation output exist
+- [x] recent validation shows the default canonical run completing in about 100s
 - [ ] full test suite passes
 - [ ] built artifacts install cleanly
 - [ ] smoke tests pass from installed artifacts
 - [ ] quickstart instructions are verified, not theoretical
+- [ ] repo-wide Phase 7 release gate is explicitly closed
+
+---
+
+## Phase 7.5 — Unified showcase runner follow-on
+
+**Objective:** Scope the next step toward a single showcase runner without expanding the immediate Phase 7 hardening change set.
+
+**Status:** Proposed
+
+This phase is the follow-on for “one script runs all methods shown in the Air Passengers showcase notebook.” Full notebook parity remains out of scope for the immediate Phase 7 hardening.
+
+### Tasks
+- [ ] Design a unified showcase/all-method runner that can execute the methods surfaced in the Air Passengers showcase notebook from one entry point
+- [ ] Produce separate per-method figures as well as merged comparison figures across methods
+- [ ] Add a deterministic but human-sounding summary/recommendation surface across methods
+- [ ] Define notebook-parity acceptance criteria explicitly instead of treating parity as already covered by Phase 7
+
+### Acceptance criteria
+- [ ] one showcase runner covers the intended multi-method surface
+- [ ] both separate and merged method-comparison figures are generated
+- [ ] summary and recommendation output reads like a human-facing showcase while remaining deterministic
+- [ ] full notebook parity is tracked as follow-on scope, not implied by Phase 7 hardening
 
 ---
 
@@ -622,7 +657,8 @@ The Jr. developer should implement in this order:
 6. [x] Phase 4 — Documentation sync
 7. [x] Phase 5 — README renovation
 8. [ ] Phase 7 — Final validation
-9. [ ] Phase 8 — Release
+9. [ ] Phase 7.5 — Unified showcase runner follow-on
+10. [ ] Phase 8 — Release
 
 ### Why this order
 - CI should exist before major refactors land
@@ -675,11 +711,13 @@ This section is intentionally included so it can be copied into a tracking file 
 - [x] documentation aligned to live package, script, notebook, and artifact surfaces (Phase 4)
 - [x] README rewritten to separate package quickstart from repository workflow (Phase 5)
 - [x] docs maintenance guide and doc coverage matrix added
+- [x] canonical runner hardening validated: dataset-level parallel execution, mixed default mode, merged panel summary artifacts, deterministic recommendation output, and explicit `--full-bands` support
 
 ### Partially implemented
-- [ ] release artifact smoke validation (Phase 7)
+- [ ] repo-wide release artifact smoke validation and installed-wheel smoke checks (Phase 7)
 
 ### Not started
+- [ ] Phase 7.5 unified showcase/all-method runner follow-on
 - [ ] Phase 8 release execution
 
 ---
