@@ -583,9 +583,9 @@ forecastability --help
 
 **Objective:** Scope the next step toward a single showcase runner without expanding the immediate Phase 7 hardening change set.
 
-**Status:** Proposed
+**Status:** Completed
 
-This phase is the follow-on for “one script runs all methods shown in the Air Passengers showcase notebook.” Full notebook parity remains out of scope for the immediate Phase 7 hardening.
+This phase delivers a single showcase runner that applies every diagnostic surface the package exposes to the Air Passengers series and summarises all results with a holistic LLM narrative. Full notebook parity remains out of scope for Phase 7 hardening.
 
 ### Tasks
 - [x] Design a unified showcase/all-method runner that can execute the methods surfaced in the Air Passengers showcase notebook from one entry point
@@ -659,7 +659,7 @@ The Jr. developer should implement in this order:
 6. [x] Phase 4 — Documentation sync
 7. [x] Phase 5 — README renovation
 8. [ ] Phase 7 — Final validation
-9. [ ] Phase 7.5 — Unified showcase runner follow-on
+9. [x] Phase 7.5 — Unified showcase runner follow-on
 10. [ ] Phase 8 — Release
 
 ### Why this order
@@ -722,11 +722,21 @@ This section is intentionally included so it can be copied into a tracking file 
 - [ ] Phase 8 release execution
 
 ### Completed in Phase 7.5
-- [x] `scripts/run_showcase.py` — unified showcase runner for Air Passengers covering all four deterministic methods (run_triage, run_canonical_example, ForecastabilityAnalyzer, run_rolling_origin_evaluation) plus agentic LLM interpretation as guarded BONUS surface (--agent flag)
-- [x] Per-method figures: triage_summary.png, canonical_result.png, analyzer_comparison.png, rolling_origin.png
-- [x] Merged 2×2 comparison figure: showcase_merged.png
-- [x] Human-readable markdown report: outputs/reports/showcase/showcase_report.md
-- [x] LLM narrative exposed as opt-in bonus with graceful fallback when API key is absent
+- [x] `scripts/run_showcase.py` — unified showcase runner for Air Passengers covering **all ten** diagnostic surfaces:
+  - M1 `run_triage` — deterministic fast triage with classification
+  - M2 `run_canonical_example` — full AMI/pAMI pipeline with significance bands
+  - M3 `ForecastabilityAnalyzer` — multi-scorer AMI vs pAMI comparison
+  - M4 `run_rolling_origin_evaluation` — rolling-origin benchmark (skippable)
+  - F1 `ForecastabilityProfile` — informative horizons, peak horizon, model-now guidance
+  - F2 `TheoreticalLimitDiagnostics` — theoretical ceiling vs achieved performance
+  - F3 `PredictiveInfoLearningCurve` — predictive information learning curve, plateau detection
+  - F4 `SpectralPredictabilityResult` — spectral entropy, PSD-based predictability score
+  - F5 `LargestLyapunovExponentResult` — experimental LLE, chaos indicator (EXPERIMENTAL)
+  - F6 `ComplexityBandResult` — permutation entropy, spectral entropy, complexity band
+- [x] Per-method figures for all 10 surfaces saved to `outputs/figures/showcase/`
+- [x] Merged 4×3 comparison figure: `showcase_merged.png`
+- [x] Human-readable markdown report with sections for all 10 methods: `outputs/reports/showcase/showcase_report.md`
+- [x] `ShowcaseExplanation` — holistic LLM interpretation of ALL diagnostics via `--agent` flag with `key_findings`, `unified_recommendation`, `narrative`, `caveats`; graceful fallback when API key absent
 
 ---
 
