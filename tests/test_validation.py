@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from forecastability.validation import validate_time_series
+from forecastability.utils.validation import validate_time_series
 
 
 def test_validate_time_series_passes_valid_array() -> None:

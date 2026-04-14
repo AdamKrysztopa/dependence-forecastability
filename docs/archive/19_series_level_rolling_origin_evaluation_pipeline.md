@@ -14,8 +14,8 @@ import numpy as np
 
 from forecastability.metrics import compute_ami, compute_pami_linear_residual
 from forecastability.models import forecast_ets, forecast_naive, forecast_seasonal_naive, smape
-from forecastability.rolling_origin import build_expanding_window_splits
-from forecastability.types import ForecastResult, SeriesEvaluationResult
+from forecastability.pipeline.rolling_origin import build_expanding_window_splits
+from forecastability.utils.types import ForecastResult, SeriesEvaluationResult
 
 
 def run_rolling_origin_evaluation(

@@ -6,9 +6,10 @@ This is the code-level map of modules in `src/forecastability`, using current po
 ## `__init__.py`
 - Package-level public API exports.
 
-## Root-level compatibility shims (planned removal in 0.3.0)
-- Root-level shim modules currently preserve legacy imports and re-export implementations from subpackages (`utils`, `diagnostics`, `metrics`, `pipeline`, `reporting`).
-- These shims are compatibility-only and include TODO notes for planned removal in `0.3.0`.
+## Root-level layout (shim-free)
+- Root-level compatibility shims have been removed.
+- Root now contains only: `__init__.py`, `extensions.py`, `models.py`, `exog_benchmark.py`.
+- Root modules now contain only active implementations and package entrypoints, with moved functionality imported from canonical subpackages (`utils`, `diagnostics`, `metrics`, `pipeline`, `reporting`) where needed.
 
 ## `pipeline/analyzer.py`
 - `ForecastabilityAnalyzer`: method-independent analyzer with scorer registry. Backward-compatible AMI/pAMI methods plus generic `compute_raw()`, `compute_partial()`, and `compute_significance_generic()`. Exposes `list_scorers()` and `register_scorer()` for runtime introspection and custom scorer registration.

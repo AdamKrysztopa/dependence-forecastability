@@ -36,7 +36,7 @@ except ImportError:
 
 from forecastability.adapters.settings import InfraSettings
 from forecastability.adapters.triage_presenter import present_triage_result
-from forecastability.scorers import default_registry
+from forecastability.metrics.scorers import default_registry
 from forecastability.triage.models import AnalysisGoal, TriageRequest, TriageResult
 from forecastability.use_cases.run_triage import run_triage
 

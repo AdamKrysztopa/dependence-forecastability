@@ -18,8 +18,8 @@ os.environ.setdefault("MPLBACKEND", "Agg")
 
 import matplotlib.pyplot as plt
 
+from forecastability.diagnostics.spectral_utils import compute_normalised_psd
 from forecastability.services.spectral_predictability_service import build_spectral_predictability
-from forecastability.spectral_utils import compute_normalised_psd
 from forecastability.triage.spectral_predictability import SpectralPredictabilityResult
 
 

@@ -8,8 +8,8 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict
 
-from forecastability.analyzer import AnalyzeResult
-from forecastability.types import SeriesEvaluationResult
+from forecastability.pipeline.analyzer import AnalyzeResult
+from forecastability.utils.types import SeriesEvaluationResult
 
 
 class AnalyzeSeriesResponse(BaseModel):

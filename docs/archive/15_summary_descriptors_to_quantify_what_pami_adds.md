@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from forecastability.types import CanonicalExampleResult
+from forecastability.utils.types import CanonicalExampleResult
 
 
 def summarize_canonical_result(

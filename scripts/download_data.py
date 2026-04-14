@@ -25,7 +25,7 @@ import numpy as np
 import pandas as pd
 import yfinance as yf
 
-from forecastability.datasets import (
+from forecastability.utils.datasets import (
     generate_henon_map,
     generate_simulated_stock_returns,
     generate_sine_wave,

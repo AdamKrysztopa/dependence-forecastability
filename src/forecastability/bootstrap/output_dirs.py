@@ -1,6 +1,6 @@
 """Runtime bootstrap: prepare output directories from an OutputConfig."""
 
-from forecastability.config import OutputConfig
+from forecastability.utils.config import OutputConfig
 
 
 def prepare_output_dirs(config: OutputConfig) -> None:

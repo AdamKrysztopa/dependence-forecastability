@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from forecastability.analyzer import ForecastabilityAnalyzer, ForecastabilityAnalyzerExog
+from forecastability.pipeline.analyzer import ForecastabilityAnalyzer, ForecastabilityAnalyzerExog
 
 # ------------------------------------------------------------------
 # Legacy backward-compat tests (updated field names)

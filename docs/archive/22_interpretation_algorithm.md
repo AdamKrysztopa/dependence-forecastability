@@ -12,8 +12,8 @@ from __future__ import annotations
 
 import numpy as np
 
-from forecastability.aggregation import summarize_canonical_result
-from forecastability.types import CanonicalExampleResult, InterpretationResult
+from forecastability.utils.aggregation import summarize_canonical_result
+from forecastability.utils.types import CanonicalExampleResult, InterpretationResult
 
 
 def interpret_canonical_result(

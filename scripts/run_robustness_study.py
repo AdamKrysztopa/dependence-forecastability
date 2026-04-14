@@ -13,14 +13,14 @@ import yaml
 # Non-interactive plotting backend.
 os.environ.setdefault("MPLBACKEND", "Agg")
 
-from forecastability.config import RobustnessStudyConfig
-from forecastability.datasets import (
+from forecastability.utils.config import RobustnessStudyConfig
+from forecastability.utils.datasets import (
     generate_henon_map,
     generate_simulated_stock_returns,
     generate_sine_wave,
     load_air_passengers,
 )
-from forecastability.robustness import run_robustness_study
+from forecastability.utils.robustness import run_robustness_study
 
 _logger = logging.getLogger(__name__)
 
@@ -58,7 +58,7 @@ def _load_datasets() -> list[tuple[str, np.ndarray]]:
 
 def _save_backend_csv(result: object, path: Path) -> None:
     """Save backend comparison results as CSV."""
-    from forecastability.types import RobustnessStudyResult
+    from forecastability.utils.types import RobustnessStudyResult
 
     assert isinstance(result, RobustnessStudyResult)
     rows: list[dict[str, str | int | float | bool | None]] = []
@@ -88,7 +88,7 @@ def _save_backend_csv(result: object, path: Path) -> None:
 
 def _save_stress_csv(result: object, path: Path) -> None:
     """Save sample-size stress results as CSV."""
-    from forecastability.types import RobustnessStudyResult
+    from forecastability.utils.types import RobustnessStudyResult
 
     assert isinstance(result, RobustnessStudyResult)
     rows: list[dict[str, str | int | float | bool]] = []

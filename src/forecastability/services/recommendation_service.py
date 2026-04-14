@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from forecastability.validation import validate_time_series
+from forecastability.utils.validation import validate_time_series
 
 # Family → (high_threshold, medium_threshold) — peak-based, calibrated on
 # canonical examples (WN ≈ 0.02, AR(1) ≈ 0.38, Logistic/Sine/Hénon ≥ 1.1).
@@ -20,7 +20,7 @@ def _triage_recommendation(raw_curve: np.ndarray, *, family: str, is_cross: bool
     """Generate a triage recommendation from the raw curve peak.
 
     Uses the peak (maximum) of the raw dependence curve with thresholds
-    aligned to :func:`forecastability.interpretation._forecastability_class`.
+    aligned to :func:`forecastability.reporting.interpretation._forecastability_class`.
 
     Args:
         raw_curve: Raw dependence curve array.

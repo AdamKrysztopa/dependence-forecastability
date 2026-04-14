@@ -424,7 +424,7 @@ def _spectral_entropy_scorer(
     """Normalised spectral entropy scorer (Welch PSD, natural-log base).
 
     Implements :class:`SeriesDiagnosticScorer`.  Uses
-    :func:`~forecastability.spectral_utils.compute_normalised_psd` then
+    :func:`~forecastability.diagnostics.spectral_utils.compute_normalised_psd` then
     normalises by ``log(N_bins)`` where ``N_bins`` is the number of frequency
     bins in the Welch estimate.
 
@@ -455,7 +455,7 @@ def _spectral_predictability_scorer(
     """Spectral predictability scorer Ω = 1 − normalised spectral entropy.
 
     Implements :class:`SeriesDiagnosticScorer`.  Uses
-    :func:`~forecastability.spectral_utils.compute_normalised_psd` then
+    :func:`~forecastability.diagnostics.spectral_utils.compute_normalised_psd` then
     normalises by ``log(N_bins)`` where ``N_bins`` is the number of frequency
     bins in the Welch estimate.
 

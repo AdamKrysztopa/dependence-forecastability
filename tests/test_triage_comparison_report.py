@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from forecastability.analyzer import AnalyzeResult
+from forecastability.pipeline.analyzer import AnalyzeResult
 from forecastability.triage.batch_models import BatchSeriesRequest, BatchTriageRequest
 from forecastability.triage.comparison_report import (
     HORIZON_DROPOFF_TABLE_COLUMNS,
@@ -19,7 +19,7 @@ from forecastability.triage.models import (
     TriageRequest,
     TriageResult,
 )
-from forecastability.types import Diagnostics, InterpretationResult
+from forecastability.utils.types import Diagnostics, InterpretationResult
 
 
 def _make_stub_triage_result(

@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import numpy as np
 
-from forecastability.datasets import generate_sine_wave
 from forecastability.metrics import compute_ami, compute_pami_linear_residual
+from forecastability.utils.datasets import generate_sine_wave
 
 
 def test_ami_returns_non_negative_finite_values() -> None:

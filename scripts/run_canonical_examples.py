@@ -14,8 +14,12 @@ import pandas as pd
 # Default to non-interactive plotting backend for script execution.
 os.environ.setdefault("MPLBACKEND", "Agg")
 
-from forecastability.aggregation import summarize_canonical_result
-from forecastability.datasets import (
+from forecastability.extensions import bootstrap_descriptor_uncertainty, compute_k_sensitivity
+from forecastability.pipeline import run_canonical_example
+from forecastability.reporting import save_canonical_markdown, save_canonical_result_json
+from forecastability.reporting.interpretation import interpret_canonical_result
+from forecastability.utils.aggregation import summarize_canonical_result
+from forecastability.utils.datasets import (
     generate_henon_map,
     generate_simulated_stock_returns,
     generate_sine_wave,
@@ -25,12 +29,8 @@ from forecastability.datasets import (
     load_crude_oil_returns,
     load_gold_returns,
 )
-from forecastability.extensions import bootstrap_descriptor_uncertainty, compute_k_sensitivity
-from forecastability.interpretation import interpret_canonical_result
-from forecastability.io_models import CanonicalPayload, CanonicalSummaryBundle
-from forecastability.pipeline import run_canonical_example
-from forecastability.plots import save_all_canonical_plots
-from forecastability.reporting import save_canonical_markdown, save_canonical_result_json
+from forecastability.utils.io_models import CanonicalPayload, CanonicalSummaryBundle
+from forecastability.utils.plots import save_all_canonical_plots
 
 _logger = logging.getLogger(__name__)
 

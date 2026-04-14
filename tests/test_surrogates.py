@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from forecastability.datasets import generate_sine_wave
-from forecastability.surrogates import compute_significance_bands, phase_surrogates
+from forecastability.diagnostics.surrogates import compute_significance_bands, phase_surrogates
+from forecastability.utils.datasets import generate_sine_wave
 
 
 def test_phase_surrogates_shape() -> None:

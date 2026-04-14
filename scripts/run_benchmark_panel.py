@@ -17,22 +17,22 @@ import yaml
 # Default to non-interactive plotting backend for script execution.
 os.environ.setdefault("MPLBACKEND", "Agg")
 
-from forecastability.aggregation import (
+from forecastability.pipeline import run_rolling_origin_evaluation
+from forecastability.utils.aggregation import (
     add_terciles,
     build_horizon_table,
     compute_rank_associations,
     summarize_frequency_panels,
     summarize_terciles,
 )
-from forecastability.config import (
+from forecastability.utils.config import (
     BenchmarkDataConfig,
     ModelConfig,
     PaperBaselineConfig,
     RollingOriginConfig,
 )
-from forecastability.datasets import load_m4_subset
-from forecastability.pipeline import run_rolling_origin_evaluation
-from forecastability.plots import plot_frequency_panel, plot_smape_vs_ami
+from forecastability.utils.datasets import load_m4_subset
+from forecastability.utils.plots import plot_frequency_panel, plot_smape_vs_ami
 
 _logger = logging.getLogger(__name__)
 

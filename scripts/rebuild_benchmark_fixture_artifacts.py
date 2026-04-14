@@ -10,7 +10,7 @@ import argparse
 import logging
 from pathlib import Path
 
-from forecastability.reproducibility import (
+from forecastability.utils.reproducibility import (
     verify_fixture_benchmark_artifacts,
     write_fixture_benchmark_artifacts,
 )

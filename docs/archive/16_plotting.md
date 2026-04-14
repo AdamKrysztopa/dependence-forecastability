@@ -14,7 +14,7 @@ from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 
-from forecastability.types import CanonicalExampleResult
+from forecastability.utils.types import CanonicalExampleResult
 
 
 def plot_canonical_result(

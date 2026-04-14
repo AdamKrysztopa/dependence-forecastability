@@ -7,7 +7,7 @@ import math
 import numpy as np
 import pytest
 
-from forecastability.scorers import _embed_series, _estimate_lle_rosenstein
+from forecastability.metrics.scorers import _embed_series, _estimate_lle_rosenstein
 from forecastability.services.lyapunov_service import build_largest_lyapunov_exponent
 from forecastability.triage.lyapunov import LargestLyapunovExponentResult
 

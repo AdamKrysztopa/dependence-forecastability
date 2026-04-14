@@ -11,7 +11,7 @@ from forecastability.triage.models import (
     ReadinessWarning,
     TriageRequest,
 )
-from forecastability.validation import validate_time_series
+from forecastability.utils.validation import validate_time_series
 
 
 def assess_readiness(request: TriageRequest) -> ReadinessReport:

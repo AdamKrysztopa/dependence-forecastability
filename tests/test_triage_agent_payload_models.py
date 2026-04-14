@@ -23,7 +23,7 @@ from forecastability.triage.lyapunov import LargestLyapunovExponentResult
 from forecastability.triage.predictive_info_learning_curve import PredictiveInfoLearningCurve
 from forecastability.triage.spectral_predictability import SpectralPredictabilityResult
 from forecastability.triage.theoretical_limit_diagnostics import TheoreticalLimitDiagnostics
-from forecastability.types import ExogenousDriverSummary
+from forecastability.utils.types import ExogenousDriverSummary
 
 # ---------------------------------------------------------------------------
 # Helpers — minimal domain object constructors

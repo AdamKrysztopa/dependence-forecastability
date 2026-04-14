@@ -12,7 +12,6 @@ import numpy as np
 import yaml
 from pydantic import BaseModel, ConfigDict, ValidationError, field_validator
 
-from forecastability.config import ExogenousScreeningWorkbenchConfig
 from forecastability.use_cases.run_exogenous_screening_workbench import (
     DRIVER_SUMMARY_TABLE_COLUMNS,
     HORIZON_USEFULNESS_TABLE_COLUMNS,
@@ -23,6 +22,7 @@ from forecastability.use_cases.run_exogenous_screening_workbench import (
     lag_window_summary_table_rows,
     run_exogenous_screening_workbench,
 )
+from forecastability.utils.config import ExogenousScreeningWorkbenchConfig
 
 _logger = logging.getLogger(__name__)
 

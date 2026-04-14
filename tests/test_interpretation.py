@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import numpy as np
 
-from forecastability.interpretation import interpret_canonical_result
-from forecastability.types import CanonicalExampleResult, MetricCurve
+from forecastability.reporting.interpretation import interpret_canonical_result
+from forecastability.utils.types import CanonicalExampleResult, MetricCurve
 
 
 def _fake_result(*, ami_vals: np.ndarray, pami_vals: np.ndarray) -> CanonicalExampleResult:

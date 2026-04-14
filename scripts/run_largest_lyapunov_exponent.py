@@ -16,7 +16,7 @@ import pathlib
 import matplotlib.pyplot as plt
 import numpy as np
 
-from forecastability.scorers import _embed_series
+from forecastability.metrics.scorers import _embed_series
 from forecastability.services.lyapunov_service import build_largest_lyapunov_exponent
 from forecastability.triage.lyapunov import LargestLyapunovExponentResult
 
@@ -89,7 +89,7 @@ def _divergence_curve(
     theiler = max(1, int(0.1 * n))
     steps = max(1, n // 20)
 
-    from forecastability.scorers import (
+    from forecastability.metrics.scorers import (
         _compute_log_divergence,
         _find_nearest_with_theiler,
     )

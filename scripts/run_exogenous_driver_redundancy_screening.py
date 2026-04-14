@@ -53,11 +53,11 @@ import matplotlib.colors as mcolors  # noqa: E402
 import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.patches import Patch  # noqa: E402
 
-from forecastability.config import ExogenousScreeningWorkbenchConfig  # noqa: E402
-from forecastability.types import ExogenousBenchmarkResult  # noqa: E402
 from forecastability.use_cases.run_exogenous_screening_workbench import (  # noqa: E402
     run_exogenous_screening_workbench,
 )
+from forecastability.utils.config import ExogenousScreeningWorkbenchConfig  # noqa: E402
+from forecastability.utils.types import ExogenousBenchmarkResult  # noqa: E402
 
 _logger = logging.getLogger(__name__)
 _OUTPUT_DIR = Path("outputs/figures/exog_screening")
@@ -288,7 +288,7 @@ def _plot_usefulness_heatmap(
         result_f8: F8 workbench result.
         output_path: Destination PNG path.
     """
-    from forecastability.types import ExogenousScreeningWorkbenchResult
+    from forecastability.utils.types import ExogenousScreeningWorkbenchResult
 
     baseline: ExogenousScreeningWorkbenchResult = result_baseline  # type: ignore[assignment]
     f8: ExogenousScreeningWorkbenchResult = result_f8  # type: ignore[assignment]
@@ -370,7 +370,7 @@ def _plot_driver_ranking_bar(
         result_f8: F8 workbench result.
         output_path: Destination PNG path.
     """
-    from forecastability.types import ExogenousScreeningWorkbenchResult
+    from forecastability.utils.types import ExogenousScreeningWorkbenchResult
 
     f8: ExogenousScreeningWorkbenchResult = result_f8  # type: ignore[assignment]
 
@@ -427,7 +427,7 @@ def _print_comparison_table(
         result_baseline: Baseline workbench result.
         result_f8: F8 workbench result.
     """
-    from forecastability.types import ExogenousScreeningWorkbenchResult
+    from forecastability.utils.types import ExogenousScreeningWorkbenchResult
 
     baseline: ExogenousScreeningWorkbenchResult = result_baseline  # type: ignore[assignment]
     f8: ExogenousScreeningWorkbenchResult = result_f8  # type: ignore[assignment]

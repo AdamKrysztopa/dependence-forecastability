@@ -14,8 +14,8 @@ from __future__ import annotations
 import numpy as np
 
 from forecastability.metrics import compute_ami, compute_pami_linear_residual
-from forecastability.surrogates import compute_significance_bands
-from forecastability.types import CanonicalExampleResult, MetricCurve
+from forecastability.diagnostics.surrogates import compute_significance_bands
+from forecastability.utils.types import CanonicalExampleResult, MetricCurve
 
 
 def _significant_lags(

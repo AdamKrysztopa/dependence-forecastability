@@ -22,7 +22,7 @@ uv sync
 ```
 
 ```python
-from forecastability.analyzer import ForecastabilityAnalyzerExog
+from forecastability.pipeline.analyzer import ForecastabilityAnalyzerExog
 
 analyzer = ForecastabilityAnalyzerExog(n_surrogates=99, random_state=42)
 ```
@@ -148,7 +148,7 @@ Expected outcomes:
 
 ```python
 import numpy as np
-from forecastability.analyzer import ForecastabilityAnalyzerExog
+from forecastability.pipeline.analyzer import ForecastabilityAnalyzerExog
 
 # generate_test_data defined in §4 above — paste here if running standalone
 y, exog_good, exog_bad = generate_test_data(n=2000)

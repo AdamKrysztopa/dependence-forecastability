@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from forecastability.config import ExogenousBenchmarkConfig, PaperBaselineConfig
+from forecastability.utils.config import ExogenousBenchmarkConfig, PaperBaselineConfig
 
 
 def test_paper_baseline_config_matches_goal_1_frequency_caps() -> None:

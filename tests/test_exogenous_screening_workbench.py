@@ -5,11 +5,11 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from forecastability.config import ExogenousScreeningWorkbenchConfig
-from forecastability.types import ExogenousBenchmarkResult
 from forecastability.use_cases.run_exogenous_screening_workbench import (
     run_exogenous_screening_workbench,
 )
+from forecastability.utils.config import ExogenousScreeningWorkbenchConfig
+from forecastability.utils.types import ExogenousBenchmarkResult
 
 
 def _config_with(
@@ -544,7 +544,7 @@ def test_bh_correction_false_by_default() -> None:
 
 
 def test_new_config_fields_have_correct_defaults() -> None:
-    from forecastability.config import ExogenousScreeningWorkbenchConfig
+    from forecastability.utils.config import ExogenousScreeningWorkbenchConfig
 
     config = ExogenousScreeningWorkbenchConfig()
     assert config.redundancy_alpha == 0.0
@@ -553,7 +553,7 @@ def test_new_config_fields_have_correct_defaults() -> None:
 
 
 def test_driver_summary_has_bh_significant_field() -> None:
-    from forecastability.types import ExogenousDriverSummary
+    from forecastability.utils.types import ExogenousDriverSummary
 
     summary = ExogenousDriverSummary(
         overall_rank=1,

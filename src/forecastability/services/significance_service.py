@@ -8,10 +8,10 @@ from typing import cast
 
 import numpy as np
 
-from forecastability.scorers import DependenceScorer, ScorerInfo
+from forecastability.diagnostics.surrogates import phase_surrogates
+from forecastability.metrics.scorers import DependenceScorer, ScorerInfo
 from forecastability.services.partial_curve_service import compute_partial_curve
 from forecastability.services.raw_curve_service import compute_raw_curve
-from forecastability.surrogates import phase_surrogates
 
 
 def compute_significance_bands_generic(

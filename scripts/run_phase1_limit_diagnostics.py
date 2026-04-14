@@ -23,10 +23,10 @@ from scipy.signal import lfilter
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402 — must follow matplotlib.use()
 
+from forecastability.diagnostics.spectral_utils import compute_normalised_psd, spectral_entropy
 from forecastability.services.theoretical_limit_diagnostics_service import (
     build_theoretical_limit_diagnostics,
 )
-from forecastability.spectral_utils import compute_normalised_psd, spectral_entropy
 from forecastability.triage.models import TriageRequest, TriageResult
 from forecastability.use_cases.run_triage import run_triage
 

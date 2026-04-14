@@ -55,8 +55,8 @@ def check_imports() -> bool:
         ("forecastability.pipeline", None),
         ("forecastability.pipeline", "run_canonical_example"),
         ("forecastability.pipeline", "run_rolling_origin_evaluation"),
-        ("forecastability.config", "MetricConfig"),
-        ("forecastability.datasets", "generate_ar1"),
+        ("forecastability.utils.config", "MetricConfig"),
+        ("forecastability.utils.datasets", "generate_ar1"),
     ]
 
     for module_name, attr in checks:

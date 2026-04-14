@@ -11,9 +11,9 @@ from typing import Any, Protocol, runtime_checkable
 
 import numpy as np
 
-from forecastability.scorers import DependenceScorer, ScorerInfo
+from forecastability.metrics.scorers import DependenceScorer, ScorerInfo
 from forecastability.triage.events import TriageEvent
-from forecastability.types import CanonicalExampleResult, InterpretationResult
+from forecastability.utils.types import CanonicalExampleResult, InterpretationResult
 
 __all__ = [
     "SeriesValidatorPort",

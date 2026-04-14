@@ -12,8 +12,6 @@ import pandas as pd
 # Default to non-interactive plotting backend for script execution.
 os.environ.setdefault("MPLBACKEND", "Agg")
 
-from forecastability.io_models import CanonicalPayload
-from forecastability.plots import plot_rank_association_bars, plot_smape_vs_ami
 from forecastability.reporting import (
     build_benchmark_markdown,
     build_frequency_panel_markdown,
@@ -21,6 +19,8 @@ from forecastability.reporting import (
     mandatory_caveats,
     save_exog_reports,
 )
+from forecastability.utils.io_models import CanonicalPayload
+from forecastability.utils.plots import plot_rank_association_bars, plot_smape_vs_ami
 
 _logger = logging.getLogger(__name__)
 

@@ -5,13 +5,13 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from forecastability.config import RobustnessStudyConfig
-from forecastability.robustness import (
+from forecastability.utils.config import RobustnessStudyConfig
+from forecastability.utils.robustness import (
     run_backend_comparison,
     run_robustness_study,
     run_sample_size_stress,
 )
-from forecastability.types import (
+from forecastability.utils.types import (
     BackendComparisonResult,
     RobustnessStudyResult,
     SampleSizeStressResult,

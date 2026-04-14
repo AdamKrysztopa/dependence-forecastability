@@ -5,9 +5,9 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from forecastability.aggregation import summarize_canonical_result
 from forecastability.pipeline import run_canonical_example
-from forecastability.types import CanonicalExampleResult
+from forecastability.utils.aggregation import summarize_canonical_result
+from forecastability.utils.types import CanonicalExampleResult
 
 
 def compute_k_sensitivity(

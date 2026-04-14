@@ -97,9 +97,9 @@ def test_profile_is_frozen() -> None:
 
 
 def test_run_triage_attaches_profile_with_surrogates() -> None:
-    from forecastability.datasets import generate_ar1
     from forecastability.triage import run_triage
     from forecastability.triage.models import TriageRequest
+    from forecastability.utils.datasets import generate_ar1
 
     series = generate_ar1(n_samples=300, phi=0.7, random_state=0)
     request = TriageRequest(series=series, n_surrogates=99, random_state=42, max_lag=20)
@@ -113,9 +113,9 @@ def test_run_triage_attaches_profile_with_surrogates() -> None:
 
 
 def test_run_triage_white_noise_profile_structure() -> None:
-    from forecastability.datasets import generate_white_noise
     from forecastability.triage import run_triage
     from forecastability.triage.models import TriageRequest
+    from forecastability.utils.datasets import generate_white_noise
 
     series = generate_white_noise(n_samples=300, random_state=42)
     request = TriageRequest(series=series, n_surrogates=99, random_state=42, max_lag=20)

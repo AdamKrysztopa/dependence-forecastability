@@ -109,7 +109,8 @@ Release `0.2.0` only when all conditions below are true:
 | Phase | Title | Duration | Status |
 |---|---:|---:|---|
 | 0 | Preparation | 1 day | In progress |
-| 1 | Source layout cleanup | 2–3 days | Proposed |
+| 1 | Source layout cleanup | 2–3 days | Completed |
+| 1.5 | Remove compatibility shims | 0.5–1 day | Completed |
 | 2 | Examples and scripts cleanup | 1–2 days | Proposed |
 | 3 | Notebook rationalization | 0.5 day | Proposed |
 | 4 | Documentation-code alignment | 2 days | Proposed |
@@ -173,7 +174,7 @@ Release `0.2.0` only when all conditions below are true:
 
 **Objective:** Reorganize `src/forecastability/` into a cleaner internal layout without unnecessary public breakage.
 
-**Status:** Proposed
+**Status:** Completed
 
 ### Architectural intent
 Preserve the hexagonal direction already present in the repo, but reduce the flat-root sprawl. Keep re-export compatibility where needed.
@@ -187,72 +188,100 @@ Keep only these modules at `src/forecastability/` root, plus existing subpackage
 
 ### File moves
 #### Create `src/forecastability/utils/` and move:
-- [ ] `aggregation.py`
-- [ ] `config.py`
-- [ ] `datasets.py`
-- [ ] `io_models.py`
-- [ ] `plots.py`
-- [ ] `reproducibility.py`
-- [ ] `robustness.py`
-- [ ] `state.py`
-- [ ] `types.py`
-- [ ] `validation.py`
+- [x] `aggregation.py`
+- [x] `config.py`
+- [x] `datasets.py`
+- [x] `io_models.py`
+- [x] `plots.py`
+- [x] `reproducibility.py`
+- [x] `robustness.py`
+- [x] `state.py`
+- [x] `types.py`
+- [x] `validation.py`
 
 #### Move into `src/forecastability/diagnostics/`
-- [ ] `diagnostic_regression.py`
-- [ ] `spectral_utils.py`
-- [ ] `cmi.py`
-- [ ] `surrogates.py`
+- [x] `diagnostic_regression.py`
+- [x] `spectral_utils.py`
+- [x] `cmi.py`
+- [x] `surrogates.py`
 
 #### Move into `src/forecastability/metrics/`
-- [ ] `metrics.py`
-- [ ] `scorers.py`
+- [x] `metrics.py`
+- [x] `scorers.py`
 
 #### Move into `src/forecastability/pipeline/`
-- [ ] `pipeline.py`
-- [ ] `analyzer.py`
-- [ ] `rolling_origin.py`
+- [x] `pipeline.py`
+- [x] `analyzer.py`
+- [x] `rolling_origin.py`
 
 #### Move into `src/forecastability/reporting/`
-- [ ] `reporting.py`
-- [ ] `interpretation.py`
+- [x] `reporting.py`
+- [x] `interpretation.py`
 
 ### Public API step
-- [ ] Update `src/forecastability/__init__.py` to expose only the public API:
+- [x] Update `src/forecastability/__init__.py` to expose only the public API:
   ```python
   from .triage import run_triage, run_batch_triage, TriageRequest
 
   __version__ = "0.2.0"
   __all__ = ["run_triage", "run_batch_triage", "TriageRequest"]
   ```
-- [ ] If existing documented public imports must remain available, add thin compatibility re-exports.
-- [ ] Do **not** delete old import paths immediately if they are used in notebooks, docs, or tests.
-- [ ] Add deprecation comments only where intentionally planned.
+- [x] If existing documented public imports must remain available, add thin compatibility re-exports.
+- [x] Do **not** delete old import paths immediately if they are used in notebooks, docs, or tests.
+- [x] Add deprecation comments only where intentionally planned.
 
 ### Refactor mechanics
-- [ ] Update all imports across `src/`, `tests/`, `examples/`, `scripts/`, `docs/`, and notebooks where needed.
-- [ ] Use:
+- [x] Update all imports across `src/`, `tests/`, `examples/`, `scripts/`, `docs/`, and notebooks where needed.
+- [x] Use:
   ```bash
   ruff check --fix .
   ruff format .
   ```
-- [ ] Run manual verification on imports not auto-fixed.
-- [ ] Add `# TODO: 0.3.0` comments only where future work is explicitly intended.
+- [x] Run manual verification on imports not auto-fixed.
+- [x] Add `# TODO: 0.3.0` comments only where future work is explicitly intended.
 
 ### Suggested Jr. developer workflow
 For each move:
-- [ ] move implementation
-- [ ] add compatibility shim if required
-- [ ] run focused tests
-- [ ] update docs/import examples
-- [ ] only then remove dead references
+- [x] move implementation
+- [x] add compatibility shim if required
+- [x] run focused tests
+- [x] update docs/import examples
+- [x] only then remove dead references
 
 ### Acceptance criteria
-- [ ] `import forecastability` works
-- [ ] no broken tests caused by module moves
-- [ ] documented public imports still work, or deprecations are explicit
-- [ ] package root is materially cleaner
-- [ ] architectural intent is clearer than before
+- [x] `import forecastability` works
+- [x] no broken tests caused by module moves
+- [x] documented public imports still work, or deprecations are explicit
+- [x] package root is materially cleaner
+- [x] architectural intent is clearer than before
+
+---
+
+## Phase 1.5 — Remove compatibility shims
+
+**Objective:** Retire root-level shim modules after migration is stable.
+
+**Status:** Completed
+
+**Scope:** Remove shim files in `src/forecastability/` that only re-export moved modules.
+
+**Preconditions:**
+- docs/scripts/tests/notebooks import paths are migrated
+- full verification is green
+
+### Tasks
+- [x] inventory shim modules
+- [x] migrate remaining imports to new package paths
+- [x] delete shim files
+- [x] update `__init__` exports only if needed
+- [x] update `docs/code/module_map.md`
+- [x] run verification (`ruff`, `ty`, `pytest`)
+
+### Acceptance criteria
+- [x] no root-level shim modules remain
+- [x] `import forecastability` works
+- [x] no broken tests/docs references
+- [x] module map reflects shim-free layout
 
 ---
 

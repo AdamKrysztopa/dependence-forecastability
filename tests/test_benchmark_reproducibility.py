@@ -7,7 +7,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from forecastability.reproducibility import (
+from forecastability.utils.reproducibility import (
     verify_fixture_benchmark_artifacts,
     write_fixture_benchmark_artifacts,
 )

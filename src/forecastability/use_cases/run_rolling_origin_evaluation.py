@@ -13,8 +13,8 @@ from forecastability.models import (
     forecast_seasonal_naive,
     smape,
 )
-from forecastability.rolling_origin import build_expanding_window_splits
-from forecastability.types import ForecastResult, SeriesEvaluationResult
+from forecastability.pipeline.rolling_origin import build_expanding_window_splits
+from forecastability.utils.types import ForecastResult, SeriesEvaluationResult
 
 _AMI_MIN_PAIRS = 30
 _PAMI_MIN_PAIRS = 50
