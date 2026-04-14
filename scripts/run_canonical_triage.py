@@ -41,6 +41,23 @@ _logger = logging.getLogger(__name__)
 
 CanonicalSpec: TypeAlias = tuple[str, np.ndarray, dict[str, str | int | float]]
 
+CORE_CANONICAL_DATASET_NAMES = frozenset(
+    {
+        "sine_wave",
+        "air_passengers",
+        "henon_map",
+        "simulated_stock_returns",
+    }
+)
+EXTENDED_FINANCIAL_DATASET_NAMES = frozenset(
+    {
+        "bitcoin_returns",
+        "gold_returns",
+        "crude_oil_returns",
+        "aapl_returns",
+    }
+)
+
 
 class _DatasetRunOutput(NamedTuple):
     """In-memory output for one dataset before artifacts are written."""
@@ -61,6 +78,19 @@ def _extensions_enabled(*, with_extensions: bool, skip_bands: bool) -> bool:
     return with_extensions and not skip_bands
 
 
+def _skip_bands_for_dataset(
+    dataset_name: str,
+    *,
+    skip_bands: bool,
+    full_bands: bool,
+) -> bool:
+    if skip_bands:
+        return True
+    if full_bands:
+        return False
+    return dataset_name in EXTENDED_FINANCIAL_DATASET_NAMES
+
+
 def _positive_int(value: str) -> int:
     try:
         parsed = int(value)
@@ -79,6 +109,14 @@ def _parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         help=(
             "Skip surrogate significance-band computation and bootstrap/k-sensitivity. "
             "Produces plots without significance bands but runs ~50x faster."
+        ),
+    )
+    parser.add_argument(
+        "--full-bands",
+        action="store_true",
+        help=(
+            "Force surrogate significance-band computation for every canonical dataset, "
+            "including the extended financial series."
         ),
     )
     parser.add_argument(
@@ -250,28 +288,39 @@ def _run_dataset(
 def run_canonical_triage(
     *,
     skip_bands: bool,
+    full_bands: bool = False,
     with_extensions: bool,
     max_workers: int | None = None,
     output_root: Path = Path("outputs"),
 ) -> None:
     """Run all canonical examples with deterministic aggregation and outputs."""
     run_start = time.perf_counter()
-    run_extensions = _extensions_enabled(
-        with_extensions=with_extensions,
-        skip_bands=skip_bands,
-    )
     figures_dir = output_root / "figures" / "canonical"
     json_dir = output_root / "json" / "canonical"
     markdown_dir = output_root / "reports" / "canonical"
     tables_dir = output_root / "tables"
 
     _log_progress("Starting canonical triage run")
+    if skip_bands and full_bands:
+        _log_progress("--full-bands requested with --no-bands; preserving no-bands override")
+    if skip_bands:
+        _log_progress("No-bands override enabled for all canonical datasets")
+    elif full_bands:
+        _log_progress("Full-bands mode enabled for all canonical datasets")
+    else:
+        _log_progress(
+            "Default mixed mode enabled: core canonical examples keep bands; "
+            "extended financial series skip bands"
+        )
+
     if with_extensions and skip_bands:
         _log_progress(
             "--with-extensions requested with --no-bands; preserving "
             "no-bands behavior and skipping extensions"
         )
-    elif run_extensions:
+    elif with_extensions and not full_bands:
+        _log_progress("Extension diagnostics enabled only for datasets that keep bands")
+    elif with_extensions:
         _log_progress("Extension diagnostics enabled")
     else:
         _log_progress("Extension diagnostics disabled")
@@ -288,14 +337,26 @@ def run_canonical_triage(
         future_to_dataset: dict[Future[_DatasetRunOutput], tuple[int, str]] = {}
         for index, spec in enumerate(datasets, start=1):
             dataset_name = spec[0]
-            _log_progress(f"[{index}/{n_datasets}] {dataset_name}: queued")
+            dataset_skip_bands = _skip_bands_for_dataset(
+                dataset_name,
+                skip_bands=skip_bands,
+                full_bands=full_bands,
+            )
+            dataset_run_extensions = _extensions_enabled(
+                with_extensions=with_extensions,
+                skip_bands=dataset_skip_bands,
+            )
+            queue_mode = "no-bands" if dataset_skip_bands else "bands"
+            if dataset_run_extensions:
+                queue_mode = f"{queue_mode}, extensions"
+            _log_progress(f"[{index}/{n_datasets}] {dataset_name}: queued ({queue_mode})")
             future = executor.submit(
                 _run_dataset,
                 index,
                 n_datasets,
                 spec,
-                skip_bands=skip_bands,
-                run_extensions=run_extensions,
+                skip_bands=dataset_skip_bands,
+                run_extensions=dataset_run_extensions,
             )
             future_to_dataset[future] = (index, dataset_name)
 
@@ -357,8 +418,13 @@ def run_canonical_triage(
             index=False,
         )
 
-    mode = "no-bands (fast)" if skip_bands else "with significance bands"
-    extensions_mode = "enabled" if run_extensions else "disabled"
+    if skip_bands:
+        mode = "no-bands (fast)"
+    elif full_bands:
+        mode = "full-bands"
+    else:
+        mode = "mixed default (core banded, extended descriptive)"
+    extensions_mode = "enabled" if with_extensions and not skip_bands else "disabled"
     _logger.info(
         "Saved canonical outputs for %d datasets (%s, extensions %s) in %.1fs.",
         len(report_payloads),
@@ -374,6 +440,7 @@ def main(argv: Sequence[str] | None = None) -> None:
     args = _parse_args(argv)
     run_canonical_triage(
         skip_bands=args.no_bands,
+        full_bands=args.full_bands,
         with_extensions=args.with_extensions,
         max_workers=args.max_workers,
     )

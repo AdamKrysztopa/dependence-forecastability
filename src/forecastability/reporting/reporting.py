@@ -32,6 +32,16 @@ class InterpretiveAnswers(BaseModel):
     if_model_performance_mismatch_explanation: str
 
 
+def _significance_count_label(*, count: int, status: str) -> str:
+    return "not computed" if status == "not computed" else str(count)
+
+
+def _broad_or_compact_label(*, n_sig_ami: int, ami_significance_status: str) -> str:
+    if ami_significance_status == "not computed":
+        return "Not assessed (bands not computed)"
+    return "Broad" if n_sig_ami > 6 else "Compact"
+
+
 def _interpretive_answers(result: CanonicalExampleResult) -> InterpretiveAnswers:
     summary = summarize_canonical_result(result)
     interpretation = interpret_canonical_result(result)
@@ -39,7 +49,10 @@ def _interpretive_answers(result: CanonicalExampleResult) -> InterpretiveAnswers
     predictive_structure = (
         "Yes" if interpretation.forecastability_class in {"high", "medium"} else "Weak"
     )
-    broad_or_compact = "Broad" if summary.n_sig_ami > 6 else "Compact"
+    broad_or_compact = _broad_or_compact_label(
+        n_sig_ami=summary.n_sig_ami,
+        ami_significance_status=summary.ami_significance_status,
+    )
     direct_or_mediated = (
         "Direct" if interpretation.directness_class == "high" else "Mostly mediated"
     )
@@ -91,12 +104,22 @@ def build_canonical_markdown(
     interpretation = interpret_canonical_result(result)
     qa = _interpretive_answers(result)
     mismatch = qa.if_model_performance_mismatch_explanation
+    n_sig_ami_label = _significance_count_label(
+        count=summary.n_sig_ami,
+        status=summary.ami_significance_status,
+    )
+    n_sig_pami_label = _significance_count_label(
+        count=summary.n_sig_pami,
+        status=summary.pami_significance_status,
+    )
 
     return f"""# {result.series_name}
 
 ## Summary
-- n_sig_ami: {summary.n_sig_ami}
-- n_sig_pami: {summary.n_sig_pami}
+- n_sig_ami: {n_sig_ami_label}
+- n_sig_pami: {n_sig_pami_label}
+- ami_significance_status: {summary.ami_significance_status}
+- pami_significance_status: {summary.pami_significance_status}
 - peak_lag_ami: {summary.peak_lag_ami}
 - peak_lag_pami: {summary.peak_lag_pami}
 - auc_ami: {summary.auc_ami:.4f}
@@ -192,22 +215,48 @@ def build_canonical_panel_markdown(*, payloads: list[CanonicalPayload]) -> str:
         "## Executive Summary",
         executive_summary,
         "",
-        "## Cross-Series Snapshot",
-        "| Series | Forecastability | Directness | Directness Ratio | n_sig AMI | "
-        "n_sig pAMI | Recommended Regime | Primary Lags |",
-        "|---|---|---|---|---|---|---|---|",
     ]
+
+    if any(
+        payload.summary.ami_significance_status == "not computed"
+        or payload.summary.pami_significance_status == "not computed"
+        for payload in payloads
+    ):
+        lines.extend(
+            [
+                "Significance entries marked 'not computed' reflect datasets "
+                "where surrogate bands were intentionally skipped.",
+                "",
+            ]
+        )
+
+    lines.extend(
+        [
+            "## Cross-Series Snapshot",
+            "| Series | Forecastability | Directness | Directness Ratio | n_sig AMI | "
+            "n_sig pAMI | Recommended Regime | Primary Lags |",
+            "|---|---|---|---|---|---|---|---|",
+        ]
+    )
 
     for payload in payloads:
         primary_lags = ", ".join(str(lag) for lag in payload.interpretation.primary_lags) or "-"
+        n_sig_ami_label = _significance_count_label(
+            count=payload.summary.n_sig_ami,
+            status=payload.summary.ami_significance_status,
+        )
+        n_sig_pami_label = _significance_count_label(
+            count=payload.summary.n_sig_pami,
+            status=payload.summary.pami_significance_status,
+        )
         lines.append(
             "| "
             f"{_series_label(payload.series_name)} "
             f"| {payload.interpretation.forecastability_class} "
             f"| {payload.interpretation.directness_class} "
             f"| {float(payload.summary.directness_ratio):.3f} "
-            f"| {int(payload.summary.n_sig_ami)} "
-            f"| {int(payload.summary.n_sig_pami)} "
+            f"| {n_sig_ami_label} "
+            f"| {n_sig_pami_label} "
             f"| {payload.interpretation.modeling_regime} "
             f"| {primary_lags} |"
         )

@@ -166,6 +166,8 @@ class CanonicalSummary(BaseModel):
     series_name: str
     n_sig_ami: int
     n_sig_pami: int
+    ami_significance_status: Literal["computed", "not computed"] = "computed"
+    pami_significance_status: Literal["computed", "not computed"] = "computed"
     peak_lag_ami: int
     peak_lag_pami: int
     peak_ami: float

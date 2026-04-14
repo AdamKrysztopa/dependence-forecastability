@@ -33,12 +33,13 @@ def _load_script_module() -> ModuleType:
 
 
 def test_parse_args_defaults_disable_extensions() -> None:
-    """Default script flags should keep bands on and extensions off."""
+    """Default script flags should keep mixed bands mode on and extensions off."""
     module = _load_script_module()
 
     args = module._parse_args([])
 
     assert args.no_bands is False
+    assert args.full_bands is False
     assert args.with_extensions is False
 
 
@@ -52,6 +53,16 @@ def test_parse_args_allows_with_extensions_flag() -> None:
     assert args.with_extensions is True
 
 
+def test_parse_args_allows_full_bands_flag() -> None:
+    """full-bands flag should be parsed as True when provided."""
+    module = _load_script_module()
+
+    args = module._parse_args(["--full-bands"])
+
+    assert args.no_bands is False
+    assert args.full_bands is True
+
+
 def test_extensions_enabled_requires_flag_and_bands() -> None:
     """Extensions are enabled only when explicitly requested and bands are active."""
     module = _load_script_module()
@@ -59,6 +70,44 @@ def test_extensions_enabled_requires_flag_and_bands() -> None:
     assert module._extensions_enabled(with_extensions=True, skip_bands=False) is True
     assert module._extensions_enabled(with_extensions=False, skip_bands=False) is False
     assert module._extensions_enabled(with_extensions=True, skip_bands=True) is False
+
+
+def test_skip_bands_policy_defaults_and_overrides() -> None:
+    """Default policy should keep bands for core examples and skip them for long finance series."""
+    module = _load_script_module()
+
+    assert (
+        module._skip_bands_for_dataset(
+            "sine_wave",
+            skip_bands=False,
+            full_bands=False,
+        )
+        is False
+    )
+    assert (
+        module._skip_bands_for_dataset(
+            "bitcoin_returns",
+            skip_bands=False,
+            full_bands=False,
+        )
+        is True
+    )
+    assert (
+        module._skip_bands_for_dataset(
+            "bitcoin_returns",
+            skip_bands=False,
+            full_bands=True,
+        )
+        is False
+    )
+    assert (
+        module._skip_bands_for_dataset(
+            "sine_wave",
+            skip_bands=True,
+            full_bands=True,
+        )
+        is True
+    )
 
 
 def test_parse_args_accepts_max_workers() -> None:
@@ -126,6 +175,7 @@ def test_run_canonical_triage_preserves_summary_order(tmp_path: Path, monkeypatc
     output_root = tmp_path / "outputs"
     module.run_canonical_triage(
         skip_bands=True,
+        full_bands=False,
         with_extensions=False,
         max_workers=2,
         output_root=output_root,
@@ -150,3 +200,83 @@ def test_run_canonical_triage_preserves_summary_order(tmp_path: Path, monkeypatc
     assert "Beta" in panel_report
     assert "Gamma" in panel_report
     assert (output_root / "figures" / "canonical" / "canonical_panel_summary.png").exists()
+
+
+def test_run_canonical_triage_default_mixed_mode_marks_not_computed_outputs(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    """Default mixed mode should skip bands for extended finance series and label outputs."""
+    module = _load_script_module()
+    dataset_specs = [
+        ("sine_wave", np.arange(96, dtype=float), {"seasonal_period": 0}),
+        ("bitcoin_returns", np.arange(96, dtype=float), {"seasonal_period": 0}),
+    ]
+    seen_skip_bands: dict[str, bool] = {}
+
+    def _fake_run_canonical_example(
+        series_name: str,
+        series: np.ndarray,
+        *,
+        skip_bands: bool,
+        **_: object,
+    ) -> CanonicalExampleResult:
+        del series
+        seen_skip_bands[series_name] = skip_bands
+        significant_lags = None if skip_bands else np.array([1, 2], dtype=int)
+        return CanonicalExampleResult(
+            series_name=series_name,
+            series=np.linspace(0.0, 1.0, 96),
+            ami=MetricCurve(
+                values=np.array([0.3, 0.2, 0.1], dtype=float),
+                significant_lags=significant_lags,
+            ),
+            pami=MetricCurve(
+                values=np.array([0.18, 0.12, 0.06], dtype=float),
+                significant_lags=significant_lags,
+            ),
+            metadata={"seasonal_period": 0},
+        )
+
+    def _write_panel_plot(_: list[object], *, save_path: Path) -> None:
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+        save_path.write_text("panel-plot", encoding="utf-8")
+
+    monkeypatch.setattr(module, "_load_canonical_datasets", lambda: dataset_specs)
+    monkeypatch.setattr(module, "run_canonical_example", _fake_run_canonical_example)
+    monkeypatch.setattr(module, "save_all_canonical_plots", lambda result, *, output_dir: {})
+    monkeypatch.setattr(module, "plot_canonical_panel_summary", _write_panel_plot)
+    monkeypatch.setattr(module, "_log_progress", lambda *args, **kwargs: None)
+
+    output_root = tmp_path / "outputs"
+    module.run_canonical_triage(
+        skip_bands=False,
+        full_bands=False,
+        with_extensions=False,
+        max_workers=1,
+        output_root=output_root,
+    )
+
+    assert seen_skip_bands == {
+        "sine_wave": False,
+        "bitcoin_returns": True,
+    }
+
+    bitcoin_payload = (output_root / "json" / "canonical" / "bitcoin_returns.json").read_text(
+        encoding="utf-8"
+    )
+    assert '"ami_significance_status": "not computed"' in bitcoin_payload
+    assert '"pami_significance_status": "not computed"' in bitcoin_payload
+
+    bitcoin_report = (output_root / "reports" / "canonical" / "bitcoin_returns.md").read_text(
+        encoding="utf-8"
+    )
+    assert "n_sig_ami: not computed" in bitcoin_report
+    assert "n_sig_pami: not computed" in bitcoin_report
+    assert "Is it broad or compact? Not assessed (bands not computed)" in bitcoin_report
+
+    panel_report = (output_root / "reports" / "canonical" / "canonical_panel_summary.md").read_text(
+        encoding="utf-8"
+    )
+    assert "Significance entries marked 'not computed'" in panel_report
+    assert "| Bitcoin Returns | high | high | 0.600 | not computed | not computed |" in panel_report

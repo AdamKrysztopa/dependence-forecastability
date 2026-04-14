@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 import numpy as np
 import pandas as pd
 from scipy.stats import spearmanr
@@ -13,6 +15,12 @@ from forecastability.utils.types import (
 )
 
 
+def _significance_status(
+    significant_lags: np.ndarray | None,
+) -> Literal["computed", "not computed"]:
+    return "not computed" if significant_lags is None else "computed"
+
+
 def summarize_canonical_result(
     result: CanonicalExampleResult,
 ) -> CanonicalSummary:
@@ -21,12 +29,10 @@ def summarize_canonical_result(
 
     ami = result.ami.values
     pami = result.pami.values
-    sig_ami = (
-        result.ami.significant_lags if result.ami.significant_lags is not None else np.array([])
-    )
-    sig_pami = (
-        result.pami.significant_lags if result.pami.significant_lags is not None else np.array([])
-    )
+    ami_sig_lags = result.ami.significant_lags
+    pami_sig_lags = result.pami.significant_lags
+    sig_ami = ami_sig_lags if ami_sig_lags is not None else np.array([], dtype=int)
+    sig_pami = pami_sig_lags if pami_sig_lags is not None else np.array([], dtype=int)
 
     auc_ami = float(np.trapezoid(ami))
     auc_pami = float(np.trapezoid(pami))
@@ -35,6 +41,8 @@ def summarize_canonical_result(
         series_name=result.series_name,
         n_sig_ami=int(sig_ami.size),
         n_sig_pami=int(sig_pami.size),
+        ami_significance_status=_significance_status(ami_sig_lags),
+        pami_significance_status=_significance_status(pami_sig_lags),
         peak_lag_ami=int(np.argmax(ami) + 1),
         peak_lag_pami=int(np.argmax(pami) + 1),
         peak_ami=float(np.max(ami)),

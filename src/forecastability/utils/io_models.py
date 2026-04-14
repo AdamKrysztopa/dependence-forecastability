@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Self
+from typing import Any, Literal, Self
 
 from pydantic import BaseModel, ConfigDict, ValidationError
 
@@ -48,6 +48,8 @@ class CanonicalSummaryPayload(_JsonFileModel):
 
     n_sig_ami: int
     n_sig_pami: int
+    ami_significance_status: Literal["computed", "not computed"] = "computed"
+    pami_significance_status: Literal["computed", "not computed"] = "computed"
     directness_ratio: float
     auc_ami: float
     auc_pami: float

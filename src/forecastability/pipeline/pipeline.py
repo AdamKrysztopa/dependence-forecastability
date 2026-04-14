@@ -45,7 +45,7 @@ def run_canonical_example(
 
     Args:
         skip_bands: When True, skip surrogate significance-band computation.
-            Bands will be ``None``; significant_lags will be empty.  Useful for
+            Bands will be ``None``; significant_lags will be ``None``. Useful for
             fast exploratory runs where statistical annotation is not needed.
     """
     ami_values = compute_ami(
@@ -57,7 +57,7 @@ def run_canonical_example(
     if skip_bands:
         ami_lower: np.ndarray | None = None
         ami_upper: np.ndarray | None = None
-        ami_sig = np.array([], dtype=int)
+        ami_sig: np.ndarray | None = None
     else:
         ami_lower, ami_upper = compute_significance_bands(
             ts,
@@ -88,7 +88,7 @@ def run_canonical_example(
     if skip_bands:
         pami_lower: np.ndarray | None = None
         pami_upper: np.ndarray | None = None
-        pami_sig = np.array([], dtype=int)
+        pami_sig: np.ndarray | None = None
     else:
         pami_lower, pami_upper = compute_significance_bands(
             ts,
