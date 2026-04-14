@@ -115,7 +115,7 @@ Release `0.2.0` only when all conditions below are true:
 | 3 | Notebook rationalization | 0.5 day | Completed |
 | 4 | Documentation-code alignment | 2 days | Completed |
 | 5 | README total renovation | 1 day | Completed |
-| 6 | CI/CD and repository infrastructure | 1–2 days | In progress |
+| 6 | CI/CD and repository infrastructure | 1–2 days | Completed |
 | 7 | Testing and final validation | 1 day | Proposed |
 | 8 | Release execution | 0.5 day | Proposed |
 
@@ -487,7 +487,7 @@ PyPI publishing is **already implemented**. This phase is about what is still mi
 
 ### Pre-commit
 - [x] Add `.pre-commit-config.yaml`
-- [ ] Install locally:
+- [x] Install locally:
   ```bash
   pre-commit install
   ```
@@ -514,7 +514,7 @@ PyPI publishing is **already implemented**. This phase is about what is still mi
 - [x] Add Dependabot config
 - [x] Add issue templates
 - [x] Add PR template
-- [ ] Add GitHub topics:
+- [ ] Add GitHub topics (GitHub UI only — cannot be automated via files):
   - `time-series`
   - `forecasting`
   - `mutual-information`
@@ -526,6 +526,7 @@ PyPI publishing is **already implemented**. This phase is about what is still mi
 - [x] release workflow is more explicit and safer
 - [x] pre-commit exists and is usable
 - [x] project metadata feels complete and professional
+- [x] `docs/releases/automated_release_pipeline.md` written — documents how to use the full pipeline
 
 ---
 
@@ -676,7 +677,7 @@ This section is intentionally included so it can be copied into a tracking file 
 - [x] docs maintenance guide and doc coverage matrix added
 
 ### Partially implemented
-- [ ] release artifact smoke validation
+- [ ] release artifact smoke validation (Phase 7)
 
 ### Not started
 - [ ] Phase 8 release execution

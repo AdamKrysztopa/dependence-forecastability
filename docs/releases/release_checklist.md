@@ -23,7 +23,7 @@ uv run pytest -q -ra
 uv run ruff check .
 uv run ty check
 rm -rf dist/ build/
-uv run python -m build
+uv build
 uv run twine check dist/*
 python3.11 -m venv .venv-release-smoke
 source .venv-release-smoke/bin/activate
