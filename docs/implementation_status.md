@@ -160,7 +160,7 @@ experimental, and where the evidence lives — without reading the source code.
 | Implemented | ✅ | `src/forecastability/extensions.py` (+ scoring infrastructure) |
 | Tested | ✅ | `tests/test_extensions.py`, `tests/test_benchmark_exog_panel.py` |
 | Regression fixtures | ✅ | `tests/` (exogenous benchmark fixture) |
-| Theory doc | ✅ | [notebooks/exogenous_analysis.md](notebooks/exogenous_analysis.md) |
+| Theory doc | — | No dedicated theory page; use the walkthrough notebook and script evidence |
 | Notebook | ✅ | `notebooks/triage/05_batch_and_exogenous_workbench.ipynb` |
 | Script | ✅ | `scripts/run_exog_analysis.py`, `scripts/archive/run_benchmark_exog_panel.py` |
 
@@ -185,4 +185,4 @@ each feature.
 | F5 ⚠️ | [largest_lyapunov_exponent.md](triage_methods/largest_lyapunov_exponent.md) | — | `scripts/archive/run_largest_lyapunov_exponent.py` | `test_lyapunov.py` |
 | F6 | [entropy_based_complexity.md](theory/entropy_based_complexity.md) | `04_spectral_and_entropy_diagnostics.ipynb` | `scripts/archive/run_entropy_complexity.py` | `test_complexity_band.py` |
 | F7 | — | `05_batch_and_exogenous_workbench.ipynb` | `run_benchmark_panel.py` | `test_batch_triage_f7.py` |
-| F8 | [notebooks/exogenous_analysis.md](notebooks/exogenous_analysis.md) | `05_batch_and_exogenous_workbench.ipynb` | `run_exog_analysis.py` | `test_extensions.py` |
+| F8 | — | `05_batch_and_exogenous_workbench.ipynb` | `run_exog_analysis.py` | `test_extensions.py` |

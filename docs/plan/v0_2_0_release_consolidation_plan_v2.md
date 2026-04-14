@@ -113,8 +113,8 @@ Release `0.2.0` only when all conditions below are true:
 | 1.5 | Remove compatibility shims | 0.5–1 day | Completed |
 | 2 | Examples and scripts cleanup | 1–2 days | Completed |
 | 3 | Notebook rationalization | 0.5 day | Completed |
-| 4 | Documentation-code alignment | 2 days | Proposed |
-| 5 | README total renovation | 1 day | Proposed |
+| 4 | Documentation-code alignment | 2 days | Completed |
+| 5 | README total renovation | 1 day | Completed |
 | 6 | CI/CD and repository infrastructure | 1–2 days | In progress |
 | 7 | Testing and final validation | 1 day | Proposed |
 | 8 | Release execution | 0.5 day | Proposed |
@@ -367,23 +367,23 @@ Keep these as development tools:
 
 **Objective:** Align docs with the cleaned source layout and actual API.
 
-**Status:** Proposed
+**Status:** Completed
 
 ### Tasks
-- [ ] Audit `docs/` for pages that describe obsolete single-paper AMI-only API paths
-- [ ] Move stale pages into `docs/archive/` or delete when safe
-- [ ] In `docs/triage_methods/*.md` and `docs/theory/*.md`, replace outdated references to individual `fX_*` function entry points with the unified API where appropriate
-- [ ] Update `docs/code/module_map.md` to reflect the new `src/` layout
-- [ ] Add:
+- [x] Audit `docs/` for pages that describe obsolete single-paper AMI-only API paths
+- [x] Move stale pages into `docs/archive/` or delete when safe
+- [x] In `docs/triage_methods/*.md` and `docs/theory/*.md`, replace outdated references to individual `fX_*` function entry points with the unified API where appropriate
+- [x] Update `docs/code/module_map.md` to reflect the new `src/` layout
+- [x] Add:
   - `docs/maintenance/developer_guide.md`
-- [ ] Seed `developer_guide.md` from existing acceptance/planning docs and current repo practices
-- [ ] Add a doc coverage matrix:
+- [x] Seed `developer_guide.md` from existing acceptance/planning docs and current repo practices
+- [x] Add a doc coverage matrix:
   - `docs/maintenance/doc_coverage_matrix.md`
-- [ ] For major docs, add a small line such as:
+- [x] For major docs, add a small line such as:
   - `Last verified for release 0.2.0`
 
 ### Required search sweep
-- [ ] Use grep or equivalent to catch stale names and paths:
+- [x] Use grep or equivalent to catch stale names and paths:
   ```bash
   grep -R "old_function_name" docs/
   grep -R "run_canonical_triage" docs/
@@ -399,10 +399,10 @@ Keep these as development tools:
 - archive docs = retained historical material only
 
 ### Acceptance criteria
-- [ ] docs point to real modules, real scripts, and real notebooks
-- [ ] no dead links in key docs
-- [ ] module map matches the actual source layout
-- [ ] developer guide exists and is useful for a new contributor
+- [x] docs point to real modules, real scripts, and real notebooks
+- [x] no dead links in key docs
+- [x] module map matches the actual source layout
+- [x] developer guide exists and is useful for a new contributor
 
 ---
 
@@ -410,7 +410,7 @@ Keep these as development tools:
 
 **Objective:** Turn the root README into a sharp, professional landing page.
 
-**Status:** Proposed
+**Status:** Completed
 
 ### README direction
 The README should present the package as:
@@ -420,39 +420,39 @@ The README should present the package as:
 It should clearly say that the project started from Catt’s AMI paper, but has become a broader **multi-paper triage and analytical toolkit**.
 
 ### Replace the README with this structure
-- [ ] Title and one-line positioning
-- [ ] Short mission paragraph
-- [ ] Key features list
-- [ ] Quick install
-- [ ] Quickstart code block
-- [ ] Link row:
+- [x] Title and one-line positioning
+- [x] Short mission paragraph
+- [x] Key features list
+- [x] Quick install
+- [x] Quickstart code block
+- [x] Link row:
   - Installation
   - Quickstart
   - All diagnostics
   - Architecture
   - Papers
-- [ ] “Why this instead of just Catt’s AMI?” section
-- [ ] Support-surface matrix
-- [ ] Short docs map
-- [ ] badges
+- [x] “Why this instead of just Catt’s AMI?” section
+- [x] Support-surface matrix
+- [x] Short docs map
+- [x] badges
 
 ### Required content elements
-- [ ] Keep or improve the good quickstart block already present
-- [ ] Remove or shorten the long paper-baseline explanation from the root page and move detail to `docs/theory/`
-- [ ] Fix markdown and LaTeX rendering issues
-- [ ] Add badges:
+- [x] Keep or improve the good quickstart block already present
+- [x] Remove or shorten the long paper-baseline explanation from the root page and move detail to `docs/theory/`
+- [x] Fix markdown and LaTeX rendering issues
+- [x] Add badges:
   - PyPI
   - Python version
   - License
   - CI status
-- [ ] Explicitly state the pivot to multi-paper triage
-- [ ] Keep agent layer, HTTP API, and CLI framed as optional surfaces over the deterministic core
+- [x] Explicitly state the pivot to multi-paper triage
+- [x] Keep agent layer, HTTP API, and CLI framed as optional surfaces over the deterministic core
 
 ### Acceptance criteria
-- [ ] a first-time visitor understands the package within one minute
-- [ ] README no longer feels like an internal memo
-- [ ] README clearly distinguishes foundation vs extensions
-- [ ] README links send users into one canonical learning path
+- [x] a first-time visitor understands the package within one minute
+- [x] README no longer feels like an internal memo
+- [x] README clearly distinguishes foundation vs extensions
+- [x] README links send users into one canonical learning path
 
 ---
 
@@ -618,8 +618,8 @@ The Jr. developer should implement in this order:
 3. [x] Phase 1 — Source layout cleanup
 4. [x] Phase 2 — Examples and scripts cleanup
 5. [x] Phase 3 — Notebook rationalization
-6. [ ] Phase 4 — Documentation sync
-7. [ ] Phase 5 — README renovation
+6. [x] Phase 4 — Documentation sync
+7. [x] Phase 5 — README renovation
 8. [ ] Phase 7 — Final validation
 9. [ ] Phase 8 — Release
 
@@ -671,14 +671,15 @@ This section is intentionally included so it can be copied into a tracking file 
 - [x] source-layout cleanup (Phase 1 + 1.5)
 - [x] examples and scripts de-duplicated (Phase 2)
 - [x] canonical showcase notebook validated end-to-end (Phase 3)
+- [x] documentation aligned to live package, script, notebook, and artifact surfaces (Phase 4)
+- [x] README rewritten to separate package quickstart from repository workflow (Phase 5)
+- [x] docs maintenance guide and doc coverage matrix added
 
 ### Partially implemented
-- [ ] README pivot to multi-paper triage exists but needs full renovation
-- [ ] docs are broad but not fully aligned with code
+- [ ] release artifact smoke validation
 
 ### Not started
-- [ ] release artifact smoke validation
-- [ ] docs maintenance guide
+- [ ] Phase 8 release execution
 
 ---
 

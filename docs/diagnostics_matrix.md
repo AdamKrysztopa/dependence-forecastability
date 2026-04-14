@@ -264,7 +264,7 @@ statistically detectable predictive signal.
 
 **Learn more.**
 - `extensions.py` source for `CrossAMIResult` and the BH FDR implementation
-- [notebooks/exogenous_analysis.md](notebooks/exogenous_analysis.md) for the
-  narrative walkthrough
+- [../notebooks/walkthroughs/02_exogenous_analysis.ipynb](../notebooks/walkthroughs/02_exogenous_analysis.ipynb)
+  for the walkthrough
 - [notebooks/triage/05_batch_and_exogenous_workbench.ipynb](../notebooks/triage/05_batch_and_exogenous_workbench.ipynb)
   for a combined F7/F8 example
