@@ -92,7 +92,8 @@ uv sync && MPLBACKEND=Agg uv run python scripts/run_canonical_triage.py
 - Observability and auditability guide: [docs/observability.md](docs/observability.md)
 - Agent layer contract (deterministic-first): [docs/agent_layer.md](docs/agent_layer.md)
 - Results summary (evidence-first): [docs/results_summary.md](docs/results_summary.md)
-- Durable notebook narratives (primary docs layer): [docs/notebooks/README.md](docs/notebooks/README.md)
+- Durable notebook narratives (showcase layer): [docs/notebooks/README.md](docs/notebooks/README.md)
+- Air Passengers showcase notebook: [notebooks/walkthroughs/00_air_passengers_showcase.ipynb](notebooks/walkthroughs/00_air_passengers_showcase.ipynb)
 - Agentic walkthrough notebook: [notebooks/walkthroughs/03_triage_end_to_end.ipynb](notebooks/walkthroughs/03_triage_end_to_end.ipynb)
 - Deterministic payload/serializer deep dive notebook: [notebooks/triage/06_agent_ready_triage_interpretation.ipynb](notebooks/triage/06_agent_ready_triage_interpretation.ipynb)
 - Full docs index: [docs/README.md](docs/README.md)
@@ -348,12 +349,12 @@ uv run python -m ipykernel install --user --name forecastability
 
 Notebook taxonomy is frozen to exactly two long-lived families:
 
-- `notebooks/walkthroughs/` — curated end-to-end user and maintainer surfaces.
+- `notebooks/walkthroughs/` — curated showcase and end-to-end narrative surfaces.
 - `notebooks/triage/` — deterministic deep dives for specific diagnostic methods.
 
 Ownership and architecture discipline:
 
-- Notebooks are consumer and demonstrator surfaces, not runtime implementation surfaces.
+- Notebooks are showcase, marketing, and demonstrator surfaces, not runtime implementation surfaces.
 - Runtime logic must live in `src/forecastability/` and follow hexagonal boundaries (`adapters -> use_cases -> domain`) with SOLID responsibilities.
 - Notebook cells may orchestrate examples and visual explanations, but they must not become authoritative runtime paths.
 
@@ -367,10 +368,11 @@ Notebook taxonomy (final):
 | Surface | Path(s) | Role |
 |---|---|---|
 | Long-lived family | `notebooks/triage/` | Deterministic deep-dive track (active). |
-| Long-lived family | `notebooks/walkthroughs/` | Curated walkthrough track (active). |
+| Long-lived family | `notebooks/walkthroughs/` | Curated showcase track (active). |
 
 Durable narrative pages for walkthrough surfaces:
 
+- [docs/notebooks/air_passengers_showcase.md](docs/notebooks/air_passengers_showcase.md)
 - [docs/notebooks/canonical_forecastability.md](docs/notebooks/canonical_forecastability.md)
 - [docs/notebooks/exogenous_analysis.md](docs/notebooks/exogenous_analysis.md)
 - [docs/notebooks/agentic_triage.md](docs/notebooks/agentic_triage.md)

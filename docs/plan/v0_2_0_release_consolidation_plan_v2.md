@@ -111,8 +111,8 @@ Release `0.2.0` only when all conditions below are true:
 | 0 | Preparation | 1 day | In progress |
 | 1 | Source layout cleanup | 2–3 days | Completed |
 | 1.5 | Remove compatibility shims | 0.5–1 day | Completed |
-| 2 | Examples and scripts cleanup | 1–2 days | Proposed |
-| 3 | Notebook rationalization | 0.5 day | Proposed |
+| 2 | Examples and scripts cleanup | 1–2 days | Completed |
+| 3 | Notebook rationalization | 0.5 day | Completed |
 | 4 | Documentation-code alignment | 2 days | Proposed |
 | 5 | README total renovation | 1 day | Proposed |
 | 6 | CI/CD and repository infrastructure | 1–2 days | In progress |
@@ -330,37 +330,36 @@ Keep these as development tools:
 
 ## Phase 3 — Handle the extra notebook (“all papers methods for one curve”)
 
-**Objective:** Preserve useful history, but stop presenting outdated notebook paths as canonical.
+**Objective:** Use notebooks as deliberate showcase surfaces that present the package clearly, promote breadth, and inspire users without turning notebooks into runtime ownership paths.
 
-**Status:** Proposed
+**Status:** Completed
 
 ### Tasks
-- [ ] Locate the notebook that manually walks Air Passengers through many or all F1–F9-style methods
-- [ ] Confirm archival decision with maintainer
-- [ ] Move it to:
-  - `notebooks/archive/all_papers_single_curve_air_passengers.ipynb`
-- [ ] Add a note at the top:
-  - `Deprecated – use run_triage() or the new walkthrough notebooks instead.`
-- [ ] Create or update `notebooks/README.md`
-
-### `notebooks/README.md` target table
-| Folder | Purpose | Status |
-|---|---|---|
-| `triage/` | Individual diagnostic deep-dives | Active |
-| `walkthroughs/` | End-to-end user flows | Active |
-| `archive/` | Old single-curve demos and superseded notebooks | Archived |
+- [x] Create a **single-curve showcase notebook** anchored on Air Passengers
+- [x] Suggested name:
+  - `notebooks/walkthroughs/00_air_passengers_showcase.ipynb`
+- [x] Make the notebook story-first rather than notebook-as-tooling:
+  - one memorable series
+  - multiple package surfaces shown from that same series
+  - strong visuals, short explanations, clear “why this matters” framing
+- [x] Ensure the notebook promotes breadth without becoming the source of truth:
+  - `run_triage()`
+  - scorer comparison via `ForecastabilityAnalyzer`
+  - `run_canonical_example()` plus reporting surface
+  - `run_rolling_origin_evaluation()`
+  - `run_batch_triage()` for portfolio context
+- [x] Add a short “where to go next” section for CLI, API, dashboard, MCP, and agent surfaces
+- [x] Update `docs/notebooks/README.md` and README notebook references so the showcase notebook is the first-stop entry point
 
 ### Additional required notebook work
-- [ ] Add a **new canonical walkthrough notebook** for one curve, preferably Air Passengers
-- [ ] Suggested name:
-  - `notebooks/walkthroughs/00_one_curve_canonical_triage_air_passengers.ipynb`
-- [ ] Use the current unified API where possible
-- [ ] Make it the notebook referenced from README and quickstart docs
+- [x] Keep the two-family notebook taxonomy (`walkthroughs/`, `triage/`)
+- [x] Do **not** introduce notebook-local runtime logic or a third long-lived archive family unless a real historical notebook must be preserved verbatim
+- [x] Make the showcase notebook the notebook referenced from README and quickstart docs
 
 ### Acceptance criteria
-- [ ] archive is explicit and intentional
-- [ ] one new canonical walkthrough exists
-- [ ] notebook index clearly explains what is active vs archived
+- [x] one obvious showcase notebook exists for first-time users
+- [x] notebook index clearly explains showcase vs deep-dive roles
+- [x] Air Passengers notebook reads like a product demonstration, not a maintenance artifact
 
 ---
 
@@ -614,11 +613,11 @@ These are small but high-value polish items.
 
 The Jr. developer should implement in this order:
 
-1. [ ] Phase 0 — Preparation
-2. [ ] Phase 6 — CI/CD baseline first
-3. [ ] Phase 1 — Source layout cleanup
-4. [ ] Phase 2 — Examples and scripts cleanup
-5. [ ] Phase 3 — Notebook rationalization
+1. [x] Phase 0 — Preparation
+2. [x] Phase 6 — CI/CD baseline first
+3. [x] Phase 1 — Source layout cleanup
+4. [x] Phase 2 — Examples and scripts cleanup
+5. [x] Phase 3 — Notebook rationalization
 6. [ ] Phase 4 — Documentation sync
 7. [ ] Phase 5 — README renovation
 8. [ ] Phase 7 — Final validation
@@ -669,16 +668,16 @@ This section is intentionally included so it can be copied into a tracking file 
 - [x] typed package marker exists
 - [x] standard CI workflow for PRs/pushes
 - [x] issue/PR templates and Dependabot
+- [x] source-layout cleanup (Phase 1 + 1.5)
+- [x] examples and scripts de-duplicated (Phase 2)
+- [x] canonical showcase notebook validated end-to-end (Phase 3)
 
 ### Partially implemented
 - [ ] README pivot to multi-paper triage exists but needs full renovation
 - [ ] docs are broad but not fully aligned with code
-- [ ] examples and scripts are useful but overlapped
-- [ ] notebook coverage exists but canonical path is unclear
 
 ### Not started
 - [ ] release artifact smoke validation
-- [ ] source-layout cleanup plan execution
 - [ ] docs maintenance guide
 
 ---

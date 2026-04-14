@@ -10,12 +10,12 @@ This repository freezes notebook policy to exactly two long-lived families:
 
 | Family | Ownership role | Purpose |
 |---|---|---|
-| `notebooks/walkthroughs/` | Curated end-to-end surfaces | Guided user and maintainer flows for canonical operational paths |
+| `notebooks/walkthroughs/` | Curated showcase surfaces | Guided story-first notebooks that market capabilities and inspire users |
 | `notebooks/triage/` | Deterministic deep dives | Focused method analysis, diagnostics, and evidence-oriented exploration |
 
 ## Architecture Alignment (SOLID + Hexagonal)
 
-- Notebooks are consumers and demonstrators, not runtime implementation surfaces.
+- Notebooks are showcase, marketing, and demonstrator surfaces, not runtime implementation surfaces.
 - Runtime logic belongs in `src/forecastability/` and follows `adapters -> use_cases -> domain` boundaries.
 - Notebook-local experimentation must not replace shared runtime orchestration, domain rules, or adapter behavior.
 
@@ -24,10 +24,11 @@ This repository freezes notebook policy to exactly two long-lived families:
 - No new long-lived notebooks may be added at `notebooks/` root.
 - Root-level notebook files are redirect shims pointing to the corresponding `notebooks/walkthroughs/` notebooks.
 
-## Durable Walkthrough Narratives
+## Durable Showcase Narratives
 
 | Durable docs page | Notebook surface |
 |---|---|
+| [air_passengers_showcase.md](air_passengers_showcase.md) | [../../notebooks/walkthroughs/00_air_passengers_showcase.ipynb](../../notebooks/walkthroughs/00_air_passengers_showcase.ipynb) |
 | [canonical_forecastability.md](canonical_forecastability.md) | [../../notebooks/walkthroughs/01_canonical_forecastability.ipynb](../../notebooks/walkthroughs/01_canonical_forecastability.ipynb) |
 | [exogenous_analysis.md](exogenous_analysis.md) | [../../notebooks/walkthroughs/02_exogenous_analysis.ipynb](../../notebooks/walkthroughs/02_exogenous_analysis.ipynb) |
 | [agentic_triage.md](agentic_triage.md) | [../../notebooks/walkthroughs/03_triage_end_to_end.ipynb](../../notebooks/walkthroughs/03_triage_end_to_end.ipynb) |
