@@ -1,0 +1,663 @@
+# dependence-forecastability — Release 0.2.0 Consolidation Plan v2
+
+**Plan Type:** Actionable release plan  
+**Audience:** Maintainer, reviewer, Jr. developer  
+**Target Release:** `0.2.0`  
+**Status:** Proposed  
+**Target Window:** 2–3 weeks from now, aim for **mid-May 2026**  
+**Primary Goal:** Fix structure, examples, docs, packaging, and release engineering so the package feels production-ready, maintainable, and professional.  
+**Non-Goal:** No new mathematical features or new diagnostic families in this release.  
+
+---
+
+## 1. Release intent
+
+This release is a **consolidation release**, not a feature release.
+
+The package already exists on PyPI and publishing is already automated. The real gaps are:
+- source layout clarity
+- duplication across examples, scripts, and notebooks
+- documentation drift
+- root README positioning
+- standard CI for PRs and pushes
+- stronger release validation and artifact hygiene
+
+This plan keeps the project aligned with the current multi-paper triage direction while preserving the useful deterministic core and minimizing unnecessary public breakage.
+
+---
+
+## 2. Release decision
+
+### Recommended version
+- Preferred: **`0.2.0`**
+- Fallback: **`0.1.1`** only if all public imports, CLI behavior, and documented usage remain backward-compatible
+
+### Recommendation rationale
+Use `0.2.0` if the internal reorganization causes any of the following:
+- public import path changes
+- changed CLI output or options
+- renamed scripts referenced in docs
+- notebook updates that require users to follow a new primary path
+
+---
+
+## 3. Scope boundaries
+
+### In scope
+- Source tree cleanup
+- Examples/scripts/notebooks cleanup
+- Documentation sync
+- README rewrite
+- CI/CD hardening
+- Release validation
+- Packaging hygiene
+- Templates and repository professionalism upgrades
+
+### Out of scope
+- New diagnostics
+- New mathematical methods
+- New agent features
+- New API surfaces beyond what is required for cleanup and consistency
+- Deep performance optimization unless needed to stabilize CI or examples
+
+---
+
+## 4. Current-state summary
+
+### Already implemented
+- PyPI package exists
+- Trusted publishing exists
+- release/publish workflows exist
+- typed package marker exists (`py.typed`)
+- deterministic triage core exists
+- docs/plan structure already exists and should remain the planning style baseline
+
+### Partially implemented / inconsistent
+- multi-paper positioning in README exists, but is not yet sharp enough
+- docs coverage is broad, but not consistently aligned with the current code structure
+- examples and scripts contain overlap
+- notebooks are useful, but there is no single obvious canonical walkthrough path
+
+### Missing or weak
+- standard CI workflow for PRs/pushes
+- artifact smoke tests from built distributions
+- clean module map documentation
+- clear maintenance guide
+- issue/PR templates and dependency hygiene automation
+
+---
+
+## 5. Definition of done for 0.2.0
+
+Release `0.2.0` only when all conditions below are true:
+
+- `import forecastability` works
+- documented public imports still work or are explicitly deprecated and documented
+- canonical CLI smoke test passes from installed wheel
+- examples/scripts/notebooks each have a clear role
+- a single canonical walkthrough path exists
+- README clearly presents the package as a **multi-paper deterministic triage and analytical toolkit**
+- docs match the actual code structure and current API
+- PR CI exists and is required
+- build, test, lint, type-check, and wheel smoke all pass before release
+- release notes and changelog are updated
+
+---
+
+## 6. Phase plan overview
+
+| Phase | Title | Duration | Status |
+|---|---:|---:|---|
+| 0 | Preparation | 1 day | Proposed |
+| 1 | Source layout cleanup | 2–3 days | Proposed |
+| 2 | Examples and scripts cleanup | 1–2 days | Proposed |
+| 3 | Notebook rationalization | 0.5 day | Proposed |
+| 4 | Documentation-code alignment | 2 days | Proposed |
+| 5 | README total renovation | 1 day | Proposed |
+| 6 | CI/CD and repository infrastructure | 1–2 days | Proposed |
+| 7 | Testing and final validation | 1 day | Proposed |
+| 8 | Release execution | 0.5 day | Proposed |
+
+---
+
+## Phase 0 — Preparation
+
+**Objective:** Freeze release intent, create branch, and establish the release baseline.
+
+**Status:** Proposed
+
+### Tasks
+- [ ] Create release branch:
+  ```bash
+  git checkout -b release-0.2.0-cleanup
+  ```
+- [ ] Update `CHANGELOG.md` at the top:
+  ```markdown
+  ## [0.2.0] - YYYY-MM-DD
+  ### Changed
+  - Major source layout cleanup (hexagonal architecture preserved)
+  - Examples/scripts/notebooks reorganized and de-duplicated
+  - Full documentation sync with current code
+  - README total renovation (multi-paper triage focus)
+  - CI/CD hardened for PyPI releases
+  ```
+- [ ] Run dependency sync and confirm the repo installs cleanly:
+  ```bash
+  uv sync --dev
+  ```
+- [ ] Create a release tracker document:
+  - `docs/plan/release_0_2_0_tracking.md`
+- [ ] Add a section in the tracker with three buckets:
+  - Implemented
+  - In progress
+  - Not started
+- [ ] Freeze the supported product surfaces for this release:
+  - deterministic core
+  - CLI
+  - HTTP API
+  - agent layer
+  - dashboard
+  - transport/MCP layer
+- [ ] Define public-surface compatibility expectations in the tracker.
+
+### Acceptance criteria
+- [ ] Branch exists
+- [ ] Changelog scaffold exists
+- [ ] `uv sync --dev` completes cleanly
+- [ ] Release tracker exists and includes implementation status buckets
+- [ ] Maintainer approves the public-surface freeze
+
+---
+
+## Phase 1 — Fix “Mess in SRC”
+
+**Objective:** Reorganize `src/forecastability/` into a cleaner internal layout without unnecessary public breakage.
+
+**Status:** Proposed
+
+### Architectural intent
+Preserve the hexagonal direction already present in the repo, but reduce the flat-root sprawl. Keep re-export compatibility where needed.
+
+### Target root contents
+Keep only these modules at `src/forecastability/` root, plus existing subpackages that are still valid:
+- `__init__.py`
+- `extensions.py`
+- `models.py`
+- `exog_benchmark.py`
+
+### File moves
+#### Create `src/forecastability/utils/` and move:
+- [ ] `aggregation.py`
+- [ ] `config.py`
+- [ ] `datasets.py`
+- [ ] `io_models.py`
+- [ ] `plots.py`
+- [ ] `reproducibility.py`
+- [ ] `robustness.py`
+- [ ] `state.py`
+- [ ] `types.py`
+- [ ] `validation.py`
+
+#### Move into `src/forecastability/diagnostics/`
+- [ ] `diagnostic_regression.py`
+- [ ] `spectral_utils.py`
+- [ ] `cmi.py`
+- [ ] `surrogates.py`
+
+#### Move into `src/forecastability/metrics/`
+- [ ] `metrics.py`
+- [ ] `scorers.py`
+
+#### Move into `src/forecastability/pipeline/`
+- [ ] `pipeline.py`
+- [ ] `analyzer.py`
+- [ ] `rolling_origin.py`
+
+#### Move into `src/forecastability/reporting/`
+- [ ] `reporting.py`
+- [ ] `interpretation.py`
+
+### Public API step
+- [ ] Update `src/forecastability/__init__.py` to expose only the public API:
+  ```python
+  from .triage import run_triage, run_batch_triage, TriageRequest
+
+  __version__ = "0.2.0"
+  __all__ = ["run_triage", "run_batch_triage", "TriageRequest"]
+  ```
+- [ ] If existing documented public imports must remain available, add thin compatibility re-exports.
+- [ ] Do **not** delete old import paths immediately if they are used in notebooks, docs, or tests.
+- [ ] Add deprecation comments only where intentionally planned.
+
+### Refactor mechanics
+- [ ] Update all imports across `src/`, `tests/`, `examples/`, `scripts/`, `docs/`, and notebooks where needed.
+- [ ] Use:
+  ```bash
+  ruff check --fix .
+  ruff format .
+  ```
+- [ ] Run manual verification on imports not auto-fixed.
+- [ ] Add `# TODO: 0.3.0` comments only where future work is explicitly intended.
+
+### Suggested Jr. developer workflow
+For each move:
+- [ ] move implementation
+- [ ] add compatibility shim if required
+- [ ] run focused tests
+- [ ] update docs/import examples
+- [ ] only then remove dead references
+
+### Acceptance criteria
+- [ ] `import forecastability` works
+- [ ] no broken tests caused by module moves
+- [ ] documented public imports still work, or deprecations are explicit
+- [ ] package root is materially cleaner
+- [ ] architectural intent is clearer than before
+
+---
+
+## Phase 2 — Clean “Mess in examples and scripts”
+
+**Objective:** Give each repo surface one clear purpose.
+
+**Status:** Proposed
+
+### Rules
+- `examples/` = minimal user-facing runnable examples
+- `scripts/` = maintainer/development utilities
+- `notebooks/` = narrative tutorials and walkthroughs
+
+### Examples
+- [ ] Keep only `examples/triage/` as the curated user-facing example family
+- [ ] Review for duplication against canonical runners
+- [ ] Delete or move duplicates into `examples/archive/`
+- [ ] If archiving, decide whether archive should remain tracked or be ignored
+- [ ] Add short purpose statements at the top of each kept example
+
+### Scripts
+Keep these as development tools:
+- [ ] `run_canonical_examples.py`
+- [ ] `run_benchmark_panel.py`
+- [ ] `run_exog_analysis.py`
+- [ ] `rebuild_*_fixtures.py` (both)
+- [ ] `build_report_artifacts.py`
+
+### Rename for consistency
+- [ ] Rename:
+  - `run_canonical_examples.py` → `run_canonical_triage.py`
+
+### Archive or remove the rest
+- [ ] Move obsolete or redundant `run_*` scripts into `scripts/archive/` or delete them if confirmed obsolete
+- [ ] Update all references in docs and README
+- [ ] Update `pyproject.toml`, tool configs, or docs if any command names are referenced
+
+### Acceptance criteria
+- [ ] examples are concise and non-duplicative
+- [ ] scripts folder has a clear maintainer-only identity
+- [ ] no broken documentation links after renames
+- [ ] there is one obvious canonical runner for triage examples
+
+---
+
+## Phase 3 — Handle the extra notebook (“all papers methods for one curve”)
+
+**Objective:** Preserve useful history, but stop presenting outdated notebook paths as canonical.
+
+**Status:** Proposed
+
+### Tasks
+- [ ] Locate the notebook that manually walks Air Passengers through many or all F1–F9-style methods
+- [ ] Confirm archival decision with maintainer
+- [ ] Move it to:
+  - `notebooks/archive/all_papers_single_curve_air_passengers.ipynb`
+- [ ] Add a note at the top:
+  - `Deprecated – use run_triage() or the new walkthrough notebooks instead.`
+- [ ] Create or update `notebooks/README.md`
+
+### `notebooks/README.md` target table
+| Folder | Purpose | Status |
+|---|---|---|
+| `triage/` | Individual diagnostic deep-dives | Active |
+| `walkthroughs/` | End-to-end user flows | Active |
+| `archive/` | Old single-curve demos and superseded notebooks | Archived |
+
+### Additional required notebook work
+- [ ] Add a **new canonical walkthrough notebook** for one curve, preferably Air Passengers
+- [ ] Suggested name:
+  - `notebooks/walkthroughs/00_one_curve_canonical_triage_air_passengers.ipynb`
+- [ ] Use the current unified API where possible
+- [ ] Make it the notebook referenced from README and quickstart docs
+
+### Acceptance criteria
+- [ ] archive is explicit and intentional
+- [ ] one new canonical walkthrough exists
+- [ ] notebook index clearly explains what is active vs archived
+
+---
+
+## Phase 4 — Make documentation follow the code
+
+**Objective:** Align docs with the cleaned source layout and actual API.
+
+**Status:** Proposed
+
+### Tasks
+- [ ] Audit `docs/` for pages that describe obsolete single-paper AMI-only API paths
+- [ ] Move stale pages into `docs/archive/` or delete when safe
+- [ ] In `docs/triage_methods/*.md` and `docs/theory/*.md`, replace outdated references to individual `fX_*` function entry points with the unified API where appropriate
+- [ ] Update `docs/code/module_map.md` to reflect the new `src/` layout
+- [ ] Add:
+  - `docs/maintenance/developer_guide.md`
+- [ ] Seed `developer_guide.md` from existing acceptance/planning docs and current repo practices
+- [ ] Add a doc coverage matrix:
+  - `docs/maintenance/doc_coverage_matrix.md`
+- [ ] For major docs, add a small line such as:
+  - `Last verified for release 0.2.0`
+
+### Required search sweep
+- [ ] Use grep or equivalent to catch stale names and paths:
+  ```bash
+  grep -R "old_function_name" docs/
+  grep -R "run_canonical_examples" docs/
+  grep -R "examples/archive" docs/
+  ```
+
+### Documentation hierarchy target
+- README = landing page
+- quickstart = first practical path
+- public API docs = authoritative public contract
+- theory docs = math and interpretation
+- notebooks = tutorial narrative layer
+- archive docs = retained historical material only
+
+### Acceptance criteria
+- [ ] docs point to real modules, real scripts, and real notebooks
+- [ ] no dead links in key docs
+- [ ] module map matches the actual source layout
+- [ ] developer guide exists and is useful for a new contributor
+
+---
+
+## Phase 5 — Total README renovation
+
+**Objective:** Turn the root README into a sharp, professional landing page.
+
+**Status:** Proposed
+
+### README direction
+The README should present the package as:
+
+> **Deterministic pre-model triage toolkit for time series**
+
+It should clearly say that the project started from Catt’s AMI paper, but has become a broader **multi-paper triage and analytical toolkit**.
+
+### Replace the README with this structure
+- [ ] Title and one-line positioning
+- [ ] Short mission paragraph
+- [ ] Key features list
+- [ ] Quick install
+- [ ] Quickstart code block
+- [ ] Link row:
+  - Installation
+  - Quickstart
+  - All diagnostics
+  - Architecture
+  - Papers
+- [ ] “Why this instead of just Catt’s AMI?” section
+- [ ] Support-surface matrix
+- [ ] Short docs map
+- [ ] badges
+
+### Required content elements
+- [ ] Keep or improve the good quickstart block already present
+- [ ] Remove or shorten the long paper-baseline explanation from the root page and move detail to `docs/theory/`
+- [ ] Fix markdown and LaTeX rendering issues
+- [ ] Add badges:
+  - PyPI
+  - Python version
+  - License
+  - CI status
+- [ ] Explicitly state the pivot to multi-paper triage
+- [ ] Keep agent layer, HTTP API, and CLI framed as optional surfaces over the deterministic core
+
+### Acceptance criteria
+- [ ] a first-time visitor understands the package within one minute
+- [ ] README no longer feels like an internal memo
+- [ ] README clearly distinguishes foundation vs extensions
+- [ ] README links send users into one canonical learning path
+
+---
+
+## Phase 6 — CI/CD for releases + repository infrastructure
+
+**Objective:** Add the missing standard CI and complete the release engineering story.
+
+**Status:** Proposed
+
+### Important clarification
+PyPI publishing is **already implemented**. This phase is about what is still missing:
+- standard CI for PRs/pushes
+- pre-commit hygiene
+- config completeness
+- templates and automation around repository maintenance
+
+### Standard CI
+- [ ] Create `.github/workflows/ci.yml`
+- [ ] Trigger on push and PR to `main`
+- [ ] Run:
+  - tests
+  - ruff
+  - mypy or current type-check command
+  - build
+
+### Release workflow tightening
+- [ ] Update `publish-pypi.yml` to trigger only from a release tag such as `v0.2.0`
+- [ ] Use the preferred build path consistently:
+  - `uv build` + trusted publishing, or
+  - current equivalent if already aligned
+- [ ] Ensure release job depends on green CI where possible
+
+### Pre-commit
+- [ ] Add `.pre-commit-config.yaml`
+- [ ] Install locally:
+  ```bash
+  pre-commit install
+  ```
+- [ ] Include hooks such as:
+  - ruff
+  - black if still used, otherwise do not duplicate formatter responsibility
+  - mypy if practical
+  - check-toml
+  - end-of-file-fixer
+  - trailing-whitespace
+
+### Project config hardening
+- [ ] Review and complete config sections in `pyproject.toml`:
+  - `[tool.ruff]`
+  - `[tool.mypy]`
+  - `[tool.pytest.ini_options]`
+- [ ] Add `[project.urls]` if incomplete:
+  - GitHub
+  - Issues
+  - Documentation
+  - PyPI
+
+### Repository professionalism
+- [ ] Add Dependabot config
+- [ ] Add issue templates
+- [ ] Add PR template
+- [ ] Add GitHub topics:
+  - `time-series`
+  - `forecasting`
+  - `mutual-information`
+  - `triage`
+  - `diagnostics`
+
+### Acceptance criteria
+- [ ] PR CI exists and runs on every push/PR to `main`
+- [ ] release workflow is more explicit and safer
+- [ ] pre-commit exists and is usable
+- [ ] project metadata feels complete and professional
+
+---
+
+## Phase 7 — Testing and final validation
+
+**Objective:** Validate the repo from both source and built artifacts.
+
+**Status:** Proposed
+
+### Tasks
+- [ ] Run the full test suite
+- [ ] Run canonical examples
+- [ ] Build package locally:
+  ```bash
+  uv build
+  ```
+- [ ] Create a clean environment and install from `dist/`
+- [ ] Smoke-test:
+  - package import
+  - `run_triage`
+  - CLI help
+- [ ] Update `docs/quickstart.md` and `README.md` if any API details changed during cleanup
+- [ ] Run a release checklist against the built wheel and sdist
+- [ ] Confirm no debug `print()` statements or obsolete `.env` assumptions remain in production code
+
+### Recommended smoke commands
+```bash
+python -c "import forecastability; print(forecastability.__all__)"
+forecastability --help
+```
+
+### Acceptance criteria
+- [ ] full test suite passes
+- [ ] built artifacts install cleanly
+- [ ] smoke tests pass from installed artifacts
+- [ ] quickstart instructions are verified, not theoretical
+
+---
+
+## Phase 8 — Release
+
+**Objective:** Execute the release in a repeatable, low-risk manner.
+
+**Status:** Proposed
+
+### Tasks
+- [ ] Update version in `pyproject.toml`
+- [ ] Update version in `src/forecastability/__init__.py`
+- [ ] Finalize `CHANGELOG.md`
+- [ ] Tag and push:
+  ```bash
+  git tag v0.2.0
+  git push --tags
+  ```
+- [ ] Let CI publish to PyPI
+- [ ] Create GitHub release using changelog excerpt
+- [ ] Verify PyPI page rendering after publish
+- [ ] Verify install commands from a fresh environment
+- [ ] Announce through selected channels
+
+### Acceptance criteria
+- [ ] tag exists
+- [ ] release workflow completes successfully
+- [ ] PyPI page renders correctly
+- [ ] GitHub release notes are clear and useful
+
+---
+
+## 7. Bonus quick wins for 0.2.0
+
+These are small but high-value polish items.
+
+- [ ] Confirm `py.typed` remains included
+- [ ] Add or complete `[project.urls]` in `pyproject.toml`
+- [ ] Add GitHub topics
+- [ ] remove stray debug output from production paths
+- [ ] remove obsolete `.env` references from production-facing code or docs
+- [ ] review Python classifiers and add 3.13 only if verified
+- [ ] add or verify branch protection rules
+- [ ] add CI status badge after `ci.yml` is live
+
+---
+
+## 8. Jr. developer execution order
+
+The Jr. developer should implement in this order:
+
+1. [ ] Phase 0 — Preparation
+2. [ ] Phase 6 — CI/CD baseline first
+3. [ ] Phase 1 — Source layout cleanup
+4. [ ] Phase 2 — Examples and scripts cleanup
+5. [ ] Phase 3 — Notebook rationalization
+6. [ ] Phase 4 — Documentation sync
+7. [ ] Phase 5 — README renovation
+8. [ ] Phase 7 — Final validation
+9. [ ] Phase 8 — Release
+
+### Why this order
+- CI should exist before major refactors land
+- source cleanup should happen before docs rewrite
+- docs and README should reflect final structure, not intermediate structure
+
+---
+
+## 9. Maintainer review checkpoints
+
+The maintainer should review at these gates:
+
+### Gate A — After Phase 0
+- [ ] confirm scope
+- [ ] confirm version target
+- [ ] confirm compatibility expectations
+
+### Gate B — After Phase 1
+- [ ] confirm module layout
+- [ ] approve compatibility shims
+- [ ] reject unnecessary public changes
+
+### Gate C — After Phases 2–4
+- [ ] confirm the canonical learning path
+- [ ] confirm docs hierarchy
+- [ ] confirm archive decisions
+
+### Gate D — Before release
+- [ ] confirm README messaging
+- [ ] confirm release notes
+- [ ] confirm CI and artifact smoke quality
+
+---
+
+## 10. Explicit implementation status section
+
+This section is intentionally included so it can be copied into a tracking file and updated during execution.
+
+### Implemented
+- [x] Package published to PyPI
+- [x] Trusted publishing exists
+- [x] release/publish workflow exists
+- [x] deterministic core exists
+- [x] typed package marker exists
+
+### Partially implemented
+- [ ] README pivot to multi-paper triage exists but needs full renovation
+- [ ] docs are broad but not fully aligned with code
+- [ ] examples and scripts are useful but overlapped
+- [ ] notebook coverage exists but canonical path is unclear
+
+### Not started
+- [ ] standard CI workflow for PRs/pushes
+- [ ] release artifact smoke validation
+- [ ] source-layout cleanup plan execution
+- [ ] docs maintenance guide
+- [ ] issue/PR templates and Dependabot
+
+---
+
+## 11. Final recommendation
+
+Ship this as **0.2.0** and treat it as the release that makes the project look deliberate.
+
+The core mathematical value is already strong enough. The main bottleneck is not another method. It is repository shape, user path, and release confidence.
+
+That is exactly what this plan addresses.
