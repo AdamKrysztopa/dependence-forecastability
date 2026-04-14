@@ -13,6 +13,7 @@ from pydantic import BaseModel, ConfigDict
 
 from forecastability.reporting.interpretation import interpret_canonical_result
 from forecastability.utils.aggregation import summarize_canonical_result
+from forecastability.utils.io_models import CanonicalPayload
 from forecastability.utils.types import CanonicalExampleResult
 
 _logger = logging.getLogger(__name__)
@@ -119,6 +120,111 @@ def build_canonical_markdown(
 ## Narrative
 {interpretation.narrative}
 """
+
+
+def _series_label(series_name: str) -> str:
+    """Return a stable human-readable label for one series name."""
+    return series_name.replace("_", " ").title()
+
+
+def _canonical_panel_recommendation(payload: CanonicalPayload) -> str:
+    """Build a deterministic modeling recommendation for one canonical payload."""
+    summary = payload.summary
+    interpretation = payload.interpretation
+
+    if interpretation.primary_lags:
+        lag_text = ", ".join(str(lag) for lag in interpretation.primary_lags)
+        lag_sentence = f"Focus validation first on lags {lag_text}."
+    else:
+        lag_sentence = (
+            "No dominant conditioned lag stands out yet, so keep lag selection conservative."
+        )
+
+    if interpretation.forecastability_class == "low":
+        return (
+            f"Keep simple baselines first. {interpretation.modeling_regime}. "
+            f"Only escalate complexity if new exogenous structure appears. {lag_sentence}"
+        )
+
+    if interpretation.directness_class in {"high", "arch_suspected"}:
+        return (
+            f"Start with {interpretation.modeling_regime} and test nonlinear capacity explicitly. "
+            f"The directness ratio of {summary.directness_ratio:.2f} indicates that "
+            "structure survives "
+            f"linear conditioning. {lag_sentence}"
+        )
+
+    return (
+        f"Use {interpretation.modeling_regime} as the default challenger while "
+        "keeping a strong linear baseline in the comparison set. "
+        f"The directness ratio of {summary.directness_ratio:.2f} suggests "
+        f"that some dependence is mediated through simpler dynamics. {lag_sentence}"
+    )
+
+
+def build_canonical_panel_markdown(*, payloads: list[CanonicalPayload]) -> str:
+    """Build a deterministic markdown summary for a canonical panel run."""
+    if not payloads:
+        return "# Canonical Panel Summary\n\n_No canonical payloads available._\n"
+
+    forecastability_counts = {"high": 0, "medium": 0, "low": 0}
+    for payload in payloads:
+        forecastability_class = payload.interpretation.forecastability_class
+        forecastability_counts[forecastability_class] = (
+            forecastability_counts.get(forecastability_class, 0) + 1
+        )
+
+    directness_values = [float(payload.summary.directness_ratio) for payload in payloads]
+    executive_summary = (
+        f"This canonical run covers {len(payloads)} series. "
+        f"{forecastability_counts.get('high', 0)} classify as high forecastability, "
+        f"{forecastability_counts.get('medium', 0)} as medium, and "
+        f"{forecastability_counts.get('low', 0)} as low. "
+        f"Directness ratios span {min(directness_values):.2f} to {max(directness_values):.2f}, "
+        "separating series whose dependence survives linear conditioning from those "
+        "that are better "
+        "handled by simpler autoregressive or seasonal baselines."
+    )
+
+    lines = [
+        "# Canonical Panel Summary",
+        "",
+        "## Executive Summary",
+        executive_summary,
+        "",
+        "## Cross-Series Snapshot",
+        "| Series | Forecastability | Directness | Directness Ratio | n_sig AMI | "
+        "n_sig pAMI | Recommended Regime | Primary Lags |",
+        "|---|---|---|---|---|---|---|---|",
+    ]
+
+    for payload in payloads:
+        primary_lags = ", ".join(str(lag) for lag in payload.interpretation.primary_lags) or "-"
+        lines.append(
+            "| "
+            f"{_series_label(payload.series_name)} "
+            f"| {payload.interpretation.forecastability_class} "
+            f"| {payload.interpretation.directness_class} "
+            f"| {float(payload.summary.directness_ratio):.3f} "
+            f"| {int(payload.summary.n_sig_ami)} "
+            f"| {int(payload.summary.n_sig_pami)} "
+            f"| {payload.interpretation.modeling_regime} "
+            f"| {primary_lags} |"
+        )
+
+    lines.extend(["", "## Actionable Recommendations"])
+    for payload in payloads:
+        lines.extend(
+            [
+                "",
+                f"### {_series_label(payload.series_name)}",
+                payload.interpretation.narrative or "No narrative available.",
+                "",
+                f"Recommendation: {_canonical_panel_recommendation(payload)}",
+            ]
+        )
+
+    return "\n".join(lines) + "\n"
 
 
 def save_canonical_markdown(result: CanonicalExampleResult, *, output_path: Path) -> None:

@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
+from forecastability.utils.io_models import CanonicalPayload
 from forecastability.utils.types import CanonicalExampleResult
 
 
@@ -161,6 +163,118 @@ def save_all_canonical_plots(
     plot_ami_pami_overlay(result, save_path=paths["overlay"])
     plot_ami_minus_pami(result, save_path=paths["difference"])
     return paths
+
+
+def plot_canonical_panel_summary(
+    payloads: Sequence[CanonicalPayload],
+    *,
+    save_path: Path,
+) -> None:
+    """Plot a cross-series canonical summary figure."""
+    if not payloads:
+        raise ValueError("payloads must contain at least one canonical payload")
+
+    labels = [payload.series_name.replace("_", " ").title() for payload in payloads]
+    auc_ami = np.array([float(payload.summary.auc_ami) for payload in payloads], dtype=float)
+    directness_ratio = np.array(
+        [float(payload.summary.directness_ratio) for payload in payloads],
+        dtype=float,
+    )
+    n_sig_ami = np.array([int(payload.summary.n_sig_ami) for payload in payloads], dtype=float)
+    n_sig_pami = np.array([int(payload.summary.n_sig_pami) for payload in payloads], dtype=float)
+    forecastability_classes = [payload.interpretation.forecastability_class for payload in payloads]
+    modeling_regimes = [payload.interpretation.modeling_regime for payload in payloads]
+
+    fig, axes = plt.subplots(1, 2, figsize=(15, 6))
+    scatter_ax, counts_ax = axes
+    palette: dict[str, str] = {
+        "high": "tab:green",
+        "medium": "tab:orange",
+        "low": "tab:red",
+    }
+
+    ordered_classes = list(dict.fromkeys(forecastability_classes))
+    for forecastability_class in ordered_classes:
+        class_indices = [
+            index
+            for index, class_name in enumerate(forecastability_classes)
+            if class_name == forecastability_class
+        ]
+        point_sizes = 90 + n_sig_ami[class_indices] * 18.0
+        scatter_ax.scatter(
+            auc_ami[class_indices],
+            directness_ratio[class_indices],
+            s=point_sizes,
+            alpha=0.85,
+            edgecolors="black",
+            linewidths=0.5,
+            color=palette.get(forecastability_class, "tab:blue"),
+            label=forecastability_class.title(),
+        )
+
+    for label, auc_value, directness_value in zip(labels, auc_ami, directness_ratio, strict=True):
+        scatter_ax.annotate(
+            label,
+            xy=(float(auc_value), float(directness_value)),
+            xytext=(6, 6),
+            textcoords="offset points",
+            fontsize=8,
+        )
+
+    scatter_ax.axhline(1.0, color="tab:purple", ls="--", lw=1, alpha=0.7)
+    scatter_ax.axhline(0.5, color="grey", ls=":", lw=1, alpha=0.7)
+    scatter_ax.set_title("Canonical panel: dependence strength vs directness")
+    scatter_ax.set_xlabel("AMI AUC")
+    scatter_ax.set_ylabel("Directness ratio (pAMI AUC / AMI AUC)")
+    scatter_ax.grid(alpha=0.3)
+    scatter_ax.legend(title="Forecastability")
+
+    y_positions = np.arange(len(payloads), dtype=float)
+    counts_ax.barh(
+        y_positions - 0.18,
+        n_sig_ami,
+        height=0.35,
+        label="Significant AMI lags",
+        color="tab:blue",
+        alpha=0.8,
+    )
+    counts_ax.barh(
+        y_positions + 0.18,
+        n_sig_pami,
+        height=0.35,
+        label="Significant pAMI lags",
+        color="tab:red",
+        alpha=0.8,
+    )
+    counts_ax.set_yticks(y_positions)
+    counts_ax.set_yticklabels(labels)
+    counts_ax.invert_yaxis()
+    counts_ax.set_title("Lag significance footprint by series")
+    counts_ax.set_xlabel("Count of significant lags")
+    counts_ax.grid(alpha=0.3, axis="x")
+    counts_ax.legend(loc="lower right")
+
+    max_sig = float(max(float(n_sig_ami.max()), float(n_sig_pami.max()), 1.0))
+    counts_ax.set_xlim(0, max_sig + 3.5)
+    for y_position, ami_count, pami_count, directness_value, modeling_regime in zip(
+        y_positions,
+        n_sig_ami,
+        n_sig_pami,
+        directness_ratio,
+        modeling_regimes,
+        strict=True,
+    ):
+        counts_ax.text(
+            max(float(ami_count), float(pami_count)) + 0.2,
+            float(y_position),
+            f"DR={float(directness_value):.2f} | {modeling_regime}",
+            va="center",
+            fontsize=8,
+        )
+
+    fig.suptitle("Canonical triage cross-series summary", fontsize=13)
+    plt.tight_layout()
+    _save(fig, save_path)
 
 
 def plot_rank_association_bars(

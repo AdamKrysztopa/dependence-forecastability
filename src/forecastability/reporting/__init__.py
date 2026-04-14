@@ -3,6 +3,7 @@
 from forecastability.reporting.reporting import (
     build_benchmark_markdown,
     build_canonical_markdown,
+    build_canonical_panel_markdown,
     build_frequency_panel_markdown,
     build_linkedin_post,
     mandatory_caveats,
@@ -14,6 +15,7 @@ from forecastability.reporting.reporting import (
 __all__ = [
     "build_benchmark_markdown",
     "build_canonical_markdown",
+    "build_canonical_panel_markdown",
     "build_frequency_panel_markdown",
     "build_linkedin_post",
     "mandatory_caveats",
