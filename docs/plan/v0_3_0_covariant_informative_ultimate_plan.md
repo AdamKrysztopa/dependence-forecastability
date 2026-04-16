@@ -74,12 +74,12 @@ This ultimate plan reconciles both by:
 
 | ID | Feature | Phase | Overlap with existing | Genuine new work | Status |
 |---|---|---:|---|---|---|
-| V3-F00 | Typed covariant result models | 0 | Extends `utils/types.py` patterns | `CovariantSummaryRow`, `CovariantAnalysisBundle`, `CausalGraphResult`, `PcmciAmiResult` | Not started |
+| V3-F00 | Typed covariant result models | 0 | Extends `utils/types.py` patterns | `CovariantSummaryRow`, `CovariantAnalysisBundle`, `CausalGraphResult`, `PcmciAmiResult` | **Done** |
 | V3-F01 | Transfer Entropy scorer + service | 1 | Follows `DependenceScorer` pattern | `te_scorer()`, `src/forecastability/services/transfer_entropy_service.py` | Not started |
 | V3-F02 | GCMI scorer + service | 1 | Follows `DependenceScorer` pattern | `gcmi_scorer()`, `src/forecastability/services/gcmi_service.py` | Not started |
 | V3-F03 | PCMCI+ adapter | 1 | None (new external integration) | `src/forecastability/adapters/tigramite_adapter.py`, `CausalGraphPort` | Not started |
 | V3-F04 | PCMCI-AMI-Hybrid method | 1 | Builds on AMI kNN + tigramite adapter | `src/forecastability/services/pcmci_ami_service.py`, dedicated result model, Phase 0 triage logic | Not started |
-| V3-F05 | `CausalGraphPort` protocol | 0 | None (new port type) | Graph-returning port for PCMCI+ and PCMCI-AMI | Not started |
+| V3-F05 | `CausalGraphPort` protocol | 0 | None (new port type) | Graph-returning port for PCMCI+ and PCMCI-AMI | **Done** |
 | V3-F06 | Covariant orchestration facade | 2 | Extends `use_cases/` pattern | `src/forecastability/use_cases/run_covariant_analysis.py` | Not started |
 | V3-F07 | Unified covariant summary table | 2 | Extends `ExogenousScreeningWorkbenchResult` pattern | `CovariantSummaryRow` with all method columns | Not started |
 | V3-F08 | Covariant tests + regression | 3 | Follows existing test patterns | Synthetic coupled systems, per-method and integration tests | Not started |
@@ -214,10 +214,10 @@ class CausalGraphPort(Protocol):
 
 #### Acceptance criteria — Phase 0
 
-- [ ] All new models importable from `forecastability.utils.types`
-- [ ] `CausalGraphPort` passes `isinstance` runtime checks
-- [ ] No computation code — contracts only
-- [ ] `uv run ruff check . && uv run ty check` clean
+- [x] All new models importable from `forecastability.utils.types`
+- [x] `CausalGraphPort` passes `isinstance` runtime checks
+- [x] No computation code — contracts only
+- [x] `uv run ruff check . && uv run ty check` clean
 
 ---
 

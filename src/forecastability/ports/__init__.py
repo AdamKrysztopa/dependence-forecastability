@@ -13,18 +13,23 @@ import numpy as np
 
 from forecastability.metrics.scorers import DependenceScorer, ScorerInfo
 from forecastability.triage.events import TriageEvent
-from forecastability.utils.types import CanonicalExampleResult, InterpretationResult
+from forecastability.utils.types import (
+    CanonicalExampleResult,
+    CausalGraphResult,
+    InterpretationResult,
+)
 
 __all__ = [
-    "SeriesValidatorPort",
+    "CausalGraphPort",
+    "CheckpointPort",
     "CurveComputePort",
-    "SignificanceBandsPort",
+    "EventEmitterPort",
     "InterpretationPort",
     "RecommendationPort",
     "ReportRendererPort",
+    "SeriesValidatorPort",
     "SettingsPort",
-    "EventEmitterPort",
-    "CheckpointPort",
+    "SignificanceBandsPort",
 ]
 
 
@@ -161,3 +166,21 @@ class CheckpointPort(Protocol):
     ) -> None:
         """Overwrite the checkpoint for *checkpoint_key* with *state*."""
         ...
+
+
+@runtime_checkable
+class CausalGraphPort(Protocol):
+    """Port for methods that return a causal graph (PCMCI+, PCMCI-AMI).
+
+    Implementations must not import from adapters — only from ports and domain.
+    """
+
+    def discover(
+        self,
+        data: np.ndarray,
+        var_names: list[str],
+        *,
+        max_lag: int,
+        alpha: float = 0.01,
+        random_state: int = 42,
+    ) -> CausalGraphResult: ...

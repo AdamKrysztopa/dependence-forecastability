@@ -255,3 +255,111 @@ class RobustnessStudyResult(BaseModel):
     excluded_series: list[str] = Field(default_factory=list)
     overall_stable: bool
     summary_narrative: str
+
+
+# ---------------------------------------------------------------------------
+# v0.3.0 Covariant result containers (V3-F00)
+# ---------------------------------------------------------------------------
+
+
+class CovariantSummaryRow(BaseModel):
+    """One row of the unified covariant summary table (V3-F07)."""
+
+    model_config = ConfigDict(frozen=True)
+
+    target: str
+    driver: str
+    lag: int
+    cross_ami: float | None = None
+    cross_pami: float | None = None
+    transfer_entropy: float | None = None
+    gcmi: float | None = None
+    pcmci_link: str | None = None  # e.g. "-->" or "o->" from PCMCI+
+    pcmci_ami_parent: bool | None = None  # True if selected by PCMCI-AMI
+    significance: str | None = None  # e.g. "p<0.01", "above_band"
+    rank: int | None = None
+    interpretation_tag: str | None = None  # e.g. "direct_driver", "mediated", "spurious"
+
+
+class TransferEntropyResult(BaseModel):
+    """Per-pair Transfer Entropy result (V3-F01)."""
+
+    model_config = ConfigDict(frozen=True)
+
+    source: str
+    target: str
+    lag: int
+    te_value: float
+    p_value: float | None = None
+    significant: bool | None = None
+
+
+class GcmiResult(BaseModel):
+    """Per-pair Gaussian Copula MI result (V3-F02)."""
+
+    model_config = ConfigDict(frozen=True)
+
+    source: str
+    target: str
+    lag: int
+    gcmi_value: float
+
+
+class CausalGraphResult(BaseModel):
+    """Graph output from PCMCI+ or PCMCI-AMI-Hybrid (V3-F03 / V3-F04)."""
+
+    model_config = ConfigDict(frozen=True)
+
+    parents: dict[str, list[tuple[str, int]]]  # target → [(source, lag), ...]
+    link_matrix: list[list[str]] | None = None  # tigramite-style link summary
+    val_matrix: list[list[float]] | None = None  # test statistic matrix
+    metadata: dict[str, str | int | float] = Field(default_factory=dict)
+
+
+class Phase0MiScore(BaseModel):
+    """One MI score entry from the Phase 0 AMI triage in PCMCI-AMI-Hybrid (V3-F04).
+
+    Captures the (source, lag, target) triplet and its unconditional MI value.
+    Using a dedicated model instead of dict[tuple[str, int, str], float] ensures
+    JSON serialisability and stays idiomatic with the project's Pydantic-first
+    convention.  (Plan spec listed dict[tuple, float] but tuple dict keys are not
+    JSON-serialisable in Pydantic v2.)
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    source: str
+    lag: int
+    target: str
+    mi_value: float
+
+
+class PcmciAmiResult(BaseModel):
+    """Full output from the PCMCI-AMI-Hybrid method (V3-F04)."""
+
+    model_config = ConfigDict(frozen=True)
+
+    causal_graph: CausalGraphResult
+    phase0_mi_scores: list[Phase0MiScore]
+    phase0_pruned_count: int
+    phase0_kept_count: int
+    phase1_skeleton: CausalGraphResult
+    phase2_final: CausalGraphResult
+    ami_threshold: float
+    metadata: dict[str, str | int | float] = Field(default_factory=dict)
+
+
+class CovariantAnalysisBundle(BaseModel):
+    """Composite output from the covariant orchestration facade (V3-F06)."""
+
+    model_config = ConfigDict(frozen=True)
+
+    summary_table: list[CovariantSummaryRow]
+    te_results: list[TransferEntropyResult] | None = None
+    gcmi_results: list[GcmiResult] | None = None
+    pcmci_graph: CausalGraphResult | None = None
+    pcmci_ami_result: PcmciAmiResult | None = None
+    target_name: str
+    driver_names: list[str]
+    horizons: list[int]
+    metadata: dict[str, str | int | float] = Field(default_factory=dict)
