@@ -177,6 +177,49 @@ def _validate_conditional_sample_requirements(
         )
 
 
+def _residualize_target_with_backend(
+    target: np.ndarray,
+    *,
+    conditioning: np.ndarray,
+    backend: str,
+    rf_estimators: int,
+    rf_max_depth: int | None,
+    et_estimators: int,
+    et_max_depth: int | None,
+    random_state: int,
+) -> np.ndarray:
+    """Residualize one aligned target against an already validated conditioning matrix.
+
+    Args:
+        target: Aligned target values.
+        conditioning: Validated 2-D conditioning matrix with matching rows.
+        backend: Residualization backend name.
+        rf_estimators: Number of trees for RF backend.
+        rf_max_depth: Optional max depth for RF backend.
+        et_estimators: Number of trees for extra-trees backend.
+        et_max_depth: Optional max depth for extra-trees backend.
+        random_state: Deterministic seed for stochastic backends.
+
+    Returns:
+        Residualized target values, or the input target when conditioning is empty.
+    """
+    if conditioning.shape[1] == 0:
+        return target
+
+    residual_backend = _backend_from_name(
+        backend,
+        rf_estimators=rf_estimators,
+        rf_max_depth=rf_max_depth,
+        et_estimators=et_estimators,
+        et_max_depth=et_max_depth,
+    )
+    return residual_backend.residualize(
+        conditioning,
+        target,
+        random_state=random_state,
+    )
+
+
 def compute_conditional_mi_with_backend(
     past: np.ndarray,
     future: np.ndarray,
@@ -227,27 +270,26 @@ def compute_conditional_mi_with_backend(
         min_pairs=min_pairs,
     )
 
-    if z.shape[1] == 0:
-        residual_past = aligned_past
-        residual_future = aligned_future
-    else:
-        residual_backend = _backend_from_name(
-            backend,
-            rf_estimators=rf_estimators,
-            rf_max_depth=rf_max_depth,
-            et_estimators=et_estimators,
-            et_max_depth=et_max_depth,
-        )
-        residual_past = residual_backend.residualize(
-            z,
-            aligned_past,
-            random_state=random_state + 1,
-        )
-        residual_future = residual_backend.residualize(
-            z,
-            aligned_future,
-            random_state=random_state + 2,
-        )
+    residual_past = _residualize_target_with_backend(
+        aligned_past,
+        conditioning=z,
+        backend=backend,
+        rf_estimators=rf_estimators,
+        rf_max_depth=rf_max_depth,
+        et_estimators=et_estimators,
+        et_max_depth=et_max_depth,
+        random_state=random_state + 1,
+    )
+    residual_future = _residualize_target_with_backend(
+        aligned_future,
+        conditioning=z,
+        backend=backend,
+        rf_estimators=rf_estimators,
+        rf_max_depth=rf_max_depth,
+        et_estimators=et_estimators,
+        et_max_depth=et_max_depth,
+        random_state=random_state + 2,
+    )
 
     value = mutual_info_regression(
         residual_past.reshape(-1, 1),

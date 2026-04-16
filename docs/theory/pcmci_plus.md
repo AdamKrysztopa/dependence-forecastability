@@ -195,9 +195,27 @@ $|X|$ is a non-monotone (V-shaped) function of $X$.
 | Computational cost | Low | Medium | High |
 
 > [!IMPORTANT]
-> The nonlinear blind-spot is the scientific motivation for V3-F04 (PCMCI-AMI-Hybrid):
-> using AMI as the CI test backend within the PCMCI+ framework combines structural
-> graph recovery with sensitivity to arbitrary nonlinear dependence.
+> The nonlinear blind-spot motivates V3-F04, but the full proposal and the shipped
+> variant are not the same thing.
+>
+> **Full proposal:** use Phase 0 AMI/CrossMI both to prune the lagged search space and
+> to rank conditioning candidates so PCMCI+ conditions on the highest-information
+> variables first.
+>
+> **Shipped variant:** compute real Phase 0 unconditional MI over lagged source-target
+> pairs, pass the survivors into Tigramite `link_assumptions`, and then run PCMCI+
+> with the selected CI backend. The current implementation does **not** expose the
+> stronger MI-ranked conditioning-set logic from the proposal.
+>
+> **CI caveat:** the shipped `knn_cmi` path uses `linear_residual` conditioning removal,
+> then measures residual dependence with kNN MI plus shuffle significance. That is a
+> practical residualization-based hybrid, not fully non-parametric conditioning.
+
+> [!NOTE]
+> The clearest side-by-side example is `examples/triage/pcmci_ami_vs_pcmci_example.py`
+> with `seed=43`, `n=1200`, `max_lag=2`, and `alpha=0.05`. It shows benchmark-specific
+> nonlinear value on one synthetic setup and should be read as illustrative evidence,
+> not broad validation.
 
 ## Key properties
 

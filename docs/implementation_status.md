@@ -228,3 +228,33 @@ $TE(X \to Y)$ peaked at lag 2 with a strong directional gap vs $TE(Y \to X)$.
   Use TE (V3-F01) or PCMCI+ (V3-F03) when autocorrelation control is required.
 - `gcmi_scorer()` accepts `random_state` for protocol compatibility but ignores it
   (GCMI has no stochastic component).
+
+---
+
+### V3-F04 — PCMCI-AMI-Hybrid (shipped variant)
+
+| Artefact | Status | Location |
+|---|---|---|
+| KnnCMI CondIndTest | ✅ | `src/forecastability/adapters/knn_cmi_ci_test.py` |
+| PcmciAmiAdapter | ✅ | `src/forecastability/adapters/pcmci_ami_adapter.py` |
+| Service facade | ✅ | `src/forecastability/services/pcmci_ami_service.py` |
+| Result model | ✅ | `PcmciAmiResult` in `utils/types.py` |
+| Tests | ✅ | `tests/test_pcmci_ami_hybrid.py` (12 tests incl. nonlinear detection) |
+| Example (standalone) | ✅ | `examples/triage/pcmci_ami_hybrid_example.py` |
+| Example (comparison) | ✅ | `examples/triage/pcmci_ami_vs_pcmci_example.py` |
+| Example (PCMCI+ base) | ✅ | `examples/triage/pcmci_adapter_example.py` |
+
+**What is implemented.**
+- Phase 0 performs real unconditional MI/CrossMI screening over lagged `(source, lag, target)` triplets and passes survivors into Tigramite `link_assumptions` before the PCMCI+ run.
+- The default `knn_cmi` path uses `linear_residual` to remove the conditioning set, scores dependence with kNN MI on residuals, and calibrates p-values with 199 shuffle permutations plus the Phipson and Smyth correction.
+- `PcmciAmiResult` exposes the Phase 0 screening diagnostics alongside the mapped Phase 1 and Phase 2 PCMCI+ outputs.
+
+**Current caveats.**
+- The stronger proposal to rank downstream conditioning sets by Phase 0 MI is not implemented in the shipped adapter; after pruning, conditioning-set selection follows Tigramite PCMCI+ behavior.
+- The shipped `knn_cmi` backend is residualization-based, so it should be read as a practical hybrid CI path rather than fully non-parametric conditioning.
+- Phase 0 pruning narrows the candidate set, but the implementation does not claim a general statistical-power gain from pruning alone.
+
+**Current evidence.**
+- The clearest back-to-back demonstrator is `examples/triage/pcmci_ami_vs_pcmci_example.py` with `seed=43`, `n=1200`, `max_lag=2`, and `alpha=0.05`.
+- On that synthetic benchmark, PCMCI+ with `parcorr` misses the expected nonlinear parents while the shipped hybrid recovers at least one of them.
+- Treat that comparison as benchmark-specific illustration, not broad validation of general nonlinear superiority.
