@@ -186,3 +186,45 @@ each feature.
 | F6 | [entropy_based_complexity.md](theory/entropy_based_complexity.md) | `04_spectral_and_entropy_diagnostics.ipynb` | `scripts/archive/run_entropy_complexity.py` | `test_complexity_band.py` |
 | F7 | — | `05_batch_and_exogenous_workbench.ipynb` | `run_benchmark_panel.py` | `test_batch_triage_f7.py` |
 | F8 | — | `05_batch_and_exogenous_workbench.ipynb` | `run_exog_analysis.py` | `test_extensions.py` |
+
+---
+
+## v0.3.0 — Covariant Informative Extensions
+
+These features extend the v0.2.x core with bivariate and causal dependence measures.
+See [plan/v0_3_0_covariant_informative_ultimate_plan.md](plan/v0_3_0_covariant_informative_ultimate_plan.md)
+for the full feature inventory and phasing plan.
+
+### V3-F01 — Transfer Entropy scorer + service
+
+| Evidence | Status | Location |
+|---|---|---|
+| Implemented | ✅ | `src/forecastability/diagnostics/transfer_entropy.py`, `src/forecastability/services/transfer_entropy_service.py` |
+| Tested | ✅ | `tests/test_gcmi.py`, `tests/test_covariant_models.py` |
+| Regression fixtures | ✅ | `tests/` (diagnostic regression suite) |
+| Theory doc | ✅ | [theory/foundations.md](theory/foundations.md) — TE section |
+| Notebook | — | Not yet in triage notebook set |
+| Script | — | No dedicated standalone script; exercised via analyzer tests |
+
+**Validated directional evidence (2026-04-16):** synthetic lag-2 driver pair, $n=1200$, `seed=17`;
+$TE(X \to Y)$ peaked at lag 2 with a strong directional gap vs $TE(Y \to X)$.
+
+---
+
+### V3-F02 — GCMI scorer + service
+
+| Evidence | Status | Location |
+|---|---|---|
+| Implemented | ✅ | `src/forecastability/diagnostics/gcmi.py`, `src/forecastability/services/gcmi_service.py` |
+| Tested | ✅ | `tests/test_gcmi.py` (25 tests) |
+| Regression fixtures | ✅ | `tests/test_gcmi.py` (numeric regression assertions) |
+| Theory doc | ✅ | [theory/gcmi.md](theory/gcmi.md) |
+| Notebook | — | Not yet in triage notebook set |
+| Script | ✅ | `examples/triage/gcmi_example.py` |
+
+**Known-partial / caveats.**
+- Bivariate GCMI only; no multivariate extension.
+- GCMI is unconditional: it does not control for target autocorrelation.
+  Use TE (V3-F01) or PCMCI+ (V3-F03) when autocorrelation control is required.
+- `gcmi_scorer()` accepts `random_state` for protocol compatibility but ignores it
+  (GCMI has no stochastic component).

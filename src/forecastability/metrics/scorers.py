@@ -13,6 +13,7 @@ from scipy.spatial.distance import pdist, squareform
 from scipy.stats import kendalltau, spearmanr
 from sklearn.feature_selection import mutual_info_regression
 
+from forecastability.diagnostics.gcmi import compute_gcmi_at_lag
 from forecastability.diagnostics.spectral_utils import compute_normalised_psd, spectral_entropy
 from forecastability.diagnostics.transfer_entropy import compute_transfer_entropy
 
@@ -275,6 +276,36 @@ def te_scorer(
         )
 
     return _te
+
+
+def gcmi_scorer(
+    *,
+    lag: int = 1,
+    min_pairs: int = 30,
+) -> DependenceScorer:
+    """Build a Gaussian Copula MI scorer.
+
+    GCMI is monotonic-transform invariant and fully deterministic (no random
+    state).  Suitable for fast initial screening across lag-variable pairs.
+
+    Args:
+        lag: Lag at which to evaluate cross-GCMI(source, target).
+        min_pairs: Minimum aligned sample pairs.
+
+    Returns:
+        Callable that maps ``(past, future)`` arrays to a non-negative GCMI score.
+    """
+
+    def _gcmi(
+        past: np.ndarray,
+        future: np.ndarray,
+        *,
+        random_state: int = 42,
+    ) -> float:
+        del random_state  # GCMI is deterministic
+        return compute_gcmi_at_lag(past, future, lag=lag, min_pairs=min_pairs)
+
+    return _gcmi
 
 
 def _pearson_scorer(
@@ -773,6 +804,12 @@ def default_registry() -> ScorerRegistry:
         te_scorer(lag=1),
         family="nonlinear",
         description="Directional transfer entropy via conditional MI backend (lag=1)",
+    )
+    registry.register(
+        "gcmi",
+        gcmi_scorer(lag=1),
+        family="nonlinear",
+        description="Gaussian Copula MI — rank-copula normalised, deterministic (lag=1)",
     )
     registry.register(
         "permutation_entropy",

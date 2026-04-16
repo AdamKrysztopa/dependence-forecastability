@@ -205,7 +205,7 @@ Standard PCMCI+ MCI testing, but with highly refined, compact, information-dense
 |---|---|---:|---|---|---|
 | V3-F00 | Typed covariant result models | 0 | Extends `utils/types.py` patterns | `CovariantSummaryRow`, `CovariantAnalysisBundle`, `CausalGraphResult`, `PcmciAmiResult` | **Done** |
 | V3-F01 | Transfer Entropy scorer + service | 1 | Follows `DependenceScorer` pattern | `te_scorer()`, `src/forecastability/services/transfer_entropy_service.py` | **Done** (2026-04-16: diagnostics/service path, analyzer `method="te"`, and tests validated) |
-| V3-F02 | GCMI scorer + service | 1 | Follows `DependenceScorer` pattern | `gcmi_scorer()`, `src/forecastability/services/gcmi_service.py` | Not started |
+| V3-F02 | GCMI scorer + service | 1 | Follows `DependenceScorer` pattern | `gcmi_scorer()`, `src/forecastability/services/gcmi_service.py` | **Done** (2026-04-16: diagnostics/service path, 25 tests, `examples/triage/gcmi_example.py`, theory doc) |
 | V3-F03 | PCMCI+ adapter | 1 | None (new external integration) | `src/forecastability/adapters/tigramite_adapter.py`, `CausalGraphPort` | Not started |
 | V3-F04 | PCMCI-AMI-Hybrid method | 1 | Builds on AMI kNN + tigramite adapter | `src/forecastability/services/pcmci_ami_service.py`, dedicated result model, Phase 0 triage logic | Not started |
 | V3-F05 | `CausalGraphPort` protocol | 0 | None (new port type) | Graph-returning port for PCMCI+ and PCMCI-AMI | **Done** |

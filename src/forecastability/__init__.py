@@ -1,10 +1,12 @@
 """Forecastability package implementing AMI and pAMI analysis."""
 
+from forecastability.diagnostics.gcmi import compute_gcmi
 from forecastability.metrics.scorers import (
     DependenceScorer,
     ScorerInfo,
     ScorerRegistry,
     default_registry,
+    gcmi_scorer,
 )
 from forecastability.pipeline.analyzer import (
     AnalyzeResult,
@@ -79,6 +81,8 @@ __all__ = [
     "ForecastabilityProfile",
     "ForecastResult",
     "GcmiResult",
+    "gcmi_scorer",
+    "compute_gcmi",
     "generate_ar1",
     "generate_white_noise",
     "BenchmarkDataConfig",
