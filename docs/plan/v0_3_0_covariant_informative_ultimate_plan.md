@@ -204,7 +204,7 @@ Standard PCMCI+ MCI testing, but with highly refined, compact, information-dense
 | ID | Feature | Phase | Overlap with existing | Genuine new work | Status |
 |---|---|---:|---|---|---|
 | V3-F00 | Typed covariant result models | 0 | Extends `utils/types.py` patterns | `CovariantSummaryRow`, `CovariantAnalysisBundle`, `CausalGraphResult`, `PcmciAmiResult` | **Done** |
-| V3-F01 | Transfer Entropy scorer + service | 1 | Follows `DependenceScorer` pattern | `te_scorer()`, `src/forecastability/services/transfer_entropy_service.py` | Not started |
+| V3-F01 | Transfer Entropy scorer + service | 1 | Follows `DependenceScorer` pattern | `te_scorer()`, `src/forecastability/services/transfer_entropy_service.py` | **Done** (2026-04-16: diagnostics/service path, analyzer `method="te"`, and tests validated) |
 | V3-F02 | GCMI scorer + service | 1 | Follows `DependenceScorer` pattern | `gcmi_scorer()`, `src/forecastability/services/gcmi_service.py` | Not started |
 | V3-F03 | PCMCI+ adapter | 1 | None (new external integration) | `src/forecastability/adapters/tigramite_adapter.py`, `CausalGraphPort` | Not started |
 | V3-F04 | PCMCI-AMI-Hybrid method | 1 | Builds on AMI kNN + tigramite adapter | `src/forecastability/services/pcmci_ami_service.py`, dedicated result model, Phase 0 triage logic | Not started |
@@ -893,6 +893,13 @@ class TestComputeGcmi:
 ---
 
 #### V3-F01 — Transfer Entropy scorer + service
+
+**Status (2026-04-16):** Implemented in current workspace.
+
+**Completion note:**
+- Core TE estimator and lag-curve functions are live in `src/forecastability/diagnostics/transfer_entropy.py` with compatibility re-exports in `src/forecastability/services/transfer_entropy_service.py`.
+- Analyzer integration is live via `method="te"` in `src/forecastability/pipeline/analyzer.py`; this path is intentionally raw-only (partial TE unsupported).
+- Deterministic validation evidence: synthetic lag-2 directional pair (`n=1200`, `seed=17`) shows lag-2 peak and directional gap, analyzer curve parity with direct TE (`max_abs_diff = 0.0`), and significant `X->Y` lags 1/2/3 above surrogate upper band.
 
 **Mathematical recap:**
 
@@ -1879,7 +1886,7 @@ class TestPcmciAmiService:
 #### Acceptance criteria — Phase 1
 
 - [ ] Each method has a standalone unit test with a synthetic fixture
-- [ ] TE: higher TE in known directional synthetic examples than in null controls
+- [x] TE: higher TE in known directional synthetic examples than in null controls
 - [ ] GCMI: monotonic transforms preserve the dependence signal
 - [ ] PCMCI+: stable output on deterministic coupled systems
 - [ ] PCMCI-AMI: Phase 0 prunes noise variables, Phase 2 recovers known parents

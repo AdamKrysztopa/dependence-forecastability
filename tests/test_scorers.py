@@ -26,9 +26,9 @@ def sine_pair() -> tuple[np.ndarray, np.ndarray]:
 
 
 class TestDefaultScorers:
-    """All 5 default scorers return float >= 0 on sinusoidal input."""
+    """All default bivariate scorers return float >= 0 on sinusoidal input."""
 
-    @pytest.mark.parametrize("name", ["mi", "pearson", "spearman", "kendall", "distance"])
+    @pytest.mark.parametrize("name", ["mi", "pearson", "spearman", "kendall", "distance", "te"])
     def test_scorer_returns_nonnegative_float(
         self,
         registry: ScorerRegistry,
@@ -115,7 +115,7 @@ class TestListScorers:
 
     def test_default_count(self, registry: ScorerRegistry) -> None:
         scorers = registry.list_scorers()
-        assert len(scorers) == 9
+        assert len(scorers) == 10
 
     def test_names(self, registry: ScorerRegistry) -> None:
         names = {s.name for s in registry.list_scorers()}
@@ -125,6 +125,7 @@ class TestListScorers:
             "spearman",
             "kendall",
             "distance",
+            "te",
             "permutation_entropy",
             "spectral_entropy",
             "spectral_predictability",
