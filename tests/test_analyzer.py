@@ -99,6 +99,7 @@ def test_analyzer_list_scorers() -> None:
         "spectral_entropy",
         "spectral_predictability",
         "largest_lyapunov_exponent",
+        "gcmi",
     }
 
 

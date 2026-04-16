@@ -115,7 +115,7 @@ class TestListScorers:
 
     def test_default_count(self, registry: ScorerRegistry) -> None:
         scorers = registry.list_scorers()
-        assert len(scorers) == 10
+        assert len(scorers) == 11
 
     def test_names(self, registry: ScorerRegistry) -> None:
         names = {s.name for s in registry.list_scorers()}
@@ -130,6 +130,7 @@ class TestListScorers:
             "spectral_entropy",
             "spectral_predictability",
             "largest_lyapunov_exponent",
+            "gcmi",
         }
 
 

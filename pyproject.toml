@@ -53,6 +53,9 @@ Changelog = "https://github.com/AdamKrysztopa/dependence-forecastability/blob/ma
 agent = [
   "pydantic-ai>=0.2",
 ]
+causal = [
+  "tigramite>=5.2",
+]
 transport = [
   "fastapi>=0.115",
   "uvicorn[standard]>=0.32",

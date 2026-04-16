@@ -147,3 +147,48 @@ Interpretation:
 
 - Paper validates AMI only.
 - pAMI, exogenous cross-dependence, and scorer-registry abstractions are project additions.
+
+## Synthetic benchmark: 8-variable covariant system
+
+`generate_covariant_benchmark` in `src/forecastability/utils/synthetic.py` implements
+an 8-variable ground-truth system used for controlled method validation. The full causal
+graph, structural equations, and benchmark narrative are documented in
+[docs/theory/pcmci_plus.md](pcmci_plus.md); this section covers the two nonlinear
+drivers added in V3-F03 and why they matter for AMI-family methods.
+
+### Nonlinear structural equations
+
+`driver_nonlin_sq` couples to `target` at lag 1 via a centered quadratic:
+
+$$\text{target}[t] \mathrel{+}= 0.40 \times (\text{nl}_1[t-1]^2 - \sigma^2_{\text{nl}_1})$$
+
+`driver_nonlin_abs` couples to `target` at lag 1 via a centered abs-value:
+
+$$\text{target}[t] \mathrel{+}= 0.35 \times (|\text{nl}_2[t-1]| - \mathbb{E}[|\text{nl}_2|])$$
+
+### Why Pearson and Spearman are blind
+
+Both couplings are constructed so that the covariance between driver and target is
+exactly zero at the population level:
+
+- **Quadratic**: $\mathrm{Cov}(X,\, X^2 - \sigma^2) = \mathbb{E}[X^3] = 0$. The odd
+  central moment of any zero-mean symmetric distribution is zero. Spearman is also near
+  zero because $X^2$ is U-shaped (non-monotone) in $X$.
+
+- **Abs-value**: $\mathrm{Cov}(X,\, |X|) = \mathbb{E}[X \cdot |X|] = 0$. The function
+  $X|X|$ is odd, so its expectation over any symmetric distribution is zero. Spearman is
+  also near zero because $|X|$ is V-shaped (non-monotone) in $X$.
+
+A Pearson or Spearman screen would rank both drivers below independent noise — the
+hallmark of a linear blind-spot.
+
+### Why information-theoretic methods detect them
+
+MI, TE, and GCMI measure dependence in the full joint distribution $P(X, Y)$, not only
+the linear second moment. Both couplings create statistically dependent joint
+distributions even though the marginal covariance is zero. kNN MI estimators detect this
+dependence directly through local density structure.
+
+The nonlinear drivers are included to validate that AMI, TE, and GCMI scores remain
+informative exactly where Pearson and Spearman fail, and to motivate the
+PCMCI-AMI-Hybrid design in V3-F04.

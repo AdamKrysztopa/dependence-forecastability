@@ -206,7 +206,7 @@ Standard PCMCI+ MCI testing, but with highly refined, compact, information-dense
 | V3-F00 | Typed covariant result models | 0 | Extends `utils/types.py` patterns | `CovariantSummaryRow`, `CovariantAnalysisBundle`, `CausalGraphResult`, `PcmciAmiResult` | **Done** |
 | V3-F01 | Transfer Entropy scorer + service | 1 | Follows `DependenceScorer` pattern | `te_scorer()`, `src/forecastability/services/transfer_entropy_service.py` | **Done** (2026-04-16: diagnostics/service path, analyzer `method="te"`, and tests validated) |
 | V3-F02 | GCMI scorer + service | 1 | Follows `DependenceScorer` pattern | `gcmi_scorer()`, `src/forecastability/services/gcmi_service.py` | **Done** (2026-04-16: diagnostics/service path, 25 tests, `examples/triage/gcmi_example.py`, theory doc) |
-| V3-F03 | PCMCI+ adapter | 1 | None (new external integration) | `src/forecastability/adapters/tigramite_adapter.py`, `CausalGraphPort` | Not started |
+| V3-F03 | PCMCI+ adapter | 1 | None (new external integration) | `src/forecastability/adapters/tigramite_adapter.py`, `CausalGraphPort` | **Done** (2026-04-16: adapter, tests, dedicated example, optional causal extra; 2026-04-16b: 8-variable benchmark with two nonlinear drivers, two-story example, `docs/theory/pcmci_plus.md`) |
 | V3-F04 | PCMCI-AMI-Hybrid method | 1 | Builds on AMI kNN + tigramite adapter | `src/forecastability/services/pcmci_ami_service.py`, dedicated result model, Phase 0 triage logic | Not started |
 | V3-F05 | `CausalGraphPort` protocol | 0 | None (new port type) | Graph-returning port for PCMCI+ and PCMCI-AMI | **Done** |
 | V3-F06 | Covariant orchestration facade | 2 | Extends `use_cases/` pattern | `src/forecastability/use_cases/run_covariant_analysis.py` | Not started |
@@ -238,26 +238,35 @@ Standard PCMCI+ MCI testing, but with highly refined, compact, information-dense
 
 The generator produces a 6-variable system with known causal structure:
 
+> [!NOTE]
+> **Upgraded to 8 variables (2026-04-16b).** Two nonlinear drivers added to expose the
+> linear-CI blind-spot: both have Pearson/Spearman ≈ 0 with target by construction,
+> so a linear CI test (parcorr) cannot detect them. See `docs/theory/pcmci_plus.md`.
+
 ```mermaid
 flowchart LR
-    X1["x1: direct driver"] -->|"lag 2, β=0.8"| Y["target"]
-    X2["x2: mediated"] -->|"lag 1, β=0.5"| Y
-    X1 -->|"lag 1, β=0.6"| X2
-    X3["x3: redundant"] -.->|"correlated via x1"| Y
-    X1 -->|"lag 1, β=0.7"| X3
-    X4["x4: noise"] -.-x Y
-    X6["x6: contemporaneous"] -->|"lag 0, β=0.35"| Y
+    X1["driver_direct"] -->|"lag 2, β=0.80"| Y["target"]
+    X2["driver_mediated"] -->|"lag 1, β=0.50"| Y
+    X1 -->|"lag 1, β=0.60"| X2
+    X3["driver_redundant"] -.->|"correlated via x1"| Y
+    X1 -->|"lag 1, β=0.70"| X3
+    X4["driver_noise"] -.-x Y
+    X6["driver_contemp"] -->|"lag 0, β=0.35"| Y
+    NL1["driver_nonlin_sq"] -->|"lag 1, β=0.40\n(quadratic — Pearson≈0)"| Y
+    NL2["driver_nonlin_abs"] -->|"lag 1, β=0.35\n(abs-value — Pearson≈0)"| Y
 ```
 
 **Ground truth causal parents of target:**
 
-| Variable | Relationship to target | Expected TE | Expected PCMCI+ |
+| Variable | Relationship to target | Expected TE | Expected PCMCI+ (parcorr) |
 |---|---|---|---|
-| `driver_direct` (x1) | Direct parent at lag 2 | $TE(x1 \to y) \gg 0$ | Parent at lag 2 |
-| `driver_mediated` (x2) | Indirect via x1 → x2 → y | $TE(x2 \to y) > 0$ | Parent at lag 1 |
-| `driver_redundant` (x3) | Correlated with x1, not direct | $TE(x3 \to y) > 0$ but drops after conditioning | **Not** a parent (removed by MCI) |
-| `driver_noise` (x4) | Independent noise | $TE(x4 \to y) \approx 0$ | Absent from graph |
-| `driver_contemp` (x6) | Same-time influence | N/A (TE is lagged) | Contemporaneous link |
+| `driver_direct` | Direct parent at lag 2 | $TE \gg 0$ | Parent at lag 2 |
+| `driver_mediated` | Indirect via driver_direct | $TE > 0$ | Parent at lag 1 |
+| `driver_redundant` | Correlated via shared cause, not direct | $TE > 0$ (drops on conditioning) | **Not** a parent (MCI removes it) |
+| `driver_noise` | Independent noise | $TE \approx 0$ | Absent from graph |
+| `driver_contemp` | Contemporaneous link | N/A (lagged TE) | Contemporaneous parent |
+| `driver_nonlin_sq` | Quadratic coupling — **Pearson/Spearman ≈ 0** | Detectable by kNN MI | **NOT found** (parcorr blind) |
+| `driver_nonlin_abs` | Abs-value coupling — **Pearson/Spearman ≈ 0** | Detectable by kNN MI | **NOT found** (parcorr blind) |
 
 ### 5.2. Complete generator implementation
 
@@ -369,6 +378,9 @@ def generate_directional_pair(
 - [x] Generator is deterministic by seed
 - [x] Notebook, tests, and showcase script all use the same generator
 - [x] Expected causal story documented in docstring
+- [x] Two nonlinear drivers with Pearson/Spearman ≈ 0 by construction (odd-moment symmetry)
+- [x] `test_synthetic_nonlinear_drivers_invisible_to_pearson` confirms |r| < 0.10
+- [x] `test_parcorr_blind_to_nonlinear_drivers` confirms linear CI test cannot recover them
 
 ---
 
@@ -2774,12 +2786,13 @@ causal = ["tigramite>=5.2"]
 
 ### Epic D — PCMCI+ adapter (Week 2, Days 4-5)
 
-- [ ] Create `src/forecastability/adapters/tigramite_adapter.py` with `TigramiteAdapter`
-- [ ] Guard `tigramite` import with try/except and clear error message
-- [ ] Implement `_map_results()` to convert tigramite graph → `CausalGraphResult`
-- [ ] Add `[causal]` optional dependency group in `pyproject.toml`: `tigramite>=5.2`
-- [ ] Write `tests/test_pcmci_adapter.py` with ≥ 3 tests (see Phase 1 examples above, guarded by `pytest.importorskip`)
-- [ ] Verify: on synthetic benchmark, `driver_direct` found as parent, `driver_noise` absent
+- [x] Create `src/forecastability/adapters/tigramite_adapter.py` with `TigramiteAdapter`
+- [x] Guard `tigramite` import with try/except and clear error message
+- [x] Implement `_map_results()` to convert tigramite graph → `CausalGraphResult`
+- [x] Add `[causal]` optional dependency group in `pyproject.toml`: `tigramite>=5.2`
+- [x] Write `tests/test_pcmci_adapter.py` with ≥ 3 tests (see Phase 1 examples above, guarded by `pytest.importorskip`)
+- [x] Add dedicated standalone example `examples/triage/pcmci_adapter_example.py` with actionable missing-dependency hint
+- [x] Verify: on synthetic benchmark, `driver_direct` found as parent, `driver_noise` absent
 
 ### Epic E — PCMCI-AMI-Hybrid (Week 3, Days 1-3)
 

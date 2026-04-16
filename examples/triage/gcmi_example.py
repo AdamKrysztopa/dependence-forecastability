@@ -165,8 +165,8 @@ def main() -> None:  # noqa: PLR0914
     ind_gcmi = compute_gcmi(x_ind, y_ind)
 
     print(
-        f"[1] Linear pair:     GCMI={compute_gcmi(x_lin,y_lin):.4f} bits; "
-        f"|r|={abs(_pearson(x_lin,y_lin)):.4f}  "
+        f"[1] Linear pair:     GCMI={compute_gcmi(x_lin, y_lin):.4f} bits; "
+        f"|r|={abs(_pearson(x_lin, y_lin)):.4f}  "
         "→ Both agree on strong linear dependence."
     )
     print(

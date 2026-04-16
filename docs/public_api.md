@@ -73,6 +73,42 @@ These are the live repo entry points for non-import surfaces.
 | Dashboard | `forecastability-dashboard` | Packaged command wired to `forecastability.adapters.dashboard:main` |
 | HTTP API | `forecastability.adapters.api:app` | FastAPI application used with Uvicorn |
 
+## Causal Discovery (v0.3.0+)
+
+Causal structure recovery for multivariate time series requires the optional `tigramite`
+dependency:
+
+```
+pip install forecastability[causal]
+```
+
+```python
+from forecastability.adapters.tigramite_adapter import TigramiteAdapter
+from forecastability.ports import CausalGraphPort
+from forecastability.utils.types import CausalGraphResult
+from forecastability.utils.synthetic import generate_covariant_benchmark, generate_directional_pair
+```
+
+| Symbol | Description |
+|---|---|
+| `TigramiteAdapter` | Wraps PCMCI+ from `tigramite` behind `CausalGraphPort`. Accepts `ci_test` of `"parcorr"` (default), `"gpdc"`, or `"cmiknn"`. Requires the `tigramite` optional extra. |
+| `CausalGraphPort` | `@runtime_checkable` Protocol defining the `discover(data, var_names, *, max_lag, alpha, random_state)` contract. Use for type annotations and `isinstance` checks. |
+| `CausalGraphResult` | Pydantic result model holding `parents`, `link_matrix`, `val_matrix`, and `metadata` from a completed PCMCI+ run. |
+| `generate_covariant_benchmark` | Generates an 8-variable ground-truth system with known linear, mediated, redundant, contemporaneous, and nonlinear structural links. Primary fixture for adapter and covariant-model tests. |
+| `generate_directional_pair` | Generates a simple $X \to Y$ directional pair for TE and GCMI validation. |
+
+> [!NOTE]
+> These are Phase 1 covariant symbols. The stable `forecastability` facade will
+> re-export them in v0.3.0 final. Until then, import directly from the submodule
+> paths listed above.
+
+> [!WARNING]
+> `CausalGraphPort` lives under `ports/` and `TigramiteAdapter` under `adapters/` —
+> namespaces otherwise marked internal. These causal discovery symbols are the
+> explicit exception: they are part of the Phase 1 covariant surface and intended
+> for direct import. `generate_covariant_benchmark` and `generate_directional_pair`
+> are similarly available directly from `forecastability.utils.synthetic`.
+
 ## Schema Stability
 
 Stable result models are Pydantic models, and their JSON field names are part of the contract.
