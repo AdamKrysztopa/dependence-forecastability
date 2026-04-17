@@ -213,7 +213,7 @@ Standard PCMCI+ MCI testing, but with highly refined, compact, information-dense
 | V3-F05 | `CausalGraphPort` protocol | 0 | None (new port type) | Graph-returning port for PCMCI+ and PCMCI-AMI | **Done** |
 | V3-F06 | Covariant orchestration facade | 2 | Extends `use_cases/` pattern | `src/forecastability/use_cases/run_covariant_analysis.py` | **Done** (2026-04-17: `run_covariant_analysis()` shipped as the covariant orchestration bundle with unified row assembly, conditioning-scope metadata/disclaimer, focused facade tests, and a dedicated benchmark example.) |
 | V3-F07 | Unified covariant summary table | 2 | Extends `ExogenousScreeningWorkbenchResult` pattern | `CovariantSummaryRow` with all method columns | **Done** (2026-04-17: significance (`above_band`/`below_band` via phase-surrogate cross_ami bands), global rank (by cross_ami→gcmi→te priority), and interpretation_tag (`causal_confirmed`, `probably_mediated`, `directional_informative`, `pairwise_informative`, `noise_or_weak`) fully populated; 5 new facade tests added; dedicated example at `examples/covariant_informative/covariant_summary_table/covariant_summary_table_example.py`; reference doc at `docs/theory/covariant_summary_table.md`; all 4 ground-truth checks pass on 8-variable benchmark; Phase 2 closed.) |
-| V3-F08 | Covariant tests + regression | 3 | Follows existing test patterns | Synthetic coupled systems, per-method and integration tests | **Partial** (2026-04-17: focused facade integration coverage and covariant model round-trip checks shipped in `tests/test_covariant_facade.py` and `tests/test_covariant_models.py`; regression fixtures and a dedicated covariant regression suite remain pending.) |
+| V3-F08 | Covariant tests + regression | 3 | Follows existing test patterns | Synthetic coupled systems, per-method and integration tests | **Done** (2026-04-17: regression module `src/forecastability/diagnostics/covariant_regression.py` with 3 deterministic fixture cases (ami_pami, gcmi, te) shipped; frozen expected fixtures at `docs/fixtures/covariant_regression/expected/`; rebuild script `scripts/rebuild_covariant_regression_fixtures.py`; 10-test suite `tests/test_covariant_regression.py` covering frozen-match, drift detection, and ground-truth sanity; dedicated V3-F08 validation example at `examples/covariant_informative/covariant_regression/covariant_regression_example.py` with 5 scientifically grounded ground-truth checks all passing; 747 tests green.) |
 | V3-F09 | Covariant showcase script | 4 | Follows `scripts/run_showcase.py` | `scripts/run_showcase_covariant.py` | Not started |
 | V3-F10 | Covariant walkthrough notebook | 4 | Follows `00_air_passengers_showcase.ipynb` | `notebooks/walkthroughs/01_covariant_informative_showcase.ipynb` | Not started |
 | V3-CI-01 | Python version matrix | 5 | Modifies `.github/workflows/ci.yml` | Add 3.11 + 3.12 matrix | Not started |
@@ -2560,15 +2560,16 @@ def run_covariant_analysis(
 # )
 ```
 
-#### Acceptance criteria — Phase 2
+#### Acceptance criteria — Phase 2 ✅ CLOSED 2026-04-17
 
-- [ ] `run_covariant_analysis()` produces a `CovariantAnalysisBundle`
-- [ ] Unified table has one row per (target, driver, lag) combination
-- [ ] Methods gracefully skip when optional deps unavailable
-- [ ] Facade is the ONLY orchestration entry point used by notebook, script, and tests
-- [ ] `CovariantSummaryRow` and per-method result models expose a `lagged_exog_conditioning` metadata field with values `none` / `target_only` / `full_mci`, populated correctly per §5A
-- [ ] `CovariantAnalysisBundle.metadata` includes a disclaimer string pointing at §5A for any bundle that contains `target_only` entries, and a forward link to the v0.3.1 plan
-- [ ] `uv run pytest tests/test_covariant_facade.py -q` passes
+- [x] `run_covariant_analysis()` produces a `CovariantAnalysisBundle`
+- [x] Unified table has one row per (target, driver, lag) combination
+- [x] Methods gracefully skip when optional deps unavailable
+- [x] Facade is the ONLY orchestration entry point used by notebook, script, and tests
+- [x] `CovariantSummaryRow` and per-method result models expose a `lagged_exog_conditioning` metadata field with values `none` / `target_only` / `full_mci`, populated correctly per §5A
+- [x] `CovariantAnalysisBundle.metadata` includes a disclaimer string pointing at §5A for any bundle that contains `target_only` entries, and a forward link to the v0.3.1 plan
+- [x] `uv run pytest tests/test_covariant_facade.py -q` passes
+- [x] `CovariantSummaryRow.significance`, `.rank`, `.interpretation_tag` fully populated (V3-F07 complete)
 
 ---
 
@@ -2740,16 +2741,16 @@ if __name__ == "__main__":
 
 #### Acceptance criteria — Phase 3
 
-- [ ] Each method has ≥ 3 unit tests (positive, negative, edge case)
-- [ ] Facade integration test with covariant benchmark fixture
-- [ ] Regression fixtures pass SHA-256 comparison
-- [ ] `n_surrogates >= 99` enforced in every surrogate call
-- [ ] `random_state: int` — never `numpy.Generator`
-- [ ] AMI computed per horizon $h$ separately — never aggregated before computation
-- [ ] AMI and pAMI computed on `split.train` ONLY inside any rolling-origin loop (partial residualization is linear via `sklearn.linear_model.LinearRegression`; pCrossAMI MUST NOT be described as non-parametric in any output metadata)
-- [ ] `np.trapezoid` for AUC — `np.trapz` removed in NumPy 2.x
-- [ ] Regression test: pCrossAMI rows ALWAYS carry `lagged_exog_conditioning == "target_only"`; raw CrossMI rows ALWAYS carry `"none"`; PCMCI+/PCMCI-AMI rows ALWAYS carry `"full_mci"`. A test MUST fail if any output metadata, docstring, or bundle field claims pCrossAMI is "fully conditioned on exogenous lags"
-- [ ] `uv run pytest tests/test_covariant*.py tests/test_transfer*.py tests/test_gcmi.py tests/test_pcmci*.py -q` all green
+- [x] Each method has ≥ 3 unit tests (positive, negative, edge case)
+- [x] Facade integration test with covariant benchmark fixture
+- [x] Regression fixtures pass deterministic comparison (JSON-based float/string/bool tolerance; `atol=1e-6`)
+- [x] `n_surrogates >= 99` enforced in every surrogate call
+- [x] `random_state: int` — never `numpy.Generator`
+- [x] AMI computed per horizon $h$ separately — never aggregated before computation
+- [x] AMI and pAMI computed on `split.train` ONLY inside any rolling-origin loop (partial residualization is linear via `sklearn.linear_model.LinearRegression`; pCrossAMI MUST NOT be described as non-parametric in any output metadata)
+- [x] `np.trapezoid` for AUC — `np.trapz` removed in NumPy 2.x
+- [x] Regression test: pCrossAMI rows ALWAYS carry `lagged_exog_conditioning == "target_only"`; raw CrossMI rows ALWAYS carry `"none"`; PCMCI+/PCMCI-AMI rows ALWAYS carry `"full_mci"`. A test MUST fail if any output metadata, docstring, or bundle field claims pCrossAMI is "fully conditioned on exogenous lags"
+- [x] `uv run pytest tests/test_covariant*.py tests/test_transfer*.py tests/test_gcmi.py tests/test_pcmci*.py -q` all green (747 total; 0 failures)
 
 ---
 

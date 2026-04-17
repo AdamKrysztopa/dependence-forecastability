@@ -1,0 +1,53 @@
+{
+  "direct_beats_noise": true,
+  "mediated_beats_noise": true,
+  "peak_score_driver": "driver_mediated",
+  "peak_score_lag": 2,
+  "rows": {
+    "driver_direct:1": {
+      "cross_ami": 0.16049389662996116,
+      "cross_pami": 0.16049389662996116,
+      "significance": "above_band"
+    },
+    "driver_direct:2": {
+      "cross_ami": 0.3139402012914694,
+      "cross_pami": 0.26108871288050306,
+      "significance": "above_band"
+    },
+    "driver_direct:3": {
+      "cross_ami": 0.4271696491987713,
+      "cross_pami": 0.021853431588055194,
+      "significance": "above_band"
+    },
+    "driver_mediated:1": {
+      "cross_ami": 0.5872421000269821,
+      "cross_pami": 0.5872421000269821,
+      "significance": "above_band"
+    },
+    "driver_mediated:2": {
+      "cross_ami": 0.6956241391977329,
+      "cross_pami": 0.049320133119453935,
+      "significance": "above_band"
+    },
+    "driver_mediated:3": {
+      "cross_ami": 0.6890886638069791,
+      "cross_pami": 0.0,
+      "significance": "above_band"
+    },
+    "driver_noise:1": {
+      "cross_ami": 0.048005782816553655,
+      "cross_pami": 0.048005782816553655,
+      "significance": "above_band"
+    },
+    "driver_noise:2": {
+      "cross_ami": 0.04448768952506921,
+      "cross_pami": 0.0,
+      "significance": "above_band"
+    },
+    "driver_noise:3": {
+      "cross_ami": 0.05981800337435228,
+      "cross_pami": 0.023703473607443293,
+      "significance": "above_band"
+    }
+  }
+}
