@@ -23,6 +23,7 @@ def test_imports_from_utils_types() -> None:
     from forecastability.utils.types import (  # noqa: F401
         CausalGraphResult,
         CovariantAnalysisBundle,
+        CovariantMethodConditioning,
         CovariantSummaryRow,
         GcmiResult,
         PcmciAmiResult,
@@ -101,7 +102,7 @@ def test_causal_graph_port_isinstance_fails_for_non_conformant() -> None:
 
 
 def test_covariant_summary_row_round_trip() -> None:
-    from forecastability.utils.types import CovariantSummaryRow
+    from forecastability.utils.types import CovariantMethodConditioning, CovariantSummaryRow
 
     row = CovariantSummaryRow(
         target="temp",
@@ -112,12 +113,17 @@ def test_covariant_summary_row_round_trip() -> None:
         significance="above_band",
         rank=1,
         interpretation_tag="direct_driver",
+        lagged_exog_conditioning=CovariantMethodConditioning(
+            cross_ami="none",
+            cross_pami="target_only",
+        ),
     )
     dumped = row.model_dump()
     assert dumped["target"] == "temp"
     assert dumped["driver"] == "humidity"
     assert dumped["lag"] == 3
     assert dumped["transfer_entropy"] is None
+    assert dumped["lagged_exog_conditioning"]["cross_ami"] == "none"
     reconstructed = CovariantSummaryRow(**dumped)
     assert reconstructed == row
 
@@ -135,6 +141,8 @@ def test_covariant_summary_row_all_optional_none() -> None:
     assert row.significance is None
     assert row.rank is None
     assert row.interpretation_tag is None
+    assert row.lagged_exog_conditioning.cross_ami is None
+    assert row.lagged_exog_conditioning.pcmci is None
 
 
 # ---------------------------------------------------------------------------
@@ -155,6 +163,7 @@ def test_transfer_entropy_result_round_trip() -> None:
     )
     dumped = te.model_dump()
     assert dumped["te_value"] == pytest.approx(0.45)
+    assert dumped["lagged_exog_conditioning"] == "target_only"
     reconstructed = TransferEntropyResult(**dumped)
     assert reconstructed == te
 
@@ -170,6 +179,7 @@ def test_gcmi_result_round_trip() -> None:
     gcmi = GcmiResult(source="a", target="b", lag=1, gcmi_value=0.33)
     dumped = gcmi.model_dump()
     assert dumped["gcmi_value"] == pytest.approx(0.33)
+    assert dumped["lagged_exog_conditioning"] == "none"
     reconstructed = GcmiResult(**dumped)
     assert reconstructed == gcmi
 
@@ -190,6 +200,7 @@ def test_causal_graph_result_round_trip() -> None:
     )
     dumped = result.model_dump()
     assert dumped["parents"]["y"] == [("x", 1), ("z", 2)]
+    assert dumped["lagged_exog_conditioning"] == "full_mci"
     reconstructed = CausalGraphResult(**dumped)
     assert reconstructed == result
 
@@ -241,6 +252,7 @@ def test_pcmci_ami_result_round_trip() -> None:
     assert dumped["phase0_kept_count"] == 3
     assert len(dumped["phase0_mi_scores"]) == 1
     assert dumped["phase0_mi_scores"][0]["source"] == "x"
+    assert dumped["lagged_exog_conditioning"] == "full_mci"
     reconstructed = PcmciAmiResult(**dumped)
     assert reconstructed == result
 

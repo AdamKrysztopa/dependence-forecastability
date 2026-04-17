@@ -288,3 +288,47 @@ the original proposal remain proposal-only; see caveats below and
   two nonlinear parents is recovered.**
 - Treat these comparisons as illustrative, not as broad validation of general
   nonlinear superiority.
+
+---
+
+### V3-F06 — Covariant orchestration facade
+
+**Status: Done (2026-04-17).** This feature ships the orchestration bundle for the
+v0.3.0 covariant workflow. It does not add new dependence mathematics on its own;
+it coordinates the existing pairwise, directional, and graph-based methods behind
+one use-case entry point and one unified row surface.
+
+| Evidence | Status | Location |
+|---|---|---|
+| Implemented | ✅ | `src/forecastability/use_cases/run_covariant_analysis.py` |
+| Public entry point | ✅ | `src/forecastability/use_cases/__init__.py`, `src/forecastability/__init__.py` |
+| Summary/result models | ✅ | `CovariantAnalysisBundle`, `CovariantSummaryRow` in `src/forecastability/utils/types.py` |
+| Tested | ✅ | `tests/test_covariant_facade.py` |
+| Model coverage | ✅ | `tests/test_covariant_models.py` |
+| Example | ✅ | `examples/covariant_informative/covariant_analysis_facade_benchmark.py` |
+| Notebook | — | No dedicated covariant walkthrough notebook yet |
+
+**Delivered.**
+- `run_covariant_analysis()` assembles CrossMI, pCrossAMI, TE, GCMI, and optional
+  PCMCI+/PCMCI-AMI outputs into one `CovariantAnalysisBundle`.
+- The facade emits one `CovariantSummaryRow` per `(target, driver, lag)` pair even
+  when optional tigramite-backed methods are unavailable, and records skipped
+  optional methods in bundle metadata.
+- Per-method `lagged_exog_conditioning` tags are populated in the row and result
+  models, and bundles that contain any `target_only` method also carry an explicit
+  conditioning-scope disclaimer plus a forward link to the v0.3.1 lagged-exogenous
+  plan.
+
+**Known-partial / caveats.**
+- This facade is an orchestration bundle, not a new causal estimator. Pairwise rows
+  summarize existing scorers; they are not causal confirmation.
+- CrossMI and GCMI are unconditioned pairwise signals (`none`); pCrossAMI and TE are
+  `target_only`; only PCMCI+ and PCMCI-AMI are `full_mci`.
+- Pairwise or `target_only` rows can still be inflated by autocorrelation or indirect
+  paths. Use PCMCI+ or PCMCI-AMI when the question is causal-parent confirmation
+  rather than triage.
+- The V3-F07 row grid is present, but the `significance`, `rank`, and
+  `interpretation_tag` fields are not yet populated by the facade.
+- V3-F08 is only partially complete at this revision: focused facade/model tests are
+  in place, but regression fixtures and a dedicated covariant regression suite are
+  not yet shipped.

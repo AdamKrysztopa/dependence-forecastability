@@ -262,6 +262,22 @@ class RobustnessStudyResult(BaseModel):
 # ---------------------------------------------------------------------------
 
 
+LaggedExogConditioningTag = Literal["none", "target_only", "full_mci"]
+
+
+class CovariantMethodConditioning(BaseModel):
+    """Per-method lagged exogenous conditioning semantics for one summary row."""
+
+    model_config = ConfigDict(frozen=True)
+
+    cross_ami: LaggedExogConditioningTag | None = None
+    cross_pami: LaggedExogConditioningTag | None = None
+    transfer_entropy: LaggedExogConditioningTag | None = None
+    gcmi: LaggedExogConditioningTag | None = None
+    pcmci: LaggedExogConditioningTag | None = None
+    pcmci_ami: LaggedExogConditioningTag | None = None
+
+
 class CovariantSummaryRow(BaseModel):
     """One row of the unified covariant summary table (V3-F07)."""
 
@@ -279,6 +295,9 @@ class CovariantSummaryRow(BaseModel):
     significance: str | None = None  # e.g. "p<0.01", "above_band"
     rank: int | None = None
     interpretation_tag: str | None = None  # e.g. "direct_driver", "mediated", "spurious"
+    lagged_exog_conditioning: CovariantMethodConditioning = Field(
+        default_factory=CovariantMethodConditioning
+    )
 
 
 class TransferEntropyResult(BaseModel):
@@ -292,6 +311,7 @@ class TransferEntropyResult(BaseModel):
     te_value: float
     p_value: float | None = None
     significant: bool | None = None
+    lagged_exog_conditioning: LaggedExogConditioningTag = "target_only"
 
 
 class GcmiResult(BaseModel):
@@ -303,6 +323,7 @@ class GcmiResult(BaseModel):
     target: str
     lag: int
     gcmi_value: float
+    lagged_exog_conditioning: LaggedExogConditioningTag = "none"
 
 
 class CausalGraphResult(BaseModel):
@@ -314,6 +335,7 @@ class CausalGraphResult(BaseModel):
     link_matrix: list[list[str]] | None = None  # tigramite-style link summary
     val_matrix: list[list[float]] | None = None  # test statistic matrix
     metadata: dict[str, str | int | float] = Field(default_factory=dict)
+    lagged_exog_conditioning: LaggedExogConditioningTag = "full_mci"
 
 
 class Phase0MiScore(BaseModel):
@@ -347,6 +369,7 @@ class PcmciAmiResult(BaseModel):
     phase2_final: CausalGraphResult
     ami_threshold: float
     metadata: dict[str, str | int | float] = Field(default_factory=dict)
+    lagged_exog_conditioning: LaggedExogConditioningTag = "full_mci"
 
 
 class CovariantAnalysisBundle(BaseModel):

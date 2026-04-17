@@ -20,7 +20,7 @@ from forecastability.triage.models import (
 )
 from forecastability.triage.predictive_info_learning_curve import PredictiveInfoLearningCurve
 from forecastability.triage.spectral_predictability import SpectralPredictabilityResult
-from forecastability.use_cases import run_batch_triage, run_triage
+from forecastability.use_cases import run_batch_triage, run_covariant_analysis, run_triage
 from forecastability.utils.config import (
     BenchmarkDataConfig,
     CMIConfig,
@@ -98,6 +98,7 @@ __all__ = [
     "RobustnessStudyResult",
     "RollingOriginConfig",
     "run_batch_triage",
+    "run_covariant_analysis",
     "run_triage",
     "SampleSizeStressResult",
     "ScorerInfo",
