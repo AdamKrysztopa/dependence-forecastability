@@ -220,7 +220,7 @@ $TE(X \to Y)$ peaked at lag 2 with a strong directional gap vs $TE(Y \to X)$.
 | Regression fixtures | ✅ | `tests/test_gcmi.py` (numeric regression assertions) |
 | Theory doc | ✅ | [theory/gcmi.md](theory/gcmi.md) |
 | Notebook | — | Not yet in triage notebook set |
-| Script | ✅ | `examples/triage/gcmi_example.py` |
+| Script | ✅ | `examples/covariant_informative/information_measures/gcmi_example.py` |
 
 **Known-partial / caveats.**
 - Bivariate GCMI only; no multivariate extension.
@@ -240,9 +240,9 @@ $TE(X \to Y)$ peaked at lag 2 with a strong directional gap vs $TE(Y \to X)$.
 | Service facade | ✅ | `src/forecastability/services/pcmci_ami_service.py` |
 | Result model | ✅ | `PcmciAmiResult` in `utils/types.py` |
 | Tests | ✅ | `tests/test_pcmci_ami_hybrid.py` (12 tests incl. nonlinear detection) |
-| Example (standalone) | ✅ | `examples/triage/pcmci_ami_hybrid_example.py` |
-| Example (comparison) | ✅ | `examples/triage/pcmci_ami_vs_pcmci_example.py` |
-| Example (PCMCI+ base) | ✅ | `examples/triage/pcmci_adapter_example.py` |
+| Example (standalone) | ✅ | `examples/covariant_informative/causal_discovery/pcmci_ami_hybrid_benchmark.py` |
+| Example (comparison) | ✅ | `examples/covariant_informative/causal_discovery/pcmci_plus_vs_pcmci_ami_benchmark.py` |
+| Example (PCMCI+ base) | ✅ | `examples/covariant_informative/causal_discovery/pcmci_plus_benchmark.py` |
 
 **What is implemented.**
 - Phase 0 performs real unconditional MI/CrossMI screening over lagged `(source, lag, target)` triplets and passes survivors into Tigramite `link_assumptions` before the PCMCI+ run.
@@ -255,6 +255,6 @@ $TE(X \to Y)$ peaked at lag 2 with a strong directional gap vs $TE(Y \to X)$.
 - Phase 0 pruning narrows the candidate set, but the implementation does not claim a general statistical-power gain from pruning alone.
 
 **Current evidence.**
-- The clearest back-to-back demonstrator is `examples/triage/pcmci_ami_vs_pcmci_example.py` with `seed=43`, `n=1200`, `max_lag=2`, and `alpha=0.05`.
+- The clearest back-to-back demonstrator is `examples/covariant_informative/causal_discovery/pcmci_plus_vs_pcmci_ami_benchmark.py` with `seed=43`, `n=1200`, `max_lag=2`, and `alpha=0.05`.
 - On that synthetic benchmark, PCMCI+ with `parcorr` misses the expected nonlinear parents while the shipped hybrid recovers at least one of them.
 - Treat that comparison as benchmark-specific illustration, not broad validation of general nonlinear superiority.

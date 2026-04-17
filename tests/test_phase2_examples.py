@@ -1,4 +1,4 @@
-"""Lightweight tests for Phase-2 triage example scripts (F3, F4, F6)."""
+"""Lightweight tests for Phase-2 univariate example scripts (F3, F4, F6)."""
 
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ def _load_module(*, relative_path: str, module_name: str) -> ModuleType:
 def test_f3_generator_is_deterministic() -> None:
     """F3 AR(1) generator should be deterministic for a fixed seed."""
     module = _load_module(
-        relative_path="examples/triage/f3_predictive_info_learning_curve.py",
+        relative_path="examples/univariate/f3_predictive_info_learning_curve.py",
         module_name="f3_example",
     )
 
@@ -49,7 +49,7 @@ def test_f3_generator_is_deterministic() -> None:
 def test_f3_small_sample_case_emits_reliability_warning() -> None:
     """F3 small-sample scenario should include at least one reliability warning."""
     module = _load_module(
-        relative_path="examples/triage/f3_predictive_info_learning_curve.py",
+        relative_path="examples/univariate/f3_predictive_info_learning_curve.py",
         module_name="f3_example_results",
     )
 
@@ -63,7 +63,7 @@ def test_f3_small_sample_case_emits_reliability_warning() -> None:
 def test_f4_example_returns_expected_signal_labels_and_score_ordering() -> None:
     """F4 example should include the planned signals with plausible score ordering."""
     module = _load_module(
-        relative_path="examples/triage/f4_spectral_predictability.py",
+        relative_path="examples/univariate/f4_spectral_predictability.py",
         module_name="f4_example",
     )
 
@@ -83,7 +83,7 @@ def test_f4_example_returns_expected_signal_labels_and_score_ordering() -> None:
 def test_f6_example_returns_entropy_metrics_in_unit_interval() -> None:
     """F6 example should provide bounded entropy metrics and valid band labels."""
     module = _load_module(
-        relative_path="examples/triage/f6_entropy_complexity.py",
+        relative_path="examples/univariate/f6_entropy_complexity.py",
         module_name="f6_example",
     )
 
@@ -99,7 +99,7 @@ def test_f6_example_returns_entropy_metrics_in_unit_interval() -> None:
 def test_f6_periodic_and_noisy_cases_show_different_complexity_levels() -> None:
     """F6 periodic and noisy examples should not collapse to the same band."""
     module = _load_module(
-        relative_path="examples/triage/f6_entropy_complexity.py",
+        relative_path="examples/univariate/f6_entropy_complexity.py",
         module_name="f6_example_bands",
     )
 

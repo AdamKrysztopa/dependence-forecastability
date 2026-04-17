@@ -42,7 +42,9 @@ import numpy as np
 from forecastability.adapters.tigramite_adapter import TigramiteAdapter
 from forecastability.utils.synthetic import generate_covariant_benchmark
 
-_FIG_PATH = Path("outputs/figures/pcmci_adapter_example.png")
+_FIG_PATH = Path(
+    "outputs/figures/examples/covariant_informative/causal_discovery/pcmci_plus_benchmark.png"
+)
 _EXPECTED_LAGGED_PARENTS = {("driver_direct", 2), ("driver_mediated", 1)}
 _NONLINEAR_DRIVERS = ("driver_nonlin_sq", "driver_nonlin_abs")
 _REDUNDANT_DRIVER = "driver_redundant"
@@ -141,12 +143,8 @@ def _print_comparison(
     print("Story B — parcorr blind-spot (expected behaviour for linear CI test):")
     sq_found = any(src == "driver_nonlin_sq" for src, _ in recovered)
     abs_found = any(src == "driver_nonlin_abs" for src, _ in recovered)
-    _check(
-        "driver_nonlin_sq NOT found by parcorr  (blind to quadratic coupling)", not sq_found
-    )
-    _check(
-        "driver_nonlin_abs NOT found by parcorr (blind to abs-value coupling)", not abs_found
-    )
+    _check("driver_nonlin_sq NOT found by parcorr  (blind to quadratic coupling)", not sq_found)
+    _check("driver_nonlin_abs NOT found by parcorr (blind to abs-value coupling)", not abs_found)
     if not sq_found and not abs_found:
         print(
             "  → These two structural parents require information-theoretic CI tests"

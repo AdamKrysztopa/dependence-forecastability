@@ -11,7 +11,7 @@ This example covers:
 * Matplotlib comparison figure: raw diagnostics vs payload fields
 
 Usage:
-    uv run python examples/triage/agent_payload_models_demo.py
+    uv run python examples/univariate/agents/agent_payload_models_demo.py
 """
 
 from __future__ import annotations
@@ -46,6 +46,8 @@ from forecastability.utils.config import ExogenousScreeningWorkbenchConfig
 from forecastability.utils.types import ExogenousBenchmarkResult
 
 _HORIZONS = [1, 2, 3, 4, 5]
+_FIG_DIR = Path("outputs/figures/examples/univariate/agents")
+_JSON_DIR = Path("outputs/json/examples/univariate/agents")
 
 
 # ---------------------------------------------------------------------------
@@ -243,7 +245,7 @@ def _section1_single_triage() -> tuple[object, object]:
     print(f"\nwarnings: {payload.warnings}")
 
     json_payload = json.loads(payload.model_dump_json())
-    json_path = Path("outputs/json/agent_payload_seasonal_ar1.json")
+    json_path = _JSON_DIR / "agent_payload_seasonal_ar1.json"
     json_path.parent.mkdir(parents=True, exist_ok=True)
     json_path.write_text(json.dumps(json_payload, indent=2), encoding="utf-8")
     print(f"\nJSON saved to {json_path}")
@@ -301,7 +303,7 @@ def _section2_batch_triage() -> list[F7BatchRankPayload]:
             f" {str(p.forecastability_class or '-'):<12} {str(p.complexity_band or '-'):<12}"
         )
 
-    json_path = Path("outputs/json/agent_payload_batch.json")
+    json_path = _JSON_DIR / "agent_payload_batch.json"
     json_path.parent.mkdir(parents=True, exist_ok=True)
     json_path.write_text(
         json.dumps([p.model_dump() for p in f7_payloads], indent=2),
@@ -363,7 +365,7 @@ def _section3_exog_screening() -> list[F8ExogDriverPayload]:
             f" {p.mean_usefulness_score:>16.4f} {str(p.redundancy_flag):>10}"
         )
 
-    json_path = Path("outputs/json/agent_payload_exog_screening.json")
+    json_path = _JSON_DIR / "agent_payload_exog_screening.json"
     json_path.parent.mkdir(parents=True, exist_ok=True)
     json_path.write_text(
         json.dumps([p.model_dump() for p in f8_payloads], indent=2),
@@ -495,7 +497,7 @@ def _section4_figures(
     )
     plt.tight_layout()
 
-    figure_path = Path("outputs/figures/agent/agent_payload_diagnostic_summary.png")
+    figure_path = _FIG_DIR / "agent_payload_diagnostic_summary.png"
     figure_path.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(figure_path, dpi=150, bbox_inches="tight")
     plt.close(fig)
@@ -504,8 +506,8 @@ def _section4_figures(
 
 def main() -> None:
     """Run the full A1 agent payload demo."""
-    Path("outputs/figures/agent").mkdir(parents=True, exist_ok=True)
-    Path("outputs/json").mkdir(parents=True, exist_ok=True)
+    _FIG_DIR.mkdir(parents=True, exist_ok=True)
+    _JSON_DIR.mkdir(parents=True, exist_ok=True)
 
     triage_result, single_payload = _section1_single_triage()
     f7_payloads = _section2_batch_triage()

@@ -5,7 +5,9 @@ compares TE(X->Y) versus TE(Y->X), and verifies analyzer parity against the
 direct TE implementation when using the exogenous path.
 
 Usage:
-    uv run python examples/triage/f9_transfer_entropy_directional.py
+    uv run python \
+        examples/covariant_informative/directional_transfer/
+        f9_transfer_entropy_directional.py
 """
 
 from __future__ import annotations
@@ -213,8 +215,14 @@ def main() -> None:
         upper_xy=upper_xy,
     )
 
-    csv_path = Path("outputs/tables/examples/triage/f9_transfer_entropy_directional_curve.csv")
-    figure_path = Path("outputs/figures/examples/triage/f9_transfer_entropy_directional_curves.png")
+    csv_path = Path(
+        "outputs/tables/examples/covariant_informative/directional_transfer/"
+        "f9_transfer_entropy_directional_curve.csv"
+    )
+    figure_path = Path(
+        "outputs/figures/examples/covariant_informative/directional_transfer/"
+        "f9_transfer_entropy_directional_curves.png"
+    )
 
     _write_csv(csv_path=csv_path, rows=rows)
     _plot_directional_curves(

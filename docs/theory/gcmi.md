@@ -140,11 +140,11 @@ façade.
 | `GcmiResult` | `src/forecastability/utils/types.py` |
 | Service façade | `src/forecastability/services/gcmi_service.py` |
 | Tests | `tests/test_gcmi.py` (25 tests) |
-| Example | `examples/triage/gcmi_example.py` |
+| Example | `examples/covariant_informative/information_measures/gcmi_example.py` |
 
 ## Example output
 
-From [examples/triage/gcmi_example.py](../../examples/triage/gcmi_example.py) with
+From [examples/covariant_informative/information_measures/gcmi_example.py](../../examples/covariant_informative/information_measures/gcmi_example.py) with
 $n=1000$, noise $\sigma=0.5$, `rng.default_rng(42)`:
 
 | Pair | GCMI (bits) | \|Pearson\| | Note |

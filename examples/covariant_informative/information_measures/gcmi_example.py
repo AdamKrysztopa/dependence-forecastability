@@ -11,6 +11,8 @@ Demonstrates V3-F02 (Gaussian Copula MI) on synthetic datasets:
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import numpy as np
 
 from forecastability.diagnostics.gcmi import (
@@ -193,10 +195,10 @@ def main() -> None:  # noqa: PLR0914
     # Optional figure
     # ------------------------------------------------------------------
     try:
-        import matplotlib  # type: ignore[import-untyped]
+        import matplotlib
 
         matplotlib.use("Agg")
-        import matplotlib.pyplot as plt  # type: ignore[import-untyped]
+        import matplotlib.pyplot as plt
 
         fig, axes = plt.subplots(1, 2, figsize=(11, 4))
         lags = np.arange(1, max_lag + 1)
@@ -221,7 +223,10 @@ def main() -> None:  # noqa: PLR0914
         ax1.grid(True, alpha=0.3)
 
         fig.tight_layout()
-        out_path = "outputs/figures/gcmi_example.png"
+        out_path = Path(
+            "outputs/figures/examples/covariant_informative/information_measures/gcmi_example.png"
+        )
+        out_path.parent.mkdir(parents=True, exist_ok=True)
         fig.savefig(out_path, dpi=150)
         plt.close(fig)
         print(f"\nFigure saved → {out_path}")

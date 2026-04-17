@@ -4,7 +4,7 @@ This example evaluates 11 synthetic signals, prints a ranked table with
 individual diagnostic columns, and exports CSV/JSON outputs.
 
 Usage:
-    uv run python examples/triage/f7_batch_ranking.py
+    uv run python examples/univariate/f7_batch_ranking.py
 """
 
 from __future__ import annotations
@@ -247,9 +247,9 @@ def main() -> None:
             f"{str(row.get('recommended_next_action') or '-')}"
         )
 
-    tables_dir = Path("outputs/tables/examples/triage")
-    json_dir = Path("outputs/json/examples/triage")
-    figure_path = Path("outputs/figures/examples/triage/f7_batch_ranking_heatmap.png")
+    tables_dir = Path("outputs/tables/examples/univariate")
+    json_dir = Path("outputs/json/examples/univariate")
+    figure_path = Path("outputs/figures/examples/univariate/f7_batch_ranking_heatmap.png")
 
     summary_csv = tables_dir / "f7_batch_ranking_summary.csv"
     failures_csv = tables_dir / "f7_batch_ranking_failures.csv"

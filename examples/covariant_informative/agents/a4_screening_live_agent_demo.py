@@ -9,7 +9,7 @@ This entrypoint demonstrates how to:
 5. Emit a deterministic fallback message when unavailable.
 
 Usage:
-    uv run python examples/triage/a4_screening_live_agent_demo.py
+    uv run python examples/covariant_informative/agents/a4_screening_live_agent_demo.py
 """
 
 from __future__ import annotations

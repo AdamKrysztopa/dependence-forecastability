@@ -8,7 +8,7 @@ It prints horizons, profile values, informative horizons, and recommendations,
 and saves profile plots.
 
 Usage:
-    uv run python examples/triage/f1_forecastability_profile_synthetic.py
+    uv run python examples/univariate/f1_forecastability_profile_synthetic.py
 """
 
 from __future__ import annotations
@@ -195,7 +195,7 @@ def main() -> None:
     for label, profile in profiles.items():
         _print_profile_summary(label=label, profile=profile)
 
-    output_dir = Path("outputs/figures/examples/triage")
+    output_dir = Path("outputs/figures/examples/univariate")
     profile_path = output_dir / "f1_forecastability_profile_synthetic_profiles.png"
     signal_path = output_dir / "f1_forecastability_profile_synthetic_signals.png"
 

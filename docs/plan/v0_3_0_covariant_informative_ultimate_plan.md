@@ -7,7 +7,7 @@
 **Current released version:** `0.2.0`  
 **Branch:** `feat/v0.3.0-covariant-informative`  
 **Status:** Proposed  
-**Last reviewed:** 2026-04-16  
+**Last reviewed:** 2026-04-17  
 **Companion refs:**
 
 - [Covariant maturity release plan](not_planed/dependence_forecastability_v0_3_0_covariant_maturity_implementation_plan.md) — original Phase 1–7 structure
@@ -205,9 +205,11 @@ Standard PCMCI+ MCI testing, but with highly refined, compact, information-dense
 |---|---|---:|---|---|---|
 | V3-F00 | Typed covariant result models | 0 | Extends `utils/types.py` patterns | `CovariantSummaryRow`, `CovariantAnalysisBundle`, `CausalGraphResult`, `PcmciAmiResult` | **Done** |
 | V3-F01 | Transfer Entropy scorer + service | 1 | Follows `DependenceScorer` pattern | `te_scorer()`, `src/forecastability/services/transfer_entropy_service.py` | **Done** (2026-04-16: diagnostics/service path, analyzer `method="te"`, and tests validated) |
-| V3-F02 | GCMI scorer + service | 1 | Follows `DependenceScorer` pattern | `gcmi_scorer()`, `src/forecastability/services/gcmi_service.py` | **Done** (2026-04-16: diagnostics/service path, 25 tests, `examples/triage/gcmi_example.py`, theory doc) |
+| V3-F02 | GCMI scorer + service | 1 | Follows `DependenceScorer` pattern | `gcmi_scorer()`, `src/forecastability/services/gcmi_service.py` | **Done** (2026-04-16: diagnostics/service path, 25 tests, theory doc; 2026-04-17: GCMI example finalized at `examples/covariant_informative/information_measures/gcmi_example.py`) |
 | V3-F03 | PCMCI+ adapter | 1 | None (new external integration) | `src/forecastability/adapters/tigramite_adapter.py`, `CausalGraphPort` | **Done** (2026-04-16: adapter, tests, dedicated example, optional causal extra; 2026-04-16b: 8-variable benchmark with two nonlinear drivers, two-story example, `docs/theory/pcmci_plus.md`) |
 | V3-F04 | PCMCI-AMI-Hybrid method | 1 | Builds on AMI kNN + tigramite adapter | `src/forecastability/adapters/pcmci_ami_adapter.py`, `knn_cmi_ci_test.py`, `services/pcmci_ami_service.py`, `PcmciAmiResult` model, Phase 0 AMI triage + kNN MI CI test | **Partial** (2026-04-16: real Phase 0 MI/CrossMI screening via Tigramite `link_assumptions` and residualized kNN CI shipped; stronger MI-ranked conditioning logic remains proposal-only; current comparison evidence is illustrative and benchmark-specific) |
+| V3-F04.1 | Full examples taxonomy + cleanup | 4 | Extends current demo/example tree | Relocate every active script out of `examples/triage/` into `examples/univariate/` or `examples/covariant_informative/`; apply subgroup taxonomy, PCMCI renames, output namespacing, and repo-wide path cleanup | **Done** (2026-04-17: active example references now use the `examples/univariate/` and `examples/covariant_informative/` taxonomy; PCMCI benchmarks renamed; repo cleanup applied) |
+| V3-F04.2 | V3-F03/V3-F04 second-loop review + docs alignment | 6 | Builds on V3-F03/V3-F04 + theory/docs/examples | Revisit theory, shipped implementation, and examples for both methods; document pros/cons, theoretical caveats, practical behavior, and exact proposal-vs-implementation boundaries | Not started |
 | V3-F05 | `CausalGraphPort` protocol | 0 | None (new port type) | Graph-returning port for PCMCI+ and PCMCI-AMI | **Done** |
 | V3-F06 | Covariant orchestration facade | 2 | Extends `use_cases/` pattern | `src/forecastability/use_cases/run_covariant_analysis.py` | Not started |
 | V3-F07 | Unified covariant summary table | 2 | Extends `ExogenousScreeningWorkbenchResult` pattern | `CovariantSummaryRow` with all method columns | Not started |
@@ -1906,6 +1908,342 @@ class TestPcmciAmiService:
 - [ ] All scorers registered in `ScorerRegistry` via `default_registry()`
 - [ ] `uv run pytest tests/test_<method>.py -q` passes for each method
 
+#### V3-F04.1 — Full Examples Taxonomy + Cleanup
+
+**Status.** Completed on 2026-04-17. Active example references now use
+`examples/univariate/` and `examples/covariant_informative/`; `examples/triage/`
+is retained only for historical mapping or non-runnable residue.
+
+**Purpose.** This completed ticket replaced the former catch-all `examples/triage/` tree with a
+durable public taxonomy that cleanly separates univariate workflows from
+covariant-informative workflows. This ticket covers the full active examples
+surface, not just the three PCMCI benchmarks.
+
+**Why this ticket exists.**
+
+- `examples/triage/` currently mixes single-series diagnostics, agent demos,
+    exogenous screening, directional-transfer workflows, information-measure
+    examples, and causal-discovery benchmarks in one ambiguous folder.
+- The folder name `triage` no longer matches the product surface area exposed by
+    the example set. It hides whether a script is univariate or
+    covariant-informative.
+- Several current names and paths are implementation-centric or historically
+    accidental, especially in the PCMCI family.
+- Artifact outputs are not yet consistently namespaced under an example-tree
+    mirror, which makes the public example surface harder to scan and maintain.
+- Docs, notebooks, tests, and README-level references now stop treating
+    `examples/triage/` as a durable public location.
+
+**Established taxonomy.**
+
+> [!IMPORTANT]
+> After this cleanup, the active top-level example families under `examples/` are
+> `examples/univariate/` and `examples/covariant_informative/`.
+
+| Folder | Meaning | Rule |
+|---|---|---|
+| `examples/univariate/` | Single-series forecastability workflows | Root for F1-F7 examples and univariate demos that operate on one primary target series |
+| `examples/univariate/agents/` | Univariate agent and adapter demos | Serializer, interpretation-adapter, and payload demos for univariate triage |
+| `examples/covariant_informative/` | Multi-series, exogenous, directional, and causal-discovery workflows | Root for any example with driver variables, target-driver structure, or multivariate dependence |
+| `examples/covariant_informative/agents/` | Covariant live-agent demos | Agent-facing workflows for exogenous or covariant-informative analysis |
+| `examples/covariant_informative/exogenous_screening/` | Exogenous screening workflows | F8-style examples that rank or screen candidate drivers |
+| `examples/covariant_informative/directional_transfer/` | Directed dependence workflows | Transfer-entropy and directional-information examples |
+| `examples/covariant_informative/information_measures/` | Cross-series information-measure workflows | GCMI and related cross-series information examples |
+| `examples/covariant_informative/causal_discovery/` | Causal graph discovery workflows | PCMCI+, PCMCI-AMI, and side-by-side causal-discovery benchmarks |
+
+**Resulting structure.**
+
+```text
+examples/
+    univariate/
+        agents/
+    covariant_informative/
+        agents/
+        exogenous_screening/
+        directional_transfer/
+        information_measures/
+        causal_discovery/
+```
+
+**Implemented scope boundary.**
+
+- This ticket relocated every active script that had lived under
+    `examples/triage/`.
+- This ticket preserved the user-facing analytical role of each script while
+    making the target category explicit in the filesystem.
+- This ticket kept the three PCMCI renames listed below exactly as written.
+- This ticket updated repo-wide path references and example artifact output
+    paths to match the new taxonomy.
+- This ticket did **not** change analytical algorithms, `src/**` public APIs,
+    or introduce any third active top-level category under `examples/`.
+
+**Source-of-truth migration inventory.**
+
+| Current file | Analytical role | Target category | Required destination path |
+|---|---|---|---|
+| `examples/triage/f1_forecastability_profile_synthetic.py` | Synthetic univariate forecastability-profile walkthrough | Univariate diagnostic | `examples/univariate/f1_forecastability_profile_synthetic.py` |
+| `examples/triage/f1_forecastability_profile_realistic.py` | Realistic univariate forecastability-profile walkthrough | Univariate diagnostic | `examples/univariate/f1_forecastability_profile_realistic.py` |
+| `examples/triage/f2_information_limits_synthetic.py` | Synthetic information-limits diagnostic | Univariate diagnostic | `examples/univariate/f2_information_limits_synthetic.py` |
+| `examples/triage/f3_predictive_info_learning_curve.py` | Predictive-information learning-curve walkthrough | Univariate diagnostic | `examples/univariate/f3_predictive_info_learning_curve.py` |
+| `examples/triage/f4_spectral_predictability.py` | Spectral predictability diagnostic | Univariate diagnostic | `examples/univariate/f4_spectral_predictability.py` |
+| `examples/triage/f5_lle_experimental.py` | Experimental Lyapunov-style predictability diagnostic | Univariate diagnostic | `examples/univariate/f5_lle_experimental.py` |
+| `examples/triage/f6_entropy_complexity.py` | Entropy-complexity diagnostic | Univariate diagnostic | `examples/univariate/f6_entropy_complexity.py` |
+| `examples/triage/f7_batch_ranking.py` | Batch ranking and triage example across multiple univariate series | Univariate diagnostic | `examples/univariate/f7_batch_ranking.py` |
+| `examples/triage/a2_triage_summary_serializer_demo.py` | Summary-serializer demo for univariate triage payloads | Univariate agent/demo | `examples/univariate/agents/a2_triage_summary_serializer_demo.py` |
+| `examples/triage/a3_triage_interpretation_adapter_demo.py` | Interpretation-adapter demo for univariate triage outputs | Univariate agent/demo | `examples/univariate/agents/a3_triage_interpretation_adapter_demo.py` |
+| `examples/triage/agent_payload_models_demo.py` | Agent payload-model demo for univariate triage contracts | Univariate agent/demo | `examples/univariate/agents/agent_payload_models_demo.py` |
+| `examples/triage/f8_exogenous_screening.py` | Exogenous screening workflow for ranked driver candidates | Covariant-informative / exogenous screening | `examples/covariant_informative/exogenous_screening/f8_exogenous_screening.py` |
+| `examples/triage/f9_transfer_entropy_directional.py` | Directional transfer-entropy workflow | Covariant-informative / directional transfer | `examples/covariant_informative/directional_transfer/f9_transfer_entropy_directional.py` |
+| `examples/triage/gcmi_example.py` | Gaussian Copula MI cross-series information-measure example | Covariant-informative / information measures | `examples/covariant_informative/information_measures/gcmi_example.py` |
+| `examples/triage/a4_screening_live_agent_demo.py` | Live-agent demo for screening workflows | Covariant-informative / agents | `examples/covariant_informative/agents/a4_screening_live_agent_demo.py` |
+| `examples/triage/pcmci_adapter_example.py` | PCMCI+ baseline causal-discovery benchmark | Covariant-informative / causal discovery | `examples/covariant_informative/causal_discovery/pcmci_plus_benchmark.py` |
+| `examples/triage/pcmci_ami_hybrid_example.py` | PCMCI-AMI shipped hybrid causal-discovery benchmark | Covariant-informative / causal discovery | `examples/covariant_informative/causal_discovery/pcmci_ami_hybrid_benchmark.py` |
+| `examples/triage/pcmci_ami_vs_pcmci_example.py` | Baseline-vs-hybrid causal-discovery comparison benchmark | Covariant-informative / causal discovery | `examples/covariant_informative/causal_discovery/pcmci_plus_vs_pcmci_ami_benchmark.py` |
+
+**Naming rules to enforce.**
+
+- The filesystem must communicate analytical scope first: univariate vs
+    covariant-informative, then subgroup, then script role.
+- Preserve current stems for non-PCMCI scripts unless a rename is required to
+    remove ambiguity or implementation-layer wording.
+- Keep the PCMCI renames exactly as specified in the inventory above.
+- Use `benchmark` for single-method synthetic ground-truth demonstrations and
+    `vs` only for direct comparison scripts.
+- Agent-facing demos belong under the appropriate `agents/` subgroup, not at the
+    top level of either taxonomy.
+- The first docstring sentence of each moved script must name its taxonomy
+    category explicitly so the file path and docstring agree.
+
+**Required PCMCI renames.**
+
+| Current path | Target path |
+|---|---|
+| `examples/triage/pcmci_adapter_example.py` | `examples/covariant_informative/causal_discovery/pcmci_plus_benchmark.py` |
+| `examples/triage/pcmci_ami_hybrid_example.py` | `examples/covariant_informative/causal_discovery/pcmci_ami_hybrid_benchmark.py` |
+| `examples/triage/pcmci_ami_vs_pcmci_example.py` | `examples/covariant_informative/causal_discovery/pcmci_plus_vs_pcmci_ami_benchmark.py` |
+
+**Artifact output namespacing rules.**
+
+| Example path prefix | Figure output prefix | Table output prefix | JSON output prefix |
+|---|---|---|---|
+| `examples/univariate/` | `outputs/figures/examples/univariate/` | `outputs/tables/examples/univariate/` | `outputs/json/examples/univariate/` |
+| `examples/covariant_informative/` | `outputs/figures/examples/covariant_informative/` | `outputs/tables/examples/covariant_informative/` | `outputs/json/examples/covariant_informative/` |
+
+- Output subfolders after `examples/` must mirror the example taxonomy exactly.
+- The primary artifact stem must match the final script stem.
+- Additional artifact variants may append a semantic suffix after the shared
+    stem, for example `<script_stem>_summary.json` or `<script_stem>_table.csv`.
+- No active example may continue writing to an unnested legacy path such as a
+    flat `outputs/figures/<script_stem>.png` location.
+
+**Files and surfaces updated in the same change.**
+
+- Docs, notebooks, tests, README-level guidance, or scripts that still pointed
+    to `examples/triage/` as an active example location
+- Hard-coded artifact paths that did not mirror the new example taxonomy
+- `docs/theory/pcmci_plus.md`, `docs/implementation_status.md`, and this release
+    plan wherever they referenced old example locations
+
+**Migration sequence used.**
+
+1. Created the target folders under `examples/univariate/` and
+    `examples/covariant_informative/`, including the subgroup folders listed
+    above.
+2. Moved every active script out of `examples/triage/`, keeping all
+    non-PCMCI filenames stable and applying the three PCMCI renames exactly as
+    specified in this ticket.
+3. Updated imports, relative helper paths, and script-level constants so each
+    moved file still runs from its new location.
+4. Rewrote artifact output constants so every figure, table, and JSON artifact
+    lands under `outputs/{figures,tables,json}/examples/univariate/...` or
+    `outputs/{figures,tables,json}/examples/covariant_informative/...`.
+5. Refreshed top docstrings and usage comments so each script states its
+    analytical role and matches the new taxonomy.
+6. Ran a repo-wide path cleanup with `rg` and replaced active references to
+    `examples/triage/` or to pre-cleanup artifact locations in docs, tests,
+    notebooks, scripts, and README-level material.
+7. Verified that no active runnable script remains under `examples/triage/`; if
+    the directory still exists afterward, it is reduced to historical or
+    non-runnable residue only.
+8. Smoke-ran the moved examples needed to validate path changes, including all
+    three renamed PCMCI scripts and at least one representative script from each
+    remaining subgroup touched by the migration.
+
+**Acceptance criteria.**
+
+- [x] Every active script previously under `examples/triage/` now lives under
+          `examples/univariate/` or `examples/covariant_informative/`
+- [x] The active top-level example families are `examples/univariate/` and
+          `examples/covariant_informative/`
+- [x] The three PCMCI scripts use the exact renamed destination paths defined in
+          this ticket
+- [x] Agent demos live under the correct `agents/` subgroup instead of the root
+          example folders
+- [x] Figure, table, and JSON outputs use the namespaced prefixes
+          `outputs/{figures,tables,json}/examples/univariate/...` and
+          `outputs/{figures,tables,json}/examples/covariant_informative/...`
+- [x] No active runnable script remains under `examples/triage/`
+- [x] A repo-wide `rg` path audit confirms that active docs, tests, notebooks,
+          scripts, and README guidance no longer reference old example locations or
+          pre-cleanup artifact paths, except in clearly historical notes or changelog
+          entries
+- [ ] Smoke runs from the new locations succeed for the renamed PCMCI scripts and
+            for representative moved scripts in the other affected subgroups
+
+**Non-goals.**
+
+- Do not change the analytical behavior of the examples beyond path, naming, and
+    docstring/metadata alignment needed for the new taxonomy.
+- Do not rename Python classes, public imports, or `src/**` modules.
+- Do not introduce a third top-level category under `examples/`.
+- Do not silently duplicate old and new files; the migration must be a clean
+    move with repo-wide reference cleanup.
+
+#### V3-F04.2 — Second Review Loop on V3-F03 and V3-F04
+
+**Purpose.** Revisit theory, shipped implementation, tests, and examples for
+both PCMCI+ and PCMCI-AMI so the v0.3.0 documentation is scientifically
+defensible, implementation-accurate, and explicit about strengths and limits.
+
+**This follow-up is mandatory, not optional polish.**
+
+The first implementation pass shipped usable code and illustrative examples, but
+the review surfaced several mismatches between:
+
+- theory vs shipped behavior,
+- example narration vs actual runtime behavior,
+- result-model wording vs actual phase separation,
+- causal orientation language vs what Tigramite actually returns.
+
+**Review objective.**
+
+At the end of V3-F04.2, a junior developer must be able to answer these four
+questions directly from the docs:
+
+1. What exactly is implemented today for V3-F03 and V3-F04?
+2. Which parts of the stronger PCMCI-AMI proposal are still proposal-only?
+3. What are the real advantages and limitations of each method in practice?
+4. Which example outputs are benchmark-specific illustrations rather than
+   general claims?
+
+**Mandatory review matrix.**
+
+| Review topic | Current issue | Required documentation outcome |
+|---|---|---|
+| Proposal vs shipped V3-F04 | The original "replace linear dependencies with AMI/CrossAMI" concept is broader than what shipped; current code implements unconditional MI pruning, not CrossAMI integration or MI-ranked conditioning sets | Every core doc must split `full proposal` from `shipped variant` and explicitly say that CrossAMI is **not** part of the current PCMCI-AMI execution path |
+| `knn_cmi` conditioning/significance defect | Shipped path is residualization-based and uses an i.i.d. shuffle fallback that breaks time-series-aware null calibration on autocorrelated data | Docs must state that current p-values are not reliable enough for strong confirmatory causal claims and that V3-F04 remains experimental until a time-series-aware null is restored |
+| Phase separation in `PcmciAmiResult` | `phase1_skeleton` and `phase2_final` are currently aliased to the same graph result | Docs must say these are not distinct stage outputs yet unless code changes first |
+| Contemporaneous `o-o` semantics | Current adapter mapping treats unresolved adjacency as a parent | Docs/examples must use `adjacency / unresolved orientation` language unless the code contract changes |
+| Benchmark ground truth | Current summaries omit the true AR(1) self-parent `target(t-1)` | All benchmark truth tables and narratives must include the self-parent explicitly |
+| Nonlinear recovery story | Current shipped hybrid reliably demonstrates only benchmark-specific partial recovery | Docs must say `may recover at least one nonlinear parent on this benchmark`, not promise both |
+| V3-F03 pairwise-method wording | MI/TE/GCMI are described too loosely as if they recover multivariate causal parents | Rephrase as dependence-detection / directional-evidence language, not direct causal-graph recovery |
+| Example evidence status | Example outputs are illustrative, not broad validation | Every example and status doc must label them as `illustrative` or `benchmark-specific` |
+| Benchmark validation limits | Current PASS-style checks can coexist with extra self-lags and other likely false positives | Docs must say the current benchmark checks are not exact parent-set validation and should not be read as proof that the recovered graph is fully correct |
+
+**Required deliverables.**
+
+| Deliverable | File(s) | Minimum required content |
+|---|---|---|
+| Theory reconciliation | `docs/theory/pcmci_plus.md` | Proposal vs shipped split, contemporaneous-edge interpretation, pros/cons table |
+| Status reconciliation | `docs/implementation_status.md` | Accurate shipped status, experimental caveats, benchmark-specific evidence wording |
+| Plan reconciliation | `docs/plan/v0_3_0_covariant_informative_ultimate_plan.md` | Follow-up work items, blocker list, exact boundaries of V3-F04 |
+| Test-scope reconciliation | `tests/test_pcmci_adapter.py`, `tests/test_pcmci_ami_hybrid.py` reviewed from the docs pass | Explicit note of what current tests prove, what they do not prove, and where the docs must avoid stronger claims |
+| Example narrative reconciliation | Renamed PCMCI example scripts | No overclaiming, correct ground truth, correct illustrative wording |
+| Cross-method comparison guidance | Theory/status/example docs | Side-by-side pros/cons of V3-F03 vs V3-F04 |
+| Review artifact | `docs/plan/implemented/v3_f03_v3_f04_second_loop_review.md` | One-page discrepancy checklist with evidence and disposition for each mismatch |
+
+**Required review artifact format.**
+
+The one-page discrepancy checklist must use one row per issue with these fields:
+
+| Field | Meaning |
+|---|---|
+| Topic | Short mismatch label |
+| Current shipped behavior | What the code/tests/examples actually do today |
+| Current doc claim | What the docs currently imply or state |
+| Gap type | `overclaim`, `ambiguity`, `missing caveat`, or `naming/path drift` |
+| Required action | Exact documentation change required |
+| Code blocker? | `yes` / `no` |
+| Evidence | File paths or example outputs reviewed |
+
+**Pros / cons table that must exist after this ticket.**
+
+| Method | Pros that must be documented | Cons / caveats that must be documented |
+|---|---|---|
+| V3-F03 PCMCI+ (`parcorr` baseline) | Mature Tigramite implementation; good at removing redundant/shared-cause structure; supports contemporaneous adjacency discovery; cheaper and easier to interpret | Linear CI blind-spot for non-monotonic nonlinear couplings; `o-o` is not a directed parent; benchmark may still show extra self-lags |
+| V3-F04 PCMCI-AMI shipped variant | Real Phase 0 MI pruning; smaller candidate set; benchmark-specific evidence of recovering at least one nonlinear parent missed by `parcorr` | Shipped variant is partial; CrossAMI is not integrated into the execution path; no MI-ranked conditioning-set logic yet; default path is residualization-based; current custom significance path is not reliable enough for strong confirmatory causal claims; phase outputs are not yet distinct |
+
+**Required implementation sequence for the junior developer.**
+
+1. Start from the current shipped code as the source of truth.
+2. Build a one-page discrepancy checklist from:
+   `src/forecastability/adapters/tigramite_adapter.py`,
+   `src/forecastability/adapters/pcmci_ami_adapter.py`,
+   `src/forecastability/adapters/knn_cmi_ci_test.py`,
+   `tests/test_pcmci_adapter.py`,
+   `tests/test_pcmci_ami_hybrid.py`,
+   and the renamed PCMCI examples.
+3. Save that checklist as
+   `docs/plan/implemented/v3_f03_v3_f04_second_loop_review.md`.
+4. Update `docs/theory/pcmci_plus.md` first.
+5. Update `docs/implementation_status.md` second.
+6. Update the renamed example narratives and docstrings third.
+7. Update the release plan and any remaining cross-links last.
+8. Re-run the three PCMCI examples and ensure the docs describe what actually
+   happens, not what was hoped to happen.
+
+**Mandatory wording rules.**
+
+- Do **not** write as if the stronger MI-ranked conditioning-set design is
+  already implemented.
+- Do **not** write as if CrossAMI is already part of the shipped PCMCI-AMI
+  execution path.
+- Do **not** describe `o-o` as a directed parent unless the code contract is
+  changed in a later source-code ticket.
+- Do **not** describe the current `knn_cmi` path as fully non-parametric
+  conditional independence.
+- Do **not** frame the current V3-F04 p-values as confirmatory causal evidence
+  while the i.i.d. shuffle null remains in place.
+- Do **not** use pairwise MI/GCMI language as if it proves multivariate causal
+  parenthood.
+- Do explicitly mark comparison scripts as `illustrative synthetic evidence`.
+
+**Recommended documentation flow.**
+
+```mermaid
+flowchart LR
+    CODE["Current shipped code"] --> REVIEW["Discrepancy review"]
+    THEORY["Theory + proposal docs"] --> REVIEW
+    EXAMPLES["Runtime example outputs"] --> REVIEW
+    REVIEW --> ALIGN["Align wording\n(proposal vs shipped)"]
+    ALIGN --> PROSCONS["Pros / cons tables"]
+    ALIGN --> STATUS["Implementation status update"]
+    ALIGN --> EX_GUIDE["Example narrative update"]
+```
+
+**Acceptance criteria.**
+
+- [ ] `docs/theory/pcmci_plus.md` distinguishes clearly between `full proposal` and `shipped variant`
+- [ ] The docs state that the shipped V3-F04 default CI path is residualization-based
+- [ ] The docs state explicitly that CrossAMI is not integrated into the current PCMCI-AMI execution path
+- [ ] The docs state explicitly that the current V3-F04 custom significance path is not reliable enough for strong confirmatory causal claims on autocorrelated series
+- [ ] The docs state explicitly that the current custom i.i.d. shuffle null is the reason those confirmatory claims are not reliable
+- [ ] The docs no longer imply that `phase1_skeleton` and `phase2_final` are separate recovered graphs unless code changes first
+- [ ] All benchmark truth summaries include `target(t-1)` as a structural self-parent
+- [ ] The example wording says nonlinear recovery is benchmark-specific and may be partial
+- [ ] The docs say clearly that current benchmark PASS checks are illustrative and not exact recovered-graph validation
+- [ ] The second-loop review artifact exists at `docs/plan/implemented/v3_f03_v3_f04_second_loop_review.md`
+- [ ] V3-F03 and V3-F04 each have an explicit pros/cons section
+- [ ] `docs/implementation_status.md` keeps V3-F04 in a partial / experimental framing until the open caveats are resolved
+- [ ] No document contradicts the actual behavior of the renamed example scripts
+
+**Escalation rules.**
+
+- If a documentation statement requires pretending the code behaves differently,
+  stop and create a blocker note instead of softening the mismatch away.
+- If release messaging wants stronger claims for V3-F04, that must be handled as
+  a separate source-code ticket rather than hidden inside docs work.
+
 ---
 
 ### Phase 2 — Covariant Orchestration Facade
@@ -2791,7 +3129,7 @@ causal = ["tigramite>=5.2"]
 - [x] Implement `_map_results()` to convert tigramite graph → `CausalGraphResult`
 - [x] Add `[causal]` optional dependency group in `pyproject.toml`: `tigramite>=5.2`
 - [x] Write `tests/test_pcmci_adapter.py` with ≥ 3 tests (see Phase 1 examples above, guarded by `pytest.importorskip`)
-- [x] Add dedicated standalone example `examples/triage/pcmci_adapter_example.py` with actionable missing-dependency hint
+- [x] Add dedicated standalone PCMCI+ example with actionable missing-dependency hint; V3-F04.1 relocated it to `examples/covariant_informative/causal_discovery/pcmci_plus_benchmark.py`
 - [x] Verify: on synthetic benchmark, `driver_direct` found as parent, `driver_noise` absent
 
 ### Epic E — PCMCI-AMI-Hybrid (Week 3, Days 1-3)
@@ -2802,6 +3140,8 @@ causal = ["tigramite>=5.2"]
 - [ ] Implement `_phase2_mci_contemporaneous()`: delegate to `TigramiteAdapter`
 - [ ] Write `tests/test_pcmci_ami_hybrid.py` with ≥ 4 tests (see Phase 1 examples above)
 - [ ] Verify: Phase 0 prunes > 30% of links, noise driver links pruned
+- [x] V3-F04.1 — Reorganized every active script previously under `examples/triage/` into the univariate vs covariant-informative taxonomy, applied the PCMCI renames, namespaced outputs, and removed active triage paths repo-wide
+- [ ] V3-F04.2 — Run a second review loop across V3-F03 and V3-F04; reconcile theory, implementation, examples, and documentation with explicit pros/cons and caveats for both methods
 
 ### Epic F — Covariant orchestration facade (Week 3, Days 4-5)
 

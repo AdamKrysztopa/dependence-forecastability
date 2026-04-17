@@ -4,7 +4,7 @@ This example contrasts white-noise-like, periodic, and structured signals,
 reports PSD-based score summaries, and prints preprocessing assumptions.
 
 Usage:
-    uv run python examples/triage/f4_spectral_predictability.py
+    uv run python examples/univariate/f4_spectral_predictability.py
 """
 
 from __future__ import annotations
@@ -182,7 +182,7 @@ def main() -> None:
     results = build_example_results()
     _print_results(results=results)
 
-    figure_path = Path("outputs/figures/examples/triage/f4_spectral_predictability.png")
+    figure_path = Path("outputs/figures/examples/univariate/f4_spectral_predictability.png")
     _plot_results(results=results, save_path=figure_path)
 
     print("\nSaved figure:")

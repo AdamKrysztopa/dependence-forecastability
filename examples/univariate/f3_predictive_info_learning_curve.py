@@ -4,7 +4,7 @@ This example compares short-memory and longer-memory processes, and includes
 an explicit small-sample run to demonstrate reliability warnings.
 
 Usage:
-    uv run python examples/triage/f3_predictive_info_learning_curve.py
+    uv run python examples/univariate/f3_predictive_info_learning_curve.py
 """
 
 from __future__ import annotations
@@ -183,7 +183,7 @@ def main() -> None:
     results = build_example_results()
     _print_results(results=results)
 
-    figure_path = Path("outputs/figures/examples/triage/f3_predictive_info_learning_curve.png")
+    figure_path = Path("outputs/figures/examples/univariate/f3_predictive_info_learning_curve.png")
     _plot_results(results=results, save_path=figure_path)
 
     print("\nSaved figure:")

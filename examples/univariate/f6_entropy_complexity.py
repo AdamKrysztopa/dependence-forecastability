@@ -5,7 +5,7 @@ then reports permutation entropy, spectral entropy, complexity band, and
 practical modeling guidance.
 
 Usage:
-    uv run python examples/triage/f6_entropy_complexity.py
+    uv run python examples/univariate/f6_entropy_complexity.py
 """
 
 from __future__ import annotations
@@ -184,7 +184,7 @@ def main() -> None:
     results = build_example_results()
     _print_results(results=results)
 
-    figure_path = Path("outputs/figures/examples/triage/f6_entropy_complexity.png")
+    figure_path = Path("outputs/figures/examples/univariate/f6_entropy_complexity.png")
     _plot_results(results=results, save_path=figure_path)
 
     print("\nSaved figure:")

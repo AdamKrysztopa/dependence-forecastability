@@ -14,7 +14,7 @@ This example covers:
 * Matplotlib figure: 3-panel comparison of payloads across signal types
 
 Usage:
-    uv run python examples/triage/a2_triage_summary_serializer_demo.py
+    uv run python examples/univariate/agents/a2_triage_summary_serializer_demo.py
 """
 
 from __future__ import annotations
@@ -42,8 +42,8 @@ from forecastability.adapters.agents.triage_summary_serializer import (
 from forecastability.triage.models import TriageRequest, TriageResult
 from forecastability.use_cases.run_triage import run_triage
 
-_FIG_DIR = Path("outputs/figures/agent")
-_JSON_DIR = Path("outputs/json")
+_FIG_DIR = Path("outputs/figures/examples/univariate/agents")
+_JSON_DIR = Path("outputs/json/examples/univariate/agents")
 
 
 # ---------------------------------------------------------------------------

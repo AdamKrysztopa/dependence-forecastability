@@ -212,7 +212,7 @@ $|X|$ is a non-monotone (V-shaped) function of $X$.
 > practical residualization-based hybrid, not fully non-parametric conditioning.
 
 > [!NOTE]
-> The clearest side-by-side example is `examples/triage/pcmci_ami_vs_pcmci_example.py`
+> The clearest side-by-side example is `examples/covariant_informative/causal_discovery/pcmci_plus_vs_pcmci_ami_benchmark.py`
 > with `seed=43`, `n=1200`, `max_lag=2`, and `alpha=0.05`. It shows benchmark-specific
 > nonlinear value on one synthetic setup and should be read as illustrative evidence,
 > not broad validation.
@@ -241,7 +241,7 @@ $|X|$ is a non-monotone (V-shaped) function of $X$.
 | `CausalGraphResult` | `src/forecastability/utils/types.py` |
 | `generate_covariant_benchmark` | `src/forecastability/utils/synthetic.py` |
 | `generate_directional_pair` | `src/forecastability/utils/synthetic.py` |
-| Example | `examples/triage/pcmci_adapter_example.py` |
+| Example | `examples/covariant_informative/causal_discovery/pcmci_plus_benchmark.py` |
 | Tests | `tests/test_pcmci_adapter.py`, `tests/test_covariant_models.py` |
 
 ## Reference

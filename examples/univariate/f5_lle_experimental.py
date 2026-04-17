@@ -4,7 +4,7 @@ This example contrasts a chaotic toy system with a smooth non-chaotic series,
 then demonstrates how the estimated LLE changes with embedding parameters.
 
 Usage:
-    uv run python examples/triage/f5_lle_experimental.py
+    uv run python examples/univariate/f5_lle_experimental.py
 """
 
 from __future__ import annotations
@@ -250,7 +250,7 @@ def main() -> None:
         )
         plotted_cases.append((case_name, series, lambda_matrix))
 
-    figure_path = Path("outputs/figures/examples/triage/f5_lle_experimental_sensitivity.png")
+    figure_path = Path("outputs/figures/examples/univariate/f5_lle_experimental_sensitivity.png")
     _plot_results(
         cases=plotted_cases,
         embedding_dims=embedding_dims,

@@ -4,7 +4,7 @@ This example runs the exogenous screening workbench using a deterministic
 pair-evaluator stub to illustrate keep/review/reject decisions quickly.
 
 Usage:
-    uv run python examples/triage/f8_exogenous_screening.py
+    uv run python examples/covariant_informative/exogenous_screening/f8_exogenous_screening.py
 """
 
 from __future__ import annotations
@@ -280,9 +280,15 @@ def main() -> None:
     summary_rows = driver_summary_table_rows(result)
     horizon_rows = horizon_usefulness_table_rows(result)
 
-    tables_dir = Path("outputs/tables/examples/triage")
-    json_path = Path("outputs/json/examples/triage/f8_exogenous_screening_result.json")
-    figure_path = Path("outputs/figures/examples/triage/f8_exogenous_screening_usefulness.png")
+    tables_dir = Path("outputs/tables/examples/covariant_informative/exogenous_screening")
+    json_path = Path(
+        "outputs/json/examples/covariant_informative/exogenous_screening/"
+        "f8_exogenous_screening_result.json"
+    )
+    figure_path = Path(
+        "outputs/figures/examples/covariant_informative/exogenous_screening/"
+        "f8_exogenous_screening_usefulness.png"
+    )
 
     summary_csv = tables_dir / "f8_exogenous_driver_summary.csv"
     horizon_csv = tables_dir / "f8_exogenous_horizon_usefulness.csv"

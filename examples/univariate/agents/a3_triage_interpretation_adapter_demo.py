@@ -5,7 +5,7 @@ payloads, derives A3 interpretations (including A2 envelope support), and saves
 JSON and figure artifacts for review.
 
 Usage:
-    uv run python examples/triage/a3_triage_interpretation_adapter_demo.py
+    uv run python examples/univariate/agents/a3_triage_interpretation_adapter_demo.py
 """
 
 from __future__ import annotations
@@ -32,8 +32,8 @@ from forecastability.adapters.agents.triage_summary_serializer import serialise_
 from forecastability.triage.models import TriageRequest, TriageResult
 from forecastability.use_cases.run_triage import run_triage
 
-_FIG_DIR = Path("outputs/figures/agent")
-_JSON_DIR = Path("outputs/json")
+_FIG_DIR = Path("outputs/figures/examples/univariate/agents")
+_JSON_DIR = Path("outputs/json/examples/univariate/agents")
 
 
 def _make_ar_series(phi: float, n: int, seed: int) -> np.ndarray:

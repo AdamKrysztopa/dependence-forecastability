@@ -6,7 +6,7 @@ This script compares an original synthetic signal with a destructive transform
 - Achieved model performance (what a simple baseline realizes on holdout splits)
 
 Usage:
-    uv run python examples/triage/f2_information_limits_synthetic.py
+    uv run python examples/univariate/f2_information_limits_synthetic.py
 """
 
 from __future__ import annotations
@@ -388,7 +388,7 @@ def main() -> None:
         achieved=transformed_achieved,
     )
 
-    output_dir = Path("outputs/figures/examples/triage")
+    output_dir = Path("outputs/figures/examples/univariate")
     possible_vs_realized_path = output_dir / "f2_information_limits_possible_vs_realized.png"
     gain_path = output_dir / "f2_information_limits_realized_gain_comparison.png"
 

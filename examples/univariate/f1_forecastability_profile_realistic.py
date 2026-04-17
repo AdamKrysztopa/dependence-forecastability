@@ -5,7 +5,7 @@ same F1 outputs as the synthetic script: horizons, profile values, informative
 horizons, and recommendations.
 
 Usage:
-    uv run python examples/triage/f1_forecastability_profile_realistic.py
+    uv run python examples/univariate/f1_forecastability_profile_realistic.py
 """
 
 from __future__ import annotations
@@ -151,7 +151,7 @@ def main() -> None:
 
     _print_profile_summary(profile=profile)
 
-    output_path = Path("outputs/figures/examples/triage") / (
+    output_path = Path("outputs/figures/examples/univariate") / (
         "f1_forecastability_profile_realistic_air_passengers.png"
     )
     _plot_realistic_profile(series=series, profile=profile, save_path=output_path)

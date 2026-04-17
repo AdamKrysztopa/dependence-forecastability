@@ -1,4 +1,4 @@
-"""Lightweight tests for Phase-1 triage example scripts."""
+"""Lightweight tests for Phase-1 univariate example scripts."""
 
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ def _load_module(*, relative_path: str, module_name: str) -> ModuleType:
 def test_f1_synthetic_generator_is_deterministic() -> None:
     """Seasonal synthetic generator should be deterministic for a fixed seed."""
     module = _load_module(
-        relative_path="examples/triage/f1_forecastability_profile_synthetic.py",
+        relative_path="examples/univariate/f1_forecastability_profile_synthetic.py",
         module_name="f1_synth_example",
     )
 
@@ -49,7 +49,7 @@ def test_f1_synthetic_generator_is_deterministic() -> None:
 def test_f2_block_aggregation_matches_expected_means() -> None:
     """Block aggregation should reduce length and return block means."""
     module = _load_module(
-        relative_path="examples/triage/f2_information_limits_synthetic.py",
+        relative_path="examples/univariate/f2_information_limits_synthetic.py",
         module_name="f2_example",
     )
 
@@ -63,7 +63,7 @@ def test_f2_block_aggregation_matches_expected_means() -> None:
 def test_f2_achieved_performance_table_has_required_columns() -> None:
     """Achieved-performance helper should return finite diagnostics columns."""
     module = _load_module(
-        relative_path="examples/triage/f2_information_limits_synthetic.py",
+        relative_path="examples/univariate/f2_information_limits_synthetic.py",
         module_name="f2_example_for_perf",
     )
 

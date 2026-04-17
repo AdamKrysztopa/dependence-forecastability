@@ -7,6 +7,7 @@ nonlinear drivers visually, with Pearson r and per-method detection status.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pandas as pd
@@ -15,7 +16,13 @@ from forecastability.adapters.pcmci_ami_adapter import PcmciAmiAdapter
 from forecastability.adapters.tigramite_adapter import TigramiteAdapter
 from forecastability.utils.synthetic import generate_covariant_benchmark
 
-_FIG_PATH = Path("outputs/figures/pcmci_ami_vs_pcmci_causality_contrast.png")
+if TYPE_CHECKING:
+    from matplotlib.figure import Figure
+
+_FIG_PATH = Path(
+    "outputs/figures/examples/covariant_informative/causal_discovery/"
+    "pcmci_plus_vs_pcmci_ami_benchmark_causality_contrast.png"
+)
 
 Parent = tuple[str, int]
 
@@ -24,10 +31,10 @@ TARGET = "target"
 # ── Causality-contrast plot config ────────────────────────────────────────────
 # (driver_column, lag, category, title)
 _SCATTER_PANELS: list[tuple[str, int, str, str]] = [
-    ("driver_direct",    2, "linear",    "driver_direct(t-2)"),
-    ("driver_mediated",  1, "linear",    "driver_mediated(t-1)"),
+    ("driver_direct", 2, "linear", "driver_direct(t-2)"),
+    ("driver_mediated", 1, "linear", "driver_mediated(t-1)"),
     ("driver_nonlin_sq", 1, "nonlinear", "driver_nonlin_sq(t-1)\n[quadratic coupling]"),
-    ("driver_nonlin_abs",1, "nonlinear", "driver_nonlin_abs(t-1)\n[abs-value coupling]"),
+    ("driver_nonlin_abs", 1, "nonlinear", "driver_nonlin_abs(t-1)\n[abs-value coupling]"),
 ]
 _ALPHA_DOT = 0.25
 EXPECTED_NONLINEAR_PARENTS = {
@@ -52,7 +59,7 @@ def _plot_causality_contrast(
     df: pd.DataFrame,
     baseline_parents: set[Parent],
     hybrid_parents: set[Parent],
-) -> object:  # returns matplotlib Figure
+) -> Figure:
     """Create a 2×2 scatter grid contrasting linear vs nonlinear causal links.
 
     Each panel shows driver(t-lag) vs target(t) with:
@@ -60,14 +67,15 @@ def _plot_causality_contrast(
     - OLS trend line for linear panels; a binned-mean curve for nonlinear panels
     - Detection badges for PCMCI+ (parcorr) and PCMCI-AMI
     """
-    import matplotlib.gridspec as gridspec  # type: ignore[import-untyped]
-    import matplotlib.pyplot as _plt  # type: ignore[import-untyped]
+    import matplotlib.gridspec as gridspec
+    import matplotlib.pyplot as _plt
 
     target = df[TARGET].to_numpy()
 
     fig = _plt.figure(figsize=(13, 10))
     gs = gridspec.GridSpec(
-        3, 2,
+        3,
+        2,
         height_ratios=[0.06, 1, 1],
         hspace=0.55,
         wspace=0.38,
@@ -77,29 +85,49 @@ def _plot_causality_contrast(
     ax_hdr_lin = fig.add_subplot(gs[0, 0])
     ax_hdr_lin.axis("off")
     ax_hdr_lin.text(
-        0.5, 0.7, "Linear causality",
-        ha="center", va="center", fontsize=11, fontweight="bold",
+        0.5,
+        0.7,
+        "Linear causality",
+        ha="center",
+        va="center",
+        fontsize=11,
+        fontweight="bold",
         color="#1a5276",
         transform=ax_hdr_lin.transAxes,
     )
     ax_hdr_lin.text(
-        0.5, 0.1, "V3-F03: PCMCI+ / parcorr",
-        ha="center", va="center", fontsize=8,
-        color="#1a5276", style="italic",
+        0.5,
+        0.1,
+        "V3-F03: PCMCI+ / parcorr",
+        ha="center",
+        va="center",
+        fontsize=8,
+        color="#1a5276",
+        style="italic",
         transform=ax_hdr_lin.transAxes,
     )
     ax_hdr_nl = fig.add_subplot(gs[0, 1])
     ax_hdr_nl.axis("off")
     ax_hdr_nl.text(
-        0.5, 0.7, "Nonlinear drivers (V3-F04 advantage)",
-        ha="center", va="center", fontsize=11, fontweight="bold",
+        0.5,
+        0.7,
+        "Nonlinear drivers (V3-F04 advantage)",
+        ha="center",
+        va="center",
+        fontsize=11,
+        fontweight="bold",
         color="#922b21",
         transform=ax_hdr_nl.transAxes,
     )
     ax_hdr_nl.text(
-        0.5, 0.1, "V3-F04: PCMCI-AMI / kNN CMI  (also recovers linear parents)",
-        ha="center", va="center", fontsize=8,
-        color="#922b21", style="italic",
+        0.5,
+        0.1,
+        "V3-F04: PCMCI-AMI / kNN CMI  (also recovers linear parents)",
+        ha="center",
+        va="center",
+        fontsize=8,
+        color="#922b21",
+        style="italic",
         transform=ax_hdr_nl.transAxes,
     )
 
@@ -110,7 +138,11 @@ def _plot_causality_contrast(
         fig.add_subplot(gs[2, 1]),
     ]
 
-    for ax, (col, lag, category, title) in zip(panel_axes, _SCATTER_PANELS):
+    for ax, (col, lag, category, title) in zip(
+        panel_axes,
+        _SCATTER_PANELS,
+        strict=True,
+    ):
         driver = df[col].to_numpy()
         x = driver[: len(driver) - lag]
         y = target[lag:]
@@ -151,27 +183,35 @@ def _plot_causality_contrast(
             r_label = f"Pearson r = {pearson_r:+.3f}"
         ax.annotate(
             r_label,
-            xy=(0.04, 0.93), xycoords="axes fraction",
-            fontsize=8, color="black",
+            xy=(0.04, 0.93),
+            xycoords="axes fraction",
+            fontsize=8,
+            color="black",
             bbox=dict(boxstyle="round,pad=0.25", fc="white", alpha=0.8, ec="grey", lw=0.5),
         )
 
         # ── Detection badges ──────────────────────────────────────────
         pcmci_hit = (col, lag) in baseline_parents
-        ami_hit   = (col, lag) in hybrid_parents
+        ami_hit = (col, lag) in hybrid_parents
         # Two separate annotations so each line can carry its own outcome colour.
         ax.annotate(
             f"V3-F03 PCMCI+:    {'✓ found' if pcmci_hit else '✗ missed'}",
-            xy=(0.96, 0.11), xycoords="axes fraction",
-            fontsize=7.5, ha="right", va="bottom",
+            xy=(0.96, 0.11),
+            xycoords="axes fraction",
+            fontsize=7.5,
+            ha="right",
+            va="bottom",
             family="monospace",
             color="#1e8449" if pcmci_hit else "#922b21",
             bbox=dict(boxstyle="round,pad=0.25", fc="white", alpha=0.85, ec="grey", lw=0.5),
         )
         ax.annotate(
-            f"V3-F04 PCMCI-AMI: {'✓ found' if ami_hit   else '✗ missed'}",
-            xy=(0.96, 0.02), xycoords="axes fraction",
-            fontsize=7.5, ha="right", va="bottom",
+            f"V3-F04 PCMCI-AMI: {'✓ found' if ami_hit else '✗ missed'}",
+            xy=(0.96, 0.02),
+            xycoords="axes fraction",
+            fontsize=7.5,
+            ha="right",
+            va="bottom",
             family="monospace",
             color="#1e8449" if ami_hit else "#922b21",
             bbox=dict(boxstyle="round,pad=0.25", fc="white", alpha=0.85, ec="grey", lw=0.5),
@@ -185,8 +225,10 @@ def _plot_causality_contrast(
 
     fig.suptitle(
         "Causality detection contrast — V3-F03 (PCMCI+/parcorr) vs V3-F04 (PCMCI-AMI/kNN CMI)\n"
-        "Linear drivers are visible to both methods · Nonlinear drivers require kNN CMI (Pearson r ≈ 0)",
-        fontsize=10, y=0.99,
+        "Linear drivers are visible to both methods · Nonlinear drivers require "
+        "kNN CMI (Pearson r ≈ 0)",
+        fontsize=10,
+        y=0.99,
     )
     return fig
 
@@ -235,8 +277,16 @@ def main() -> None:
     # Identify self-lag parents (target appearing as its own parent);
     # AR(1) target has only lag-1 structural self-coupling — higher lags are FPs.
     structural_self_lags: set[Parent] = {(TARGET, 1)}
-    baseline_self_fp = {p for p in baseline_parents if p[0] == TARGET and p not in structural_self_lags}
-    hybrid_self_fp   = {p for p in hybrid_parents   if p[0] == TARGET and p not in structural_self_lags}
+    baseline_self_fp = {
+        parent
+        for parent in baseline_parents
+        if parent[0] == TARGET and parent not in structural_self_lags
+    }
+    hybrid_self_fp = {
+        parent
+        for parent in hybrid_parents
+        if parent[0] == TARGET and parent not in structural_self_lags
+    }
 
     print(f"PCMCI+ target parents: {_format_parents(baseline_parents)}")
     if baseline_self_fp:
@@ -286,10 +336,10 @@ def main() -> None:
 
     # ── Causality-contrast figure ──────────────────────────────────────────────
     try:
-        import matplotlib  # type: ignore[import-untyped]
+        import matplotlib
 
         matplotlib.use("Agg")
-        import matplotlib.pyplot as plt  # type: ignore[import-untyped]
+        import matplotlib.pyplot as plt
 
         fig = _plot_causality_contrast(df, baseline_parents, hybrid_parents)
         _FIG_PATH.parent.mkdir(parents=True, exist_ok=True)

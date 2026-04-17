@@ -42,7 +42,9 @@ import numpy as np
 from forecastability.adapters.pcmci_ami_adapter import PcmciAmiAdapter
 from forecastability.utils.synthetic import generate_covariant_benchmark
 
-_FIG_PATH = Path("outputs/figures/pcmci_ami_hybrid_example.png")
+_FIG_PATH = Path(
+    "outputs/figures/examples/covariant_informative/causal_discovery/pcmci_ami_hybrid_benchmark.png"
+)
 _TARGET = "target"
 _EXPECTED_LAGGED_PARENTS = {("driver_direct", 2), ("driver_mediated", 1)}
 _NONLINEAR_DRIVERS = ("driver_nonlin_sq", "driver_nonlin_abs")
