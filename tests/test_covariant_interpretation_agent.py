@@ -66,7 +66,9 @@ def _interpretation() -> CovariantInterpretationResult:
 
 
 def _settings_without_key() -> InfraSettings:
-    return InfraSettings(_env_file=None)  # type: ignore[call-arg]
+    # Explicitly pass openai_api_key=None so env-var OPENAI_API_KEY (if set in
+    # the test environment) does not bypass the no-key fallback guard.
+    return InfraSettings(_env_file=None, openai_api_key=None)  # type: ignore[call-arg]
 
 
 def test_strict_mode_returns_narrative_none() -> None:

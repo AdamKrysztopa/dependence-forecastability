@@ -319,6 +319,63 @@ def test_mediated_rule_requires_causal_evidence() -> None:
     assert result.driver_roles[0].role == "inconclusive"
 
 
+def test_mediated_driver_via_pcmci_ami_only() -> None:
+    # Rubber-duck concern #3: mediated_driver must also fire when has_causal is
+    # satisfied by pcmci_ami_result alone (pcmci_graph=None). This exercises
+    # the `or` branch in _assign_role's has_causal check.
+    rows = [
+        _row(
+            driver="driver_mediated",
+            lag=lag,
+            cross_ami=0.3 if lag == 1 else 0.02,
+            cross_pami=0.02 if lag == 1 else 0.0,
+            te=0.0,
+            gcmi=0.05 if lag == 1 else 0.0,
+            significance="above_band" if lag == 1 else None,
+        )
+        for lag in (1, 2)
+    ]
+    # No pcmci_parents (pcmci_graph=None), but pcmci_ami_result is populated.
+    bundle = _make_bundle(rows, pcmci_ami_parents={"target": []})
+
+    result = interpret_covariant_bundle(bundle)
+
+    assert result.driver_roles[0].role == "mediated_driver"
+
+
+def test_nonlinear_driver_requires_multi_lag_support() -> None:
+    # Rubber-duck concern #4 / statistician concern #4: a single above_band lag
+    # must NOT be enough to classify a driver as nonlinear_driver.
+    rows = [
+        _row(
+            driver="driver_nonlin",
+            lag=1,
+            cross_ami=0.05,
+            gcmi=0.001,
+            significance="above_band",
+        ),
+        _row(
+            driver="driver_nonlin",
+            lag=2,
+            cross_ami=0.03,
+            gcmi=0.001,
+            significance="below_band",
+        ),
+        _row(
+            driver="driver_nonlin",
+            lag=3,
+            cross_ami=0.01,
+            gcmi=0.001,
+            significance="below_band",
+        ),
+    ]
+    bundle = _make_bundle(rows)  # no causal methods; sig_count == 1
+
+    result = interpret_covariant_bundle(bundle)
+
+    assert result.driver_roles[0].role != "nonlinear_driver"
+
+
 def test_redundant_driver_when_another_driver_is_causal_parent() -> None:
     rows = [
         _row(

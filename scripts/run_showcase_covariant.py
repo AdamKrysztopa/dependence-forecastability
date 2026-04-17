@@ -120,7 +120,7 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument(
         "--n",
         type=int,
-        default=5000,
+        default=1500,
         help="synthetic benchmark length (default 1500); raise to >=5000 for"
         " reliable nonlinear-driver detection of weak (β≈0.35) couplings",
     )
