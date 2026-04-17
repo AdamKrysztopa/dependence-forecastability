@@ -15,14 +15,16 @@ _Last verified for release 0.2.0 consolidation on 2026-04-14._
 ## Canonical Learning Path
 
 1. Start with [../../notebooks/walkthroughs/00_air_passengers_showcase.ipynb](../../notebooks/walkthroughs/00_air_passengers_showcase.ipynb).
-2. Continue through walkthrough notebooks `01` to `04` in order.
-3. Move to `notebooks/triage/` only when you want method-specific depth.
+2. Continue with [../../notebooks/walkthroughs/01_covariant_informative_showcase.ipynb](../../notebooks/walkthroughs/01_covariant_informative_showcase.ipynb) for the covariant walkthrough.
+3. Continue through the remaining walkthrough notebooks in order.
+4. Move to `notebooks/triage/` only when you want method-specific depth.
 
 ## Walkthrough Notebooks
 
 | Notebook | Role |
 | --- | --- |
 | [../../notebooks/walkthroughs/00_air_passengers_showcase.ipynb](../../notebooks/walkthroughs/00_air_passengers_showcase.ipynb) | First-stop product showcase |
+| [../../notebooks/walkthroughs/01_covariant_informative_showcase.ipynb](../../notebooks/walkthroughs/01_covariant_informative_showcase.ipynb) | Covariant informative walkthrough: pairwise, directional, and causal comparisons on the synthetic benchmark |
 | [../../notebooks/walkthroughs/01_canonical_forecastability.ipynb](../../notebooks/walkthroughs/01_canonical_forecastability.ipynb) | Canonical AMI and pAMI walkthrough |
 | [../../notebooks/walkthroughs/02_exogenous_analysis.ipynb](../../notebooks/walkthroughs/02_exogenous_analysis.ipynb) | Exogenous analysis walkthrough |
 | [../../notebooks/walkthroughs/03_triage_end_to_end.ipynb](../../notebooks/walkthroughs/03_triage_end_to_end.ipynb) | End-to-end triage walkthrough |

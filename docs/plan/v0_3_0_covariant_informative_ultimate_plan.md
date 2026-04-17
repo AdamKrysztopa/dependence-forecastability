@@ -215,11 +215,11 @@ Standard PCMCI+ MCI testing, but with highly refined, compact, information-dense
 | V3-F07 | Unified covariant summary table | 2 | Extends `ExogenousScreeningWorkbenchResult` pattern | `CovariantSummaryRow` with all method columns | **Done** (2026-04-17: significance (`above_band`/`below_band` via phase-surrogate cross_ami bands), global rank (by cross_ami→gcmi→te priority), and interpretation_tag (`causal_confirmed`, `probably_mediated`, `directional_informative`, `pairwise_informative`, `noise_or_weak`) fully populated; 5 new facade tests added; dedicated example at `examples/covariant_informative/covariant_summary_table/covariant_summary_table_example.py`; reference doc at `docs/theory/covariant_summary_table.md`; all 4 ground-truth checks pass on 8-variable benchmark; Phase 2 closed.) |
 | V3-F08 | Covariant tests + regression | 3 | Follows existing test patterns | Synthetic coupled systems, per-method and integration tests | **Done** (2026-04-17: regression module `src/forecastability/diagnostics/covariant_regression.py` with 3 deterministic fixture cases (ami_pami, gcmi, te) shipped; frozen expected fixtures at `docs/fixtures/covariant_regression/expected/`; rebuild script `scripts/rebuild_covariant_regression_fixtures.py`; 10-test suite `tests/test_covariant_regression.py` covering frozen-match, drift detection, and ground-truth sanity; dedicated V3-F08 validation example at `examples/covariant_informative/covariant_regression/covariant_regression_example.py` with 5 scientifically grounded ground-truth checks all passing; 747 tests green.) |
 | V3-F09 | Covariant showcase script | 4 | Follows `scripts/run_showcase.py` | `scripts/run_showcase_covariant.py` | **Done** |
-| V3-F10 | Covariant walkthrough notebook | 4 | Follows `00_air_passengers_showcase.ipynb` | `notebooks/walkthroughs/01_covariant_informative_showcase.ipynb` | Not started |
+| V3-F10 | Covariant walkthrough notebook | 4 | Follows `00_air_passengers_showcase.ipynb` | `notebooks/walkthroughs/01_covariant_informative_showcase.ipynb` | **Done** (2026-04-17: live covariant walkthrough notebook shipped with sections A-H plus the required v0.3.1 limitation section; uses `generate_covariant_benchmark()` and `run_covariant_analysis()` with stable notebook artifact paths, dedicated notebook-facing reporting helpers, docs updates, notebook contract coverage, and a top-to-bottom executed notebook.) |
 | V3-CI-01 | Python version matrix | 5 | Modifies `.github/workflows/ci.yml` | Add 3.11 + 3.12 matrix | Not started |
 | V3-CI-02 | Install-from-wheel smoke test | 5 | Modifies `.github/workflows/publish-pypi.yml` | Wheel install + import + minimal covariant run | Not started |
 | V3-CI-03 | Showcase script smoke test | 5 | None | Both showcase scripts run in CI | Not started |
-| V3-CI-04 | Notebook contract validation | 5 | Extends `scripts/check_notebook_contract.py` | Covariant notebook added to contract | Not started |
+| V3-CI-04 | Notebook contract validation | 5 | Extends `scripts/check_notebook_contract.py` | Covariant notebook added to contract | **Done** (2026-04-17: `scripts/check_notebook_contract.py` now tracks the covariant walkthrough notebook and runs a representative covariant facade/import check.) |
 | V3-CI-05 | Artifact upload in CI | 5 | None | Upload covariant JSON + table + figures | Not started |
 | V3-CI-06 | Release checklist automation | 5 | None | Changelog, version/tag, README commands | Not started |
 | V3-CI-07 | Pre-commit hook alignment | 5 | Modifies `.pre-commit-config.yaml` | Ensure ruff + ty coverage | Not started |
@@ -2913,11 +2913,11 @@ print(f"Ratio:    {te_xy.te_value / max(te_yx.te_value, 1e-10):.1f}×")
 #### Acceptance criteria — Phase 4
 
 - [ ] `uv run python scripts/run_showcase_covariant.py` runs end-to-end
-- [ ] Notebook is top-to-bottom executable
-- [ ] Both demonstrate all six methods
-- [ ] Artifacts emitted to stable paths
-- [ ] No notebook-only logic — all computation via `run_covariant_analysis()`
-- [ ] Notebook contains a dedicated section titled **"Known limitation: exogenous autohistory is not conditioned out in CrossMI/pCrossAMI/TE—see v0.3.1"** reproducing the §5A conditioning-scope table and linking to `docs/plan/v0_3_1_lagged_exogenous_triage_plan.md`
+- [x] Notebook is top-to-bottom executable
+- [x] Both demonstrate all six methods
+- [x] Artifacts emitted to stable paths
+- [x] No notebook-only logic — all computation via `run_covariant_analysis()`
+- [x] Notebook contains a dedicated section titled **"Known limitation: exogenous autohistory is not conditioned out in CrossMI/pCrossAMI/TE—see v0.3.1"** reproducing the §5A conditioning-scope table and linking to `docs/plan/v0_3_1_lagged_exogenous_triage_plan.md`
 
 ---
 
@@ -3242,16 +3242,16 @@ causal = ["tigramite>=5.2"]
 
 - [ ] Create `scripts/run_showcase_covariant.py` with `--no-rolling` and `--methods` flags
 - [ ] Emit `outputs/json/covariant_bundle.json`, `outputs/tables/covariant_summary.csv`
-- [ ] Create `notebooks/walkthroughs/01_covariant_informative_showcase.ipynb` with sections A–H
-- [ ] Verify: notebook runs top-to-bottom, no notebook-only logic
-- [ ] Verify: all computation flows through `run_covariant_analysis()`
+- [x] Create `notebooks/walkthroughs/01_covariant_informative_showcase.ipynb` with sections A–H
+- [x] Verify: notebook runs top-to-bottom, no notebook-only logic
+- [x] Verify: all computation flows through `run_covariant_analysis()`
 
 ### Epic I — CI/CD hardening (Week 4, Day 5)
 
 - [ ] V3-CI-01: Add Python 3.11 + 3.12 matrix to `ci.yml`
 - [ ] V3-CI-02: Add wheel install smoke test to `publish-pypi.yml`
 - [ ] V3-CI-03: Add showcase script smoke tests to `ci.yml`
-- [ ] V3-CI-04: Extend `scripts/check_notebook_contract.py` for covariant notebook
+- [x] V3-CI-04: Extend `scripts/check_notebook_contract.py` for covariant notebook
 - [ ] V3-CI-05: Add artifact upload step to `ci.yml`
 - [ ] V3-CI-06: Add release checklist checks to `release.yml`
 - [ ] V3-CI-07: Align `.pre-commit-config.yaml` with ruff + ty

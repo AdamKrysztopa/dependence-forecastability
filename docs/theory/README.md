@@ -20,6 +20,11 @@ This repository keeps the paper's AMI framing and extends it with pAMI to separa
 |---|---|
 | [foundations.md](foundations.md) | Definitions, feasibility constraints, significance logic, and extension boundaries |
 | [forecastability_profile.md](forecastability_profile.md) | Forecastability Profile model, informative horizon set, epsilon resolution, and DPI diagnostic |
+| [covariant_informative_walkthrough.md](covariant_informative_walkthrough.md) | Why the covariant walkthrough needs pairwise, directional, and causal sections on the same benchmark |
+| [covariant_summary_table.md](covariant_summary_table.md) | Unified `(driver, lag)` screening table for the covariant surface |
+| [covariant_role_assignment.md](covariant_role_assignment.md) | Deterministic role assignment from covariant bundle evidence |
+| [gcmi.md](gcmi.md) | Gaussian-copula mutual information background and project usage |
+| [pcmci_plus.md](pcmci_plus.md) | PCMCI+ and PCMCI-AMI causal-discovery background |
 | [pami_residual_backends.md](pami_residual_backends.md) | Residual backend options, benchmark deltas versus linear, and known failure modes |
 | [interpretation_patterns.md](interpretation_patterns.md) | Pattern-based interpretation logic used in reporting |
 | [spectral_predictability.md](spectral_predictability.md) | Spectral predictability Ω, Welch PSD normalisation, linear/nonlinear divergence diagnostic |

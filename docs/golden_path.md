@@ -82,8 +82,9 @@ Use the live notebooks directly.
 
 1. Read [notebooks/README.md](notebooks/README.md).
 2. Run [../notebooks/walkthroughs/00_air_passengers_showcase.ipynb](../notebooks/walkthroughs/00_air_passengers_showcase.ipynb).
-3. Continue through walkthrough notebooks `01` to `04`.
-4. Use the `notebooks/triage/` notebooks only after the walkthroughs; they are deep dives, not first-stop onboarding.
+3. Run [../notebooks/walkthroughs/01_covariant_informative_showcase.ipynb](../notebooks/walkthroughs/01_covariant_informative_showcase.ipynb) if you want the covariant benchmark path.
+4. Continue through the remaining walkthrough notebooks.
+5. Use the `notebooks/triage/` notebooks only after the walkthroughs; they are deep dives, not first-stop onboarding.
 
 ## 5. Use The Maintainer Workflows When You Need Repo Outputs
 

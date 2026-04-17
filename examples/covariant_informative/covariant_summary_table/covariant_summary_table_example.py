@@ -64,8 +64,11 @@ def _print_significance_distribution(df: pd.DataFrame, report: StringIO) -> None
         df.groupby(["driver", "significance"], dropna=False)
         .size()
         .unstack(fill_value=0)
-        .reindex(columns=["above_band", "below_band", None], fill_value=0)
     )
+    for column in ("above_band", "below_band", None):
+        if column not in sig_counts.columns:
+            sig_counts[column] = 0
+    sig_counts = sig_counts.loc[:, ["above_band", "below_band", None]]
     # Rename None column to "no_band" for display clarity
     sig_counts.columns = ["above_band", "below_band", "no_band"]
 
@@ -101,9 +104,21 @@ def _print_rank1_row(df: pd.DataFrame, report: StringIO) -> None:
         lines = [
             f"  driver           : {row['driver']}",
             f"  lag              : {row['lag']}",
-            f"  cross_ami        : {row['cross_ami']:.4f}" if row["cross_ami"] is not None else "  cross_ami        : None",
-            f"  transfer_entropy : {row['transfer_entropy']:.4f}" if row["transfer_entropy"] is not None else "  transfer_entropy : None",
-            f"  gcmi             : {row['gcmi']:.4f}" if row["gcmi"] is not None else "  gcmi             : None",
+            (
+                f"  cross_ami        : {row['cross_ami']:.4f}"
+                if row["cross_ami"] is not None
+                else "  cross_ami        : None"
+            ),
+            (
+                f"  transfer_entropy : {row['transfer_entropy']:.4f}"
+                if row["transfer_entropy"] is not None
+                else "  transfer_entropy : None"
+            ),
+            (
+                f"  gcmi             : {row['gcmi']:.4f}"
+                if row["gcmi"] is not None
+                else "  gcmi             : None"
+            ),
             f"  significance     : {row['significance']}",
             f"  interpretation   : {row['interpretation_tag']}",
         ]
@@ -143,16 +158,27 @@ def _print_top10(df: pd.DataFrame, report: StringIO) -> None:
     report.write(f"{line}\n{header}\n{line}\n")
 
     top10 = df.sort_values("rank").head(10)
-    col_header = f"  {'rank':>4}  {'driver':<25s}  {'lag':>3}  {'cross_ami':>9}  {'te':>8}  {'gcmi':>8}  {'significance':<12}  {'tag'}"
+    col_header = (
+        f"  {'rank':>4}  {'driver':<25s}  {'lag':>3}  "
+        f"{'cross_ami':>9}  {'te':>8}  {'gcmi':>8}  {'significance':<12}  {'tag'}"
+    )
     print(col_header)
     report.write(f"{col_header}\n")
 
     for _, row in top10.iterrows():
-        cross_ami_str = f"{row['cross_ami']:9.4f}" if row["cross_ami"] is not None else f"{'None':>9}"
-        te_str = f"{row['transfer_entropy']:8.4f}" if row["transfer_entropy"] is not None else f"{'None':>8}"
+        cross_ami_str = (
+            f"{row['cross_ami']:9.4f}" if row["cross_ami"] is not None else f"{'None':>9}"
+        )
+        te_str = (
+            f"{row['transfer_entropy']:8.4f}"
+            if row["transfer_entropy"] is not None
+            else f"{'None':>8}"
+        )
         gcmi_str = f"{row['gcmi']:8.4f}" if row["gcmi"] is not None else f"{'None':>8}"
         sig_str = str(row["significance"]) if row["significance"] is not None else "None"
-        tag_str = str(row["interpretation_tag"]) if row["interpretation_tag"] is not None else "None"
+        tag_str = (
+            str(row["interpretation_tag"]) if row["interpretation_tag"] is not None else "None"
+        )
         line_text = (
             f"  {int(row['rank']):>4}  {row['driver']:<25s}  {int(row['lag']):>3}"
             f"  {cross_ami_str}  {te_str}  {gcmi_str}  {sig_str:<12}  {tag_str}"
@@ -190,8 +216,16 @@ def _run_ground_truth_checks(df: pd.DataFrame, report: StringIO) -> bool:
     ))
 
     # Check 2: driver_noise has no above_band rows (or far fewer than driver_direct)
-    noise_above = int(((df["driver"] == "driver_noise") & (df["significance"] == "above_band")).sum()) if "driver_noise" in df["driver"].values else 0
-    direct_above = int(((df["driver"] == "driver_direct") & (df["significance"] == "above_band")).sum()) if "driver_direct" in df["driver"].values else 0
+    noise_above = (
+        int(((df["driver"] == "driver_noise") & (df["significance"] == "above_band")).sum())
+        if "driver_noise" in df["driver"].values
+        else 0
+    )
+    direct_above = (
+        int(((df["driver"] == "driver_direct") & (df["significance"] == "above_band")).sum())
+        if "driver_direct" in df["driver"].values
+        else 0
+    )
     check2_pass = noise_above == 0 or noise_above < direct_above
     results.append((
         "driver_noise has no above_band rows (or far fewer than driver_direct)",
@@ -210,7 +244,12 @@ def _run_ground_truth_checks(df: pd.DataFrame, report: StringIO) -> bool:
     ))
 
     # Check 4: driver_direct has at least one row with a non-noise tag
-    non_noise_tags = {"causal_confirmed", "directional_informative", "pairwise_informative", "probably_mediated"}
+    non_noise_tags = {
+        "causal_confirmed",
+        "directional_informative",
+        "pairwise_informative",
+        "probably_mediated",
+    }
     direct_tags = set(df[df["driver"] == "driver_direct"]["interpretation_tag"].dropna().tolist())
     check4_pass = bool(direct_tags & non_noise_tags)
     results.append((

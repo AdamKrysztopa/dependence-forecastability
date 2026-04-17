@@ -97,6 +97,10 @@ uv run jupyter lab
 Open [../notebooks/walkthroughs/00_air_passengers_showcase.ipynb](../notebooks/walkthroughs/00_air_passengers_showcase.ipynb)
 for the story-first showcase notebook.
 
+If you want the covariant walkthrough introduced in v0.3.0, open
+[../notebooks/walkthroughs/01_covariant_informative_showcase.ipynb](../notebooks/walkthroughs/01_covariant_informative_showcase.ipynb)
+for the benchmark that compares CrossAMI, CrosspAMI, GCMI, TE, PCMCI+, and PCMCI-AMI on one synthetic system.
+
 If you want the same AR(1) signal used throughout this ladder, open
 [../notebooks/walkthroughs/03_triage_end_to_end.ipynb](../notebooks/walkthroughs/03_triage_end_to_end.ipynb)
 and run a scratch cell:
