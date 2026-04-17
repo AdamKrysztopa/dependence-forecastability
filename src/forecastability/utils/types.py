@@ -386,3 +386,50 @@ class CovariantAnalysisBundle(BaseModel):
     driver_names: list[str]
     horizons: list[int]
     metadata: dict[str, str | int | float] = Field(default_factory=dict)
+
+
+# ---------------------------------------------------------------------------
+# v0.3.0 Covariant interpretation result containers (V3-F09)
+# ---------------------------------------------------------------------------
+
+
+CovariantRoleTag = Literal[
+    "direct_driver",
+    "nonlinear_driver",
+    "mediated_driver",
+    "redundant",
+    "contemporaneous",
+    "noise_or_weak",
+    "inconclusive",
+]
+
+
+class CovariantDriverRole(BaseModel):
+    """Deterministic interpretation of one driver's role toward the target."""
+
+    model_config = ConfigDict(frozen=True)
+
+    driver: str
+    role: CovariantRoleTag
+    best_lag: int | None
+    evidence: list[str]
+    methods_supporting: list[str]
+    methods_missing: list[str]
+    conditioning: CovariantMethodConditioning
+    warnings: list[str] = Field(default_factory=list)
+
+
+class CovariantInterpretationResult(BaseModel):
+    """Bundle-level deterministic interpretation of covariant drivers."""
+
+    model_config = ConfigDict(frozen=True)
+
+    target: str
+    driver_roles: list[CovariantDriverRole]
+    forecastability_class: Literal["high", "medium", "low"]
+    directness_class: Literal["high", "medium", "low", "mixed"]
+    primary_drivers: list[str]
+    modeling_regime: str
+    conditioning_disclaimer: str
+    warnings: list[str] = Field(default_factory=list)
+    schema_version: str = "1"
