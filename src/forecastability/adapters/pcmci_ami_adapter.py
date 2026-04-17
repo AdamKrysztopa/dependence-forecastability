@@ -35,6 +35,14 @@ def _compute_auto_threshold(mi_values: list[float]) -> float:
 
     Strategy: ``max(median(scores) * 0.1, 0.001)``.
 
+    This is a data-adaptive heuristic, not a permutation-calibrated threshold.
+    The median is driven up by true-signal pairs, so the threshold is only
+    meaningful when the majority of candidates have non-negligible MI.
+    For small n or sparse causal graphs, the threshold can sit at the KSG
+    noise floor (~0.001–0.005 nats at n≈1000, k=8) and will be
+    effectively non-selective. Pass an explicit ``ami_threshold`` to
+    override when permutation calibration is required.
+
     Args:
         mi_values: All unconditional MI scores from Phase 0.
 
