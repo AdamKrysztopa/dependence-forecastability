@@ -87,7 +87,7 @@ def test_synthetic_nonlinear_drivers_invisible_to_pearson() -> None:
     Threshold: |r| < 0.10 at n=1500.  True Pearson is 0 by construction
     (odd-moment symmetry); finite-sample fluctuations stay well below 0.10.
     """
-    from scipy import stats  # type: ignore[import-untyped]
+    from scipy import stats
 
     df = generate_covariant_benchmark(n=1500, seed=42)
     target = df["target"].to_numpy()

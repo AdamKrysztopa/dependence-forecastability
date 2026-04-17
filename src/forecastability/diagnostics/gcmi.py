@@ -15,7 +15,7 @@ Reference:
 from __future__ import annotations
 
 import numpy as np
-from scipy.stats import norm, rankdata  # type: ignore[import-untyped]
+from scipy.stats import norm, rankdata
 
 from forecastability.utils.validation import validate_time_series
 
