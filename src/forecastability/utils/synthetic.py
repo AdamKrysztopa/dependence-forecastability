@@ -96,7 +96,7 @@ def generate_covariant_benchmark(
             + 0.80 * x1[t - 2]
             + 0.50 * x2[t - 1]
             + 0.35 * x6[t]
-            + 0.40 * (nl1[t - 1] ** 2 - nl1_var)   # quadratic — zero Pearson/Spearman
+            + 0.40 * (nl1[t - 1] ** 2 - nl1_var)  # quadratic — zero Pearson/Spearman
             + 0.35 * (np.abs(nl2[t - 1]) - nl2_abs_mean)  # abs-value — zero Pearson/Spearman
             + rng.normal(0.0, 1.0)
         )

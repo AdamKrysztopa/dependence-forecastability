@@ -38,8 +38,7 @@ def _validate_shuffle_scheme(shuffle_scheme: str) -> None:
     """
     if shuffle_scheme not in _VALID_SHUFFLE_SCHEMES:
         raise ValueError(
-            f"shuffle_scheme must be one of {_VALID_SHUFFLE_SCHEMES}; "
-            f"got {shuffle_scheme!r}"
+            f"shuffle_scheme must be one of {_VALID_SHUFFLE_SCHEMES}; got {shuffle_scheme!r}"
         )
 
 

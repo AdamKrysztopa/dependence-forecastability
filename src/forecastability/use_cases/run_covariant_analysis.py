@@ -18,6 +18,7 @@ from forecastability.services.exog_raw_curve_service import compute_exog_raw_cur
 from forecastability.services.gcmi_service import compute_gcmi_curve
 from forecastability.services.pcmci_ami_service import build_pcmci_ami_hybrid
 from forecastability.services.pcmci_plus_service import build_pcmci_plus
+from forecastability.services.significance_service import compute_significance_bands_generic
 from forecastability.services.transfer_entropy_service import compute_transfer_entropy_curve
 from forecastability.utils.types import (
     CausalGraphResult,
@@ -293,6 +294,131 @@ def _build_conditioning_metadata(active_methods: set[str]) -> CovariantMethodCon
     )
 
 
+def _compute_cross_ami_bands(
+    *,
+    target: np.ndarray,
+    drivers: dict[str, np.ndarray],
+    max_lag: int,
+    n_surrogates: int,
+    random_state: int,
+) -> dict[str, tuple[np.ndarray, np.ndarray]]:
+    """Compute phase-surrogate significance bands for cross-AMI per driver.
+
+    Phase-randomises the target series to break the temporal association with
+    each driver, then computes the 2.5/97.5 surrogate percentile bands.
+
+    Args:
+        target: Validated target series (will be phase-randomised).
+        drivers: Validated driver mapping (kept fixed during surrogates).
+        max_lag: Maximum lag horizon.
+        n_surrogates: Number of phase-randomised surrogates (>= 99).
+        random_state: Base random seed.
+
+    Returns:
+        Mapping driver_name → (lower_band, upper_band), each of shape (max_lag,).
+    """
+    registry = default_registry()
+    mi_info = registry.get("mi")
+    bands: dict[str, tuple[np.ndarray, np.ndarray]] = {}
+    for index, (driver_name, driver_series) in enumerate(drivers.items()):
+        lower, upper = compute_significance_bands_generic(
+            target,
+            n_surrogates,
+            random_state + index,
+            max_lag,
+            mi_info,
+            "raw",
+            exog=driver_series,
+            min_pairs=30,
+            n_jobs=1,
+        )
+        bands[driver_name] = (lower, upper)
+    return bands
+
+
+def _significance_tag(value: float | None, upper: float | None) -> str | None:
+    """Return 'above_band' / 'below_band' / None."""
+    if value is None or upper is None:
+        return None
+    return "above_band" if value > upper else "below_band"
+
+
+def _interpretation_tag(
+    *,
+    cross_ami: float | None,
+    cross_pami: float | None,
+    transfer_entropy: float | None,
+    gcmi: float | None,
+    pcmci_link: str | None,
+    significance: str | None,
+) -> str | None:
+    """Assign a multi-method evidence tag to a covariant summary row.
+
+    Priority (first match wins):
+    1. ``causal_confirmed``          — PCMCI+ confirms a parent link AND cross_ami above band
+    2. ``probably_mediated``         — cross_ami significant but pCrossAMI collapses
+                                        (directness_ratio < 0.3)
+    3. ``directional_informative``   — cross_ami AND transfer_entropy both above a floor
+    4. ``pairwise_informative``      — cross_ami alone is significant
+    5. ``noise_or_weak``             — no significant dependence found
+
+    Returns None when no primary metric is available to classify.
+    """
+    has_primary = cross_ami is not None or transfer_entropy is not None or gcmi is not None
+    if not has_primary:
+        return None
+
+    is_sig = significance == "above_band"
+    pcmci_confirmed = pcmci_link is not None
+
+    if pcmci_confirmed and is_sig:
+        return "causal_confirmed"
+
+    if is_sig and cross_ami is not None and cross_pami is not None and cross_ami > 0:
+        directness_ratio = cross_pami / cross_ami
+        # directness_ratio > 1.0 is a numerical anomaly (pAMI > AMI); skip mediation check
+        if 0.0 <= directness_ratio < 0.3:
+            return "probably_mediated"
+
+    if is_sig and transfer_entropy is not None and transfer_entropy > 0.01:
+        return "directional_informative"
+
+    if is_sig:
+        return "pairwise_informative"
+
+    return "noise_or_weak"
+
+
+def _assign_ranks(rows: list[CovariantSummaryRow]) -> list[CovariantSummaryRow]:
+    """Return new rows (frozen model) with rank populated.
+
+    Rank is global across all (driver, lag) pairs, ordered by primary score
+    descending. Primary score priority: cross_ami → gcmi → transfer_entropy.
+    Ties broken by driver name then lag.
+
+    Args:
+        rows: Rows without rank assigned (rank=None).
+
+    Returns:
+        New list of rows with rank field populated (1-indexed, 1 = best).
+    """
+
+    def _primary(row: CovariantSummaryRow) -> float:
+        if row.cross_ami is not None:
+            return row.cross_ami
+        if row.gcmi is not None:
+            return row.gcmi
+        if row.transfer_entropy is not None:
+            return row.transfer_entropy
+        return 0.0
+
+    sorted_rows = sorted(rows, key=lambda r: (-_primary(r), r.driver, r.lag))
+    ranked: list[CovariantSummaryRow] = []
+    for rank, row in enumerate(sorted_rows, start=1):
+        ranked.append(row.model_copy(update={"rank": rank}))
+    return ranked
+
+
 def _build_bundle_metadata(
     *,
     requested_methods: tuple[str, ...],
@@ -360,6 +486,7 @@ def run_covariant_analysis(
     skipped_optional_methods: set[str] = set()
     cross_ami_curves: dict[str, np.ndarray] = {}
     cross_pami_curves: dict[str, np.ndarray] = {}
+    cross_ami_upper_bands: dict[str, np.ndarray] = {}
     te_curves: dict[str, np.ndarray] = {}
     gcmi_curves: dict[str, np.ndarray] = {}
     te_results: list[TransferEntropyResult] = []
@@ -376,6 +503,14 @@ def run_covariant_analysis(
         )
         if "cross_ami" in requested_method_set:
             active_methods.add("cross_ami")
+            bands = _compute_cross_ami_bands(
+                target=validated_target,
+                drivers=validated_drivers,
+                max_lag=max_lag,
+                n_surrogates=n_surrogates,
+                random_state=random_state,
+            )
+            cross_ami_upper_bands = {name: upper for name, (lower, upper) in bands.items()}
         if "cross_pami" in requested_method_set:
             active_methods.add("cross_pami")
 
@@ -476,32 +611,52 @@ def run_covariant_analysis(
                     )
                 )
 
+            row_cross_ami = (
+                float(cross_ami_curve[lag - 1])
+                if "cross_ami" in requested_method_set and cross_ami_curve is not None
+                else None
+            )
+            row_cross_pami = (
+                float(cross_pami_curve[lag - 1])
+                if "cross_pami" in requested_method_set and cross_pami_curve is not None
+                else None
+            )
+            upper_band_at_lag = (
+                float(cross_ami_upper_bands[driver_name][lag - 1])
+                if driver_name in cross_ami_upper_bands
+                else None
+            )
+            row_significance = _significance_tag(row_cross_ami, upper_band_at_lag)
+            row_pcmci_link = pcmci_links.get((driver_name, target_name, lag))
             rows.append(
                 CovariantSummaryRow(
                     target=target_name,
                     driver=driver_name,
                     lag=lag,
-                    cross_ami=(
-                        float(cross_ami_curve[lag - 1])
-                        if "cross_ami" in requested_method_set and cross_ami_curve is not None
-                        else None
-                    ),
-                    cross_pami=(
-                        float(cross_pami_curve[lag - 1])
-                        if "cross_pami" in requested_method_set and cross_pami_curve is not None
-                        else None
-                    ),
+                    cross_ami=row_cross_ami,
+                    cross_pami=row_cross_pami,
                     transfer_entropy=te_value,
                     gcmi=gcmi_value,
-                    pcmci_link=pcmci_links.get((driver_name, target_name, lag)),
+                    pcmci_link=row_pcmci_link,
                     pcmci_ami_parent=(
                         (driver_name, lag) in pcmci_ami_parents
                         if "pcmci_ami" in active_methods
                         else None
                     ),
                     lagged_exog_conditioning=conditioning,
+                    significance=row_significance,
+                    interpretation_tag=_interpretation_tag(
+                        cross_ami=row_cross_ami,
+                        cross_pami=row_cross_pami,
+                        transfer_entropy=te_value,
+                        gcmi=gcmi_value,
+                        pcmci_link=row_pcmci_link,
+                        significance=row_significance,
+                    ),
                 )
             )
+
+    rows = _assign_ranks(rows)
 
     return CovariantAnalysisBundle(
         summary_table=rows,

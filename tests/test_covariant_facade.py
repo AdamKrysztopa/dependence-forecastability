@@ -396,3 +396,94 @@ def test_rejects_low_surrogates(benchmark_df: pd.DataFrame) -> None:
             {"driver_direct": benchmark_df["driver_direct"].to_numpy()},
             n_surrogates=98,
         )
+
+
+def test_significance_populated_when_cross_ami_requested(
+    benchmark_df: pd.DataFrame,
+) -> None:
+    """Every row has significance tag when cross_ami is active."""
+    drivers = {"driver_direct": benchmark_df["driver_direct"].to_numpy()}
+    result = run_covariant_analysis(
+        benchmark_df["target"].to_numpy(),
+        drivers,
+        max_lag=3,
+        methods=["cross_ami"],
+        n_surrogates=99,
+        random_state=42,
+    )
+    assert all(row.significance in ("above_band", "below_band") for row in result.summary_table)
+
+
+def test_significance_none_when_cross_ami_not_requested(
+    benchmark_df: pd.DataFrame,
+) -> None:
+    drivers = {"driver_direct": benchmark_df["driver_direct"].to_numpy()}
+    result = run_covariant_analysis(
+        benchmark_df["target"].to_numpy(),
+        drivers,
+        max_lag=3,
+        methods=["te"],
+        n_surrogates=99,
+        random_state=42,
+    )
+    assert all(row.significance is None for row in result.summary_table)
+
+
+def test_rank_is_always_populated(benchmark_df: pd.DataFrame) -> None:
+    """Rank field is always populated with a valid positive integer."""
+    drivers = {
+        name: benchmark_df[name].to_numpy()
+        for name in ("driver_direct", "driver_mediated", "driver_noise")
+    }
+    result = run_covariant_analysis(
+        benchmark_df["target"].to_numpy(),
+        drivers,
+        max_lag=3,
+        methods=["cross_ami", "te", "gcmi"],
+        n_surrogates=99,
+        random_state=42,
+    )
+    ranks = [row.rank for row in result.summary_table]
+    assert all(r is not None and r >= 1 for r in ranks)
+    assert sorted(ranks) == list(range(1, len(result.summary_table) + 1))
+
+
+def test_interpretation_tag_populated_when_cross_ami_requested(
+    benchmark_df: pd.DataFrame,
+) -> None:
+    drivers = {"driver_direct": benchmark_df["driver_direct"].to_numpy()}
+    result = run_covariant_analysis(
+        benchmark_df["target"].to_numpy(),
+        drivers,
+        max_lag=3,
+        methods=["cross_ami"],
+        n_surrogates=99,
+        random_state=42,
+    )
+    valid_tags = {
+        "causal_confirmed",
+        "probably_mediated",
+        "directional_informative",
+        "pairwise_informative",
+        "noise_or_weak",
+    }
+    assert all(row.interpretation_tag in valid_tags for row in result.summary_table)
+
+
+def test_rank_ordering_consistent_with_primary_score(benchmark_df: pd.DataFrame) -> None:
+    """Row with highest cross_ami has rank 1."""
+    drivers = {
+        name: benchmark_df[name].to_numpy()
+        for name in ("driver_direct", "driver_mediated", "driver_noise")
+    }
+    result = run_covariant_analysis(
+        benchmark_df["target"].to_numpy(),
+        drivers,
+        max_lag=3,
+        methods=["cross_ami"],
+        n_surrogates=99,
+        random_state=42,
+    )
+    rank1_row = next(r for r in result.summary_table if r.rank == 1)
+    best_ami = max(r.cross_ami for r in result.summary_table if r.cross_ami is not None)
+    assert rank1_row.cross_ami == best_ami
