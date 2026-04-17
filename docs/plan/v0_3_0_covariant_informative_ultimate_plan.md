@@ -223,9 +223,9 @@ Standard PCMCI+ MCI testing, but with highly refined, compact, information-dense
 | V3-CI-05 | Artifact upload in CI | 5 | None | Upload covariant JSON + table + figures | **Done** (2026-04-17: `ci.yml` now uploads `outputs/figures/`, `outputs/json/`, `outputs/tables/` as `ci-artifacts-py{version}` after each matrix build; `if-no-files-found: ignore`.) |
 | V3-CI-06 | Release checklist automation | 5 | None | Changelog, version/tag, README commands | **Done** (2026-04-17: `.github/ISSUE_TEMPLATE/release_checklist.md` created with full checklist (changelog, version, pytest 3.11+3.12, ruff, ty, showcases, notebook contract, build, publish, post-release); `release.yml` now includes covariant import sanity check in `build-dist` job.) |
 | V3-CI-07 | Pre-commit hook alignment | 5 | Modifies `.pre-commit-config.yaml` | Ensure ruff + ty coverage | **Done** (2026-04-17: `.pre-commit-config.yaml` updated with `local` hook running `uv run ty check`; ruff rev pinned with comment aligning to `>=0.11.0` in `pyproject.toml`.) |
-| V3-D01 | README dual-workflow update | 6 | Modifies `README.md` | Univariate + covariant as first-class workflows | Not started |
-| V3-D02 | API docs + quickstart refresh | 6 | Modifies `docs/` | New methods documented | Not started |
-| V3-D03 | Changelog v0.3.0 | 6 | Modifies `CHANGELOG.md` | Release notes | Not started |
+| V3-D01 | README dual-workflow update | 6 | Modifies `README.md` | Univariate + covariant as first-class workflows | **Done** (2026-04-17: README quickstart now includes parallel univariate triage and covariant bundle usage; badge wording aligned with v0.3.0 language.) |
+| V3-D02 | API docs + quickstart refresh | 6 | Modifies `docs/` | New methods documented | **Done** (2026-04-17: `docs/public_api.md` and `docs/quickstart.md` now document `run_covariant_analysis`, covariant method tokens, conditioning scope, and optional causal extra.) |
+| V3-D03 | Changelog v0.3.0 | 6 | Modifies `CHANGELOG.md` | Release notes | **Done** (2026-04-17: added `0.3.0` Keep-a-Changelog release block with Added/Changed/Fixed/Migration notes.) |
 
 ---
 
