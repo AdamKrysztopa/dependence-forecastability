@@ -112,7 +112,9 @@ def _classify_driver(
     max_gcmi = _safe_max(r.gcmi for r in rows)
     max_te = _safe_max(r.transfer_entropy for r in rows)
     max_pami = _safe_max(r.cross_pami for r in rows)
-    any_sig = any(r.significance == significance_label for r in rows)
+    sig_count = sum(1 for r in rows if r.significance == significance_label)
+    any_sig = sig_count > 0
+    has_causal = bundle.pcmci_graph is not None or bundle.pcmci_ami_result is not None
     gcmi_strong = max_gcmi >= strong_mi_threshold
     te_strong = max_te >= strong_mi_threshold
     ami_strong = max_ami >= strong_mi_threshold
@@ -172,6 +174,8 @@ def _classify_driver(
         max_te=max_te,
         max_pami=max_pami,
         any_sig=any_sig,
+        sig_count=sig_count,
+        has_causal=has_causal,
         is_pcmci_parent=is_pcmci_parent,
         is_pcmci_ami_parent=is_pcmci_ami_parent,
         is_contemp_pcmci_parent=is_contemp_pcmci_parent,
@@ -209,6 +213,8 @@ def _assign_role(
     max_te: float,
     max_pami: float,
     any_sig: bool,
+    sig_count: int,
+    has_causal: bool,
     is_pcmci_parent: bool,
     is_pcmci_ami_parent: bool,
     is_contemp_pcmci_parent: bool,
@@ -220,7 +226,9 @@ def _assign_role(
     mediation_ratio: float,
 ) -> CovariantRoleTag:
     """First-match role assignment per statistician-approved rules."""
-    # Rule 1: noise_or_weak.
+    # Rule 1: noise_or_weak. A surrogate-significant row (any_sig) blocks this
+    # classification even when all effect-size thresholds are sub-threshold:
+    # such rows must fall through to `inconclusive` rather than be swallowed.
     if (
         max_ami < noise_ami_ceil
         and max_gcmi < strong_mi_threshold
@@ -228,6 +236,7 @@ def _assign_role(
         and not is_pcmci_parent
         and not is_pcmci_ami_parent
         and not is_contemp_pcmci_parent
+        and not any_sig
     ):
         return "noise_or_weak"
     # Rule 2: direct_driver.
@@ -236,8 +245,15 @@ def _assign_role(
     # Rule 3: contemporaneous.
     if is_contemp_pcmci_parent:
         return "contemporaneous"
-    # Rule 4: nonlinear_driver.
-    if max_ami >= nonlinear_ami_min and max_gcmi < gcmi_noise_floor and any_sig:
+    # Rule 4: nonlinear_driver. Require multi-lag surrogate support
+    # (>= 2 significant lags) so a single chance-significant row at max_lag=5
+    # cannot trigger the role; this is a Bonferroni-style guard against the
+    # per-lag false-positive rate of the phase-randomised surrogate test.
+    if (
+        max_ami >= nonlinear_ami_min
+        and max_gcmi < gcmi_noise_floor
+        and sig_count >= 2
+    ):
         return "nonlinear_driver"
     # Rule 5: redundant.
     if (
@@ -246,8 +262,16 @@ def _assign_role(
         and other_lagged_parent_exists
     ):
         return "redundant"
-    # Rule 6: mediated_driver.
-    if max_ami >= strong_mi_threshold and max_ami > 0 and (max_pami / max_ami) < mediation_ratio:
+    # Rule 6: mediated_driver. Mediation is a causal claim; cross_pami alone
+    # (conditioned on target history only) cannot establish it. Require at
+    # least one causal method (PCMCI+ or PCMCI-AMI) to be present in the
+    # bundle; otherwise fall through to `inconclusive`.
+    if (
+        has_causal
+        and max_ami >= strong_mi_threshold
+        and max_ami > 0
+        and (max_pami / max_ami) < mediation_ratio
+    ):
         return "mediated_driver"
     # Rule 7: inconclusive fallback.
     return "inconclusive"

@@ -136,13 +136,13 @@ def test_nonlinear_driver_absent_from_pcmci_but_detected_by_gcmi_te() -> None:
         _row(
             driver="driver_nonlin",
             lag=lag,
-            cross_ami=0.15 if lag == 1 else 0.01,
-            cross_pami=0.12 if lag == 1 else 0.005,
-            te=0.2 if lag == 1 else 0.0,
-            gcmi=0.0 if lag == 1 else 0.0,
-            significance="above_band" if lag == 1 else None,
+            cross_ami=0.15 if lag in (1, 2) else 0.01,
+            cross_pami=0.12 if lag in (1, 2) else 0.005,
+            te=0.2 if lag in (1, 2) else 0.0,
+            gcmi=0.0 if lag in (1, 2) else 0.0,
+            significance="above_band" if lag in (1, 2) else None,
         )
-        for lag in (1, 2)
+        for lag in (1, 2, 3)
     ]
     bundle = _make_bundle(rows, pcmci_parents={"target": []})
 
@@ -159,16 +159,19 @@ def test_nonlinear_driver_absent_from_pcmci_but_detected_by_gcmi_te() -> None:
 def test_nonlinear_driver_borderline_ami_still_primary() -> None:
     # cross_ami sits between strong_mi_threshold (0.05) and the legacy 0.10
     # gate. Role rule 3 fires and the driver MUST land in primary_drivers.
+    # Multi-lag surrogate support (>= 2 significant lags) is required after
+    # the Bonferroni-style tightening of rule 4.
     rows = [
         _row(
             driver="driver_nonlin",
-            lag=1,
+            lag=lag,
             cross_ami=0.07,
             cross_pami=0.06,
             te=0.15,
             gcmi=0.0,
             significance="above_band",
         )
+        for lag in (1, 2)
     ]
     bundle = _make_bundle(rows, pcmci_parents={"target": []})
 
@@ -182,13 +185,14 @@ def test_nonlinear_driver_when_gcmi_near_zero() -> None:
     rows = [
         _row(
             driver="driver_nonlin",
-            lag=1,
+            lag=lag,
             cross_ami=0.05,
             cross_pami=0.04,
             te=0.0,
             gcmi=1e-4,
             significance="above_band",
         )
+        for lag in (1, 2)
     ]
     bundle = _make_bundle(rows, pcmci_parents={"target": []})
 
@@ -197,7 +201,32 @@ def test_nonlinear_driver_when_gcmi_near_zero() -> None:
     assert result.driver_roles[0].role == "nonlinear_driver"
 
 
+def test_nonlinear_driver_requires_multi_lag_significance() -> None:
+    # Single-lag chance significance must NOT trigger rule 4; the driver
+    # should fall through to `inconclusive` (rule 1 is blocked by any_sig).
+    rows = [
+        _row(
+            driver="driver_chance",
+            lag=lag,
+            cross_ami=0.05 if lag == 1 else 0.001,
+            cross_pami=0.04 if lag == 1 else 0.0,
+            te=0.0,
+            gcmi=1e-4,
+            significance="above_band" if lag == 1 else None,
+        )
+        for lag in (1, 2, 3, 4, 5)
+    ]
+    bundle = _make_bundle(rows, pcmci_parents={"target": []})
+
+    result = interpret_covariant_bundle(bundle)
+
+    assert result.driver_roles[0].role == "inconclusive"
+
+
 def test_noise_driver_with_spurious_above_band_significance() -> None:
+    # Concern 1 regression: a sub-threshold driver whose surrogate band was
+    # crossed (any_sig=True) must NOT be swallowed as noise_or_weak; it falls
+    # through to `inconclusive`.
     rows = [
         _row(
             driver="driver_noise",
@@ -223,7 +252,28 @@ def test_noise_driver_with_spurious_above_band_significance() -> None:
     result = interpret_covariant_bundle(bundle)
 
     noise_entry = next(r for r in result.driver_roles if r.driver == "driver_noise")
-    assert noise_entry.role == "noise_or_weak"
+    assert noise_entry.role == "inconclusive"
+
+
+def test_subthreshold_driver_without_surrogate_significance_is_noise() -> None:
+    # Companion to the concern-1 test: identical effect sizes but no
+    # significance label must still classify as noise_or_weak.
+    rows = [
+        _row(
+            driver="driver_noise",
+            lag=1,
+            cross_ami=0.028,
+            cross_pami=0.02,
+            te=0.028,
+            gcmi=0.004,
+            significance=None,
+        ),
+    ]
+    bundle = _make_bundle(rows, pcmci_parents={"target": []})
+
+    result = interpret_covariant_bundle(bundle)
+
+    assert result.driver_roles[0].role == "noise_or_weak"
 
 
 def test_mediated_driver_when_pami_collapses_relative_to_ami() -> None:
@@ -244,6 +294,29 @@ def test_mediated_driver_when_pami_collapses_relative_to_ami() -> None:
     result = interpret_covariant_bundle(bundle)
 
     assert result.driver_roles[0].role == "mediated_driver"
+
+
+def test_mediated_rule_requires_causal_evidence() -> None:
+    # Concern 2 regression: without PCMCI+ or PCMCI-AMI in the bundle, a low
+    # pAMI/AMI ratio alone must NOT produce `mediated_driver`. The driver
+    # should fall through to `inconclusive` in triage mode.
+    rows = [
+        _row(
+            driver="driver_mediated",
+            lag=lag,
+            cross_ami=0.3 if lag == 1 else 0.02,
+            cross_pami=0.02 if lag == 1 else 0.0,
+            te=0.0,
+            gcmi=0.05 if lag == 1 else 0.0,
+            significance="above_band" if lag == 1 else None,
+        )
+        for lag in (1, 2)
+    ]
+    bundle = _make_bundle(rows)  # no pcmci_graph, no pcmci_ami_result
+
+    result = interpret_covariant_bundle(bundle)
+
+    assert result.driver_roles[0].role == "inconclusive"
 
 
 def test_redundant_driver_when_another_driver_is_causal_parent() -> None:

@@ -55,15 +55,8 @@ _EXPECTED_ROLES: dict[str, set[str]] = {
     "driver_noise": {"noise_or_weak"},
     "driver_contemp": {"contemporaneous", "direct_driver"},
     "driver_nonlin_sq": {"nonlinear_driver", "direct_driver"},
-    "driver_nonlin_abs": {"nonlinear_driver", "noise_or_weak", "direct_driver"},
+    "driver_nonlin_abs": {"nonlinear_driver", "direct_driver"},
 }
-
-_NONLIN_ABS_NOISE_NOTE = (
-    "NOTE: driver_nonlin_abs resolved to noise_or_weak. At n=1500 the β=0.35 "
-    "abs-value\ncoupling sits near the surrogate noise floor; this is expected and "
-    "not a rule\nfailure. For stable detection increase n to >= 5000 or raise "
-    "β above 0.5."
-)
 
 
 def _parse_args(argv: list[str] | None) -> argparse.Namespace:
@@ -121,8 +114,8 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
     parser.add_argument(
         "--n",
         type=int,
-        default=1500,
-        help="synthetic benchmark length (default 1500)",
+        default=5000,
+        help="synthetic benchmark length (default 5000)",
     )
     parser.add_argument(
         "--quiet",
@@ -265,12 +258,6 @@ def _write_verification_report(
     else:
         lines.append("- none")
     lines.append("")
-    role_by_driver = {entry.driver: entry.role for entry in interpretation.driver_roles}
-    if role_by_driver.get("driver_nonlin_abs") == "noise_or_weak":
-        lines.append("## Notes")
-        lines.append("")
-        lines.append(_NONLIN_ABS_NOISE_NOTE)
-        lines.append("")
     path.write_text("\n".join(lines), encoding="utf-8")
 
 
