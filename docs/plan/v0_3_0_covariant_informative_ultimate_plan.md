@@ -207,9 +207,9 @@ Standard PCMCI+ MCI testing, but with highly refined, compact, information-dense
 | V3-F01 | Transfer Entropy scorer + service | 1 | Follows `DependenceScorer` pattern | `te_scorer()`, `src/forecastability/services/transfer_entropy_service.py` | **Done** (2026-04-16: diagnostics/service path, analyzer `method="te"`, and tests validated) |
 | V3-F02 | GCMI scorer + service | 1 | Follows `DependenceScorer` pattern | `gcmi_scorer()`, `src/forecastability/services/gcmi_service.py` | **Done** (2026-04-16: diagnostics/service path, 25 tests, theory doc; 2026-04-17: GCMI example finalized at `examples/covariant_informative/information_measures/gcmi_example.py`) |
 | V3-F03 | PCMCI+ adapter | 1 | None (new external integration) | `src/forecastability/adapters/tigramite_adapter.py`, `CausalGraphPort` | **Done** (2026-04-16: adapter, tests, dedicated example, optional causal extra; 2026-04-16b: 8-variable benchmark with two nonlinear drivers, two-story example, `docs/theory/pcmci_plus.md`) |
-| V3-F04 | PCMCI-AMI-Hybrid method | 1 | Builds on AMI kNN + tigramite adapter | `src/forecastability/adapters/pcmci_ami_adapter.py`, `knn_cmi_ci_test.py`, `services/pcmci_ami_service.py`, `PcmciAmiResult` model, Phase 0 AMI triage + kNN MI CI test | **Partial** (2026-04-16: real Phase 0 MI/CrossMI screening via Tigramite `link_assumptions` and residualized kNN CI shipped; stronger MI-ranked conditioning logic remains proposal-only; current comparison evidence is illustrative and benchmark-specific) |
+| V3-F04 | PCMCI-AMI-Hybrid method | 1 | Builds on AMI kNN + tigramite adapter | `src/forecastability/adapters/pcmci_ami_adapter.py`, `knn_cmi_ci_test.py`, `services/pcmci_ami_service.py`, `PcmciAmiResult` model, Phase 0 AMI triage + kNN MI CI test | **Partial** (2026-04-16: real Phase 0 MI/CrossMI screening via Tigramite `link_assumptions` and residualized kNN CI shipped; stronger MI-ranked conditioning logic remains proposal-only; current comparison evidence is illustrative and benchmark-specific. **MI-ranked conditioning and CrossAMI past-window deferred to v0.3.1.**) |
 | V3-F04.1 | Full examples taxonomy + cleanup | 4 | Extends current demo/example tree | Relocate every active script out of `examples/triage/` into `examples/univariate/` or `examples/covariant_informative/`; apply subgroup taxonomy, PCMCI renames, output namespacing, and repo-wide path cleanup | **Done** (2026-04-17: active example references now use the `examples/univariate/` and `examples/covariant_informative/` taxonomy; PCMCI benchmarks renamed; repo cleanup applied) |
-| V3-F04.2 | V3-F03/V3-F04 second-loop review + docs alignment | 6 | Builds on V3-F03/V3-F04 + theory/docs/examples | Revisit theory, shipped implementation, and examples for both methods; document pros/cons, theoretical caveats, practical behavior, and exact proposal-vs-implementation boundaries | Not started |
+| V3-F04.2 | V3-F03/V3-F04 second-loop review + docs alignment | 6 | Builds on V3-F03/V3-F04 + theory/docs/examples | Revisit theory, shipped implementation, and examples for both methods; document pros/cons, theoretical caveats, practical behavior, and exact proposal-vs-implementation boundaries | **Done** (2026-04-17: second-loop review landed in `docs/plan/implemented/v3_f03_v3_f04_second_loop_review.md`; vectorised linear residual + opt-in block-shuffle + ground-truth helper shipped) |
 | V3-F05 | `CausalGraphPort` protocol | 0 | None (new port type) | Graph-returning port for PCMCI+ and PCMCI-AMI | **Done** |
 | V3-F06 | Covariant orchestration facade | 2 | Extends `use_cases/` pattern | `src/forecastability/use_cases/run_covariant_analysis.py` | Not started |
 | V3-F07 | Unified covariant summary table | 2 | Extends `ExogenousScreeningWorkbenchResult` pattern | `CovariantSummaryRow` with all method columns | Not started |
@@ -383,6 +383,74 @@ def generate_directional_pair(
 - [x] Two nonlinear drivers with Pearson/Spearman ≈ 0 by construction (odd-moment symmetry)
 - [x] `test_synthetic_nonlinear_drivers_invisible_to_pearson` confirms |r| < 0.10
 - [x] `test_parcorr_blind_to_nonlinear_drivers` confirms linear CI test cannot recover them
+
+---
+
+## 5A. Known limitation: lagged-exogenous autohistory conditioning
+
+v0.3.0 ships a full covariant-informative **triage gate**, not a full confirmatory causal toolkit.
+Users must understand which covariant methods condition on what, because the lightweight
+scorer/curve path (CrossMI, pCrossAMI, univariate-exog TE) does **not** condition on the
+exogenous driver's own past — only on the target's autohistory (or nothing, for raw CrossMI).
+A driver with mixed lag-1 + lag-3 effects on the target can therefore appear spuriously
+strong at lag 3 in pCrossAMI or TE. Full lagged-exogenous verification in v0.3.0 requires
+PCMCI+ (V3-F03) or PCMCI-AMI-Hybrid (V3-F04), both of which apply the full MCI conditioning
+on both sides' lagged parents.
+
+**Verified in source (as of 2026-04-17):**
+
+- `src/forecastability/services/partial_curve_service.py::_residualize` residualizes the
+  future target on the target's intermediate lags only; when `exog is not None`, the
+  exogenous predictor is left untouched on the past side (the in-file comment records this).
+  The residualization itself is linear (`sklearn.linear_model.LinearRegression`).
+- `src/forecastability/diagnostics/transfer_entropy.py` conditions on the **target** history
+  `Y_{t-1..t-h+1}` only; the source (exog) own-history is not conditioned on.
+- PCMCI+ and PCMCI-AMI-Hybrid apply the full MCI test, which conditions on the lagged
+  parents of both the source and the target.
+
+### Conditioning scope per method
+
+| Method | Conditioning scope | `lagged_exog_conditioning` tag |
+|---|---|---|
+| Raw CrossMI (`exog_raw_curve_service`) | None (bivariate) | `none` |
+| pCrossAMI (`partial_curve_service` with exog) | Target intermediate lags only | `target_only` |
+| Transfer Entropy (`diagnostics/transfer_entropy.py`) | Target history only | `target_only` |
+| PCMCI+ (V3-F03) | Full MCI (both sides' lagged parents) | `full_mci` |
+| PCMCI-AMI-Hybrid (V3-F04) | Full MCI (both sides' lagged parents) | `full_mci` |
+
+```mermaid
+flowchart LR
+    Y_future["Y_t (future target)"]
+    Y_hist["Y_{t-1..t-h+1}\n(target autohistory)"]
+    X_future["X_{t-h} (lagged exog)"]
+    X_hist["X_{t-h-1..t-h+1}\n(exog autohistory)"]
+    raw["Raw CrossMI\nconditioning: none"]
+    partial["pCrossAMI / TE\nconditioning: target_only"]
+    full["PCMCI+ / PCMCI-AMI\nconditioning: full_mci"]
+    X_future --> raw
+    Y_future --> raw
+    Y_hist --> partial
+    X_future --> partial
+    Y_future --> partial
+    Y_hist --> full
+    X_hist --> full
+    X_future --> full
+    Y_future --> full
+```
+
+> [!IMPORTANT]
+> If your analysis requires attributing a driver effect to a specific lag in the presence
+> of exogenous autocorrelation, use PCMCI+ or PCMCI-AMI-Hybrid in v0.3.0. The CrossMI,
+> pCrossAMI, and TE paths in the covariant bundle are triage signals only and will
+> generally inflate apparent dependence at non-primary lags when the driver itself is
+> autocorrelated. A proper lagged-exogenous residualization path is scheduled for v0.3.1.
+
+Forward link: [`docs/plan/v0_3_1_lagged_exogenous_triage_plan.md`](v0_3_1_lagged_exogenous_triage_plan.md).
+
+Because of this limitation, the v0.3.0 facade (V3-F06) and summary table (V3-F07) MUST
+expose a `lagged_exog_conditioning` metadata field per method row so downstream consumers
+cannot accidentally read a `target_only` pCrossAMI as if it were `full_mci` causal evidence.
+See the amended acceptance criteria in Phase 2 and Phase 3.
 
 ---
 
@@ -2498,6 +2566,8 @@ def run_covariant_analysis(
 - [ ] Unified table has one row per (target, driver, lag) combination
 - [ ] Methods gracefully skip when optional deps unavailable
 - [ ] Facade is the ONLY orchestration entry point used by notebook, script, and tests
+- [ ] `CovariantSummaryRow` and per-method result models expose a `lagged_exog_conditioning` metadata field with values `none` / `target_only` / `full_mci`, populated correctly per §5A
+- [ ] `CovariantAnalysisBundle.metadata` includes a disclaimer string pointing at §5A for any bundle that contains `target_only` entries, and a forward link to the v0.3.1 plan
 - [ ] `uv run pytest tests/test_covariant_facade.py -q` passes
 
 ---
@@ -2676,8 +2746,9 @@ if __name__ == "__main__":
 - [ ] `n_surrogates >= 99` enforced in every surrogate call
 - [ ] `random_state: int` — never `numpy.Generator`
 - [ ] AMI computed per horizon $h$ separately — never aggregated before computation
-- [ ] AMI and pAMI computed on `split.train` ONLY inside any rolling-origin loop
+- [ ] AMI and pAMI computed on `split.train` ONLY inside any rolling-origin loop (partial residualization is linear via `sklearn.linear_model.LinearRegression`; pCrossAMI MUST NOT be described as non-parametric in any output metadata)
 - [ ] `np.trapezoid` for AUC — `np.trapz` removed in NumPy 2.x
+- [ ] Regression test: pCrossAMI rows ALWAYS carry `lagged_exog_conditioning == "target_only"`; raw CrossMI rows ALWAYS carry `"none"`; PCMCI+/PCMCI-AMI rows ALWAYS carry `"full_mci"`. A test MUST fail if any output metadata, docstring, or bundle field claims pCrossAMI is "fully conditioned on exogenous lags"
 - [ ] `uv run pytest tests/test_covariant*.py tests/test_transfer*.py tests/test_gcmi.py tests/test_pcmci*.py -q` all green
 
 ---
@@ -2845,6 +2916,7 @@ print(f"Ratio:    {te_xy.te_value / max(te_yx.te_value, 1e-10):.1f}×")
 - [ ] Both demonstrate all six methods
 - [ ] Artifacts emitted to stable paths
 - [ ] No notebook-only logic — all computation via `run_covariant_analysis()`
+- [ ] Notebook contains a dedicated section titled **"Known limitation: exogenous autohistory is not conditioned out in CrossMI/pCrossAMI/TE—see v0.3.1"** reproducing the §5A conditioning-scope table and linking to `docs/plan/v0_3_1_lagged_exogenous_triage_plan.md`
 
 ---
 
@@ -3023,10 +3095,12 @@ a competing PCMCI+ engine. Optional dependency keeps core package lean.
 #### Acceptance criteria — Phase 6
 
 - [ ] README clearly separates univariate and covariant workflows
+- [ ] README and `docs/quickstart.md` include the §5A conditioning-scope table in plain text (one row per method, `none` / `target_only` / `full_mci`)
 - [ ] `docs/quickstart.md` includes covariant quick-start
-- [ ] `CHANGELOG.md` has complete v0.3.0 entry
+- [ ] `CHANGELOG.md` has complete v0.3.0 entry and an explicit "Known limitations" subsection naming the lagged-exogenous conditioning gap and forward-linking to v0.3.1
 - [ ] ADR for PCMCI-AMI-Hybrid decision exists
 - [ ] `docs/implementation_status.md` updated with new status table
+- [ ] `docs/plan/v0_3_1_lagged_exogenous_triage_plan.md` exists and is linked from this plan's §5A
 
 ---
 
@@ -3239,6 +3313,35 @@ gantt
         M9 Docs + status          :m9, after m8, 2d
         M10 Tag + publish         :m10, after m9, 1d
 ```
+
+---
+
+## 13A. v0.3.0 exit criteria — finalized triage gate
+
+v0.3.0 ships as a **finalized covariant-informative triage gate**, not as a full
+lagged-exogenous confirmatory toolkit. Before tagging `v0.3.0`, all of the following must
+be true:
+
+- [ ] Every ticket V3-F00 through V3-F10 is either **Done** or explicitly **Deferred** with a
+      one-line reason recorded in §4 (e.g. MI-ranked conditioning and CrossAMI past-window
+      deferred to v0.3.1 under V3-F04).
+- [ ] Every ticket V3-CI-01 through V3-CI-07 is **Done**.
+- [ ] Every ticket V3-D01 through V3-D03 is **Done**.
+- [ ] The §5A conditioning-scope table is present in `README.md` and in `docs/quickstart.md`,
+      with identical wording for method rows and the `none` / `target_only` / `full_mci`
+      tag values.
+- [ ] `CovariantSummaryRow` and per-method result payloads carry a
+      `lagged_exog_conditioning` metadata field populated per §5A, and the facade bundle
+      metadata carries a disclaimer string plus a forward link to the v0.3.1 plan.
+- [ ] A regression test (Phase 3) fails if any shipped docstring, metadata field, or bundle
+      string ever describes pCrossAMI as "fully conditioned on exogenous lags" or as
+      non-parametric.
+- [ ] The v0.3.1 plan file [`docs/plan/v0_3_1_lagged_exogenous_triage_plan.md`](v0_3_1_lagged_exogenous_triage_plan.md)
+      exists, is in `Draft / Proposed` state, and is linked from §5A of this plan and from
+      the v0.3.0 `CHANGELOG.md` "Known limitations" subsection.
+- [ ] No shipped covariant showcase output or notebook cell implies that pCrossAMI or
+      TE in the v0.3.0 bundle recovers lag-specific exogenous effects in the presence of
+      exogenous autocorrelation.
 
 ---
 
