@@ -7,7 +7,17 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
+    # Pinned to match ruff>=0.11.0 in pyproject.toml dev dependencies.
     rev: v0.11.0
     hooks:
       - id: ruff
       - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: ty-check
+        name: ty type check
+        language: system
+        entry: uv run ty check
+        pass_filenames: false
+        types: [python]

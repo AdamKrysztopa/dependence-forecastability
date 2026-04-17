@@ -1,0 +1,58 @@
+name: Showcase Smoke Tests
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: smoke-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Showcase script smoke tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      MPLBACKEND: Agg
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Sync development dependencies
+        run: |
+          set -euo pipefail
+          uv sync --dev --all-extras
+
+      # --no-rolling skips the ~30-second rolling-origin benchmark.
+      # --no-bands skips surrogate bands for a further speedup.
+      - name: Run univariate showcase
+        run: uv run scripts/run_showcase.py --no-rolling --no-bands
+
+      # --fast skips PCMCI and PCMCI-AMI, which account for the vast majority
+      # of wall-clock time while still exercising every deterministic service path.
+      - name: Run covariant showcase
+        run: uv run scripts/run_showcase_covariant.py --fast
+
+      - name: Upload showcase artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: smoke-artifacts
+          path: |
+            outputs/figures/
+            outputs/json/
+            outputs/tables/
+          if-no-files-found: ignore

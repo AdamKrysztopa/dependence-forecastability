@@ -1,0 +1,56 @@
+name: Dependabot Auto-merge
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  pull_request_review:
+    types: [submitted]
+
+concurrency:
+  group: dependabot-automerge-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+# Narrow default; write scopes are job-local below.
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  automerge:
+    name: Auto-merge Dependabot PRs
+    runs-on: ubuntu-latest
+    # Only run for Dependabot-authored PRs.
+    if: github.actor == 'dependabot[bot]'
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Approve and enable auto-merge for labelled dependency PRs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          labels=$(gh pr view "${PR_NUMBER}" \
+            --repo "${{ github.repository }}" \
+            --json labels \
+            --jq '.labels[].name' | tr '\n' ' ')
+
+          echo "PR #${PR_NUMBER} labels: ${labels}"
+
+          if echo "${labels}" | grep -qE '(dependencies|github-actions)'; then
+            echo "Label match — approving and enabling auto-merge (squash, merge when checks pass)"
+            gh pr review "${PR_NUMBER}" \
+              --approve \
+              --repo "${{ github.repository }}"
+            # --auto enables GitHub's branch-protection auto-merge; the PR will
+            # only be merged once all required CI checks (including ci.yml) pass.
+            gh pr merge "${PR_NUMBER}" \
+              --auto \
+              --squash \
+              --repo "${{ github.repository }}"
+          else
+            echo "No dependency or github-actions label found; skipping auto-merge"
+          fi

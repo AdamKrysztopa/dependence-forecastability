@@ -50,6 +50,21 @@ jobs:
       - name: Validate artifacts
         run: uv run twine check dist/*
 
+      - name: Wheel smoke test (install from wheel)
+        shell: bash
+        run: |
+          set -euo pipefail
+          wheel_path=$(ls dist/*.whl | head -1)
+          python -m venv /tmp/smoke-venv
+          /tmp/smoke-venv/bin/pip install --quiet "${wheel_path}[causal]"
+          /tmp/smoke-venv/bin/python - <<'PY'
+          from forecastability.use_cases.run_covariant_analysis import run_covariant_analysis
+          from forecastability.utils.synthetic import generate_covariant_benchmark
+          import pandas as pd
+          df = generate_covariant_benchmark(n=200, seed=42)
+          print('wheel smoke test: OK')
+          PY
+
       - name: Upload dist artifacts
         uses: actions/upload-artifact@v7
         with:
