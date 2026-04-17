@@ -105,6 +105,20 @@ flowchart LR
 Dashed arrows mark the two nonlinear drivers: they are structural causes of `target`
 but invisible to linear CI tests (Story B below).
 
+### Ground-truth causal parents of `target`
+
+| Parent | Lag | Coefficient | Mechanism |
+|---|---|---|---|
+| `target` | 1 | 0.75 | linear self-AR |
+| `driver_direct` | 2 | 0.80 | linear lagged |
+| `driver_mediated` | 1 | 0.50 | linear lagged |
+| `driver_contemp` | 0 | 0.35 | linear contemporaneous |
+| `driver_nonlin_sq` | 1 | 0.40 | quadratic coupling (Pearson ≈ 0) |
+| `driver_nonlin_abs` | 1 | 0.35 | absolute-value coupling (Pearson ≈ 0) |
+
+Non-parents: `driver_redundant` (correlated via `driver_direct` — the MCI conditioning
+step should reject it) and `driver_noise` (independent AR(1) noise).
+
 ### Structural equations
 
 $$\text{driver\_direct}[t] = 0.8\, x_1[t-1] + \varepsilon_1$$
@@ -244,7 +258,143 @@ $|X|$ is a non-monotone (V-shaped) function of $X$.
 | Example | `examples/covariant_informative/causal_discovery/pcmci_plus_benchmark.py` |
 | Tests | `tests/test_pcmci_adapter.py`, `tests/test_covariant_models.py` |
 
-## Reference
+## Shipped-variant semantics (V3-F03, V3-F04)
+
+The following subsections document what the shipped code actually does. They exist so
+readers do not conflate the V3-F04 proposal (AMI-ranked conditioning, past-window
+CrossAMI, distinct phase1/phase2 outputs) with the variant currently in `src/`.
+
+```mermaid
+flowchart LR
+    IN["Input panel<br/>(source, target, lags)"] --> P0["Phase 0<br/>unconditional lagged MI"]
+    P0 --> THR["Noise-floor threshold<br/>max(median(MI)·0.1, 1e-3)"]
+    THR --> LA["link_assumptions<br/>(survivors only)"]
+    LA --> PCP["PCMCI+ run<br/>(PC stable + MCI)"]
+    PCP --> MAP["Adapter mapping"]
+    MAP --> OUT["CausalGraphResult<br/>+ PcmciAmiResult"]
+```
+
+### What Phase 0 computes
+
+Phase 0 is **unconditional lagged pairwise MI** (CrossMI evaluated at a single lag).
+On the diagonal `source == target` it reduces to standard AMI at lag $h$; off the
+diagonal it is lagged CrossMI between $\text{source}_{t-h}$ and $\text{target}_t$.
+
+This is **not** Catt's past-window CrossAMI — the shipped screener does not aggregate
+a window of past lags into a single predictive-information score. CrossAMI past-window
+triage is a proposal item (see V3-F04 outstanding work in
+[../implementation_status.md](../implementation_status.md)), not part of the shipped
+execution path.
+
+> [!IMPORTANT]
+> Phase 0 output should be read as "lagged pairwise dependence survived the noise
+> floor", not as multivariate causal evidence. It cannot speak to confounding,
+> mediation, or synergy — those are left to the PCMCI+ stage that follows.
+
+### `o-o` output semantics
+
+`CausalGraphResult.parents` currently includes contemporaneous edges returned by
+tigramite as `o-o`. An `o-o` marker is **adjacency with unresolved orientation**
+inside the CPDAG Markov-equivalence class, not a directed parent claim.
+
+Users who need a strict directed parent set should filter for `-->` or `o->` markers
+in `link_matrix` (when available) and treat `o-o` entries as candidate contemporaneous
+neighbours whose direction the algorithm could not resolve from the observed data.
+
+> [!WARNING]
+> Do not cite `o-o` entries as evidence that `source` causes `target` at lag 0. They
+> are Markov-equivalent to the reverse orientation unless additional background
+> knowledge or a directed marker is provided.
+
+### `phase1_skeleton` vs `phase2_final`
+
+`PcmciAmiResult.phase1_skeleton` and `PcmciAmiResult.phase2_final` are currently
+**aliases** to the single graph object returned by `tigramite.run_pcmciplus`. The
+adapter does not separate PC₁-stage skeleton output from the final MCI-stage graph.
+
+Producing genuinely distinct stage outputs requires splitting the adapter call into
+`run_pc_stable` followed by `run_mci`, which is a separate code ticket and is not
+part of V3-F04.2.
+
+### Null calibration of `knn_cmi`
+
+The residualised kNN CI test (`knn_cmi`) calibrates p-values by permutation. The
+default `shuffle_scheme="iid"` reshuffles residual samples independently across time
+and is **not a time-series-aware null** — on raw autocorrelated series it over-rejects
+the true null of conditional independence.
+
+Users who need valid p-values on autocorrelated inputs should pass
+`shuffle_scheme="block"` to `build_knn_cmi_test(...)`, `PcmciAmiAdapter(...)`, or
+`build_pcmci_ami_hybrid(...)`. The block shuffler uses Politis–Romano circular blocks
+with $L = \max\!\bigl(1,\; \operatorname{round}(1.75\, T^{1/3})\bigr)$.
+
+The default stays i.i.d. for speed and backward compatibility; switching to `block`
+is opt-in. Unsupported values raise `ValueError` at construction time.
+
+> [!WARNING]
+> Default-mode p-values on autocorrelated data should not be framed as confirmatory
+> causal evidence. Either switch to `shuffle_scheme="block"` or interpret default
+> results as screening strength only.
+
+### Phase 0 threshold caveat
+
+The default Phase 0 threshold is the heuristic noise floor
+$\tau = \max\!\bigl(\operatorname{median}(\text{MI})\cdot 0.1,\; 10^{-3}\bigr)$. It is
+**not a significance-calibrated threshold**: in sparse-signal settings it is
+effectively non-selective, and in dense-signal settings it can prune weak true
+parents below the noise floor.
+
+The dedicated shortcoming is **pairwise-MI blindness to purely-synergistic parents** —
+configurations with three or more variables in which
+
+$$I(A;\,C) \approx 0, \qquad I(B;\,C) \approx 0, \qquad I(A,B;\,C) \gg 0.$$
+
+Phase 0 will reject both $A$ and $B$ pairwise, and the PCMCI+ stage never sees them
+as candidates. Synergy-case detection requires joint (multivariate) MI scoring and is
+out of scope for V3-F04.2.
+
+### Pros and cons — PCMCI+ (V3-F03)
+
+**Pros**
+
+| Pro | Detail |
+|---|---|
+| Autocorrelation control | MCI double conditioning breaks spurious lagged associations between autocorrelated series. |
+| Lagged + contemporaneous | Recovers links at $h \ge 0$ in a single run. |
+| Pluggable CI backends | `parcorr`, `gpdc`, `cmiknn` at construction time. |
+| Established baseline | Validated reference implementation from the tigramite project. |
+
+**Cons**
+
+| Con | Detail |
+|---|---|
+| Single `alpha` knob | One level collapses PC₁ screening and MCI threshold; no independent control. |
+| `o-o` in `parents` | Contemporaneous `o-o` adjacency is surfaced inside `CausalGraphResult.parents` and can be misread as a directed parent claim. |
+| Hidden stage controls | `contemp_collider_rule`, `conflict_resolution`, and `fdr_method` are not exposed through the adapter surface. |
+| Global RNG coupling | `tigramite` mutates the global NumPy RNG; adapter is single-threaded only. |
+
+### Pros and cons — PCMCI-AMI-Hybrid (V3-F04)
+
+**Pros**
+
+| Pro | Detail |
+|---|---|
+| Phase 0 pruning | Unconditional lagged MI removes clearly independent source–target pairs before costly CI testing. |
+| Residualised kNN CI | `linear_residual` + kNN MI path can recover nonlinear couplings that `parcorr` misses on this benchmark. |
+| Perf vectorisation (V3-F04.2) | QR-projector reuse across shuffle permutations on the linear-residual path. |
+| Opt-in block-bootstrap null (V3-F04.2) | `shuffle_scheme="block"` enables a time-series-aware null for autocorrelated inputs. |
+
+**Cons**
+
+| Con | Detail |
+|---|---|
+| Pairwise MI blind-spot | Phase 0 cannot see purely-synergistic parents ($I(A;C)\approx 0,\ I(B;C)\approx 0,\ I(A,B;C)\gg 0$). |
+| Default i.i.d. shuffle | Default null over-rejects on raw autocorrelated series; block scheme is opt-in. |
+| Aliased phases | `phase1_skeleton` and `phase2_final` point at the same tigramite graph object. |
+| "CrossAMI" is a proposal label | Past-window CrossAMI triage is a proposal item; shipped Phase 0 is single-lag unconditional MI. |
+| Benchmark-specific nonlinear recovery | On the 8-variable benchmark at `seed=43, n=1200, max_lag=2, alpha=0.05`, at most one of the two nonlinear parents is recovered. |
+
+
 
 Runge, J. (2020). Discovering contemporaneous and lagged causal relations in
 autocorrelated nonlinear time series datasets. *Proceedings of the 36th Conference

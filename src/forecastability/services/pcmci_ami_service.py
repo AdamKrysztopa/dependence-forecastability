@@ -23,6 +23,7 @@ def build_pcmci_ami_hybrid(
     ami_threshold: float | None = None,
     n_neighbors: int = 8,
     min_pairs: int = 50,
+    shuffle_scheme: Literal["iid", "block"] = "iid",
 ) -> CausalGraphPort:
     """Create a PCMCI-AMI-Hybrid causal discovery adapter.
 
@@ -31,6 +32,10 @@ def build_pcmci_ami_hybrid(
         ami_threshold: Optional fixed AMI pruning threshold.
         n_neighbors: kNN neighbors for MI estimation.
         min_pairs: Minimum observation pairs for MI computation.
+        shuffle_scheme: Permutation scheme for the ``knn_cmi`` null distribution.
+            ``"iid"`` (default) is fast and appropriate for residualised or
+            whitened inputs; ``"block"`` preserves short-range autocorrelation
+            (Politis & Romano, 1994) and is recommended on raw AR-like series.
 
     Returns:
         A ``CausalGraphPort``-compatible adapter.
@@ -41,4 +46,5 @@ def build_pcmci_ami_hybrid(
         ami_threshold=ami_threshold,
         n_neighbors=n_neighbors,
         min_pairs=min_pairs,
+        shuffle_scheme=shuffle_scheme,
     )

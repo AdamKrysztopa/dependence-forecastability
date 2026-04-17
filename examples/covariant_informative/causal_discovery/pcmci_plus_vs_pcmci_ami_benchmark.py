@@ -6,6 +6,8 @@ nonlinear drivers visually, with Pearson r and per-method detection status.
 
 from __future__ import annotations
 
+import sys
+import time
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -15,6 +17,13 @@ import pandas as pd
 from forecastability.adapters.pcmci_ami_adapter import PcmciAmiAdapter
 from forecastability.adapters.tigramite_adapter import TigramiteAdapter
 from forecastability.utils.synthetic import generate_covariant_benchmark
+
+sys.path.insert(0, str(Path(__file__).parent))
+from _benchmark_ground_truth import (  # noqa: E402
+    GROUND_TRUTH_PARENTS,
+    print_ground_truth_table,
+    summarize_recovery,
+)
 
 if TYPE_CHECKING:
     from matplotlib.figure import Figure
@@ -246,6 +255,9 @@ def main() -> None:
     data = df.to_numpy()
     var_names = df.columns.tolist()
 
+    print_ground_truth_table()
+
+    t0 = time.perf_counter()
     baseline_result = baseline_adapter.discover(
         data,
         var_names,
@@ -253,6 +265,8 @@ def main() -> None:
         alpha=ALPHA,
         random_state=SEED,
     )
+    baseline_elapsed = time.perf_counter() - t0
+    t0 = time.perf_counter()
     hybrid_result = hybrid_adapter.discover_full(
         data,
         var_names,
@@ -260,6 +274,10 @@ def main() -> None:
         alpha=ALPHA,
         random_state=SEED,
     )
+    hybrid_elapsed = time.perf_counter() - t0
+    print(f"PCMCI+ (parcorr) wall-clock:    {baseline_elapsed:.2f}s")
+    print(f"PCMCI-AMI (knn_cmi) wall-clock: {hybrid_elapsed:.2f}s")
+    print()
 
     baseline_parents = set(baseline_result.parents[TARGET])
     hybrid_parents = set(hybrid_result.phase2_final.parents[TARGET])
@@ -298,8 +316,34 @@ def main() -> None:
     if hybrid_self_fp:
         print(
             f"  [NOTE] Likely false positive(s) — non-structural self-lag(s): "
-            f"{_format_parents(hybrid_self_fp)}"
+            f"{_format_parents(hybrid_self_fp)}  (AR(1) target has no lag>1 structural self-link)"
         )
+    print()
+    baseline_parents_sorted = sorted(baseline_parents, key=lambda p: (p[1], p[0]))
+    hybrid_parents_sorted = sorted(hybrid_parents, key=lambda p: (p[1], p[0]))
+    print(
+        summarize_recovery(
+            method_label="PCMCI+ (parcorr)",
+            recovered_parents=baseline_parents_sorted,
+        )
+    )
+    print()
+    print(
+        summarize_recovery(
+            method_label="PCMCI-AMI (knn_cmi)",
+            recovered_parents=hybrid_parents_sorted,
+        )
+    )
+    print()
+    print("Side-by-side recovery table:")
+    print(f"  {'Parent':<24s} {'PCMCI+':>8s}   {'PCMCI-AMI':>10s}")
+    print(f"  {'-' * 24} {'-' * 8}   {'-' * 10}")
+    for name, lag, _coef, _kind in GROUND_TRUTH_PARENTS:
+        formatted = f"{name}(t-{lag})" if lag > 0 else f"{name}(t)"
+        pcmci_mark = "✓" if (name, lag) in baseline_parents else "✗"
+        ami_mark = "✓" if (name, lag) in hybrid_parents else "✗"
+        print(f"  {formatted:<24s} {pcmci_mark:>8s}   {ami_mark:>10s}")
+    print()
     print()
     print(f"Expected nonlinear parents: {_format_parents(EXPECTED_NONLINEAR_PARENTS)}")
     print(f"PCMCI+ nonlinear parents found: {_format_parents(baseline_nonlinear)}")

@@ -34,6 +34,8 @@ NOT a causal parent:
 
 from __future__ import annotations
 
+import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -41,6 +43,12 @@ import numpy as np
 
 from forecastability.adapters.pcmci_ami_adapter import PcmciAmiAdapter
 from forecastability.utils.synthetic import generate_covariant_benchmark
+
+sys.path.insert(0, str(Path(__file__).parent))
+from _benchmark_ground_truth import (  # noqa: E402
+    print_ground_truth_table,
+    summarize_recovery,
+)
 
 _FIG_PATH = Path(
     "outputs/figures/examples/covariant_informative/causal_discovery/pcmci_ami_hybrid_benchmark.png"
@@ -62,11 +70,14 @@ def _print_narrative() -> None:
     """Print the scientific question and method overview."""
     width = 72
     print("\n" + "=" * width)
-    print("  PCMCI-AMI-Hybrid: AMI triage + residualized kNN CI on benchmark")
+    print(
+        "  PCMCI-AMI-Hybrid: unconditional lagged MI triage (Phase 0) + "
+        "residualized kNN CI (Phases 1–2) on benchmark"
+    )
     print("=" * width)
     print()
     print("Method overview (three phases):")
-    print("  Phase 0 — unconditional MI triage:")
+    print("  Phase 0 — unconditional lagged MI triage:")
     print("    Compute MI(source_lag, target) for all (source, lag) pairs.")
     print("    Prune pairs whose MI falls below a noise-floor threshold.")
     print()
@@ -84,9 +95,9 @@ def _print_phase0_results(
     pruned_count: int,
     kept_count: int,
 ) -> None:
-    """Print Phase 0 MI triage diagnostics."""
+    """Print Phase 0 unconditional lagged MI triage diagnostics."""
     print("─" * 72)
-    print("Phase 0 — AMI triage results:")
+    print("Phase 0 — unconditional lagged MI triage results:")
     print(f"  Threshold: {ami_threshold:.6f}")
     print(f"  Candidates pruned: {pruned_count}")
     print(f"  Candidates kept:   {kept_count}")
@@ -124,7 +135,10 @@ def _print_phase2_results(
 
     direct_found = ("driver_direct", 2) in recovered
     mediated_found = ("driver_mediated", 1) in recovered
+    contemp_found = ("driver_contemp", 0) in recovered
+    self_lag1_found = ("target", 1) in recovered
     nonlin_sq_found = ("driver_nonlin_sq", 1) in recovered
+    nonlin_abs_found = ("driver_nonlin_abs", 1) in recovered
     redundant_excluded = all(src != _REDUNDANT_DRIVER for src, _ in recovered)
     noise_excluded = all(src != _NOISE_DRIVER for src, _ in recovered)
 
@@ -132,21 +146,55 @@ def _print_phase2_results(
         marker = "PASS" if passed else "FAIL"
         print(f"  [{marker}] {label}")
 
+    def _expected_or_missed(label: str, *, passed: bool) -> None:
+        # Used for known-partial-recovery checks where a silent miss should
+        # not masquerade as PASS.
+        marker = "expected" if passed else "missed"
+        print(f"  [{marker}] {label}")
+
     print("  Causal discovery checks:")
     _check("driver_direct (lag 2) recovered", passed=direct_found)
     _check("driver_mediated (lag 1) recovered", passed=mediated_found)
-    _check(
-        "driver_nonlin_sq (lag 1) recovered — benchmark nonlinear parent",
+    _check("target (lag 1) self-AR recovered", passed=self_lag1_found)
+    _expected_or_missed(
+        "driver_contemp (lag 0) recovered — contemporaneous link",
+        passed=contemp_found,
+    )
+    _expected_or_missed(
+        "driver_nonlin_sq (lag 1) recovered — quadratic parent",
         passed=nonlin_sq_found,
     )
-    _check(
-        "driver_redundant correctly EXCLUDED",
-        passed=redundant_excluded,
+    _expected_or_missed(
+        "driver_nonlin_abs (lag 1) recovered — abs-value parent",
+        passed=nonlin_abs_found,
     )
+    _check("driver_redundant correctly EXCLUDED", passed=redundant_excluded)
     _check("driver_noise correctly EXCLUDED", passed=noise_excluded)
-    if nonlin_sq_found:
+
+    recovered_nonlin_names = [
+        name
+        for name, hit in (
+            ("driver_nonlin_sq", nonlin_sq_found),
+            ("driver_nonlin_abs", nonlin_abs_found),
+        )
+        if hit
+    ]
+    missed_nonlin_names = [
+        name
+        for name, hit in (
+            ("driver_nonlin_sq", nonlin_sq_found),
+            ("driver_nonlin_abs", nonlin_abs_found),
+        )
+        if not hit
+    ]
+    if recovered_nonlin_names or missed_nonlin_names:
+        recovered_str = ", ".join(recovered_nonlin_names) or "(none)"
+        missed_str = ", ".join(missed_nonlin_names) or "(none)"
         print()
-        print("  ★ On this benchmark, kNN MI recovered the quadratic coupling that parcorr missed.")
+        print(
+            f"  ★ On this benchmark, kNN MI recovered {recovered_str}; "
+            f"{missed_str} were NOT recovered at these settings."
+        )
     print()
 
 
@@ -241,6 +289,7 @@ def main() -> None:
     var_names = df.columns.tolist()
 
     _print_narrative()
+    print_ground_truth_table()
 
     try:
         adapter = PcmciAmiAdapter()
@@ -251,7 +300,10 @@ def main() -> None:
         )
         raise SystemExit(0) from exc
 
+    t0 = time.perf_counter()
     result = adapter.discover_full(data, var_names, max_lag=2, alpha=0.05, random_state=42)
+    elapsed = time.perf_counter() - t0
+    print(f"discover_full wall-clock: {elapsed:.2f}s")
 
     target_parents = sorted(
         result.causal_graph.parents[_TARGET],
@@ -266,6 +318,9 @@ def main() -> None:
     )
 
     _print_phase2_results(target_parents=target_parents)
+
+    print(summarize_recovery(method_label="PCMCI-AMI (knn_cmi)", recovered_parents=target_parents))
+    print()
 
     _print_pruning_summary(
         pruned_count=result.phase0_pruned_count,

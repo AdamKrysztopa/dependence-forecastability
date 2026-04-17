@@ -34,6 +34,8 @@ Reference:
 
 from __future__ import annotations
 
+import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -41,6 +43,12 @@ import numpy as np
 
 from forecastability.adapters.tigramite_adapter import TigramiteAdapter
 from forecastability.utils.synthetic import generate_covariant_benchmark
+
+sys.path.insert(0, str(Path(__file__).parent))
+from _benchmark_ground_truth import (  # noqa: E402
+    print_ground_truth_table,
+    summarize_recovery,
+)
 
 _FIG_PATH = Path(
     "outputs/figures/examples/covariant_informative/causal_discovery/pcmci_plus_benchmark.png"
@@ -73,8 +81,12 @@ def _print_narrative() -> None:
     print("  driver_nonlin_sq  couples to target via x² (quadratic).")
     print("  driver_nonlin_abs couples to target via |x| (abs-value).")
     print("  Both have Pearson/Spearman ≈ 0 with target by construction.")
-    print("  A linear CI test (parcorr) CANNOT detect these links.")
-    print("  Information-theoretic methods (MI/TE/GCMI) would recover them.")
+    print("  A linear CI test (parcorr) typically fails to detect these links on this benchmark.")
+    print(
+        "  Information-theoretic methods (MI/TE/GCMI) can detect some of these "
+        "— see Script 2 / Script 3 "
+        "(one of the two nonlinear parents recovered at the current settings)."
+    )
     print()
 
 
@@ -240,6 +252,7 @@ def main() -> None:
     var_names = df.columns.tolist()
 
     _print_narrative()
+    print_ground_truth_table()
 
     try:
         adapter = TigramiteAdapter(ci_test="parcorr")
@@ -250,8 +263,14 @@ def main() -> None:
         )
         raise SystemExit(0) from exc
 
+    t0 = time.perf_counter()
     result = adapter.discover(data, var_names, max_lag=3, alpha=0.01, random_state=42)
+    elapsed = time.perf_counter() - t0
+    print(f"Discover wall-clock: {elapsed:.2f}s")
     target_parents = sorted(result.parents[_TARGET], key=lambda item: (item[1], item[0]))
+    print()
+    print(summarize_recovery(method_label="PCMCI+ (parcorr)", recovered_parents=target_parents))
+    print()
 
     _print_comparison(
         df=df,

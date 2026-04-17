@@ -46,11 +46,12 @@ def generate_covariant_benchmark(
     distribution P(nl1, y) and P(nl2, y) are statistically dependent.
 
     Ground-truth causal parents of target:
-        driver_direct      at lag 2  (strong linear direct)
-        driver_mediated    at lag 1  (mediated through driver_direct)
-        driver_contemp     at lag 0  (contemporaneous linear link)
-        driver_nonlin_sq   at lag 1  (quadratic nonlinear — Pearson/Spearman blind)
-        driver_nonlin_abs  at lag 1  (abs-value nonlinear — Pearson/Spearman blind)
+        target             at lag 1  (β=0.75, linear self-AR)
+        driver_direct      at lag 2  (β=0.80, strong linear direct)
+        driver_mediated    at lag 1  (β=0.50, mediated through driver_direct)
+        driver_contemp     at lag 0  (β=0.35, contemporaneous linear link)
+        driver_nonlin_sq   at lag 1  (β=0.40, quadratic nonlinear — Pearson/Spearman blind)
+        driver_nonlin_abs  at lag 1  (β=0.35, abs-value nonlinear — Pearson/Spearman blind)
 
     NOT causal parents:
         driver_redundant: correlated with driver_direct but not a structural cause

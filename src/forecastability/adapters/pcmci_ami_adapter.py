@@ -346,12 +346,17 @@ class PcmciAmiAdapter:
         ami_threshold: float | None = None,
         n_neighbors: int = 8,
         min_pairs: int = 50,
+        shuffle_scheme: Literal["iid", "block"] = "iid",
     ) -> None:
+        from forecastability.adapters.knn_cmi_ci_test import _validate_shuffle_scheme
+
+        _validate_shuffle_scheme(shuffle_scheme)
         _check_tigramite_available()
         self._ci_test_name = ci_test
         self._ami_threshold = ami_threshold
         self._n_neighbors = n_neighbors
         self._min_pairs = min_pairs
+        self._shuffle_scheme: Literal["iid", "block"] = shuffle_scheme
 
     def _build_ci_test(self, *, seed: int = 42) -> object:
         """Instantiate the tigramite conditional-independence test."""
@@ -363,6 +368,7 @@ class PcmciAmiAdapter:
                 n_permutations=199,
                 residual_backend="linear_residual",
                 seed=seed,
+                shuffle_scheme=self._shuffle_scheme,
             )
         if self._ci_test_name == "parcorr":
             module = importlib.import_module("tigramite.independence_tests.parcorr")

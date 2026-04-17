@@ -233,6 +233,11 @@ $TE(X \to Y)$ peaked at lag 2 with a strong directional gap vs $TE(Y \to X)$.
 
 ### V3-F04 — PCMCI-AMI-Hybrid (shipped variant)
 
+**Status: Partial / Experimental.** V3-F04.2 second-loop review added
+performance vectorisation and an opt-in block-bootstrap null. Several items from
+the original proposal remain proposal-only; see caveats below and
+[theory/pcmci_plus.md](theory/pcmci_plus.md#shipped-variant-semantics-v3-f03-v3-f04).
+
 | Artefact | Status | Location |
 |---|---|---|
 | KnnCMI CondIndTest | ✅ | `src/forecastability/adapters/knn_cmi_ci_test.py` |
@@ -244,17 +249,42 @@ $TE(X \to Y)$ peaked at lag 2 with a strong directional gap vs $TE(Y \to X)$.
 | Example (comparison) | ✅ | `examples/covariant_informative/causal_discovery/pcmci_plus_vs_pcmci_ami_benchmark.py` |
 | Example (PCMCI+ base) | ✅ | `examples/covariant_informative/causal_discovery/pcmci_plus_benchmark.py` |
 
-**What is implemented.**
-- Phase 0 performs real unconditional MI/CrossMI screening over lagged `(source, lag, target)` triplets and passes survivors into Tigramite `link_assumptions` before the PCMCI+ run.
-- The default `knn_cmi` path uses `linear_residual` to remove the conditioning set, scores dependence with kNN MI on residuals, and calibrates p-values with 199 shuffle permutations plus the Phipson and Smyth correction.
-- `PcmciAmiResult` exposes the Phase 0 screening diagnostics alongside the mapped Phase 1 and Phase 2 PCMCI+ outputs.
+**Delivered.**
+- Phase 0 triage: **unconditional lagged pairwise MI** (CrossMI at single lag;
+  diagonal reduces to AMI at lag $h$) over `(source, lag, target)` triplets,
+  survivors passed into Tigramite `link_assumptions`.
+- Residualised kNN CI (`knn_cmi`): `linear_residual` conditioning removal, kNN MI on
+  residuals, shuffle permutation with Phipson–Smyth correction.
+- **V3-F04.2**: opt-in `shuffle_scheme="block"` (Politis–Romano circular blocks,
+  $L=\max(1,\,\operatorname{round}(1.75\,T^{1/3}))$) on
+  `build_knn_cmi_test(...)`, `PcmciAmiAdapter(...)`, and `build_pcmci_ami_hybrid(...)`.
+- **V3-F04.2**: linear-residual null-distribution vectorisation (QR-projector reuse
+  across permutations) — wall-clock improvement on the comparison script from
+  ≈ 102.9 s to ≈ 97.9 s.
 
-**Current caveats.**
-- The stronger proposal to rank downstream conditioning sets by Phase 0 MI is not implemented in the shipped adapter; after pruning, conditioning-set selection follows Tigramite PCMCI+ behavior.
-- The shipped `knn_cmi` backend is residualization-based, so it should be read as a practical hybrid CI path rather than fully non-parametric conditioning.
-- Phase 0 pruning narrows the candidate set, but the implementation does not claim a general statistical-power gain from pruning alone.
+**Proposal-only (not yet shipped).**
+- Past-window CrossAMI triage (currently: single-lag unconditional MI).
+- MI-ranked conditioning-set selection inside PCMCI+ (currently: tigramite default).
+- Distinct `phase1_skeleton` / `phase2_final` outputs (currently: aliases to the
+  single tigramite graph object).
+
+**Caveats.**
+- Default `shuffle_scheme="iid"` is **not a time-series-aware null** and over-rejects
+  on autocorrelated series. Use `shuffle_scheme="block"` for valid p-values on raw
+  AR data; default stays i.i.d. for speed and backward compatibility.
+- `CausalGraphResult.parents` currently surfaces contemporaneous `o-o` entries as
+  adjacency with unresolved orientation, **not directed parent claims**.
+- Phase 0 default threshold $\max(\operatorname{median}(\text{MI})\cdot 0.1,\,10^{-3})$
+  is a heuristic noise floor, not a significance-calibrated threshold, and is blind
+  to purely-synergistic parents by construction (pairwise MI only).
 
 **Current evidence.**
-- The clearest back-to-back demonstrator is `examples/covariant_informative/causal_discovery/pcmci_plus_vs_pcmci_ami_benchmark.py` with `seed=43`, `n=1200`, `max_lag=2`, and `alpha=0.05`.
-- On that synthetic benchmark, PCMCI+ with `parcorr` misses the expected nonlinear parents while the shipped hybrid recovers at least one of them.
-- Treat that comparison as benchmark-specific illustration, not broad validation of general nonlinear superiority.
+- V3-F04.2 example scripts are labelled **illustrative synthetic evidence**; they
+  print the six-row ground-truth table (including `target(t-1)` self-AR) at the
+  start and a per-parent recovery summary at the end.
+- On the benchmark at `seed=43, n=1200, max_lag=2, alpha=0.05`, PCMCI-AMI recovers
+  `driver_nonlin_sq(t-1)` but misses `driver_nonlin_abs(t-1)` — **nonlinear-parent
+  recovery is benchmark-specific, and at the current settings at most one of the
+  two nonlinear parents is recovered.**
+- Treat these comparisons as illustrative, not as broad validation of general
+  nonlinear superiority.
