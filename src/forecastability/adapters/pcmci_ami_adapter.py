@@ -15,7 +15,7 @@ from typing import Literal
 
 import numpy as np
 
-from forecastability.adapters.tigramite_adapter import (
+from forecastability.adapters._tigramite_shared import (
     _DIRECTED_LINKS,
     _check_tigramite_available,
 )
@@ -348,7 +348,7 @@ class PcmciAmiAdapter:
         min_pairs: int = 50,
         shuffle_scheme: Literal["iid", "block"] = "iid",
     ) -> None:
-        from forecastability.adapters.knn_cmi_ci_test import _validate_shuffle_scheme
+        from forecastability.diagnostics.knn_cmi_ci_test import _validate_shuffle_scheme
 
         _validate_shuffle_scheme(shuffle_scheme)
         _check_tigramite_available()
@@ -361,7 +361,7 @@ class PcmciAmiAdapter:
     def _build_ci_test(self, *, seed: int = 42) -> object:
         """Instantiate the tigramite conditional-independence test."""
         if self._ci_test_name == "knn_cmi":
-            from forecastability.adapters.knn_cmi_ci_test import build_knn_cmi_test
+            from forecastability.diagnostics.knn_cmi_ci_test import build_knn_cmi_test
 
             return build_knn_cmi_test(
                 n_neighbors=self._n_neighbors,

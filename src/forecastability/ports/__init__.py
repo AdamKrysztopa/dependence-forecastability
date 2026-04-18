@@ -17,9 +17,11 @@ from forecastability.utils.types import (
     CanonicalExampleResult,
     CausalGraphResult,
     InterpretationResult,
+    PcmciAmiResult,
 )
 
 __all__ = [
+    "CausalGraphFullPort",
     "CausalGraphPort",
     "CheckpointPort",
     "CurveComputePort",
@@ -184,3 +186,34 @@ class CausalGraphPort(Protocol):
         alpha: float = 0.01,
         random_state: int = 42,
     ) -> CausalGraphResult: ...
+
+
+@runtime_checkable
+class CausalGraphFullPort(Protocol):
+    """Extended causal-discovery port for adapters that also expose ``discover_full``.
+
+    Any adapter satisfying this port satisfies ``CausalGraphPort`` structurally
+    (it has both ``discover`` and ``discover_full``).  Declared as a flat Protocol
+    rather than a ``CausalGraphPort`` subclass to avoid ``isinstance`` hazards with
+    multi-level ``@runtime_checkable`` Protocols on Python < 3.12.
+    """
+
+    def discover(
+        self,
+        data: np.ndarray,
+        var_names: list[str],
+        *,
+        max_lag: int,
+        alpha: float = 0.01,
+        random_state: int = 42,
+    ) -> CausalGraphResult: ...
+
+    def discover_full(
+        self,
+        data: np.ndarray,
+        var_names: list[str],
+        *,
+        max_lag: int,
+        alpha: float = 0.01,
+        random_state: int = 42,
+    ) -> PcmciAmiResult: ...

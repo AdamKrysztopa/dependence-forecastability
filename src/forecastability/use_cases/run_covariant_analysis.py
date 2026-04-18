@@ -7,12 +7,12 @@ without introducing new metric math in the use-case layer.
 
 from __future__ import annotations
 
-from typing import Protocol, cast, runtime_checkable
+from typing import cast
 
 import numpy as np
 
 from forecastability.metrics.scorers import DependenceScorer, default_registry
-from forecastability.ports import CausalGraphPort
+from forecastability.ports import CausalGraphFullPort, CausalGraphPort
 from forecastability.services.exog_partial_curve_service import compute_exog_partial_curve
 from forecastability.services.exog_raw_curve_service import compute_exog_raw_curve
 from forecastability.services.gcmi_service import compute_gcmi_curve
@@ -65,21 +65,6 @@ _CONDITIONING_DISCLAIMER = (
     "docs/plan/v0_3_0_covariant_informative_ultimate_plan.md."
 )
 _FORWARD_LINK = "docs/plan/v0_3_1_lagged_exogenous_triage_plan.md"
-
-
-@runtime_checkable
-class _PcmciAmiFullPort(Protocol):
-    """Port-like protocol for adapters that expose ``discover_full``."""
-
-    def discover_full(
-        self,
-        data: np.ndarray,
-        var_names: list[str],
-        *,
-        max_lag: int,
-        alpha: float = 0.01,
-        random_state: int = 42,
-    ) -> PcmciAmiResult: ...
 
 
 def _resolve_requested_methods(methods: list[str] | None) -> tuple[str, ...]:
@@ -237,7 +222,7 @@ def _run_pcmci_ami(
     except ImportError:
         return None
 
-    if not isinstance(port, _PcmciAmiFullPort):
+    if not isinstance(port, CausalGraphFullPort):
         raise TypeError("build_pcmci_ami_hybrid() returned an object without discover_full()")
 
     return port.discover_full(

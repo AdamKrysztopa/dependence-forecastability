@@ -47,15 +47,27 @@ Everything else in `src/forecastability/` exists to support those facades and re
 | `utils/` | Config models, typed containers, datasets, validation, plotting, and repo workflow support |
 | `adapters/` | CLI, dashboard, API, MCP, agent, settings, event, checkpoint, and presenter adapters |
 | `services/` | Internal builder/orchestration helpers used by analyzers and use cases |
-| `ports/` | Protocol-oriented seams for the architecture direction |
+| `ports/` | Protocol-oriented seams for the architecture direction, including causal discovery contracts (`CausalGraphPort`, `CausalGraphFullPort`) |
 | `bootstrap/` | Bootstrap helpers such as output directory setup |
+
+## Causal Discovery Port Boundary (V3-AI-02)
+
+The PCMCI and PCMCI-AMI causal-discovery path now uses explicit protocol seams in `ports/`.
+
+| Port | Contract | Primary use |
+| --- | --- | --- |
+| `CausalGraphPort` | `discover(...) -> CausalGraphResult` | PCMCI+ style graph discovery |
+| `CausalGraphFullPort` | `discover(...) -> CausalGraphResult` and `discover_full(...) -> PcmciAmiResult` | PCMCI-AMI full three-phase result path |
+
+> [!IMPORTANT]
+> PCMCI-AMI orchestration now follows the inward-only dependency rule: use cases depend on declared ports (protocol contracts), and adapters satisfy those contracts without adapter-to-adapter helper coupling.
 
 ## Dependency Direction
 
 The practical dependency direction is:
 
 1. Entrypoints and adapters call the package facades or use cases.
-2. Use cases orchestrate triage models, pipeline helpers, and internal services.
+2. Use cases orchestrate triage models, pipeline helpers, and internal services, and depend on causal discovery through declared `ports/` contracts.
 3. Triage, pipeline, and services consume metrics, diagnostics, reporting, and utils.
 4. Ports and bootstrap remain support seams rather than primary business-logic owners.
 

@@ -130,12 +130,13 @@ from forecastability.utils.synthetic import generate_covariant_benchmark, genera
 |---|---|
 | `TigramiteAdapter` | Wraps PCMCI+ from `tigramite` behind `CausalGraphPort`. Accepts `ci_test` of `"parcorr"` (default), `"gpdc"`, or `"cmiknn"`. Requires the `tigramite` optional extra. |
 | `CausalGraphPort` | `@runtime_checkable` Protocol defining the `discover(data, var_names, *, max_lag, alpha, random_state)` contract. Use for type annotations and `isinstance` checks. |
+| `CausalGraphFullPort` | `@runtime_checkable` Protocol extending the causal-discovery boundary with `discover_full(...) -> PcmciAmiResult` for the PCMCI-AMI hybrid path while still supporting `discover(...)`. |
 | `CausalGraphResult` | Pydantic result model holding `parents`, `link_matrix`, `val_matrix`, and `metadata` from a completed PCMCI+ run. |
 | `generate_covariant_benchmark` | Generates an 8-variable ground-truth system with known linear, mediated, redundant, contemporaneous, and nonlinear structural links. Primary fixture for adapter and covariant-model tests. |
 | `generate_directional_pair` | Generates a simple $X \to Y$ directional pair for TE and GCMI validation. |
 
 > [!WARNING]
-> `CausalGraphPort` lives under `ports/` and `TigramiteAdapter` under `adapters/` —
+> `CausalGraphPort` and `CausalGraphFullPort` live under `ports/` and `TigramiteAdapter` under `adapters/` —
 > namespaces otherwise marked internal. These causal discovery symbols are the
 > explicit exception: they are part of the Phase 1 covariant surface and intended
 > for direct import. `generate_covariant_benchmark` and `generate_directional_pair`
