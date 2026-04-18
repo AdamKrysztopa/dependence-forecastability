@@ -140,7 +140,8 @@ from forecastability.utils.synthetic import generate_covariant_benchmark, genera
 > namespaces otherwise marked internal. These causal discovery symbols are the
 > explicit exception: they are part of the Phase 1 covariant surface and intended
 > for direct import. `generate_covariant_benchmark` and `generate_directional_pair`
-> are similarly available directly from `forecastability.utils.synthetic`.
+> are now also part of the stable facade surface via top-level `forecastability`
+> re-exports (with `forecastability.utils.synthetic` remaining valid).
 
 ## Schema Stability
 

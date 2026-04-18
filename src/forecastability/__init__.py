@@ -38,6 +38,10 @@ from forecastability.utils.datasets import (
     generate_ar1,
     generate_white_noise,
 )
+from forecastability.utils.synthetic import (
+    generate_covariant_benchmark,
+    generate_directional_pair,
+)
 from forecastability.utils.types import (
     BackendComparisonResult,
     CanonicalExampleResult,
@@ -84,6 +88,8 @@ __all__ = [
     "gcmi_scorer",
     "compute_gcmi",
     "generate_ar1",
+    "generate_covariant_benchmark",
+    "generate_directional_pair",
     "generate_white_noise",
     "BenchmarkDataConfig",
     "InterpretationResult",
