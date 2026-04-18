@@ -377,13 +377,12 @@ Required `0.3.1` agent-layer semantics:
 | V3_1-F00 | Typed fingerprint result models | 0 | Extends `utils/types.py` patterns | `ForecastabilityFingerprint`, `RoutingRecommendation`, `FingerprintBundle` | ✅ **Done** |
 | V3_1-F00.1 | Synthetic fingerprint archetype generators | 0 | Extends `utils/synthetic.py` | `generate_white_noise`, `generate_ar1_monotonic`, `generate_seasonal_periodic`, `generate_nonlinear_mixed`, `generate_mediated_directness_drop` | ✅ **Done** |
 | V3_1-F01 | Linear Gaussian-information baseline | 1 | Reuses Pearson / autocorrelation logic | per-horizon `I_G(h)` service with stable clipping and aggregation | ✅ **Done** |
-| V3_1-F02 | Fingerprint builder service | 1 | Builds on AMI/profile outputs | `information_mass`, `information_horizon`, `information_structure`, `nonlinear_share` | Proposed |
 | V3_1-F02 | Fingerprint builder service | 1 | Builds on AMI/profile outputs | `information_mass`, `information_horizon`, `information_structure`, `nonlinear_share` | ✅ **Done** |
 | V3_1-F03 | Routing policy service | 1 | Extends current recommendation logic | explicit model-family policy keyed by fingerprint buckets | ✅ **Done** |
 | V3_1-F04 | Fingerprint orchestration use case | 2 | Follows existing use-case / facade pattern | `run_forecastability_fingerprint()` and optional bundle integration | ✅ **Done** |
 | V3_1-F05 | Unified summary rendering | 2 | Extends current reporting helpers | compact summary row / markdown / JSON surface for fingerprint + routing | ✅ **Done** |
-| V3_1-F05.1 | Agent-ready fingerprint adapters | 2 | Extends existing A1/A2/A3 agent pattern | `fingerprint_agent_payload_models.py`, versioned serialiser, deterministic interpretation adapter | Proposed |
-| V3_1-F05.2 | Optional live fingerprint agent | 2 | Extends existing `adapters/llm` pattern | `fingerprint_agent.py` consuming deterministic payloads only | Proposed |
+| V3_1-F05.1 | Agent-ready fingerprint adapters | 2 | Extends existing A1/A2/A3 agent pattern | `fingerprint_agent_payload_models.py`, versioned serialiser, deterministic interpretation adapter | ✅ **Done** |
+| V3_1-F05.2 | Optional live fingerprint agent | 2 | Extends existing `adapters/llm` pattern | `fingerprint_agent.py` consuming deterministic payloads only | ✅ **Done** |
 | V3_1-F06 | Tests and regression fixtures | 3 | Follows current deterministic regression pattern | synthetic archetypes, threshold tests, routing invariants | Proposed |
 | V3_1-F07 | Showcase script and notebook | 4 | Follows existing walkthrough / showcase pattern | canonical four-series fingerprint demo | Proposed |
 | V3_1-F08 | Public examples and notebook extensions | 5 | Extends examples taxonomy and walkthrough surfaces | minimal Python example, CLI example, notebook cross-links, and reusable example artifacts | Proposed |
