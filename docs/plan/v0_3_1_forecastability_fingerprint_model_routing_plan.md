@@ -379,7 +379,7 @@ Required `0.3.1` agent-layer semantics:
 | V3_1-F01 | Linear Gaussian-information baseline | 1 | Reuses Pearson / autocorrelation logic | per-horizon `I_G(h)` service with stable clipping and aggregation | ✅ **Done** |
 | V3_1-F02 | Fingerprint builder service | 1 | Builds on AMI/profile outputs | `information_mass`, `information_horizon`, `information_structure`, `nonlinear_share` | Proposed |
 | V3_1-F02 | Fingerprint builder service | 1 | Builds on AMI/profile outputs | `information_mass`, `information_horizon`, `information_structure`, `nonlinear_share` | ✅ **Done** |
-| V3_1-F03 | Routing policy service | 1 | Extends current recommendation logic | explicit model-family policy keyed by fingerprint buckets | Proposed |
+| V3_1-F03 | Routing policy service | 1 | Extends current recommendation logic | explicit model-family policy keyed by fingerprint buckets | ✅ **Done** |
 | V3_1-F04 | Fingerprint orchestration use case | 2 | Follows existing use-case / facade pattern | `run_forecastability_fingerprint()` and optional bundle integration | Proposed |
 | V3_1-F05 | Unified summary rendering | 2 | Extends current reporting helpers | compact summary row / markdown / JSON surface for fingerprint + routing | Proposed |
 | V3_1-F05.1 | Agent-ready fingerprint adapters | 2 | Extends existing A1/A2/A3 agent pattern | `fingerprint_agent_payload_models.py`, versioned serialiser, deterministic interpretation adapter | Proposed |
