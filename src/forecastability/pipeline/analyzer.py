@@ -13,6 +13,7 @@ from typing import Any, Literal, cast
 import numpy as np
 
 from forecastability.diagnostics.surrogates import compute_significance_bands
+from forecastability.diagnostics.transfer_entropy import compute_transfer_entropy_curve
 from forecastability.metrics.metrics import (
     compute_ami,
     compute_pami_linear_residual,
@@ -45,9 +46,20 @@ from forecastability.services.recommendation_service import (
 )
 from forecastability.services.significance_service import (
     compute_significance_bands_generic,
+    compute_significance_bands_transfer_entropy,
 )
 from forecastability.utils.state import AnalyzerState
 from forecastability.utils.validation import validate_time_series
+
+_TE_MIN_PAIRS = 50
+
+
+def _te_partial_not_supported_error() -> ValueError:
+    """Return the canonical error for unsupported partial TE requests."""
+    return ValueError(
+        "method='te' is not supported for partial curves: "
+        "no validated partial-TE estimand is implemented"
+    )
 
 
 @dataclass(slots=True)
@@ -200,6 +212,22 @@ class ForecastabilityAnalyzer:
         Returns:
             1-D array of shape ``(max_lag,)`` with dependence at each lag.
         """
+        if method == "te":
+            self._registry.get(method)
+            effective_min_pairs = max(min_pairs, _TE_MIN_PAIRS)
+            arr = validate_time_series(ts, min_length=max_lag + effective_min_pairs + 1)
+            raw = compute_transfer_entropy_curve(
+                arr,
+                arr,
+                max_lag=max_lag,
+                min_pairs=effective_min_pairs,
+                random_state=self.random_state,
+            )
+            self.ts = arr
+            self._method = method
+            self._state = dataclasses.replace(self._state, raw=raw)
+            return raw
+
         info = self._registry.get(method)
         arr = validate_time_series(ts, min_length=max_lag + min_pairs + 1)
         self.ts = arr
@@ -230,6 +258,9 @@ class ForecastabilityAnalyzer:
         Returns:
             1-D array of shape ``(max_lag,)`` with partial dependence at each lag.
         """
+        if method == "te":
+            raise _te_partial_not_supported_error()
+
         info = self._registry.get(method)
         arr = validate_time_series(ts, min_length=max_lag + min_pairs + 1)
         self.ts = arr
@@ -318,6 +349,22 @@ class ForecastabilityAnalyzer:
             raise ValueError("No series cached. Call compute_raw/compute_partial first.")
         if which not in {"raw", "partial"}:
             raise ValueError("which must be one of {'raw', 'partial'}")
+        if method == "te" and which == "partial":
+            raise _te_partial_not_supported_error()
+
+        if method == "te":
+            self._registry.get(method)
+            effective_min_pairs = max(min_pairs, _TE_MIN_PAIRS)
+            bands = compute_significance_bands_transfer_entropy(
+                self.ts,
+                self.n_surrogates,
+                self.random_state,
+                max_lag,
+                min_pairs=effective_min_pairs,
+                n_jobs=n_jobs,
+            )
+            self._state = dataclasses.replace(self._state, raw_bands=bands)
+            return bands
 
         info = self._registry.get(method)
         bands = compute_significance_bands_generic(
@@ -375,6 +422,12 @@ class ForecastabilityAnalyzer:
         if method == "mi":
             return self._analyze_legacy(
                 ts, max_lag, partial_lag, compute_surrogates=compute_surrogates
+            )
+        if method == "te":
+            return self._analyze_transfer_entropy(
+                ts,
+                max_lag,
+                compute_surrogates=compute_surrogates,
             )
 
         return self._analyze_generic(
@@ -497,6 +550,45 @@ class ForecastabilityAnalyzer:
             method=method,
         )
 
+    def _analyze_transfer_entropy(
+        self,
+        ts: np.ndarray,
+        max_lag: int,
+        *,
+        compute_surrogates: bool,
+    ) -> AnalyzeResult:
+        """Analyze TE using a dedicated raw-only path.
+
+        Partial TE is intentionally disabled because the current residualized
+        partial-curve formulation is not a valid TE estimand.
+        """
+        raw = self.compute_raw(ts, max_lag=max_lag, method="te", min_pairs=_TE_MIN_PAIRS)
+        partial = np.array([], dtype=float)
+        self._state = dataclasses.replace(self._state, partial=partial, partial_bands=None)
+
+        if compute_surrogates:
+            self.compute_significance_generic(
+                "raw",
+                max_lag,
+                method="te",
+                min_pairs=_TE_MIN_PAIRS,
+            )
+            assert self._state.raw_bands is not None  # noqa: S101
+            sig_raw = np.where(raw > self._state.raw_bands[1])[0] + 1
+        else:
+            sig_raw = np.array([], dtype=int)
+
+        sig_partial = np.array([], dtype=int)
+        rec = _triage_recommendation(raw, family="nonlinear")
+        return AnalyzeResult(
+            raw=raw.copy(),
+            partial=partial,
+            sig_raw_lags=sig_raw,
+            sig_partial_lags=sig_partial,
+            recommendation=rec,
+            method="te",
+        )
+
     def _resolve_curves_for_plot(self) -> tuple[np.ndarray, np.ndarray]:
         """Return (raw, partial) curves from whichever cache is populated."""
         raw = self._state.raw if self._state.raw is not None else self._state.ami
@@ -570,6 +662,25 @@ class ForecastabilityAnalyzerExog(ForecastabilityAnalyzer):
         exog: np.ndarray | None = None,
     ) -> np.ndarray:
         """Compute raw dependence curve in auto- or cross-dependence mode."""
+        if method == "te":
+            self._registry.get(method)
+            effective_min_pairs = max(min_pairs, _TE_MIN_PAIRS)
+            arr = validate_time_series(ts, min_length=max_lag + effective_min_pairs + 1)
+            validated_exog = _validate_exog_for_target(exog, target=arr)
+            source = validated_exog if validated_exog is not None else arr
+            raw = compute_transfer_entropy_curve(
+                source,
+                arr,
+                max_lag=max_lag,
+                min_pairs=effective_min_pairs,
+                random_state=self.random_state,
+            )
+            self.ts = arr
+            self.exog = validated_exog
+            self._method = method
+            self._state = dataclasses.replace(self._state, raw=raw)
+            return raw
+
         info = self._registry.get(method)
         arr = validate_time_series(ts, min_length=max_lag + min_pairs + 1)
         validated_exog = _validate_exog_for_target(exog, target=arr)
@@ -608,6 +719,9 @@ class ForecastabilityAnalyzerExog(ForecastabilityAnalyzer):
         exog: np.ndarray | None = None,
     ) -> np.ndarray:
         """Compute partial dependence curve in auto- or cross-dependence mode."""
+        if method == "te":
+            raise _te_partial_not_supported_error()
+
         info = self._registry.get(method)
         arr = validate_time_series(ts, min_length=max_lag + min_pairs + 1)
         validated_exog = _validate_exog_for_target(exog, target=arr)
@@ -670,11 +784,28 @@ class ForecastabilityAnalyzerExog(ForecastabilityAnalyzer):
             raise ValueError("No series cached. Call compute_raw/compute_partial first.")
         if which not in {"raw", "partial"}:
             raise ValueError("which must be one of {'raw', 'partial'}")
+        if method == "te" and which == "partial":
+            raise _te_partial_not_supported_error()
 
         if exog is not None:
             self.exog = _validate_exog_for_target(exog, target=self.ts)
         elif self.exog is not None and self.exog.size != self.ts.size:
             raise ValueError("Cached exogenous series length must match cached target length.")
+
+        if method == "te":
+            self._registry.get(method)
+            effective_min_pairs = max(min_pairs, _TE_MIN_PAIRS)
+            bands = compute_significance_bands_transfer_entropy(
+                self.ts,
+                self.n_surrogates,
+                self.random_state,
+                max_lag,
+                source=self.exog,
+                min_pairs=effective_min_pairs,
+                n_jobs=n_jobs,
+            )
+            self._state = dataclasses.replace(self._state, raw_bands=bands)
+            return bands
 
         info = self._registry.get(method)
         bands = compute_significance_bands_generic(
@@ -730,6 +861,13 @@ class ForecastabilityAnalyzerExog(ForecastabilityAnalyzer):
         if method == "mi" and exog is None:
             return self._analyze_legacy(
                 ts, max_lag, partial_lag, compute_surrogates=compute_surrogates
+            )
+        if method == "te":
+            return self._analyze_transfer_entropy_exog(
+                ts,
+                max_lag,
+                exog=exog,
+                compute_surrogates=compute_surrogates,
             )
 
         return self._analyze_generic_exog(
@@ -802,6 +940,49 @@ class ForecastabilityAnalyzerExog(ForecastabilityAnalyzer):
             sig_partial_lags=sig_partial,
             recommendation=rec,
             method=method,
+        )
+
+    def _analyze_transfer_entropy_exog(
+        self,
+        ts: np.ndarray,
+        max_lag: int,
+        *,
+        exog: np.ndarray | None,
+        compute_surrogates: bool,
+    ) -> AnalyzeResult:
+        """Analyze TE in auto/cross mode using the dedicated raw-only path."""
+        raw = self.compute_raw(
+            ts,
+            max_lag=max_lag,
+            method="te",
+            min_pairs=_TE_MIN_PAIRS,
+            exog=exog,
+        )
+        partial = np.array([], dtype=float)
+        self._state = dataclasses.replace(self._state, partial=partial, partial_bands=None)
+
+        if compute_surrogates:
+            self.compute_significance_generic(
+                "raw",
+                max_lag,
+                method="te",
+                min_pairs=_TE_MIN_PAIRS,
+                exog=exog,
+            )
+            assert self._state.raw_bands is not None  # noqa: S101
+            sig_raw = np.where(raw > self._state.raw_bands[1])[0] + 1
+        else:
+            sig_raw = np.array([], dtype=int)
+
+        sig_partial = np.array([], dtype=int)
+        rec = _triage_recommendation(raw, family="nonlinear", is_cross=exog is not None)
+        return AnalyzeResult(
+            raw=raw.copy(),
+            partial=partial,
+            sig_raw_lags=sig_raw,
+            sig_partial_lags=sig_partial,
+            recommendation=rec,
+            method="te",
         )
 
 

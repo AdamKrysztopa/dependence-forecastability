@@ -7,6 +7,26 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-04-17
+
+### Added
+- First-class covariant analysis facade in the stable package surface via `run_covariant_analysis` and covariant result models (`CovariantAnalysisBundle`, `CovariantSummaryRow`, `TransferEntropyResult`, `GcmiResult`, `CausalGraphResult`, `PcmciAmiResult`, `Phase0MiScore`).
+- Unified covariant summary-table workflow covering `cross_ami`, `cross_pami`, `te`, `gcmi`, and optional causal methods (`pcmci`, `pcmci_ami`) with conditioning-scope metadata.
+- Covariant showcase and walkthrough documentation path for benchmark-driven method comparison and interpretation.
+
+### Changed
+- README updated to present univariate triage and covariant-informative analysis as parallel first-class workflows.
+- Public API and quickstart docs refreshed for v0.3.0 covariant entry points, method tokens, and optional causal install path.
+- CI/release docs alignment extended for v0.3.0 covariant validation expectations.
+
+### Fixed
+- Replaced docs badge that relied on a missing GitHub Pages deployment environment with a stable in-repo docs badge.
+- Replaced single-paper "based on" badge language with repository-consistent multi-paper plus original-method wording.
+
+### Migration notes
+- No breaking import changes for existing univariate triage integrations.
+- Integrators can adopt covariant workflows incrementally through `run_covariant_analysis` without changing existing `run_triage` usage.
+
 ## [0.2.0] - 2026-04-14
 
 ### Changed

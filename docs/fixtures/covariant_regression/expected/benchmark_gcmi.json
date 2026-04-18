@@ -1,0 +1,35 @@
+{
+  "direct_beats_noise": true,
+  "mediated_beats_noise": true,
+  "peak_score_driver": "driver_mediated",
+  "peak_score_lag": 2,
+  "rows": {
+    "driver_direct:1": {
+      "gcmi": 0.2329764017845152
+    },
+    "driver_direct:2": {
+      "gcmi": 0.4211006585981782
+    },
+    "driver_direct:3": {
+      "gcmi": 0.6067386079550288
+    },
+    "driver_mediated:1": {
+      "gcmi": 0.831031404707004
+    },
+    "driver_mediated:2": {
+      "gcmi": 0.992620257290299
+    },
+    "driver_mediated:3": {
+      "gcmi": 0.9769762709837395
+    },
+    "driver_noise:1": {
+      "gcmi": 0.008779600463865927
+    },
+    "driver_noise:2": {
+      "gcmi": 0.009625567157140271
+    },
+    "driver_noise:3": {
+      "gcmi": 0.01148476970423148
+    }
+  }
+}

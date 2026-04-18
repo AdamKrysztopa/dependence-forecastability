@@ -1,0 +1,35 @@
+{
+  "direct_beats_noise": true,
+  "mediated_beats_noise": true,
+  "peak_score_driver": "driver_mediated",
+  "peak_score_lag": 1,
+  "rows": {
+    "driver_direct:1": {
+      "transfer_entropy": 0.16049389662996116
+    },
+    "driver_direct:2": {
+      "transfer_entropy": 0.430069867654308
+    },
+    "driver_direct:3": {
+      "transfer_entropy": 0.08080495328928183
+    },
+    "driver_mediated:1": {
+      "transfer_entropy": 0.5872421000269821
+    },
+    "driver_mediated:2": {
+      "transfer_entropy": 0.11336728484469738
+    },
+    "driver_mediated:3": {
+      "transfer_entropy": 0.014754697524655747
+    },
+    "driver_noise:1": {
+      "transfer_entropy": 0.048005782816553655
+    },
+    "driver_noise:2": {
+      "transfer_entropy": 0.0
+    },
+    "driver_noise:3": {
+      "transfer_entropy": 0.0
+    }
+  }
+}

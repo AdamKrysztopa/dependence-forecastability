@@ -37,7 +37,7 @@ This page is a compact, decision-first evidence layer. Notebooks are linked as d
 - **Experimental diagnostic (F5):** largest Lyapunov exponent estimation — gated behind `experimental: true` in config, not included in automated triage decisions.
 - **Agent payload adapters (A1–A3):** structured Pydantic result models for deterministic consumption by agents, API consumers, or downstream pipelines.
 - **Diagnostic regression fixtures (F9):** golden-value snapshot tests ensure reproducibility across all new diagnostics.
-- Worked examples are available in `examples/triage/` and `notebooks/triage/` (see Primary Narrative Pages below).
+- Worked examples now live in `examples/univariate/` and `examples/covariant_informative/`; notebook deep dives remain under `notebooks/triage/` (see Primary Narrative Pages below).
 - These extensions draw on multiple papers beyond the original AMI work: Catt (2026, arXiv:2603.27074), Morawski et al. (2025, arXiv:2510.10744), Wang et al. (2025, arXiv:2507.13556), Ponce-Flores et al. (2020), Bandt & Pompe (2002).
 
 ## Decision-Relevant Outcomes

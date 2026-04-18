@@ -28,7 +28,7 @@ All nine feature groups (F1–F9) from the development plan have been implemente
 - **F8** Agent adapters (MCP server, dashboard, CLI)
 - **F9** Robustness study & benchmark panel
 
-Supporting deliverables: triage examples (`examples/triage/`), walkthrough notebooks (`notebooks/triage/`), theory docs (`docs/theory/`), and end-to-end agent integration.
+Supporting deliverables: univariate examples (`examples/univariate/`), covariant-informative examples (`examples/covariant_informative/`), walkthrough notebooks (`notebooks/walkthroughs/` and `notebooks/triage/`), theory docs (`docs/theory/`), and end-to-end agent integration.
 
 ## Source epic
 

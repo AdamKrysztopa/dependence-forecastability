@@ -28,8 +28,9 @@ Use the live notebooks directly rather than notebook narrative proxies.
 
 1. [notebooks/README.md](notebooks/README.md) for the notebook map.
 2. [../notebooks/walkthroughs/00_air_passengers_showcase.ipynb](../notebooks/walkthroughs/00_air_passengers_showcase.ipynb) for the first-stop walkthrough.
-3. [../notebooks/walkthroughs/01_canonical_forecastability.ipynb](../notebooks/walkthroughs/01_canonical_forecastability.ipynb) through [../notebooks/walkthroughs/04_screening_end_to_end.ipynb](../notebooks/walkthroughs/04_screening_end_to_end.ipynb) for expanded walkthroughs.
-4. [../notebooks/triage/01_forecastability_profile_walkthrough.ipynb](../notebooks/triage/01_forecastability_profile_walkthrough.ipynb) through [../notebooks/triage/06_agent_ready_triage_interpretation.ipynb](../notebooks/triage/06_agent_ready_triage_interpretation.ipynb) for deep-dive method notebooks.
+3. [../notebooks/walkthroughs/01_covariant_informative_showcase.ipynb](../notebooks/walkthroughs/01_covariant_informative_showcase.ipynb) for the covariant pairwise-versus-causal walkthrough.
+4. [../notebooks/walkthroughs/01_canonical_forecastability.ipynb](../notebooks/walkthroughs/01_canonical_forecastability.ipynb) through [../notebooks/walkthroughs/04_screening_end_to_end.ipynb](../notebooks/walkthroughs/04_screening_end_to_end.ipynb) for expanded walkthroughs.
+5. [../notebooks/triage/01_forecastability_profile_walkthrough.ipynb](../notebooks/triage/01_forecastability_profile_walkthrough.ipynb) through [../notebooks/triage/06_agent_ready_triage_interpretation.ipynb](../notebooks/triage/06_agent_ready_triage_interpretation.ipynb) for deep-dive method notebooks.
 
 ## Contributors
 

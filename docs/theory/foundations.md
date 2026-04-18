@@ -1,5 +1,5 @@
 <!-- type: explanation -->
-# AMI and pAMI Foundations
+# AMI, pAMI, and TE Foundations
 
 ## Scope
 
@@ -34,6 +34,44 @@ Current estimator in this repo:
 1. Build conditioning matrix \(Z=[X_{t+1},\ldots,X_{t+h-1}]\).
 2. Residualize past and future on \(Z\) (linear backend by default; optional RF backend).
 3. Compute MI on residual pairs.
+
+## Directional extension metric
+
+Transfer Entropy (TE) at lag \(h\):
+\[
+TE(X \to Y \mid h) = I(Y_t ; X_{t-h} \mid Y_{t-1},\ldots,Y_{t-h+1})
+\]
+
+Interpretation:
+- Directional predictive dependence: in general \(TE(X \to Y) \neq TE(Y \to X)\).
+- Conditioning on target history controls for autocorrelation-driven carryover in \(Y\).
+- Positive TE indicates added predictive information from source history beyond target-only history.
+
+Implemented entry points:
+- `src/forecastability/diagnostics/transfer_entropy.py`:
+  `compute_transfer_entropy()` and `compute_transfer_entropy_curve()` (core estimator path).
+- `src/forecastability/services/transfer_entropy_service.py`:
+  compatibility facade re-exporting the diagnostics functions.
+- `src/forecastability/pipeline/analyzer.py`:
+  `ForecastabilityAnalyzer` and `ForecastabilityAnalyzerExog` support `method="te"`
+  for raw-curve analysis and TE surrogate significance bands.
+
+Current constraints and caveats:
+- Analyzer path is raw-only for TE: partial TE is intentionally unsupported.
+  Requests for `compute_partial(..., method="te")` raise a validation error because no
+  validated partial-TE estimand is implemented in the analyzer path.
+- TE sample-size guardrails require `min_pairs >= 50`; with non-empty conditioning
+  history, at least `2 * min_pairs` aligned rows are required.
+- TE values are estimator- and null-model-aware diagnostics, not causal proof.
+  Significance is evaluated against phase-randomized surrogate bands and should be
+  interpreted with the same surrogate caveats used elsewhere in this repository.
+
+Validated directional evidence (analyst run, 2026-04-16):
+- Synthetic lag-2 driver pair, \(n=1200\), `seed=17`.
+- \(TE(X \to Y)\) peaked at lag 2 with a strong directional gap vs \(TE(Y \to X)\).
+- `ForecastabilityAnalyzerExog(..., method="te")` raw TE curve matched
+  `compute_transfer_entropy_curve(...)` exactly (`max_abs_diff = 0.0`).
+- Significant \(X \to Y\) lags above the surrogate upper band: 1, 2, and 3.
 
 ## AMI vs pAMI properties
 
@@ -109,3 +147,48 @@ Interpretation:
 
 - Paper validates AMI only.
 - pAMI, exogenous cross-dependence, and scorer-registry abstractions are project additions.
+
+## Synthetic benchmark: 8-variable covariant system
+
+`generate_covariant_benchmark` in `src/forecastability/utils/synthetic.py` implements
+an 8-variable ground-truth system used for controlled method validation. The full causal
+graph, structural equations, and benchmark narrative are documented in
+[docs/theory/pcmci_plus.md](pcmci_plus.md); this section covers the two nonlinear
+drivers added in V3-F03 and why they matter for AMI-family methods.
+
+### Nonlinear structural equations
+
+`driver_nonlin_sq` couples to `target` at lag 1 via a centered quadratic:
+
+$$\text{target}[t] \mathrel{+}= 0.40 \times (\text{nl}_1[t-1]^2 - \sigma^2_{\text{nl}_1})$$
+
+`driver_nonlin_abs` couples to `target` at lag 1 via a centered abs-value:
+
+$$\text{target}[t] \mathrel{+}= 0.35 \times (|\text{nl}_2[t-1]| - \mathbb{E}[|\text{nl}_2|])$$
+
+### Why Pearson and Spearman are blind
+
+Both couplings are constructed so that the covariance between driver and target is
+exactly zero at the population level:
+
+- **Quadratic**: $\mathrm{Cov}(X,\, X^2 - \sigma^2) = \mathbb{E}[X^3] = 0$. The odd
+  central moment of any zero-mean symmetric distribution is zero. Spearman is also near
+  zero because $X^2$ is U-shaped (non-monotone) in $X$.
+
+- **Abs-value**: $\mathrm{Cov}(X,\, |X|) = \mathbb{E}[X \cdot |X|] = 0$. The function
+  $X|X|$ is odd, so its expectation over any symmetric distribution is zero. Spearman is
+  also near zero because $|X|$ is V-shaped (non-monotone) in $X$.
+
+A Pearson or Spearman screen would rank both drivers below independent noise — the
+hallmark of a linear blind-spot.
+
+### Why information-theoretic methods detect them
+
+MI, TE, and GCMI measure dependence in the full joint distribution $P(X, Y)$, not only
+the linear second moment. Both couplings create statistically dependent joint
+distributions even though the marginal covariance is zero. kNN MI estimators detect this
+dependence directly through local density structure.
+
+The nonlinear drivers are included to validate that AMI, TE, and GCMI scores remain
+informative exactly where Pearson and Spearman fail, and to motivate the
+PCMCI-AMI-Hybrid design in V3-F04.

@@ -13,7 +13,9 @@ from scipy.spatial.distance import pdist, squareform
 from scipy.stats import kendalltau, spearmanr
 from sklearn.feature_selection import mutual_info_regression
 
+from forecastability.diagnostics.gcmi import compute_gcmi_at_lag
 from forecastability.diagnostics.spectral_utils import compute_normalised_psd, spectral_entropy
+from forecastability.diagnostics.transfer_entropy import compute_transfer_entropy
 
 
 @runtime_checkable
@@ -227,6 +229,83 @@ def _mi_scorer(
         random_state=random_state,
     )[0]
     return max(float(value), 0.0)
+
+
+def te_scorer(
+    *,
+    lag: int = 1,
+    history: int | None = None,
+    backend: Literal["linear_residual", "rf_residual", "extra_trees_residual"] = "linear_residual",
+    n_neighbors: int = 8,
+    min_pairs: int = 50,
+) -> DependenceScorer:
+    """Build a directional Transfer Entropy scorer.
+
+    The returned callable follows :class:`DependenceScorer` and computes
+    directional transfer entropy using the conditional-MI backend:
+
+    ``TE(X -> Y | lag) = I(Y_t ; X_{t-lag} | Y_{t-1}, ..., Y_{t-lag+1})``.
+
+    Args:
+        lag: Source lag in the directional relation.
+        history: Optional target-history depth for conditioning.
+            ``None`` uses canonical ``lag - 1``.
+        backend: Residualization backend used by the CMI estimator.
+        n_neighbors: Neighbors for kNN MI estimator.
+        min_pairs: Minimum aligned sample pairs.
+
+    Returns:
+        Callable that maps ``(past, future)`` arrays to a non-negative TE score.
+    """
+
+    def _te(
+        past: np.ndarray,
+        future: np.ndarray,
+        *,
+        random_state: int = 42,
+    ) -> float:
+        return compute_transfer_entropy(
+            past,
+            future,
+            lag=lag,
+            history=history,
+            backend=backend,
+            n_neighbors=n_neighbors,
+            min_pairs=min_pairs,
+            random_state=random_state,
+        )
+
+    return _te
+
+
+def gcmi_scorer(
+    *,
+    lag: int = 1,
+    min_pairs: int = 30,
+) -> DependenceScorer:
+    """Build a Gaussian Copula MI scorer.
+
+    GCMI is monotonic-transform invariant and fully deterministic (no random
+    state).  Suitable for fast initial screening across lag-variable pairs.
+
+    Args:
+        lag: Lag at which to evaluate cross-GCMI(source, target).
+        min_pairs: Minimum aligned sample pairs.
+
+    Returns:
+        Callable that maps ``(past, future)`` arrays to a non-negative GCMI score.
+    """
+
+    def _gcmi(
+        past: np.ndarray,
+        future: np.ndarray,
+        *,
+        random_state: int = 42,
+    ) -> float:
+        del random_state  # GCMI is deterministic
+        return compute_gcmi_at_lag(past, future, lag=lag, min_pairs=min_pairs)
+
+    return _gcmi
 
 
 def _pearson_scorer(
@@ -679,6 +758,7 @@ def default_registry() -> ScorerRegistry:
     ``spearman``                rank               Absolute Spearman rank correlation
     ``kendall``                 rank               Absolute Kendall tau-b correlation
     ``distance``                bounded_nonlinear  Distance correlation (energy-distance)
+    ``te``                      nonlinear          Directional transfer entropy (lag-1 CMI)
     ``permutation_entropy``     nonlinear          Normalised permutation entropy (Bandt & Pompe)
     ``spectral_entropy``        nonlinear          Normalised spectral entropy from Welch PSD
     ``spectral_predictability`` nonlinear          Spectral predictability Ω (1 − normalised SE)
@@ -718,6 +798,18 @@ def default_registry() -> ScorerRegistry:
         _distance_scorer,
         family="bounded_nonlinear",
         description="Distance correlation (energy-distance)",
+    )
+    registry.register(
+        "te",
+        te_scorer(lag=1),
+        family="nonlinear",
+        description="Directional transfer entropy via conditional MI backend (lag=1)",
+    )
+    registry.register(
+        "gcmi",
+        gcmi_scorer(lag=1),
+        family="nonlinear",
+        description="Gaussian Copula MI — rank-copula normalised, deterministic (lag=1)",
     )
     registry.register(
         "permutation_entropy",

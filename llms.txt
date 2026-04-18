@@ -1,0 +1,13 @@
+# dependence-forecastability: fast path for coding agents
+
+Start in this order:
+1. README.md
+2. docs/quickstart.md
+3. docs/public_api.md
+4. notebooks/walkthroughs/00_air_passengers_showcase.ipynb
+
+Key invariants:
+- Compute AMI and pAMI per horizon (never pre-aggregate before diagnostics).
+- In rolling-origin evaluation, compute diagnostics on each training window only.
+- Use np.trapezoid (not np.trapz).
+- Use phase-randomized FFT surrogates with n_surrogates >= 99.

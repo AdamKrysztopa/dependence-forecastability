@@ -1,19 +1,22 @@
 <!-- type: reference -->
 # Forecastability Triage Toolkit
 
-A deterministic forecastability triage toolkit with AMI as the paper-aligned foundation and pAMI as a project extension.
+> Forecastability triage for time series using AMI, pAMI, and covariate-aware dependence diagnostics before expensive model search.
 
 [![CI](https://github.com/AdamKrysztopa/dependence-forecastability/actions/workflows/ci.yml/badge.svg)](https://github.com/AdamKrysztopa/dependence-forecastability/actions/workflows/ci.yml)
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/dependence-forecastability?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/dependence-forecastability)
+[![PyPI version](https://img.shields.io/pypi/v/dependence-forecastability.svg)](https://pypi.org/project/dependence-forecastability/)
 [![Version](https://img.shields.io/github/v/tag/AdamKrysztopa/dependence-forecastability?label=version&sort=semver)](https://github.com/AdamKrysztopa/dependence-forecastability/releases)
-[![Docs](https://img.shields.io/github/deployments/AdamKrysztopa/dependence-forecastability/github-pages?label=docs)](https://github.com/AdamKrysztopa/dependence-forecastability/tree/main/docs)
+[![Docs](https://img.shields.io/badge/docs-quickstart-0A7B83.svg)](https://github.com/AdamKrysztopa/dependence-forecastability/blob/main/docs/quickstart.md)
 [![Python 3.11-3.12](https://img.shields.io/badge/python-3.11%20to%203.12-blue.svg)](https://python.org)
-[![Based on arXiv:2601.10006](https://img.shields.io/badge/based%20on-arXiv%3A2601.10006-b31b1b.svg)](https://doi.org/10.48550/arXiv.2601.10006)
+[![Research base](https://img.shields.io/badge/research%20base-multi--paper%20%2B%20original%20methods-2E8B57.svg)](https://github.com/AdamKrysztopa/dependence-forecastability/tree/main/docs/theory)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/AdamKrysztopa/dependence-forecastability/blob/main/LICENSE)
 
-This repository provides a deterministic triage workflow for deciding whether a time series shows exploitable structure before you commit to expensive model search. The maintained package facade exposes `run_triage`, `run_batch_triage`, analyzers, request/result models, config models, dataset helpers, and the scorer registry through `forecastability` and `forecastability.triage`.
+## Why this package
 
-## Package And API Quickstart
+Forecastability triage for time series using AMI, pAMI, and covariate-aware dependence diagnostics before expensive model search.
 
-Install the package surface:
+## Install
 
 ```bash
 pip install dependence-forecastability
@@ -26,7 +29,9 @@ pip install "dependence-forecastability[transport]"
 pip install "dependence-forecastability[agent]"
 ```
 
-Run one deterministic triage call through the top-level facade:
+## Quickstart
+
+Run one deterministic univariate triage call through the top-level facade:
 
 ```python
 from forecastability import TriageRequest, generate_ar1, run_triage
@@ -50,6 +55,44 @@ summary = {
     "primary_lags": [] if result.interpretation is None else list(result.interpretation.primary_lags),
 }
 print(summary)
+```
+
+Equivalent minimal files:
+
+- [examples/minimal_python.py](examples/minimal_python.py)
+- [examples/minimal_covariant.py](examples/minimal_covariant.py)
+- [examples/minimal_cli.sh](examples/minimal_cli.sh)
+
+## Start here
+
+- Python user: start with [examples/minimal_python.py](examples/minimal_python.py), then [docs/public_api.md](docs/public_api.md).
+- CLI user: run [examples/minimal_cli.sh](examples/minimal_cli.sh), then [docs/quickstart.md](docs/quickstart.md).
+- Notebook user: open the canonical notebook [notebooks/walkthroughs/00_air_passengers_showcase.ipynb](notebooks/walkthroughs/00_air_passengers_showcase.ipynb).
+- Maintainer/contributor: use [docs/maintenance/developer_guide.md](docs/maintenance/developer_guide.md).
+
+## Canonical walkthrough
+
+The canonical notebook is [notebooks/walkthroughs/00_air_passengers_showcase.ipynb](notebooks/walkthroughs/00_air_passengers_showcase.ipynb).
+
+## When to use it
+
+Use this package when you need a deterministic pre-modeling screen to decide whether a series has exploitable structure before expensive model search.
+
+## Links
+
+- Notebook: [notebooks/walkthroughs/00_air_passengers_showcase.ipynb](notebooks/walkthroughs/00_air_passengers_showcase.ipynb)
+- Notebook (covariant informative): [notebooks/walkthroughs/01_covariant_informative_showcase.ipynb](notebooks/walkthroughs/01_covariant_informative_showcase.ipynb)
+- Quickstart: [docs/quickstart.md](docs/quickstart.md)
+- PyPI: [dependence-forecastability](https://pypi.org/project/dependence-forecastability/)
+- Issues: [GitHub Issues](https://github.com/AdamKrysztopa/dependence-forecastability/issues)
+
+> [!NOTE]
+> `run_covariant_analysis()` supports six methods: `cross_ami`, `cross_pami`, `te`, `gcmi`, `pcmci`, and `pcmci_ami`. The two PCMCI methods are optional and skip gracefully when the causal extra is unavailable.
+
+Install optional causal dependencies only if you need PCMCI methods:
+
+```bash
+pip install "dependence-forecastability[causal]"
 ```
 
 Transport and runtime entry points:
@@ -100,12 +143,14 @@ Current config status:
 
 ## Notebook Path And Artifact Surfaces
 
-The canonical notebook path is:
+Canonical notebook:
 
-1. [docs/notebooks/README.md](docs/notebooks/README.md)
-2. [notebooks/walkthroughs/00_air_passengers_showcase.ipynb](notebooks/walkthroughs/00_air_passengers_showcase.ipynb)
-3. `notebooks/walkthroughs/01` through `04`
-4. `notebooks/triage/01` through `06` for deep dives
+- [notebooks/walkthroughs/00_air_passengers_showcase.ipynb](notebooks/walkthroughs/00_air_passengers_showcase.ipynb)
+
+Follow-on notebooks:
+
+- `notebooks/walkthroughs/01` through `04`
+- `notebooks/triage/01` through `06` for deep dives
 
 Main checked-in artifact surfaces:
 

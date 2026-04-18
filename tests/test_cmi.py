@@ -5,7 +5,10 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from forecastability.diagnostics.cmi import compute_pami_with_backend
+from forecastability.diagnostics.cmi import (
+    compute_conditional_mi_with_backend,
+    compute_pami_with_backend,
+)
 from forecastability.utils.datasets import generate_sine_wave
 
 
@@ -42,3 +45,28 @@ def test_compute_pami_with_backend_rejects_unknown_backend() -> None:
     ts = generate_sine_wave(n_samples=260, random_state=3)
     with pytest.raises(ValueError, match="Unsupported pAMI backend"):
         compute_pami_with_backend(ts, max_lag=8, backend="unsupported_backend", random_state=7)
+
+
+def test_compute_conditional_mi_requires_min_pairs_floor() -> None:
+    rng = np.random.default_rng(8)
+    past = rng.normal(size=120)
+    future = 0.4 * past + rng.normal(scale=0.8, size=120)
+
+    with pytest.raises(ValueError, match="min_pairs must be >= 50"):
+        compute_conditional_mi_with_backend(past, future, min_pairs=30, random_state=7)
+
+
+def test_compute_conditional_mi_requires_robust_rows_when_conditioning_present() -> None:
+    rng = np.random.default_rng(10)
+    past = rng.normal(size=90)
+    future = 0.5 * past + rng.normal(scale=0.6, size=90)
+    conditioning = rng.normal(size=(90, 3))
+
+    with pytest.raises(ValueError, match=r"at least 2 \* min_pairs"):
+        compute_conditional_mi_with_backend(
+            past,
+            future,
+            conditioning=conditioning,
+            min_pairs=50,
+            random_state=7,
+        )

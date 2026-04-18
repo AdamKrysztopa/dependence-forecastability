@@ -73,8 +73,9 @@ The maintained notebook path is:
 
 1. `docs/notebooks/README.md`
 2. `notebooks/walkthroughs/00_air_passengers_showcase.ipynb`
-3. Walkthrough notebooks `01` to `04`
-4. Deep-dive notebooks `notebooks/triage/01` to `06`
+3. `notebooks/walkthroughs/01_covariant_informative_showcase.ipynb`
+4. Remaining walkthrough notebooks
+5. Deep-dive notebooks `notebooks/triage/01` to `06`
 
 Legacy narrative pages that duplicate live notebooks should be archived, not kept in the primary docs path.
 

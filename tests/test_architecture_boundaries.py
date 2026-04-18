@@ -248,3 +248,31 @@ def test_adapter_utilities_do_not_import_transport_adapters() -> None:
         "Adapter utility modules must not import primary transport adapters "
         "(api, cli, dashboard, mcp_server, pydantic_ai_agent).\n" + "\n".join(violations)
     )
+
+
+# ---------------------------------------------------------------------------
+# Rule 6 — LLM adapters must not import scripts/
+# ---------------------------------------------------------------------------
+
+
+def test_llm_adapters_do_not_import_scripts() -> None:
+    """Agent adapters under adapters/llm/ must not reach back into scripts/.
+
+    The CLI showcase scripts are allowed to import from adapters/, but the
+    reverse direction would couple library code to one-off entry points.
+    """
+    llm_dir = ROOT / "src/forecastability/adapters/llm"
+    py_files = sorted(p for p in llm_dir.glob("*.py") if p.name != "__init__.py")
+    assert py_files, "No .py files found under src/forecastability/adapters/llm/"
+
+    violations: list[str] = []
+    for py_file in py_files:
+        full_imports = _get_full_imports(py_file)
+        for dotted in full_imports:
+            if dotted == "scripts" or dotted.startswith("scripts."):
+                relative = str(py_file.relative_to(ROOT))
+                violations.append(f"{relative}: imports '{dotted}'")
+
+    assert not violations, "adapters/llm/ modules must not import from scripts/.\n" + "\n".join(
+        violations
+    )

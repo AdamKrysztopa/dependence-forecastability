@@ -137,3 +137,63 @@ This endpoint streams stage progress as Server-Sent Events.
 uv sync --extra transport
 uv run uvicorn forecastability.adapters.api:app --host 127.0.0.1 --port 8000
 ```
+
+---
+
+## Python Compute Functions
+
+The functions below are importable directly and do not require the HTTP transport layer.
+They are part of the v0.3.0 covariant-informative extension.
+
+### Transfer Entropy (V3-F01)
+
+All TE functions live in `src/forecastability/diagnostics/transfer_entropy.py`
+(re-exported by `src/forecastability/services/transfer_entropy_service.py`).
+
+| Function | Signature | Returns |
+|---|---|---|
+| `compute_transfer_entropy` | `(source, target, *, lag, min_pairs=50) -> float` | TE in bits |
+| `compute_transfer_entropy_curve` | `(source, target, *, max_lag, min_pairs=50) -> np.ndarray` | Per-lag TE curve, shape `(max_lag,)` |
+| `te_scorer` | `(*, lag=1, min_pairs=50) -> DependenceScorer` | Factory — returns a `DependenceScorer` registered as `"te"` |
+
+`TeResult` model fields:
+
+| Field | Type | Notes |
+|---|---|---|
+| `source` | `str` | Source series identifier |
+| `target` | `str` | Target series identifier |
+| `lag` | `int` | Lag at which TE was computed |
+| `te_value` | `float` | TE estimate in bits |
+| `p_value` | `float \| None` | Surrogate p-value if computed |
+| `significant` | `bool \| None` | Significance flag |
+
+> [!NOTE]
+> TE uses kNN MI estimation with conditioning vectors. Minimum pairs requirement
+> is `min_pairs=50` due to conditioning dimensionality.
+
+### Gaussian Copula MI (V3-F02)
+
+All GCMI functions live in `src/forecastability/diagnostics/gcmi.py`
+(re-exported by `src/forecastability/services/gcmi_service.py`).
+
+| Function | Signature | Returns |
+|---|---|---|
+| `compute_gcmi` | `(x, y, *, min_pairs=30) -> float` | GCMI in bits |
+| `compute_gcmi_at_lag` | `(source, target, *, lag, min_pairs=30) -> float` | GCMI at a single lag, in bits |
+| `compute_gcmi_curve` | `(source, target, *, max_lag, min_pairs=30) -> np.ndarray` | Per-lag GCMI curve, shape `(max_lag,)`, index 0 = lag 1 |
+| `gcmi_scorer` | `(*, lag=1, min_pairs=30) -> DependenceScorer` | Factory — returns a `DependenceScorer` registered as `"gcmi"` |
+
+`GcmiResult` model fields:
+
+| Field | Type | Notes |
+|---|---|---|
+| `source` | `str` | Source series identifier |
+| `target` | `str` | Target series identifier |
+| `lag` | `int` | Lag at which GCMI was computed |
+| `gcmi_value` | `float` | GCMI estimate in bits |
+
+> [!NOTE]
+> GCMI is fully deterministic — it has no random state. The `random_state` argument
+> accepted by `DependenceScorer.__call__` is accepted but ignored.
+
+See [theory/gcmi.md](theory/gcmi.md) for the algorithm, properties, and GCMI vs TE comparison.

@@ -39,7 +39,7 @@ These are the repo-following workflows that contributors and maintainers should 
 | Benchmark panel workflow | `scripts/run_benchmark_panel.py` | Runs the benchmark panel and writes summary artifacts |
 | Report-building workflow | `scripts/build_report_artifacts.py` | Builds report-facing artifacts from generated outputs |
 | Exogenous workflow | `scripts/run_exog_analysis.py` | Runs exogenous screening and related artifacts |
-| Notebook learning path | `docs/notebooks/README.md` and `notebooks/walkthroughs/00_air_passengers_showcase.ipynb` | First-stop walkthrough path followed by deeper notebooks |
+| Notebook learning path | `docs/notebooks/README.md`, `notebooks/walkthroughs/00_air_passengers_showcase.ipynb`, and `notebooks/walkthroughs/01_covariant_informative_showcase.ipynb` | First-stop walkthrough plus the covariant benchmark walkthrough before deeper notebooks |
 
 > [!NOTE]
 > Checked-in files under `outputs/json/`, `outputs/tables/`, and `outputs/reports/` are reference artifacts. They are useful examples of the artifact surface, but they are not guaranteed to be freshly regenerated for every commit.
