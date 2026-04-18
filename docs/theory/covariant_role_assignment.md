@@ -5,7 +5,7 @@ Explains the seven-rule priority algorithm in
 `_assign_role` inside
 [src/forecastability/services/covariant_interpretation_service.py](../../src/forecastability/services/covariant_interpretation_service.py).
 
-_Last verified for V3-F09 on 2026-04-17._
+_Last verified for V3-AI-03 on 2026-04-18._
 
 ---
 
@@ -39,7 +39,7 @@ $12 \times \{high, medium, low, mixed\}$ lookup table in the service.
 | `contemporaneous` | PCMCI+ identified the driver as a *lag-0* causal parent only.  A genuine instantaneous coupling that cannot be detected by cross-AMI (which is lag-indexed). |
 | `nonlinear_driver` | Cross-AMI is above the noise floor ($I_h \geq 0.03$) but GCMI is below the noise floor ($I_{GCMI} < 0.01$) and at least two lags are surrogate-significant.  This pattern indicates a nonlinear coupling that linear GCMI misses but AMI detects.  No PCMCI causal evidence is available. |
 | `redundant` | Both AMI and GCMI are strong ($\geq 0.10$) *and* another lagged parent already exists in the causal graph.  The driver covaries with the target but its information is already captured by another confirmed driver. |
-| `mediated_driver` | AMI is strong ($\geq 0.10$) but cross-pAMI is small relative to AMI ($\tilde{I} / I < 0.30$), indicating that most of the observed dependence is indirect — passing through intermediate variables.  Requires at least one causal method in the bundle. |
+| `mediated_driver` | AMI is strong ($\geq 0.10$), cross-pAMI collapses ($\tilde{I} / I < 0.30$), **and** at least one lag is surrogate-significant (`any_sig`), indicating the AMI signal is genuine and most dependence is indirect.  Requires at least one causal method in the bundle (`has_causal`). |
 | `inconclusive` | Evidence exists (e.g. surrogate-significant lags) but the driver does not satisfy any canonical pattern.  Manual review is required. |
 
 ---
@@ -52,7 +52,7 @@ Rule 2  direct_driver        ← strongest evidence, causal methods
 Rule 3  contemporaneous      ← lag-0 causal, PCMCI only
 Rule 4  nonlinear_driver     ← nonlinear signature, surrogate-guarded
 Rule 5  redundant            ← redundancy check, requires other parent
-Rule 6  mediated_driver      ← mediation claim, requires causal method
+Rule 6  mediated_driver      ← mediation claim, requires causal method + any_sig
 Rule 7  inconclusive         ← fallback
 ```
 
@@ -139,6 +139,8 @@ because:
 Without PCMCI+ or PCMCI-AMI, which condition on the full reconstructed parent
 set, these two cases cannot be distinguished.  Claiming mediation without any
 causal method in the bundle would therefore be scientifically unsupported.
+
+**V3-AI-03 — the `any_sig` driver-specific gate (added 2026-04-18).**  In addition to `has_causal`, Rule 6 now requires `any_sig = True` — at least one lag's cross-AMI must be above the phase-randomised surrogate upper band for this driver.  The rationale: the ratio $\tilde{I}_h / I_h$ is computed from values that could both be sub-noise.  A ratio of 0.02 / 0.30 = 0.067 is compelling evidence of mediation, but a ratio of 0.002 / 0.03 = 0.067 involving sub-noise values is not.  The phase-randomised surrogate test is per-driver, so `any_sig` constitutes driver-specific causal support: it confirms that the driver's cross-AMI signal is genuine at the 5% level for at least one lag.  Without `any_sig`, the driver falls through to `inconclusive`.
 
 > [!IMPORTANT]
 > pAMI is a project extension and approximate direct-dependence diagnostic.

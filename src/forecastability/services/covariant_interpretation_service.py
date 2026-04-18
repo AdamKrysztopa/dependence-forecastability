@@ -249,11 +249,7 @@ def _assign_role(
     # (>= 2 significant lags) so a single chance-significant row at max_lag=5
     # cannot trigger the role; this is a Bonferroni-style guard against the
     # per-lag false-positive rate of the phase-randomised surrogate test.
-    if (
-        max_ami >= nonlinear_ami_min
-        and max_gcmi < gcmi_noise_floor
-        and sig_count >= 2
-    ):
+    if max_ami >= nonlinear_ami_min and max_gcmi < gcmi_noise_floor and sig_count >= 2:
         return "nonlinear_driver"
     # Rule 5: redundant.
     if (
@@ -263,11 +259,16 @@ def _assign_role(
     ):
         return "redundant"
     # Rule 6: mediated_driver. Mediation is a causal claim; cross_pami alone
-    # (conditioned on target history only) cannot establish it. Require at
-    # least one causal method (PCMCI+ or PCMCI-AMI) to be present in the
-    # bundle; otherwise fall through to `inconclusive`.
+    # (conditioned on target history only) cannot establish it. Require:
+    # 1. has_causal: a causal method ran (bundle-level gate)
+    # 2. any_sig: surrogate test confirms the AMI signal is real for this
+    #    driver (driver-specific gate; V3-AI-03). Without any_sig the
+    #    ratio max_pami / max_ami could be < 0.30 purely because both values
+    #    are sub-noise, not because mediation suppressed the partial.
+    # Without both conditions, fall through to `inconclusive`.
     if (
         has_causal
+        and any_sig
         and max_ami >= strong_mi_threshold
         and max_ami > 0
         and (max_pami / max_ami) < mediation_ratio

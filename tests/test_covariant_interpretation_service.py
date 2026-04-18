@@ -6,6 +6,7 @@ from forecastability.services.covariant_interpretation_service import (
     interpret_covariant_bundle,
     verify_narrative_against_bundle,
 )
+from forecastability.use_cases.run_covariant_analysis import _interpretation_tag
 from forecastability.utils.types import (
     CausalGraphResult,
     CovariantAnalysisBundle,
@@ -435,6 +436,88 @@ def test_pcmci_graph_present_emits_nonlinear_warning() -> None:
     result = interpret_covariant_bundle(bundle)
 
     assert any("parcorr is blind" in w for w in result.warnings)
+
+
+def test_mediated_driver_blocked_when_no_significant_lags() -> None:
+    # V3-AI-03: without any surrogate-significant lag (any_sig=False), a low
+    # pAMI/AMI ratio must NOT produce `mediated_driver` even when has_causal=True.
+    rows = [
+        _row(
+            driver="driver_mediated",
+            lag=lag,
+            cross_ami=0.3 if lag == 1 else 0.02,
+            cross_pami=0.02 if lag == 1 else 0.0,
+            te=0.0,
+            gcmi=0.05 if lag == 1 else 0.0,
+            significance=None,  # No lag is surrogate-significant
+        )
+        for lag in (1, 2)
+    ]
+    bundle = _make_bundle(rows, pcmci_parents={"target": []})
+
+    result = interpret_covariant_bundle(bundle)
+
+    assert result.driver_roles[0].role != "mediated_driver"
+
+
+def test_mediated_driver_blocked_any_sig_false_pcmci_ami_only() -> None:
+    # V3-AI-03: same no-significance scenario, but causal evidence comes from
+    # pcmci_ami_result (not pcmci_graph). The any_sig gate must apply
+    # regardless of which causal method provided has_causal=True.
+    rows = [
+        _row(
+            driver="driver_mediated",
+            lag=lag,
+            cross_ami=0.3 if lag == 1 else 0.02,
+            cross_pami=0.02 if lag == 1 else 0.0,
+            te=0.0,
+            gcmi=0.05 if lag == 1 else 0.0,
+            significance=None,
+        )
+        for lag in (1, 2)
+    ]
+    bundle = _make_bundle(rows, pcmci_ami_parents={"target": []})
+
+    result = interpret_covariant_bundle(bundle)
+
+    assert result.driver_roles[0].role != "mediated_driver"
+
+
+# ---------------------------------------------------------------------------
+# _interpretation_tag unit tests (V3-AI-03)
+# ---------------------------------------------------------------------------
+
+
+def test_probably_mediated_blocked_when_pcmci_not_run() -> None:
+    # V3-AI-03: without pcmci_ran=True, a surrogate-significant row with
+    # collapsing pAMI must NOT be tagged "probably_mediated".
+    tag = _interpretation_tag(
+        cross_ami=0.30,
+        cross_pami=0.02,
+        transfer_entropy=None,
+        gcmi=None,
+        pcmci_link=None,
+        significance="above_band",
+        pcmci_ran=False,
+    )
+    assert tag != "probably_mediated"
+    # Should degrade to pairwise_informative (is_sig=True, no other signals)
+    assert tag == "pairwise_informative"
+
+
+def test_probably_mediated_fires_when_pcmci_ran_no_link_for_lag() -> None:
+    # V3-AI-03 positive-case regression: when pcmci_ran=True and this specific
+    # lag has no PCMCI link (pcmci_link=None), probably_mediated must fire.
+    tag = _interpretation_tag(
+        cross_ami=0.30,
+        cross_pami=0.02,
+        transfer_entropy=None,
+        gcmi=None,
+        pcmci_link=None,
+        significance="above_band",
+        pcmci_ran=True,
+    )
+    assert tag == "probably_mediated"
 
 
 # ---------------------------------------------------------------------------

@@ -336,6 +336,7 @@ def _interpretation_tag(
     gcmi: float | None,
     pcmci_link: str | None,
     significance: str | None,
+    pcmci_ran: bool = False,
 ) -> str | None:
     """Assign a multi-method evidence tag to a covariant summary row.
 
@@ -346,6 +347,10 @@ def _interpretation_tag(
     3. ``directional_informative``   — cross_ami AND transfer_entropy both above a floor
     4. ``pairwise_informative``      — cross_ami alone is significant
     5. ``noise_or_weak``             — no significant dependence found
+
+    The ``probably_mediated`` tag (priority 2) additionally requires
+    ``pcmci_ran=True``; without a causal method in the bundle, a low
+    directness ratio is insufficient to claim mediation at the row level.
 
     Returns None when no primary metric is available to classify.
     """
@@ -359,7 +364,7 @@ def _interpretation_tag(
     if pcmci_confirmed and is_sig:
         return "causal_confirmed"
 
-    if is_sig and cross_ami is not None and cross_pami is not None and cross_ami > 0:
+    if is_sig and pcmci_ran and cross_ami is not None and cross_pami is not None and cross_ami > 0:
         directness_ratio = cross_pami / cross_ami
         # directness_ratio > 1.0 is a numerical anomaly (pAMI > AMI); skip mediation check
         if 0.0 <= directness_ratio < 0.3:
@@ -560,6 +565,8 @@ def run_covariant_analysis(
         else set()
     )
 
+    pcmci_ran = pcmci_graph is not None or pcmci_ami_result is not None
+
     rows: list[CovariantSummaryRow] = []
     for driver_name in validated_drivers:
         te_curve = te_curves.get(driver_name)
@@ -637,6 +644,7 @@ def run_covariant_analysis(
                         gcmi=gcmi_value,
                         pcmci_link=row_pcmci_link,
                         significance=row_significance,
+                        pcmci_ran=pcmci_ran,
                     ),
                 )
             )
