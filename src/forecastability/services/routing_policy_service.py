@@ -151,14 +151,16 @@ def _select_families(
     if structure == "periodic":
         return ["seasonal_naive", "tbats", "seasonal_state_space"], ["harmonic_regression"]
 
-    if structure == "monotonic" and flags.is_high_mass:
+    if not flags.is_high_mass:
+        # low-mass series: nl_share is unreliable due to near-zero AMI/I_G ratio;
+        # do not route to nonlinear models regardless of nl_share.
+        return ["naive", "seasonal_naive"], []
+
+    if structure == "monotonic":
         return _select_monotonic_families(flags=flags)
 
-    if structure == "mixed" or flags.is_high_nl:
-        return ["tree_on_lags", "tcn", "nbeats", "nhits", "nonlinear_tabular"], []
-
-    # low mass, not "none"
-    return ["naive", "seasonal_naive"], []
+    # mixed structure or high nonlinear share with sufficient information mass
+    return ["tree_on_lags", "tcn", "nbeats", "nhits", "nonlinear_tabular"], []
 
 
 def _is_near_threshold(
@@ -261,7 +263,12 @@ def _compute_signal_conflict_penalty(
     is_nonlinear_route = has_nonlinear and not has_linear
     is_high_nl = fingerprint.nonlinear_share >= config.nonlinear_share_high_threshold
 
-    linear_but_nl = is_linear_route and is_high_nl
+    # Only flag as conflicting if mass is high enough for nl_share to be reliable
+    linear_but_nl = (
+        is_linear_route
+        and is_high_nl
+        and fingerprint.information_mass >= config.mass_high_threshold
+    )
     nonlinear_but_linear_signal = (
         is_nonlinear_route and not is_high_nl and fingerprint.information_structure != "mixed"
     )
