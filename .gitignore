@@ -21,5 +21,6 @@ data/raw/m4/
 data/raw/causal_rivers/
 notebooks/.ipynb_checkpoints/
 .env
-docs/plan/not_planed
+docs/plan/aux_documents/
+docs/input_papers/
 dist/
