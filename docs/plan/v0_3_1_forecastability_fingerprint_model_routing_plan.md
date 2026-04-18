@@ -346,7 +346,7 @@ Required confidence semantics for `0.3.1`:
 |---|---|---:|---|---|---|
 | V3_1-F00 | Typed fingerprint result models | 0 | Extends `utils/types.py` patterns | `ForecastabilityFingerprint`, `RoutingRecommendation`, `FingerprintBundle` | ✅ **Done** |
 | V3_1-F00.1 | Synthetic fingerprint archetype generators | 0 | Extends `utils/synthetic.py` | `generate_white_noise`, `generate_ar1_monotonic`, `generate_seasonal_periodic`, `generate_nonlinear_mixed`, `generate_mediated_directness_drop` | ✅ **Done** |
-| V3_1-F01 | Linear Gaussian-information baseline | 1 | Reuses Pearson / autocorrelation logic | per-horizon `I_G(h)` service with stable clipping and aggregation | Proposed |
+| V3_1-F01 | Linear Gaussian-information baseline | 1 | Reuses Pearson / autocorrelation logic | per-horizon `I_G(h)` service with stable clipping and aggregation | ✅ **Done** |
 | V3_1-F02 | Fingerprint builder service | 1 | Builds on AMI/profile outputs | `information_mass`, `information_horizon`, `information_structure`, `nonlinear_share` | Proposed |
 | V3_1-F03 | Routing policy service | 1 | Extends current recommendation logic | explicit model-family policy keyed by fingerprint buckets | Proposed |
 | V3_1-F04 | Fingerprint orchestration use case | 2 | Follows existing use-case / facade pattern | `run_forecastability_fingerprint()` and optional bundle integration | Proposed |
@@ -855,3 +855,2151 @@ Scope statement for reviewers:
 8. Examples + docs + changelog
 9. CI + release hygiene
 ```
+
+
+---
+
+## 11. Detailed implementation appendix — additive extension only
+
+> [!IMPORTANT]
+> This appendix does **not** replace any prior section.
+> It exists only to give `0.3.1` the same practical implementation depth that `0.3.0`
+> already had: file-level targets, code skeletons, validation rules, and execution order.
+
+### 11.1. Reference architecture for the fingerprint release
+
+```mermaid
+flowchart TD
+    A["Series input"] --> B["Existing AMI/profile computation"]
+    B --> C["Informative-horizon mask\nshared threshold semantics"]
+    B --> D["Linear Gaussian-information baseline"]
+    C --> E["Fingerprint service\n mass / horizon / structure / nonlinear_share"]
+    D --> E
+    E --> F["Routing policy service\n primary / secondary / cautions / confidence"]
+    E --> G["Summary renderer\n dict / markdown / json"]
+    F --> G
+    E --> H["run_forecastability_fingerprint()"]
+    F --> H
+    G --> I["CLI / docs / examples / notebook / agents"]
+    H --> I
+```
+
+### 11.2. File map — concrete target placement
+
+| Layer | New / updated file | Purpose |
+|---|---|---|
+| Utils | `src/forecastability/utils/types.py` | typed fingerprint + routing outputs |
+| Utils | `src/forecastability/utils/synthetic.py` | deterministic archetypal series for routing tests |
+| Services | `src/forecastability/services/linear_information_service.py` | Gaussian-information proxy from autocorrelation |
+| Services | `src/forecastability/services/fingerprint_service.py` | shared `H_info` mask + fingerprint construction |
+| Services | `src/forecastability/services/routing_policy_service.py` | versioned model-family routing rules |
+| Adapters / renderers | `src/forecastability/adapters/rendering/fingerprint_rendering.py` or existing reporting helper | markdown / dict / JSON summaries |
+| Use cases | `src/forecastability/use_cases/run_forecastability_fingerprint.py` | additive public orchestration function |
+| Tests | `tests/test_linear_information_service.py` | baseline correctness + clipping |
+| Tests | `tests/test_fingerprint_service.py` | semantics of the four fingerprint fields |
+| Tests | `tests/test_routing_policy_service.py` | deterministic mapping + caution logic |
+| Tests | `tests/test_run_forecastability_fingerprint.py` | facade / typed output |
+| Tests | `tests/test_fingerprint_regression.py` | frozen fixture drift guard |
+| Examples | `examples/univariate/fingerprint/forecastability_fingerprint_example.py` | minimal Python example |
+| Examples | `examples/univariate/fingerprint/forecastability_routing_cli_example.md` | CLI example surface |
+| Scripts | `scripts/run_showcase_fingerprint.py` | canonical four-series artifact generator |
+| Notebook | `notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb` | pedagogical walkthrough |
+| Docs | `docs/theory/forecastability_fingerprint.md` | mathematical semantics |
+| Docs | `docs/quickstart.md`, `docs/public_api.md`, `README.md` | user-facing additive surface |
+
+### 11.3. Shared configuration object for semantics
+
+**File:** `src/forecastability/services/fingerprint_service.py`
+
+```python
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True, slots=True)
+class FingerprintThresholdConfig:
+    """Versioned threshold and tolerance settings for fingerprint semantics.
+
+    This object centralizes the release semantics so tests, routing, and docs
+    all reference the same thresholds.
+
+    Args:
+        alpha: Surrogate significance level.
+        ami_floor: Minimum AMI threshold after significance masking.
+        peak_prominence_abs: Absolute minimum prominence for accepted peaks.
+        peak_prominence_rel: Relative prominence as a fraction of max informative AMI.
+        spacing_tolerance: Allowed deviation from dominant periodic spacing.
+        monotonicity_tolerance: Allowed upward local reversal within monotonic decay.
+        min_confident_horizons: Minimum informative horizons for confident routing.
+        epsilon: Numerical floor used in ratios.
+    """
+
+    alpha: float = 0.05
+    ami_floor: float = 0.01
+    peak_prominence_abs: float = 0.02
+    peak_prominence_rel: float = 0.10
+    spacing_tolerance: int = 1
+    monotonicity_tolerance: float = 0.01
+    min_confident_horizons: int = 3
+    epsilon: float = 1e-12
+```
+
+> [!NOTE]
+> The exact numeric defaults above are placeholders for the plan.
+> The important requirement is that `0.3.1` defines one versioned configuration
+> surface and reuses it across fingerprint construction, routing, regression,
+> notebook examples, and docs.
+
+### 11.4. Synthetic archetype generator — mandatory before routing
+
+`0.3.1` depends on deterministic series families with an expected fingerprint story.
+The synthetic panel should live in the same shared utility style used in `0.3.0`.
+
+**File:** `src/forecastability/utils/synthetic.py`
+
+```python
+"""Synthetic series generators for fingerprint and routing validation."""
+
+from __future__ import annotations
+
+import numpy as np
+import pandas as pd
+
+
+
+def generate_fingerprint_archetypes(
+    n: int = 600,
+    *,
+    seed: int = 42,
+    seasonal_period: int = 24,
+) -> dict[str, pd.Series]:
+    """Generate canonical univariate archetypes for fingerprint validation.
+
+    Args:
+        n: Number of observations per series.
+        seed: Random seed for reproducibility.
+        seasonal_period: Dominant seasonal spacing for the periodic archetype.
+
+    Returns:
+        dict[str, pd.Series]: Named benchmark series.
+    """
+    rng = np.random.default_rng(seed)
+    t = np.arange(n)
+
+    white_noise = rng.normal(0.0, 1.0, size=n)
+
+    ar1 = np.zeros(n)
+    for idx in range(1, n):
+        ar1[idx] = 0.82 * ar1[idx - 1] + rng.normal(0.0, 1.0)
+
+    seasonal = (
+        1.2 * np.sin(2.0 * np.pi * t / seasonal_period)
+        + 0.5 * np.sin(2.0 * np.pi * t / (seasonal_period * 2))
+        + rng.normal(0.0, 0.35, size=n)
+    )
+
+    nonlinear = np.zeros(n)
+    driver = rng.normal(0.0, 1.0, size=n)
+    for idx in range(2, n):
+        nonlinear[idx] = (
+            0.35 * nonlinear[idx - 1]
+            + 0.55 * (driver[idx - 1] ** 2 - 1.0)
+            + 0.25 * np.sin(nonlinear[idx - 2])
+            + rng.normal(0.0, 0.45)
+        )
+
+    return {
+        "white_noise": pd.Series(white_noise, name="white_noise"),
+        "ar1_monotonic": pd.Series(ar1, name="ar1_monotonic"),
+        "seasonal_periodic": pd.Series(seasonal, name="seasonal_periodic"),
+        "nonlinear_mixed": pd.Series(nonlinear, name="nonlinear_mixed"),
+    }
+```
+
+**Expected fingerprint stories**
+
+| Archetype | Expected structure | Expected mass | Expected nonlinear share | Expected route |
+|---|---|---|---|---|
+| `white_noise` | `none` | near zero | near zero | `naive` / `downscope` |
+| `ar1_monotonic` | `monotonic` | low-to-medium | low | linear families |
+| `seasonal_periodic` | `periodic` | medium-to-high | low | seasonal families |
+| `nonlinear_mixed` | `mixed` | medium | elevated | nonlinear families |
+
+### 11.5. Linear Gaussian-information baseline — detailed code skeleton
+
+**File:** `src/forecastability/services/linear_information_service.py`
+
+```python
+"""Linear Gaussian-information baseline derived from autocorrelation."""
+
+from __future__ import annotations
+
+import math
+
+import numpy as np
+from pydantic import BaseModel, Field
+
+
+class LinearInformationPoint(BaseModel, frozen=True):
+    """Per-horizon linear-information proxy."""
+
+    horizon: int
+    rho: float | None = None
+    gaussian_information: float | None = None
+    valid: bool = True
+    caution: str | None = None
+
+
+class LinearInformationCurve(BaseModel, frozen=True):
+    """Collection of Gaussian-information points over horizons."""
+
+    points: list[LinearInformationPoint] = Field(default_factory=list)
+
+
+
+def _safe_autocorrelation(series: np.ndarray, horizon: int) -> float | None:
+    """Compute Pearson autocorrelation for one horizon.
+
+    Args:
+        series: One-dimensional numeric series.
+        horizon: Positive lag horizon.
+
+    Returns:
+        float | None: Correlation value or None if undefined.
+    """
+    x = series[:-horizon]
+    y = series[horizon:]
+    if x.size < 3 or y.size < 3:
+        return None
+    if np.std(x) == 0.0 or np.std(y) == 0.0:
+        return None
+    return float(np.corrcoef(x, y)[0, 1])
+
+
+
+def _gaussian_information_from_rho(rho: float, *, epsilon: float) -> float:
+    """Map correlation to the Gaussian-information proxy.
+
+    Args:
+        rho: Pearson correlation.
+        epsilon: Numerical floor for clipping near one.
+
+    Returns:
+        float: Gaussian-information value in nats.
+    """
+    rho_abs = min(abs(rho), 1.0 - epsilon)
+    return -0.5 * math.log(1.0 - rho_abs * rho_abs)
+
+
+
+def compute_linear_information_curve(
+    series: np.ndarray,
+    *,
+    horizons: list[int],
+    epsilon: float = 1e-12,
+) -> LinearInformationCurve:
+    """Compute the Gaussian-information baseline over horizons.
+
+    Args:
+        series: One-dimensional numeric series.
+        horizons: Positive horizons to evaluate.
+        epsilon: Numerical clipping constant.
+
+    Returns:
+        LinearInformationCurve: Horizon-wise baseline values.
+    """
+    points: list[LinearInformationPoint] = []
+    for horizon in horizons:
+        rho = _safe_autocorrelation(series, horizon)
+        if rho is None:
+            points.append(
+                LinearInformationPoint(
+                    horizon=horizon,
+                    rho=None,
+                    gaussian_information=None,
+                    valid=False,
+                    caution="undefined_autocorrelation",
+                )
+            )
+            continue
+        points.append(
+            LinearInformationPoint(
+                horizon=horizon,
+                rho=rho,
+                gaussian_information=_gaussian_information_from_rho(
+                    rho,
+                    epsilon=epsilon,
+                ),
+            )
+        )
+    return LinearInformationCurve(points=points)
+```
+
+**Acceptance details beyond the main plan**
+
+- uses Pearson/autocorrelation-derived information proxy only
+- clips safely near `|rho| = 1`
+- excludes undefined horizons conservatively
+- returns stable horizon-wise output that tests can freeze
+- does not pretend to estimate AMI; it is explicitly a baseline only
+
+### 11.6. Fingerprint builder service — detailed code skeleton
+
+**File:** `src/forecastability/services/fingerprint_service.py`
+
+```python
+"""Forecastability fingerprint construction from AMI profile outputs."""
+
+from __future__ import annotations
+
+from collections import Counter
+
+import numpy as np
+from pydantic import BaseModel, Field
+
+from forecastability.services.linear_information_service import LinearInformationCurve
+from forecastability.utils.types import ForecastabilityFingerprint
+
+
+class FingerprintInputs(BaseModel, frozen=True):
+    """Normalized domain inputs for fingerprint computation."""
+
+    horizons: list[int]
+    ami_values: list[float]
+    surrogate_p_values: list[float | None]
+    directness_ratio: float | None = None
+
+
+class FingerprintDiagnostics(BaseModel, frozen=True):
+    """Supplementary diagnostics emitted alongside the fingerprint."""
+
+    informative_horizons: list[int] = Field(default_factory=list)
+    informative_mask: list[bool] = Field(default_factory=list)
+    nonlinear_excess_by_horizon: list[float] = Field(default_factory=list)
+    cautions: list[str] = Field(default_factory=list)
+
+
+
+def _build_informative_mask(
+    inputs: FingerprintInputs,
+    *,
+    alpha: float,
+    ami_floor: float,
+) -> list[bool]:
+    """Build the shared informative-horizon mask.
+
+    Args:
+        inputs: Normalized fingerprint inputs.
+        alpha: Surrogate significance threshold.
+        ami_floor: Minimum AMI floor.
+
+    Returns:
+        list[bool]: Horizon-aligned informative mask.
+    """
+    mask: list[bool] = []
+    for ami_value, p_value in zip(inputs.ami_values, inputs.surrogate_p_values, strict=True):
+        if p_value is None:
+            mask.append(False)
+            continue
+        is_informative = ami_value >= ami_floor and p_value <= alpha
+        mask.append(is_informative)
+    return mask
+
+
+
+def _classify_information_structure(
+    horizons: list[int],
+    ami_values: list[float],
+    informative_mask: list[bool],
+    *,
+    peak_prominence_abs: float,
+    peak_prominence_rel: float,
+    spacing_tolerance: int,
+    monotonicity_tolerance: float,
+) -> str:
+    """Classify the AMI profile shape.
+
+    Returns:
+        str: One of none, monotonic, periodic, mixed.
+    """
+    informative_points = [
+        (horizon, value)
+        for horizon, value, is_informative in zip(
+            horizons,
+            ami_values,
+            informative_mask,
+            strict=True,
+        )
+        if is_informative
+    ]
+    if not informative_points:
+        return "none"
+
+    informative_values = [value for _, value in informative_points]
+    monotonic_ok = True
+    for previous, current in zip(informative_values, informative_values[1:], strict=False):
+        if current - previous > monotonicity_tolerance:
+            monotonic_ok = False
+            break
+
+    peak_threshold = max(
+        peak_prominence_abs,
+        peak_prominence_rel * max(informative_values),
+    )
+    peaks: list[int] = []
+    for idx in range(1, len(informative_points) - 1):
+        previous_value = informative_points[idx - 1][1]
+        current_value = informative_points[idx][1]
+        next_value = informative_points[idx + 1][1]
+        prominence = current_value - max(previous_value, next_value)
+        if current_value >= previous_value and current_value >= next_value and prominence >= peak_threshold:
+            peaks.append(informative_points[idx][0])
+
+    if len(peaks) >= 2:
+        spacings = [right - left for left, right in zip(peaks, peaks[1:], strict=True)]
+        dominant_spacing = Counter(spacings).most_common(1)[0][0]
+        if all(abs(spacing - dominant_spacing) <= spacing_tolerance for spacing in spacings):
+            return "periodic"
+
+    if monotonic_ok:
+        return "monotonic"
+    return "mixed"
+
+
+
+def build_forecastability_fingerprint(
+    inputs: FingerprintInputs,
+    baseline: LinearInformationCurve,
+    *,
+    config: FingerprintThresholdConfig,
+) -> tuple[ForecastabilityFingerprint, FingerprintDiagnostics]:
+    """Build the fingerprint from horizon-wise AMI and baseline outputs.
+
+    Args:
+        inputs: AMI-profile inputs.
+        baseline: Linear Gaussian-information baseline.
+        config: Threshold and tolerance configuration.
+
+    Returns:
+        tuple[ForecastabilityFingerprint, FingerprintDiagnostics]:
+            Typed fingerprint plus supplementary diagnostics.
+    """
+    informative_mask = _build_informative_mask(
+        inputs,
+        alpha=config.alpha,
+        ami_floor=config.ami_floor,
+    )
+    informative_horizons = [
+        horizon
+        for horizon, is_informative in zip(inputs.horizons, informative_mask, strict=True)
+        if is_informative
+    ]
+    information_mass = sum(
+        ami_value
+        for ami_value, is_informative in zip(inputs.ami_values, informative_mask, strict=True)
+        if is_informative
+    ) / max(1, len(inputs.horizons))
+    information_horizon = max(informative_horizons, default=0)
+
+    baseline_map = {point.horizon: point for point in baseline.points}
+    nonlinear_excess_by_horizon: list[float] = []
+    nonlinear_numerator = 0.0
+    nonlinear_denominator = 0.0
+    cautions: list[str] = []
+
+    for horizon, ami_value, is_informative in zip(
+        inputs.horizons,
+        inputs.ami_values,
+        informative_mask,
+        strict=True,
+    ):
+        if not is_informative:
+            nonlinear_excess_by_horizon.append(0.0)
+            continue
+        point = baseline_map.get(horizon)
+        if point is None or not point.valid or point.gaussian_information is None:
+            nonlinear_excess_by_horizon.append(0.0)
+            cautions.append(f"undefined_linear_baseline_h{horizon}")
+            continue
+        excess = max(ami_value - point.gaussian_information, 0.0)
+        nonlinear_excess_by_horizon.append(excess)
+        nonlinear_numerator += excess
+        nonlinear_denominator += ami_value
+
+    nonlinear_share = 0.0
+    if nonlinear_denominator > config.epsilon:
+        nonlinear_share = nonlinear_numerator / nonlinear_denominator
+
+    information_structure = _classify_information_structure(
+        inputs.horizons,
+        inputs.ami_values,
+        informative_mask,
+        peak_prominence_abs=config.peak_prominence_abs,
+        peak_prominence_rel=config.peak_prominence_rel,
+        spacing_tolerance=config.spacing_tolerance,
+        monotonicity_tolerance=config.monotonicity_tolerance,
+    )
+
+    fingerprint = ForecastabilityFingerprint(
+        information_mass=float(information_mass),
+        information_horizon=int(information_horizon),
+        information_structure=information_structure,
+        nonlinear_share=float(nonlinear_share),
+        directness_ratio=inputs.directness_ratio,
+        informative_horizons=informative_horizons,
+        metadata={
+            "alpha": config.alpha,
+            "ami_floor": config.ami_floor,
+        },
+    )
+    diagnostics = FingerprintDiagnostics(
+        informative_horizons=informative_horizons,
+        informative_mask=informative_mask,
+        nonlinear_excess_by_horizon=nonlinear_excess_by_horizon,
+        cautions=sorted(set(cautions)),
+    )
+    return fingerprint, diagnostics
+```
+
+### 11.7. Routing policy service — detailed code skeleton
+
+**File:** `src/forecastability/services/routing_policy_service.py`
+
+```python
+"""Deterministic model-family routing from a forecastability fingerprint."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+from forecastability.utils.types import ForecastabilityFingerprint, RoutingRecommendation
+
+
+@dataclass(frozen=True, slots=True)
+class RoutingThresholdConfig:
+    """Versioned thresholds for model-family routing."""
+
+    mass_low: float = 0.03
+    mass_high: float = 0.12
+    horizon_short: int = 3
+    horizon_long: int = 12
+    nonlinear_share_high: float = 0.30
+    directness_high: float = 0.60
+    directness_low: float = 0.30
+    near_threshold_margin: float = 0.01
+
+
+
+def build_routing_recommendation(
+    fingerprint: ForecastabilityFingerprint,
+    *,
+    config: RoutingThresholdConfig,
+) -> RoutingRecommendation:
+    """Map a fingerprint to deterministic model-family guidance.
+
+    Args:
+        fingerprint: Typed forecastability fingerprint.
+        config: Versioned routing thresholds.
+
+    Returns:
+        RoutingRecommendation: Primary and secondary families with rationale.
+    """
+    primary: list[str] = []
+    secondary: list[str] = []
+    rationale: list[str] = []
+    caution_flags: list[str] = []
+
+    if fingerprint.information_structure == "none" or fingerprint.information_mass <= config.mass_low:
+        primary = ["naive", "seasonal_naive", "downscope"]
+        rationale.append("Information mass is low or no informative structure was detected.")
+        caution_flags.append("weak_informative_support")
+    elif (
+        fingerprint.information_structure == "periodic"
+        and fingerprint.nonlinear_share < config.nonlinear_share_high
+    ):
+        primary = ["seasonal_naive", "harmonic_regression", "tbats"]
+        secondary = ["seasonal_state_space"]
+        rationale.append("Repeated informative peaks indicate stable periodic structure.")
+    elif (
+        fingerprint.information_structure == "monotonic"
+        and fingerprint.nonlinear_share < config.nonlinear_share_high
+        and (fingerprint.directness_ratio is None or fingerprint.directness_ratio >= config.directness_high)
+    ):
+        primary = ["arima", "ets", "linear_state_space"]
+        secondary = ["dynamic_regression"]
+        rationale.append("Decay is mostly monotonic with limited nonlinear excess over the Gaussian baseline.")
+    else:
+        primary = ["tree_on_lags", "tcn", "nbeats"]
+        secondary = ["nhits", "nonlinear_tabular"]
+        rationale.append("Mixed structure or elevated nonlinear share suggests richer nonlinear families.")
+
+    if fingerprint.information_structure == "mixed":
+        caution_flags.append("mixed_structure")
+    if fingerprint.information_horizon <= config.horizon_short:
+        caution_flags.append("short_information_horizon")
+    if fingerprint.directness_ratio is not None and fingerprint.directness_ratio <= config.directness_low:
+        caution_flags.append("low_directness")
+    if fingerprint.nonlinear_share >= config.nonlinear_share_high:
+        caution_flags.append("high_nonlinear_share")
+
+    penalty_count = 0
+    if abs(fingerprint.information_mass - config.mass_low) <= config.near_threshold_margin:
+        penalty_count += 1
+        caution_flags.append("near_threshold")
+    if fingerprint.information_structure == "mixed":
+        penalty_count += 1
+    if (
+        fingerprint.information_structure == "monotonic"
+        and fingerprint.nonlinear_share >= config.nonlinear_share_high
+    ):
+        penalty_count += 1
+        caution_flags.append("signal_conflict")
+
+    confidence_label = "high"
+    if penalty_count == 1:
+        confidence_label = "medium"
+    elif penalty_count >= 2:
+        confidence_label = "low"
+
+    return RoutingRecommendation(
+        primary_families=primary,
+        secondary_families=secondary,
+        rationale=rationale,
+        caution_flags=sorted(set(caution_flags)),
+        confidence_label=confidence_label,
+        metadata={"routing_policy_version": "0.3.1"},
+    )
+```
+
+**Mandatory wording rule for every output surface**
+
+- “Recommended families” is allowed
+- “Suggested starting families” is allowed
+- “Best model” is not allowed
+- “Optimal model” is not allowed
+- “Guaranteed winner” is not allowed
+
+### 11.8. Use case / facade — detailed code skeleton
+
+**File:** `src/forecastability/use_cases/run_forecastability_fingerprint.py`
+
+```python
+"""Public use case for the forecastability fingerprint workflow."""
+
+from __future__ import annotations
+
+import numpy as np
+import pandas as pd
+
+from forecastability.services.fingerprint_service import (
+    FingerprintInputs,
+    FingerprintThresholdConfig,
+    build_forecastability_fingerprint,
+)
+from forecastability.services.linear_information_service import compute_linear_information_curve
+from forecastability.services.routing_policy_service import (
+    RoutingThresholdConfig,
+    build_routing_recommendation,
+)
+from forecastability.utils.types import FingerprintBundle
+
+
+
+def run_forecastability_fingerprint(
+    series: pd.Series | np.ndarray,
+    *,
+    target_name: str = "target",
+    max_lag: int = 24,
+    alpha: float = 0.05,
+    ami_floor: float = 0.01,
+    directness_ratio: float | None = None,
+) -> FingerprintBundle:
+    """Run the additive forecastability fingerprint workflow.
+
+    Args:
+        series: Input univariate series.
+        target_name: Friendly target label.
+        max_lag: Maximum horizon for profile computation.
+        alpha: Surrogate significance threshold.
+        ami_floor: Minimum AMI floor.
+        directness_ratio: Optional directness statistic supplied by existing logic.
+
+    Returns:
+        FingerprintBundle: Typed fingerprint, routing guidance, and compact summary.
+    """
+    values = np.asarray(series, dtype=float)
+    horizons = list(range(1, max_lag + 1))
+
+    # Placeholder integration point: reuse existing profile / significance machinery.
+    ami_values = [0.0 for _ in horizons]
+    surrogate_p_values = [1.0 for _ in horizons]
+
+    fingerprint_inputs = FingerprintInputs(
+        horizons=horizons,
+        ami_values=ami_values,
+        surrogate_p_values=surrogate_p_values,
+        directness_ratio=directness_ratio,
+    )
+    baseline = compute_linear_information_curve(values, horizons=horizons)
+    fingerprint, diagnostics = build_forecastability_fingerprint(
+        fingerprint_inputs,
+        baseline,
+        config=FingerprintThresholdConfig(alpha=alpha, ami_floor=ami_floor),
+    )
+    recommendation = build_routing_recommendation(
+        fingerprint,
+        config=RoutingThresholdConfig(),
+    )
+    profile_summary = {
+        "informative_horizons": ",".join(str(item) for item in diagnostics.informative_horizons),
+        "structure": fingerprint.information_structure,
+        "confidence": recommendation.confidence_label,
+    }
+    return FingerprintBundle(
+        target_name=target_name,
+        fingerprint=fingerprint,
+        recommendation=recommendation,
+        profile_summary=profile_summary,
+        metadata={"release": "0.3.1"},
+    )
+```
+
+> [!IMPORTANT]
+> The placeholder AMI values above are intentional in the plan.
+> The junior developer must wire this use case to the repo’s existing AMI/profile
+> and surrogate-significance machinery rather than duplicating computation locally.
+
+### 11.9. Unified summary rendering — recommended output contract
+
+**File:** reporting helper or adapter-specific renderer
+
+```python
+from __future__ import annotations
+
+from forecastability.utils.types import FingerprintBundle
+
+
+
+def render_fingerprint_summary(bundle: FingerprintBundle) -> dict[str, object]:
+    """Render a stable dictionary for JSON, docs, and agents.
+
+    Args:
+        bundle: Forecastability fingerprint bundle.
+
+    Returns:
+        dict[str, object]: Stable compact summary.
+    """
+    return {
+        "target_name": bundle.target_name,
+        "information_mass": bundle.fingerprint.information_mass,
+        "information_horizon": bundle.fingerprint.information_horizon,
+        "information_structure": bundle.fingerprint.information_structure,
+        "nonlinear_share": bundle.fingerprint.nonlinear_share,
+        "directness_ratio": bundle.fingerprint.directness_ratio,
+        "primary_families": bundle.recommendation.primary_families,
+        "secondary_families": bundle.recommendation.secondary_families,
+        "confidence_label": bundle.recommendation.confidence_label,
+        "caution_flags": bundle.recommendation.caution_flags,
+        "rationale": bundle.recommendation.rationale,
+    }
+```
+
+**Stable JSON example expected in docs and tests**
+
+```json
+{
+  "target_name": "seasonal_periodic",
+  "information_mass": 0.184,
+  "information_horizon": 24,
+  "information_structure": "periodic",
+  "nonlinear_share": 0.071,
+  "directness_ratio": 0.79,
+  "primary_families": ["seasonal_naive", "harmonic_regression", "tbats"],
+  "secondary_families": ["seasonal_state_space"],
+  "confidence_label": "high",
+  "caution_flags": [],
+  "rationale": [
+    "Repeated informative peaks indicate stable periodic structure."
+  ]
+}
+```
+
+### 11.10. Test plan — concrete file-level detail
+
+#### `tests/test_linear_information_service.py`
+
+```python
+def test_gaussian_information_zero_for_zero_correlation() -> None:
+    ...
+
+
+def test_linear_information_curve_marks_invalid_short_horizon() -> None:
+    ...
+
+
+def test_gaussian_information_clips_near_unit_correlation() -> None:
+    ...
+```
+
+#### `tests/test_fingerprint_service.py`
+
+```python
+def test_information_horizon_zero_when_no_informative_horizons() -> None:
+    ...
+
+
+def test_information_mass_uses_full_horizon_normalization() -> None:
+    ...
+
+
+def test_information_structure_monotonic_on_ar1_like_profile() -> None:
+    ...
+
+
+def test_information_structure_periodic_on_repeated_peak_profile() -> None:
+    ...
+
+
+def test_information_structure_mixed_when_periodic_rule_not_stable() -> None:
+    ...
+
+
+def test_nonlinear_share_uses_gaussian_baseline_only_on_informative_horizons() -> None:
+    ...
+
+
+def test_invalid_baseline_horizon_is_excluded_conservatively() -> None:
+    ...
+```
+
+#### `tests/test_routing_policy_service.py`
+
+```python
+def test_route_none_structure_to_naive_and_downscope() -> None:
+    ...
+
+
+def test_route_periodic_structure_to_seasonal_families() -> None:
+    ...
+
+
+def test_route_monotonic_low_nonlinear_to_linear_families() -> None:
+    ...
+
+
+def test_route_mixed_or_high_nonlinear_to_nonlinear_families() -> None:
+    ...
+
+
+def test_confidence_drops_when_signals_conflict() -> None:
+    ...
+```
+
+#### `tests/test_run_forecastability_fingerprint.py`
+
+```python
+def test_use_case_returns_fingerprint_bundle() -> None:
+    ...
+
+
+def test_bundle_summary_contains_same_four_fields_as_python_surface() -> None:
+    ...
+```
+
+#### `tests/test_fingerprint_regression.py`
+
+- freeze one compact artifact per canonical series
+- compare exact categorical outputs and tolerance-bounded numeric outputs
+- fail loudly on semantic drift in routing or fingerprint construction
+
+### 11.11. Regression fixture format
+
+**Suggested path:** `docs/fixtures/fingerprint_regression/expected/`
+
+Each fixture should contain at least:
+
+```json
+{
+  "series_name": "ar1_monotonic",
+  "routing_policy_version": "0.3.1",
+  "fingerprint": {
+    "information_mass": 0.0941,
+    "information_horizon": 8,
+    "information_structure": "monotonic",
+    "nonlinear_share": 0.0482,
+    "directness_ratio": 0.73
+  },
+  "recommendation": {
+    "primary_families": ["arima", "ets", "linear_state_space"],
+    "secondary_families": ["dynamic_regression"],
+    "confidence_label": "high",
+    "caution_flags": []
+  }
+}
+```
+
+### 11.12. Showcase script — recommended structure
+
+**File:** `scripts/run_showcase_fingerprint.py`
+
+```python
+"""Canonical showcase for the forecastability fingerprint release."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from forecastability.use_cases.run_forecastability_fingerprint import run_forecastability_fingerprint
+from forecastability.utils.synthetic import generate_fingerprint_archetypes
+
+
+
+def main() -> None:
+    """Run the fingerprint showcase and emit stable artifacts."""
+    outputs_dir = Path("outputs/json")
+    outputs_dir.mkdir(parents=True, exist_ok=True)
+
+    series_map = generate_fingerprint_archetypes()
+    for name, series in series_map.items():
+        bundle = run_forecastability_fingerprint(series, target_name=name, max_lag=24)
+        payload = {
+            "target_name": bundle.target_name,
+            "fingerprint": bundle.fingerprint.model_dump(),
+            "recommendation": bundle.recommendation.model_dump(),
+            "profile_summary": bundle.profile_summary,
+        }
+        output_path = outputs_dir / f"fingerprint_{name}.json"
+        output_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+**Required showcase artifacts**
+
+- one JSON artifact per canonical series
+- one markdown summary table for docs/screenshots
+- one stable figure showing AMI profile + informative mask + baseline for each series
+- one lightweight routing comparison table
+
+### 11.13. Notebook outline — required pedagogical flow
+
+**File:** `notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb`
+
+Sections to include:
+
+1. What the fingerprint solves
+2. Why four fields instead of many disconnected diagnostics
+3. Canonical benchmark series generation
+4. `information_mass` walkthrough
+5. `information_horizon` walkthrough
+6. `information_structure` walkthrough with peak-spacing visuals
+7. `nonlinear_share` walkthrough against Gaussian baseline
+8. Routing walkthrough with caution flags and confidence labels
+9. Caveats: heuristic routing, univariate-first, no exact-model claim
+10. Cross-links to `0.3.0` and planned `0.3.4` validation hardening
+
+### 11.14. Public examples — mandatory additive surfaces
+
+#### Minimal Python example
+
+**File:** `examples/univariate/fingerprint/forecastability_fingerprint_example.py`
+
+```python
+from __future__ import annotations
+
+from forecastability.use_cases.run_forecastability_fingerprint import run_forecastability_fingerprint
+from forecastability.utils.synthetic import generate_fingerprint_archetypes
+
+series = generate_fingerprint_archetypes()["seasonal_periodic"]
+bundle = run_forecastability_fingerprint(series, target_name="seasonal_periodic", max_lag=24)
+
+print(bundle.fingerprint)
+print(bundle.recommendation)
+```
+
+#### CLI example snippet for README / quickstart
+
+```bash
+uv run python -m forecastability.adapters.cli.fingerprint \
+  --input data/examples/air_passengers.csv \
+  --target passengers \
+  --max-lag 24 \
+  --output-json outputs/json/air_passengers_fingerprint.json
+```
+
+> [!NOTE]
+> If a dedicated CLI subcommand does not exist yet, the release may expose the same
+> surface through an existing CLI entrypoint. The important requirement is that the
+> four fingerprint fields and routing output become available outside notebooks.
+
+### 11.15. Documentation snippets — mandatory wording additions
+
+#### README / quickstart Python example
+
+```python
+from forecastability.use_cases.run_forecastability_fingerprint import run_forecastability_fingerprint
+
+bundle = run_forecastability_fingerprint(series, target_name="sales", max_lag=24)
+print(bundle.fingerprint.information_structure)
+print(bundle.recommendation.primary_families)
+```
+
+#### Required README caution box
+
+> [!WARNING]
+> The forecastability fingerprint is a triage and routing aid.
+> It summarizes horizon-wise information structure and suggests starting model families.
+> It does **not** claim to identify the one true optimal model and does **not** replace
+> empirical validation.
+
+---
+
+## 12. Scientific invariants — mandatory in all new `0.3.1` code
+
+| Invariant | Enforcement | Example |
+|---|---|---|
+| `information_mass` and `information_horizon` use the same `H_info` mask | shared helper function + test | `_build_informative_mask()` |
+| `nonlinear_share` is computed against Gaussian-information baseline only | service boundary + test | `_gaussian_information_from_rho()` |
+| Undefined baseline horizons are excluded conservatively | explicit caution + test | `valid=False` point |
+| `information_structure` is domain logic, not plotting logic | service placement review | `fingerprint_service.py` |
+| Routing is heuristic guidance only | wording grep / doc review | “recommended families” |
+| Confidence is deterministic, never prose-only | threshold tests | penalty-count mapping |
+| `directness_ratio` remains separate from `nonlinear_share` | explicit fields + negative tests | `test_directness_ratio_not_used_as_nonlinear_share()` |
+| Synthetic generators are deterministic by integer seed | typed seed + fixture test | `seed: int = 42` |
+| Public surfaces expose the same four fingerprint fields | example / notebook / CLI contract tests | JSON + notebook assertions |
+| `0.3.1` remains univariate-first / AMI-first | docs review | README + theory page |
+
+---
+
+## 13. Definition of done — per phase
+
+| Phase | Done when |
+|---|---|
+| **0 — Contracts + synthetic panel** | Typed models importable, archetype generator deterministic, no notebook-only logic, linter clean |
+| **1 — Core services** | Linear baseline, fingerprint builder, and routing policy independently testable, threshold semantics centralized |
+| **2 — Facade** | `run_forecastability_fingerprint()` returns `FingerprintBundle`, summary rendering stable, additive public API only |
+| **3 — Tests** | Unit + integration + regression fixtures green, semantic edge cases covered, routing-quality panel documented |
+| **4 — Showcase** | Canonical script and notebook run end-to-end, stable artifacts emitted, all four archetypes demonstrated |
+| **5 — Docs / examples** | README, quickstart, theory doc, examples, and notebook all expose the same four fields and same caution language |
+| **6 — CI / release** | Smoke path, notebook contract, artifact checks, and release checklist all mention fingerprint + routing semantics |
+
+---
+
+## 14. Junior-developer backlog — copy-paste execution order
+
+### Epic A — Contracts + synthetic panel (Day 1)
+
+- [ ] Extend `src/forecastability/utils/types.py` with `ForecastabilityFingerprint`, `RoutingRecommendation`, and `FingerprintBundle`
+- [ ] Add `generate_fingerprint_archetypes()` to `src/forecastability/utils/synthetic.py`
+- [ ] Write `tests/test_fingerprint_synthetic.py`
+- [ ] Verify deterministic output by `seed=42`
+
+### Epic B — Linear-information baseline (Day 2)
+
+- [ ] Create `src/forecastability/services/linear_information_service.py`
+- [ ] Add `LinearInformationPoint` and `LinearInformationCurve`
+- [ ] Implement safe clipping near `|rho| = 1`
+- [ ] Write `tests/test_linear_information_service.py`
+- [ ] Verify: zero-correlation white noise produces near-zero Gaussian information
+
+### Epic C — Fingerprint semantics (Days 3-4)
+
+- [ ] Create `FingerprintThresholdConfig` and `FingerprintInputs`
+- [ ] Implement `_build_informative_mask()`
+- [ ] Implement `_classify_information_structure()`
+- [ ] Implement `build_forecastability_fingerprint()`
+- [ ] Write `tests/test_fingerprint_service.py`
+- [ ] Verify: `ar1_monotonic -> monotonic`, `seasonal_periodic -> periodic`, `white_noise -> none`
+
+### Epic D — Routing policy (Day 5)
+
+- [ ] Create `src/forecastability/services/routing_policy_service.py`
+- [ ] Add versioned routing thresholds
+- [ ] Implement caution flags and confidence penalties
+- [ ] Write `tests/test_routing_policy_service.py`
+- [ ] Verify: mixed/high-nonlinear cases map to nonlinear families
+
+### Epic E — Use case + rendering (Day 6)
+
+- [ ] Create `src/forecastability/use_cases/run_forecastability_fingerprint.py`
+- [ ] Reuse existing AMI/profile machinery; do not recompute AMI ad hoc in the use case
+- [ ] Add stable rendering helper for dict / JSON / markdown output
+- [ ] Write `tests/test_run_forecastability_fingerprint.py`
+- [ ] Verify additive imports only; no breaking interface changes
+
+### Epic F — Regression + routing-quality panel (Day 7)
+
+- [ ] Freeze expected fixtures in `docs/fixtures/fingerprint_regression/expected/`
+- [ ] Add `tests/test_fingerprint_regression.py`
+- [ ] Create a small curated routing-quality panel note under `docs/theory/forecastability_fingerprint.md` or adjacent doc
+- [ ] Document mismatches explicitly rather than smoothing them away
+
+### Epic G — Showcase + notebook + examples (Days 8-9)
+
+- [ ] Create `scripts/run_showcase_fingerprint.py`
+- [ ] Create `notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb`
+- [ ] Add minimal Python example under `examples/univariate/fingerprint/`
+- [ ] Add CLI example snippet to README / quickstart
+- [ ] Verify notebook uses real package surfaces only
+
+### Epic H — Docs + CI + release closeout (Day 10)
+
+- [ ] Update `README.md`, `docs/quickstart.md`, `docs/public_api.md`
+- [ ] Add `docs/theory/forecastability_fingerprint.md`
+- [ ] Update `CHANGELOG.md`
+- [ ] Extend smoke workflow to run fingerprint showcase
+- [ ] Extend notebook contract checker for the new walkthrough
+- [ ] Extend release checklist with fingerprint/routing semantics checks
+
+---
+
+## 15. Copy-paste commands for the maintainer
+
+```bash
+git checkout -b feat/v0.3.1-forecastability-fingerprint-model-routing
+uv run ruff check .
+uv run ty check
+uv run pytest -q
+uv run python scripts/run_showcase_fingerprint.py
+uv run python scripts/check_notebook_contract.py
+uv build
+```
+
+```bash
+uv run pytest tests/test_linear_information_service.py -q
+uv run pytest tests/test_fingerprint_service.py -q
+uv run pytest tests/test_routing_policy_service.py -q
+uv run pytest tests/test_run_forecastability_fingerprint.py -q
+uv run pytest tests/test_fingerprint_regression.py -q
+```
+
+---
+
+## 16. Final maintainer note
+
+This appendix is intentionally verbose so a junior developer can implement the release
+without guessing where files belong, what each service owns, or how the four fingerprint
+fields are expected to behave.
+
+The base plan remains the source of truth.
+This appendix only makes that plan operational in the same stronger style as `0.3.0`.
+
+
+---
+
+## 17. Heavy math-to-code extension — additive only, no prior text removed
+
+> [!IMPORTANT]
+> This section exists specifically to mirror the practical density of `0.3.0`.
+> It adds **worked mathematical examples**, **implementation helpers**, and
+> **test-ready code snippets**. It does not replace any earlier section.
+
+### 17.1. Worked example — `information_mass` and `information_horizon`
+
+Suppose the AMI profile over horizons `1..6` is:
+
+$$
+AMI = [0.21, 0.16, 0.11, 0.03, 0.08, 0.01]
+$$
+
+and the surrogate p-values are:
+
+$$
+p_{sur} = [0.001, 0.004, 0.010, 0.150, 0.030, 0.600]
+$$
+
+with:
+
+$$
+\alpha = 0.05, \qquad \tau_{AMI} = 0.05
+$$
+
+Then:
+
+$$
+\mathcal{H}_{info} = \{1, 2, 3, 5\}
+$$
+
+because horizons `1,2,3,5` satisfy both the AMI floor and the surrogate significance rule.
+
+The masked normalized area is:
+
+$$
+M = \frac{0.21 + 0.16 + 0.11 + 0.08}{6} = \frac{0.56}{6} \approx 0.0933
+$$
+
+and the latest informative horizon is:
+
+$$
+H_{info} = 5
+$$
+
+This worked example is important because it shows two non-obvious facts:
+
+1. `information_horizon` is **not** the count of informative horizons.
+2. `information_mass` is **not** the average over informative horizons.
+
+Python helper snippet:
+
+```python
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True, slots=True)
+class InformativeMaskResult:
+    """Shared informative-horizon mask and scalar summaries.
+
+    Args:
+        informative_horizons: Accepted horizon indices.
+        informative_mask: Horizon-aligned boolean mask.
+        information_mass: Normalized masked area over full horizon grid.
+        information_horizon: Latest informative horizon or zero.
+    """
+
+    informative_horizons: list[int]
+    informative_mask: list[bool]
+    information_mass: float
+    information_horizon: int
+
+
+
+def build_informative_mask_result(
+    horizons: list[int],
+    ami_values: list[float],
+    surrogate_p_values: list[float | None],
+    *,
+    alpha: float,
+    ami_floor: float,
+) -> InformativeMaskResult:
+    """Construct the shared informative-horizon semantics.
+
+    Args:
+        horizons: Evaluated horizon indices.
+        ami_values: AMI value per horizon.
+        surrogate_p_values: Per-horizon surrogate p-values.
+        alpha: Surrogate significance threshold.
+        ami_floor: Minimum AMI floor after significance filtering.
+
+    Returns:
+        InformativeMaskResult: Shared mask plus mass/horizon outputs.
+
+    Raises:
+        ValueError: If aligned vectors have mismatched lengths.
+    """
+    if not (
+        len(horizons) == len(ami_values) == len(surrogate_p_values)
+    ):
+        raise ValueError("horizons, ami_values, and surrogate_p_values must align")
+
+    informative_horizons: list[int] = []
+    informative_mask: list[bool] = []
+    masked_sum = 0.0
+
+    for horizon, ami_value, p_value in zip(
+        horizons,
+        ami_values,
+        surrogate_p_values,
+        strict=True,
+    ):
+        is_informative = (
+            p_value is not None
+            and ami_value >= ami_floor
+            and p_value <= alpha
+        )
+        informative_mask.append(is_informative)
+        if is_informative:
+            informative_horizons.append(horizon)
+            masked_sum += ami_value
+
+    information_mass = masked_sum / max(1, len(horizons))
+    information_horizon = max(informative_horizons, default=0)
+    return InformativeMaskResult(
+        informative_horizons=informative_horizons,
+        informative_mask=informative_mask,
+        information_mass=information_mass,
+        information_horizon=information_horizon,
+    )
+```
+
+### 17.2. Worked example — `nonlinear_share`
+
+Suppose the informative horizons are again `1,2,3,5`, with:
+
+$$
+AMI = [0.21, 0.16, 0.11, 0.08]
+$$
+
+and autocorrelations:
+
+$$
+\rho = [0.55, 0.41, 0.32, 0.10]
+$$
+
+The Gaussian-information baseline per informative horizon is:
+
+$$
+I_G(h) = -\frac{1}{2}\log(1 - \rho(h)^2)
+$$
+
+which gives approximately:
+
+$$
+I_G \approx [0.1803, 0.0913, 0.0540, 0.0050]
+$$
+
+Then the nonlinear excess is:
+
+$$
+E = \max(AMI - I_G, 0) \approx [0.0297, 0.0687, 0.0560, 0.0750]
+$$
+
+and:
+
+$$
+N = \frac{0.0297 + 0.0687 + 0.0560 + 0.0750}{0.21 + 0.16 + 0.11 + 0.08}
+= \frac{0.2294}{0.56} \approx 0.4096
+$$
+
+So the series has a **non-trivial nonlinear component**, but it is not “purely nonlinear”.
+
+Implementation helper:
+
+```python
+from __future__ import annotations
+
+import math
+
+
+
+def gaussian_information_from_rho(
+    rho: float,
+    *,
+    epsilon: float,
+) -> float:
+    """Convert Pearson correlation into Gaussian-information baseline.
+
+    Args:
+        rho: Pearson autocorrelation value.
+        epsilon: Numerical floor for clipping near one.
+
+    Returns:
+        float: Gaussian-information proxy in nats.
+    """
+    rho_clipped = min(abs(rho), 1.0 - epsilon)
+    return -0.5 * math.log(1.0 - rho_clipped * rho_clipped)
+
+
+
+def compute_nonlinear_share(
+    informative_horizons: list[int],
+    ami_by_horizon: dict[int, float],
+    rho_by_horizon: dict[int, float | None],
+    *,
+    epsilon: float,
+) -> tuple[float, list[float], list[str]]:
+    """Compute nonlinear_share and emit per-horizon diagnostics.
+
+    Args:
+        informative_horizons: Accepted informative horizons.
+        ami_by_horizon: AMI values keyed by horizon.
+        rho_by_horizon: Pearson autocorrelation values keyed by horizon.
+        epsilon: Numerical floor.
+
+    Returns:
+        tuple[float, list[float], list[str]]: Share, excess values, cautions.
+    """
+    if not informative_horizons:
+        return 0.0, [], []
+
+    numerator = 0.0
+    denominator = 0.0
+    excess_values: list[float] = []
+    cautions: list[str] = []
+
+    for horizon in informative_horizons:
+        ami_value = ami_by_horizon[horizon]
+        rho = rho_by_horizon.get(horizon)
+        if rho is None:
+            cautions.append(f"invalid_rho_h{horizon}")
+            continue
+        baseline = gaussian_information_from_rho(rho, epsilon=epsilon)
+        excess = max(ami_value - baseline, 0.0)
+        excess_values.append(excess)
+        numerator += excess
+        denominator += ami_value
+
+    if denominator <= epsilon:
+        return 0.0, excess_values, cautions
+    return numerator / denominator, excess_values, cautions
+```
+
+### 17.3. Worked example — `information_structure`
+
+Take the informative AMI profile:
+
+$$
+[(1, 0.31), (2, 0.22), (3, 0.15), (4, 0.10), (5, 0.08)]
+$$
+
+This is a clean **monotonic** shape.
+
+Now take:
+
+$$
+[(1, 0.26), (2, 0.09), (3, 0.23), (4, 0.08), (5, 0.20), (6, 0.07)]
+$$
+
+with accepted peaks at horizons `1, 3, 5`. Dominant spacing is `2`, repeated within tolerance,
+so this is **periodic**.
+
+Now take:
+
+$$
+[(1, 0.28), (2, 0.14), (3, 0.25), (4, 0.11), (5, 0.12)]
+$$
+
+This has a strong rebound but no stable repeated spacing, so the safe label is **mixed**.
+
+Implementation helper:
+
+```python
+from __future__ import annotations
+
+from collections import Counter
+
+
+
+def classify_information_structure(
+    informative_horizons: list[int],
+    informative_ami_values: list[float],
+    *,
+    peak_prominence_abs: float,
+    peak_prominence_rel: float,
+    spacing_tolerance: int,
+    monotonicity_tolerance: float,
+) -> tuple[str, list[int], list[str]]:
+    """Classify the shape of the informative AMI profile.
+
+    Args:
+        informative_horizons: Informative horizons only.
+        informative_ami_values: Informative AMI values only.
+        peak_prominence_abs: Absolute peak threshold.
+        peak_prominence_rel: Relative peak threshold.
+        spacing_tolerance: Allowed deviation from dominant spacing.
+        monotonicity_tolerance: Allowed monotonic reversal tolerance.
+
+    Returns:
+        tuple[str, list[int], list[str]]: Structure label, accepted peaks, cautions.
+    """
+    if not informative_horizons:
+        return "none", [], []
+    if len(informative_horizons) < 3:
+        return "mixed", [], ["too_few_informative_horizons"]
+
+    max_value = max(informative_ami_values)
+    prominence_threshold = max(
+        peak_prominence_abs,
+        peak_prominence_rel * max_value,
+    )
+
+    accepted_peak_horizons: list[int] = []
+    for idx in range(1, len(informative_ami_values) - 1):
+        previous_value = informative_ami_values[idx - 1]
+        current_value = informative_ami_values[idx]
+        next_value = informative_ami_values[idx + 1]
+        prominence = current_value - max(previous_value, next_value)
+        if (
+            current_value >= previous_value
+            and current_value >= next_value
+            and prominence >= prominence_threshold
+        ):
+            accepted_peak_horizons.append(informative_horizons[idx])
+
+    if len(accepted_peak_horizons) >= 3:
+        spacings = [
+            right - left
+            for left, right in zip(
+                accepted_peak_horizons,
+                accepted_peak_horizons[1:],
+                strict=True,
+            )
+        ]
+        dominant_spacing = Counter(spacings).most_common(1)[0][0]
+        spacing_ok = all(
+            abs(spacing - dominant_spacing) <= spacing_tolerance
+            for spacing in spacings
+        )
+        if spacing_ok:
+            return "periodic", accepted_peak_horizons, []
+
+    monotonic_ok = True
+    for previous_value, current_value in zip(
+        informative_ami_values,
+        informative_ami_values[1:],
+        strict=True,
+    ):
+        if current_value - previous_value > monotonicity_tolerance:
+            monotonic_ok = False
+            break
+
+    if monotonic_ok:
+        return "monotonic", accepted_peak_horizons, []
+    return "mixed", accepted_peak_horizons, []
+```
+
+### 17.4. Unified fingerprint builder — end-to-end service sketch
+
+**File:** `src/forecastability/services/fingerprint_service.py`
+
+```python
+from __future__ import annotations
+
+from pydantic import BaseModel, Field
+
+from forecastability.services.linear_information_service import (
+    compute_linear_information_curve,
+)
+from forecastability.utils.types import ForecastabilityFingerprint
+
+
+class FingerprintBuildResult(BaseModel, frozen=True):
+    """Structured output of fingerprint construction.
+
+    Args:
+        fingerprint: Compact typed fingerprint.
+        caution_flags: Deterministic caution flags.
+        accepted_peaks: Accepted periodic peaks, if any.
+        nonlinear_excess: Horizon-wise nonlinear excess values.
+    """
+
+    fingerprint: ForecastabilityFingerprint
+    caution_flags: list[str] = Field(default_factory=list)
+    accepted_peaks: list[int] = Field(default_factory=list)
+    nonlinear_excess: list[float] = Field(default_factory=list)
+
+
+
+def build_forecastability_fingerprint(
+    horizons: list[int],
+    ami_values: list[float],
+    surrogate_p_values: list[float | None],
+    *,
+    directness_ratio: float | None,
+    config: FingerprintThresholdConfig,
+) -> FingerprintBuildResult:
+    """Build the full forecastability fingerprint from aligned profile outputs.
+
+    Args:
+        horizons: Evaluated horizons.
+        ami_values: AMI value per horizon.
+        surrogate_p_values: Surrogate significance p-values per horizon.
+        directness_ratio: Existing directness metric when available.
+        config: Versioned release thresholds.
+
+    Returns:
+        FingerprintBuildResult: Fingerprint plus deterministic diagnostics.
+    """
+    mask_result = build_informative_mask_result(
+        horizons,
+        ami_values,
+        surrogate_p_values,
+        alpha=config.alpha,
+        ami_floor=config.ami_floor,
+    )
+
+    informative_ami_values = [
+        value
+        for value, is_informative in zip(
+            ami_values,
+            mask_result.informative_mask,
+            strict=True,
+        )
+        if is_informative
+    ]
+
+    structure, accepted_peaks, structure_cautions = classify_information_structure(
+        mask_result.informative_horizons,
+        informative_ami_values,
+        peak_prominence_abs=config.peak_prominence_abs,
+        peak_prominence_rel=config.peak_prominence_rel,
+        spacing_tolerance=config.spacing_tolerance,
+        monotonicity_tolerance=config.monotonicity_tolerance,
+    )
+
+    linear_curve = compute_linear_information_curve(
+        np.asarray(ami_values, dtype=float),
+        horizons=horizons,
+        epsilon=config.epsilon,
+    )
+    rho_by_horizon = {
+        point.horizon: point.rho
+        for point in linear_curve.points
+    }
+    ami_by_horizon = {
+        horizon: ami_value
+        for horizon, ami_value in zip(horizons, ami_values, strict=True)
+    }
+    nonlinear_share, nonlinear_excess, nonlinear_cautions = compute_nonlinear_share(
+        mask_result.informative_horizons,
+        ami_by_horizon,
+        rho_by_horizon,
+        epsilon=config.epsilon,
+    )
+
+    caution_flags = list(structure_cautions) + list(nonlinear_cautions)
+    if len(mask_result.informative_horizons) < config.min_confident_horizons:
+        caution_flags.append("weak_informative_support")
+
+    fingerprint = ForecastabilityFingerprint(
+        information_mass=mask_result.information_mass,
+        information_horizon=mask_result.information_horizon,
+        information_structure=structure,
+        nonlinear_share=nonlinear_share,
+        directness_ratio=directness_ratio,
+        informative_horizons=mask_result.informative_horizons,
+        metadata={
+            "alpha": config.alpha,
+            "ami_floor": config.ami_floor,
+        },
+    )
+    return FingerprintBuildResult(
+        fingerprint=fingerprint,
+        caution_flags=caution_flags,
+        accepted_peaks=accepted_peaks,
+        nonlinear_excess=nonlinear_excess,
+    )
+```
+
+> [!WARNING]
+> The junior developer must notice one thing here: the example above assumes the
+> autocorrelation baseline is computed from the **original target series**, not from the
+> AMI values themselves. In the real implementation, `compute_linear_information_curve()`
+> must receive the raw target series and the evaluated horizons, then be aligned to the
+> already computed AMI profile. Do **not** pass the AMI vector into the autocorrelation service.
+
+### 17.5. Routing service — concrete rule table and code skeleton
+
+**File:** `src/forecastability/services/routing_policy_service.py`
+
+```python
+from __future__ import annotations
+
+from pydantic import BaseModel
+
+from forecastability.utils.types import ForecastabilityFingerprint, RoutingRecommendation
+
+
+class RoutingThresholdConfig(BaseModel, frozen=True):
+    """Versioned decision thresholds for model-family routing."""
+
+    low_mass_max: float = 0.03
+    high_mass_min: float = 0.10
+    short_horizon_max: int = 3
+    high_nonlinear_share_min: float = 0.30
+    high_directness_min: float = 0.60
+    near_threshold_margin: float = 0.01
+
+
+
+def _threshold_margin_penalty(
+    fingerprint: ForecastabilityFingerprint,
+    config: RoutingThresholdConfig,
+) -> int:
+    """Flag borderline scalar decisions."""
+    threshold_pairs = [
+        (fingerprint.information_mass, config.low_mass_max),
+        (fingerprint.information_mass, config.high_mass_min),
+        (fingerprint.nonlinear_share, config.high_nonlinear_share_min),
+    ]
+    if fingerprint.directness_ratio is not None:
+        threshold_pairs.append((fingerprint.directness_ratio, config.high_directness_min))
+    for value, threshold in threshold_pairs:
+        if abs(value - threshold) <= config.near_threshold_margin:
+            return 1
+    return 0
+
+
+
+def recommend_model_families(
+    fingerprint: ForecastabilityFingerprint,
+    *,
+    routing_config: RoutingThresholdConfig,
+    fingerprint_config: FingerprintThresholdConfig,
+    classifier_used_tiebreak: bool,
+) -> RoutingRecommendation:
+    """Map a fingerprint to deterministic model-family guidance.
+
+    Args:
+        fingerprint: Compact forecastability fingerprint.
+        routing_config: Routing thresholds.
+        fingerprint_config: Fingerprint thresholds.
+        classifier_used_tiebreak: Whether structure classification relied on tie-break logic.
+
+    Returns:
+        RoutingRecommendation: Deterministic routing output.
+    """
+    primary_families: list[str] = []
+    secondary_families: list[str] = []
+    rationale: list[str] = []
+    caution_flags: list[str] = []
+
+    if (
+        fingerprint.information_mass <= routing_config.low_mass_max
+        or fingerprint.information_structure == "none"
+    ):
+        primary_families = ["naive", "seasonal_naive", "downscope"]
+        rationale.append("Low information mass or no informative structure detected.")
+    elif (
+        fingerprint.information_structure == "periodic"
+        and fingerprint.nonlinear_share < routing_config.high_nonlinear_share_min
+    ):
+        primary_families = ["seasonal_naive", "harmonic_regression", "tbats"]
+        secondary_families = ["seasonal_state_space"]
+        rationale.append("Stable repeated informative peaks indicate seasonal structure.")
+    elif (
+        fingerprint.information_structure == "monotonic"
+        and fingerprint.nonlinear_share < routing_config.high_nonlinear_share_min
+        and (fingerprint.directness_ratio or 0.0) >= routing_config.high_directness_min
+    ):
+        primary_families = ["arima", "ets", "linear_state_space"]
+        secondary_families = ["dynamic_regression"]
+        rationale.append("Mostly linear monotonic decay with strong direct lag structure.")
+    else:
+        primary_families = ["tree_on_lags", "tcn", "nbeats", "nhits"]
+        secondary_families = ["nonlinear_tabular"]
+        rationale.append("Mixed structure or nonlinear excess suggests richer nonlinear families.")
+
+    if fingerprint.directness_ratio is not None and fingerprint.directness_ratio < routing_config.high_directness_min:
+        caution_flags.append("low_directness")
+    if fingerprint.nonlinear_share >= routing_config.high_nonlinear_share_min:
+        caution_flags.append("high_nonlinear_share")
+    if fingerprint.information_horizon <= routing_config.short_horizon_max:
+        caution_flags.append("short_information_horizon")
+    if len(fingerprint.informative_horizons) < fingerprint_config.min_confident_horizons:
+        caution_flags.append("weak_informative_support")
+    if fingerprint.information_structure == "mixed":
+        caution_flags.append("mixed_structure")
+
+    threshold_margin_penalty = _threshold_margin_penalty(fingerprint, routing_config)
+    taxonomy_uncertainty_penalty = int(
+        fingerprint.information_structure == "mixed"
+        or classifier_used_tiebreak
+        or len(fingerprint.informative_horizons) < fingerprint_config.min_confident_horizons
+    )
+    signal_conflict_penalty = int(
+        fingerprint.information_structure == "periodic"
+        and fingerprint.information_horizon < 2 * routing_config.short_horizon_max
+    )
+
+    penalty_sum = (
+        threshold_margin_penalty
+        + taxonomy_uncertainty_penalty
+        + signal_conflict_penalty
+    )
+    confidence_label = "high"
+    if penalty_sum == 1:
+        confidence_label = "medium"
+    elif penalty_sum >= 2:
+        confidence_label = "low"
+
+    return RoutingRecommendation(
+        primary_families=primary_families,
+        secondary_families=secondary_families,
+        rationale=rationale,
+        caution_flags=sorted(set(caution_flags)),
+        confidence_label=confidence_label,
+        metadata={
+            "routing_policy_version": "0.3.1",
+            "threshold_margin_penalty": threshold_margin_penalty,
+            "taxonomy_uncertainty_penalty": taxonomy_uncertainty_penalty,
+            "signal_conflict_penalty": signal_conflict_penalty,
+        },
+    )
+```
+
+### 17.6. Use-case orchestration — additive public facade
+
+**File:** `src/forecastability/use_cases/run_forecastability_fingerprint.py`
+
+```python
+from __future__ import annotations
+
+import numpy as np
+import pandas as pd
+
+from forecastability.pipeline.analyzer import ForecastabilityAnalyzer
+from forecastability.services.fingerprint_service import (
+    FingerprintThresholdConfig,
+    build_forecastability_fingerprint,
+)
+from forecastability.services.routing_policy_service import (
+    RoutingThresholdConfig,
+    recommend_model_families,
+)
+from forecastability.utils.types import FingerprintBundle
+
+
+
+def run_forecastability_fingerprint(
+    series: pd.Series,
+    *,
+    max_horizon: int = 24,
+    alpha: float = 0.05,
+    ami_floor: float = 0.01,
+) -> FingerprintBundle:
+    """Run the additive fingerprint use case on one univariate series.
+
+    Args:
+        series: Numeric target series.
+        max_horizon: Maximum horizon to evaluate.
+        alpha: Surrogate significance threshold.
+        ami_floor: Minimum AMI floor after significance filtering.
+
+    Returns:
+        FingerprintBundle: Fingerprint, routing recommendation, and compact summary.
+    """
+    analyzer = ForecastabilityAnalyzer(max_lag=max_horizon)
+    result = analyzer.analyze(series)
+
+    horizons = list(range(1, max_horizon + 1))
+    fingerprint_config = FingerprintThresholdConfig(
+        alpha=alpha,
+        ami_floor=ami_floor,
+    )
+    fingerprint_result = build_forecastability_fingerprint(
+        horizons,
+        list(result.raw_curve.values),
+        list(result.significance.p_values),
+        directness_ratio=getattr(result, "directness_ratio", None),
+        config=fingerprint_config,
+    )
+    recommendation = recommend_model_families(
+        fingerprint_result.fingerprint,
+        routing_config=RoutingThresholdConfig(),
+        fingerprint_config=fingerprint_config,
+        classifier_used_tiebreak=False,
+    )
+
+    return FingerprintBundle(
+        target_name=series.name or "target",
+        fingerprint=fingerprint_result.fingerprint,
+        recommendation=recommendation,
+        profile_summary={
+            "max_horizon": max_horizon,
+            "n_obs": int(series.shape[0]),
+        },
+        metadata={
+            "release": "0.3.1",
+        },
+    )
+```
+
+> [!WARNING]
+> The exact attributes on `AnalyzeResult` above are placeholders and must be aligned to
+> the real repo objects. The purpose of this snippet is to force the maintainer to design
+> the use-case seam explicitly instead of hiding fingerprint assembly inside notebook cells.
+
+### 17.7. Rendering contract — markdown, dict, JSON
+
+**File:** `src/forecastability/adapters/rendering/fingerprint_rendering.py`
+
+```python
+from __future__ import annotations
+
+from forecastability.utils.types import FingerprintBundle
+
+
+
+def render_fingerprint_summary_dict(bundle: FingerprintBundle) -> dict[str, object]:
+    """Render a stable machine-friendly summary payload."""
+    return {
+        "target_name": bundle.target_name,
+        "information_mass": bundle.fingerprint.information_mass,
+        "information_horizon": bundle.fingerprint.information_horizon,
+        "information_structure": bundle.fingerprint.information_structure,
+        "nonlinear_share": bundle.fingerprint.nonlinear_share,
+        "directness_ratio": bundle.fingerprint.directness_ratio,
+        "informative_horizons": bundle.fingerprint.informative_horizons,
+        "primary_families": bundle.recommendation.primary_families,
+        "secondary_families": bundle.recommendation.secondary_families,
+        "confidence_label": bundle.recommendation.confidence_label,
+        "caution_flags": bundle.recommendation.caution_flags,
+        "rationale": bundle.recommendation.rationale,
+    }
+
+
+
+def render_fingerprint_markdown(bundle: FingerprintBundle) -> str:
+    """Render a stable human-friendly markdown summary."""
+    fingerprint = bundle.fingerprint
+    recommendation = bundle.recommendation
+    return "\n".join(
+        [
+            f"# Forecastability fingerprint — {bundle.target_name}",
+            "",
+            f"- information_mass: {fingerprint.information_mass:.4f}",
+            f"- information_horizon: {fingerprint.information_horizon}",
+            f"- information_structure: {fingerprint.information_structure}",
+            f"- nonlinear_share: {fingerprint.nonlinear_share:.4f}",
+            f"- directness_ratio: {fingerprint.directness_ratio}",
+            f"- informative_horizons: {fingerprint.informative_horizons}",
+            "",
+            f"Primary families: {', '.join(recommendation.primary_families)}",
+            f"Secondary families: {', '.join(recommendation.secondary_families)}",
+            f"Confidence: {recommendation.confidence_label}",
+            f"Cautions: {', '.join(recommendation.caution_flags)}",
+            "",
+            "Rationale:",
+            *[f"- {item}" for item in recommendation.rationale],
+        ]
+    )
+```
+
+Expected CLI / JSON example output:
+
+```json
+{
+  "target_name": "seasonal_periodic",
+  "information_mass": 0.1184,
+  "information_horizon": 24,
+  "information_structure": "periodic",
+  "nonlinear_share": 0.0812,
+  "directness_ratio": 0.74,
+  "informative_horizons": [1, 2, 3, 6, 12, 18, 24],
+  "primary_families": ["seasonal_naive", "harmonic_regression", "tbats"],
+  "secondary_families": ["seasonal_state_space"],
+  "confidence_label": "high",
+  "caution_flags": [],
+  "rationale": [
+    "Stable repeated informative peaks indicate seasonal structure."
+  ]
+}
+```
+
+### 17.8. Example script — exactly what the maintainer should want in the repo
+
+**File:** `examples/univariate/fingerprint/forecastability_fingerprint_example.py`
+
+```python
+"""Minimal public example for the v0.3.1 fingerprint surface."""
+
+from __future__ import annotations
+
+from forecastability.adapters.rendering.fingerprint_rendering import (
+    render_fingerprint_markdown,
+    render_fingerprint_summary_dict,
+)
+from forecastability.use_cases.run_forecastability_fingerprint import (
+    run_forecastability_fingerprint,
+)
+from forecastability.utils.synthetic import generate_fingerprint_archetypes
+
+
+
+def main() -> None:
+    """Run the public fingerprint example on canonical archetypes."""
+    series_map = generate_fingerprint_archetypes()
+    for series_name, series in series_map.items():
+        bundle = run_forecastability_fingerprint(series, max_horizon=24)
+        print(f"\n=== {series_name} ===")
+        print(render_fingerprint_markdown(bundle))
+        print(render_fingerprint_summary_dict(bundle))
+
+
+if __name__ == "__main__":
+    main()
+```
+
+### 17.9. Test plan — concrete assertions, not slogans
+
+**File:** `tests/test_fingerprint_service.py`
+
+```python
+from __future__ import annotations
+
+from forecastability.services.fingerprint_service import (
+    FingerprintThresholdConfig,
+    build_forecastability_fingerprint,
+)
+
+
+
+def test_information_mass_uses_full_horizon_normalization() -> None:
+    """information_mass must normalize by full evaluated horizon count."""
+    result = build_forecastability_fingerprint(
+        horizons=[1, 2, 3, 4, 5, 6],
+        ami_values=[0.21, 0.16, 0.11, 0.03, 0.08, 0.01],
+        surrogate_p_values=[0.001, 0.004, 0.010, 0.150, 0.030, 0.600],
+        directness_ratio=0.7,
+        config=FingerprintThresholdConfig(alpha=0.05, ami_floor=0.05),
+    )
+    assert round(result.fingerprint.information_mass, 4) == 0.0933
+    assert result.fingerprint.information_horizon == 5
+    assert result.fingerprint.informative_horizons == [1, 2, 3, 5]
+
+
+
+def test_empty_informative_set_returns_none_and_zeroes() -> None:
+    """No informative horizons means zero mass, zero horizon, none structure."""
+    result = build_forecastability_fingerprint(
+        horizons=[1, 2, 3],
+        ami_values=[0.004, 0.003, 0.002],
+        surrogate_p_values=[0.40, 0.60, 0.80],
+        directness_ratio=None,
+        config=FingerprintThresholdConfig(alpha=0.05, ami_floor=0.01),
+    )
+    assert result.fingerprint.information_mass == 0.0
+    assert result.fingerprint.information_horizon == 0
+    assert result.fingerprint.information_structure == "none"
+    assert result.fingerprint.nonlinear_share == 0.0
+```
+
+**File:** `tests/test_routing_policy_service.py`
+
+```python
+from __future__ import annotations
+
+from forecastability.services.fingerprint_service import FingerprintThresholdConfig
+from forecastability.services.routing_policy_service import (
+    RoutingThresholdConfig,
+    recommend_model_families,
+)
+from forecastability.utils.types import ForecastabilityFingerprint
+
+
+
+def test_periodic_fingerprint_routes_to_seasonal_families() -> None:
+    """Periodic structure should produce seasonal routing."""
+    fingerprint = ForecastabilityFingerprint(
+        information_mass=0.12,
+        information_horizon=24,
+        information_structure="periodic",
+        nonlinear_share=0.08,
+        directness_ratio=0.74,
+        informative_horizons=[1, 2, 3, 6, 12, 18, 24],
+    )
+    recommendation = recommend_model_families(
+        fingerprint,
+        routing_config=RoutingThresholdConfig(),
+        fingerprint_config=FingerprintThresholdConfig(),
+        classifier_used_tiebreak=False,
+    )
+    assert recommendation.primary_families == [
+        "seasonal_naive",
+        "harmonic_regression",
+        "tbats",
+    ]
+    assert recommendation.confidence_label in {"high", "medium"}
+```
+
+### 17.10. Regression fixtures — freeze semantics across releases
+
+The maintainer should add a small frozen fixture module in the same spirit as `0.3.0`.
+Suggested fixture rows:
+
+| Fixture | Expectation |
+|---|---|
+| `white_noise` | `none`, mass ≈ 0, route contains `downscope` |
+| `ar1_monotonic` | `monotonic`, low nonlinear share, route contains `arima` |
+| `seasonal_periodic` | `periodic`, route contains `tbats` or `harmonic_regression` |
+| `nonlinear_mixed` | `mixed`, elevated nonlinear share, route contains nonlinear family |
+
+Suggested artifact shape:
+
+```python
+EXPECTED_FINGERPRINT_FIXTURES: dict[str, dict[str, object]] = {
+    "white_noise": {
+        "information_structure": "none",
+        "primary_families": ["naive", "seasonal_naive", "downscope"],
+    },
+    "ar1_monotonic": {
+        "information_structure": "monotonic",
+        "primary_contains": "arima",
+    },
+    "seasonal_periodic": {
+        "information_structure": "periodic",
+        "primary_contains": "tbats",
+    },
+    "nonlinear_mixed": {
+        "information_structure": "mixed",
+        "primary_contains": "tcn",
+    },
+}
+```
+
+### 17.11. Junior-developer implementation rules — line-by-line reminders
+
+- Do **not** recompute thresholding inside the routing service.
+- Do **not** hardcode notebook-only logic for `information_structure`.
+- Do **not** collapse `nonlinear_share` into `1 - directness_ratio`.
+- Do **not** normalize `information_mass` by the number of informative horizons.
+- Do **not** mark non-informative peaks as seasonal evidence.
+- Do **not** return free-form recommendation strings; use typed labels.
+- Do **not** let CI rely only on notebooks; add real unit and regression tests.
+
+### 17.12. Exact public-surface snippets that should appear in README / quickstart
+
+Python snippet:
+
+```python
+from forecastability.use_cases.run_forecastability_fingerprint import (
+    run_forecastability_fingerprint,
+)
+from forecastability.utils.synthetic import generate_fingerprint_archetypes
+
+series = generate_fingerprint_archetypes()["seasonal_periodic"]
+bundle = run_forecastability_fingerprint(series, max_horizon=24)
+print(bundle.fingerprint)
+print(bundle.recommendation)
+```
+
+CLI snippet shape:
+
+```bash
+uv run python -m forecastability.adapters.cli.fingerprint \
+  --input data/demo/seasonal_periodic.csv \
+  --target value \
+  --max-horizon 24 \
+  --alpha 0.05 \
+  --ami-floor 0.01 \
+  --output-json outputs/json/seasonal_periodic_fingerprint.json
+```
+
+Notebook expectation:
+
+1. plot raw AMI profile
+2. overlay informative mask
+3. overlay Gaussian-information baseline
+4. print typed fingerprint object
+5. print routing recommendation
+6. compare across the four canonical archetypes in one summary table
+
+### 17.13. Maintainer review checklist for the implementation PR
+
+Before merging `0.3.1`, the reviewer should be able to answer **yes** to all of these:
+
+- Is there exactly one shared definition of `\mathcal{H}_{info}`?
+- Is `information_mass` normalized by the full horizon grid?
+- Does `information_horizon` return the latest informative lag even when the set is non-contiguous?
+- Is `information_structure` deterministic and test-covered?
+- Is `nonlinear_share` computed against a clear Gaussian-information baseline?
+- Are routing recommendations typed, versioned, and explicitly heuristic?
+- Do README, notebook, example script, and JSON surface all expose the same four metrics?
+- Can a junior developer trace each mathematical definition to one concrete file and function?
+
+### 17.14. Final note on style parity with `0.3.0`
+
+If this appendix still feels lighter than `0.3.0`, the next additive extension should not change the plan body.
+It should append only:
+
+1. a complete notebook section outline,
+2. a complete CLI adapter contract,
+3. frozen regression fixture payloads,
+4. one synthetic benchmark module with expected scalar ranges,
+5. one theory doc draft ready to paste into `docs/theory/forecastability_fingerprint.md`.
