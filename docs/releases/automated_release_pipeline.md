@@ -1,5 +1,5 @@
 <!-- type: how-to -->
-<!-- Last verified for release 0.2.0 -->
+<!-- Last verified for release 0.3.0 -->
 
 # Automated Release Pipeline
 
