@@ -5,25 +5,30 @@ This repository maintains two long-lived notebook families.
 
 _Last verified for release 0.2.0 consolidation on 2026-04-14._
 
+## Canonical Notebook
+
+The canonical walkthrough notebook is
+[../../notebooks/walkthroughs/00_air_passengers_showcase.ipynb](../../notebooks/walkthroughs/00_air_passengers_showcase.ipynb).
+
 ## Notebook Families
 
 | Family | Role | Start here |
 | --- | --- | --- |
 | `notebooks/walkthroughs/` | Guided, story-first walkthroughs for onboarding and demonstrations | `00_air_passengers_showcase.ipynb` |
-| `notebooks/triage/` | Focused deep dives into specific diagnostics and payloads | Use only after the walkthroughs |
+| `notebooks/triage/` | Focused deep dives into specific diagnostics and payloads | Use only after the canonical walkthrough |
 
-## Canonical Learning Path
+## Suggested Learning Path
 
-1. Start with [../../notebooks/walkthroughs/00_air_passengers_showcase.ipynb](../../notebooks/walkthroughs/00_air_passengers_showcase.ipynb).
-2. Continue with [../../notebooks/walkthroughs/01_covariant_informative_showcase.ipynb](../../notebooks/walkthroughs/01_covariant_informative_showcase.ipynb) for the covariant walkthrough.
+1. Start with the canonical notebook: [../../notebooks/walkthroughs/00_air_passengers_showcase.ipynb](../../notebooks/walkthroughs/00_air_passengers_showcase.ipynb).
+2. Continue with [../../notebooks/walkthroughs/01_covariant_informative_showcase.ipynb](../../notebooks/walkthroughs/01_covariant_informative_showcase.ipynb).
 3. Continue through the remaining walkthrough notebooks in order.
-4. Move to `notebooks/triage/` only when you want method-specific depth.
+4. Move to `notebooks/triage/` when you want method-specific depth.
 
 ## Walkthrough Notebooks
 
 | Notebook | Role |
 | --- | --- |
-| [../../notebooks/walkthroughs/00_air_passengers_showcase.ipynb](../../notebooks/walkthroughs/00_air_passengers_showcase.ipynb) | First-stop product showcase |
+| [../../notebooks/walkthroughs/00_air_passengers_showcase.ipynb](../../notebooks/walkthroughs/00_air_passengers_showcase.ipynb) | Canonical walkthrough |
 | [../../notebooks/walkthroughs/01_covariant_informative_showcase.ipynb](../../notebooks/walkthroughs/01_covariant_informative_showcase.ipynb) | Covariant informative walkthrough: pairwise, directional, and causal comparisons on the synthetic benchmark |
 | [../../notebooks/walkthroughs/01_canonical_forecastability.ipynb](../../notebooks/walkthroughs/01_canonical_forecastability.ipynb) | Canonical AMI and pAMI walkthrough |
 | [../../notebooks/walkthroughs/02_exogenous_analysis.ipynb](../../notebooks/walkthroughs/02_exogenous_analysis.ipynb) | Exogenous analysis walkthrough |
