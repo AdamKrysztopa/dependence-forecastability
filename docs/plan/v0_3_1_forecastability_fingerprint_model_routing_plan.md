@@ -6,7 +6,7 @@
 **Target release:** `0.3.1`  
 **Current released version:** `0.3.0`  
 **Branch:** `feat/v0.3.1-forecastability-fingerprint`  
-**Status:** Draft / Proposed  
+**Status:** In Progress — Phase 0 complete  
 **Last reviewed:** 2026-04-18  
 
 **Companion refs:**
@@ -344,7 +344,8 @@ Required confidence semantics for `0.3.1`:
 
 | ID | Feature | Phase | Overlap with existing | Genuine new work | Status |
 |---|---|---:|---|---|---|
-| V3_1-F00 | Typed fingerprint result models | 0 | Extends `utils/types.py` patterns | `ForecastabilityFingerprint`, `RoutingRecommendation`, `FingerprintBundle` | Proposed |
+| V3_1-F00 | Typed fingerprint result models | 0 | Extends `utils/types.py` patterns | `ForecastabilityFingerprint`, `RoutingRecommendation`, `FingerprintBundle` | ✅ **Done** |
+| V3_1-F00.1 | Synthetic fingerprint archetype generators | 0 | Extends `utils/synthetic.py` | `generate_white_noise`, `generate_ar1_monotonic`, `generate_seasonal_periodic`, `generate_nonlinear_mixed`, `generate_mediated_directness_drop` | ✅ **Done** |
 | V3_1-F01 | Linear Gaussian-information baseline | 1 | Reuses Pearson / autocorrelation logic | per-horizon `I_G(h)` service with stable clipping and aggregation | Proposed |
 | V3_1-F02 | Fingerprint builder service | 1 | Builds on AMI/profile outputs | `information_mass`, `information_horizon`, `information_structure`, `nonlinear_share` | Proposed |
 | V3_1-F03 | Routing policy service | 1 | Extends current recommendation logic | explicit model-family policy keyed by fingerprint buckets | Proposed |
