@@ -7,7 +7,7 @@
 **Current released version:** `0.2.0`  
 **Branch:** `feat/v0.3.0-covariant-informative`  
 **Status:** Proposed  
-**Last reviewed:** 2026-04-17  
+**Last reviewed:** 2026-04-18  
 **Companion refs:**
 
 - [Covariant maturity release plan](not_planed/dependence_forecastability_v0_3_0_covariant_maturity_implementation_plan.md) — original Phase 1–7 structure
@@ -226,6 +226,11 @@ Standard PCMCI+ MCI testing, but with highly refined, compact, information-dense
 | V3-D01 | README dual-workflow update | 6 | Modifies `README.md` | Univariate + covariant as first-class workflows | **Done** (2026-04-17: README quickstart now includes parallel univariate triage and covariant bundle usage; badge wording aligned with v0.3.0 language.) |
 | V3-D02 | API docs + quickstart refresh | 6 | Modifies `docs/` | New methods documented | **Done** (2026-04-17: `docs/public_api.md` and `docs/quickstart.md` now document `run_covariant_analysis`, covariant method tokens, conditioning scope, and optional causal extra.) |
 | V3-D03 | Changelog v0.3.0 | 6 | Modifies `CHANGELOG.md` | Release notes | **Done** (2026-04-17: added `0.3.0` Keep-a-Changelog release block with Added/Changed/Fixed/Migration notes.) |
+| V3-AI-01 | Release version integrity review follow-up | 6 | Extends release-checklist and packaging closeout | Align `pyproject.toml`, `src/forecastability/__init__.py`, and release-checklist assertions with the real `0.3.0` state | **Done** (2026-04-18: bumped `version` in `pyproject.toml` and `__version__` in `src/forecastability/__init__.py` from `0.2.0` → `0.3.0`; ruff, ty, and pytest all pass.) |
+| V3-AI-02 | Hexagonal contract hardening for PCMCI-AMI | 2 | Extends `CausalGraphPort` / covariant-use-case boundary | Replace local `_PcmciAmiFullPort` coupling with a declared full-result port (or equivalent boundary split); remove adapter-to-adapter helper imports | **Added post-review** (2026-04-18: open architecture action item; required to restore explicit port ownership and inward-only dependencies.) |
+| V3-AI-03 | Covariant mediation-semantics hardening | 2 | Extends covariant interpretation/service rules | Tighten `mediated_driver` assignment so target-only pCrossAMI collapse cannot imply mediation without driver-specific causal support | **Added post-review** (2026-04-18: open statistician action item; update deterministic interpretation docs and regression tests together.) |
+| V3-AI-04 | Public API / quickstart contract correction | 6 | Extends README + API docs + facade exports | Either re-export `generate_covariant_benchmark` from the stable facade or rewrite user-facing covariant examples to import from `forecastability.utils.synthetic` | **Added post-review** (2026-04-18: open docs/API action item; current quickstart examples reference a non-exported top-level symbol.) |
+| V3-AI-05 | Documentation freshness pass | 6 | Extends implementation-status / docs-index refresh | Reconcile stale `0.2.0` verification banners and pre-closure covariant caveats; tracked in `docs/plan/v0_3_2_documentation_quality_improvement_plan.md` | **Added post-review** (2026-04-18: open documentation-quality action item.) |
 
 ---
 
@@ -3343,6 +3348,23 @@ be true:
 - [ ] No shipped covariant showcase output or notebook cell implies that pCrossAMI or
       TE in the v0.3.0 bundle recovers lag-specific exogenous effects in the presence of
       exogenous autocorrelation.
+
+---
+
+## 13B. Post-review AI action items (2026-04-18)
+
+These items were added after a repository review focused on mathematical validity,
+hexagonal/SOLID architecture quality, and documentation correctness. They are not
+new feature requests; they are follow-up actions required to keep the shipped
+v0.3.0 story technically coherent.
+
+| ID | Theme | Severity | Finding | Required follow-up |
+|---|---|---|---|---|
+| V3-AI-01 | Release version integrity | Critical | `pyproject.toml` and `src/forecastability/__init__.py` still declare `0.2.0` while `CHANGELOG.md` and multiple v0.3.0 docs already describe a shipped `0.3.0` surface. | Before any `v0.3.0` tag or publish action, align packaging/runtime version metadata and rerun the release-checklist command that asserts `forecastability.__version__ == "0.3.0"`. |
+| V3-AI-02 | Hexagonal contract hardening | High | `run_covariant_analysis()` depends on a local `_PcmciAmiFullPort` protocol because `CausalGraphPort` does not express `discover_full()`. The PCMCI-AMI use-case path is therefore coupled to adapter-only behavior; `pcmci_ami_adapter.py` also imports Tigramite helper internals from another adapter module. | Introduce a declared port for full PCMCI-AMI results (or split graph ports cleanly by responsibility), remove the local protocol from the use-case layer, and move shared Tigramite helper logic out of adapter-to-adapter imports. |
+| V3-AI-03 | Covariant role semantics | High | `mediated_driver` can currently be assigned when a causal method merely exists in the bundle, even if that driver has no PCMCI+/PCMCI-AMI support. That still over-claims mediation from target-only pCrossAMI evidence. | Tighten the role rule so mediation requires driver-specific causal support or downgrade the case to `inconclusive`; update the deterministic interpretation docs and regression tests together. |
+| V3-AI-04 | Public API / quickstart accuracy | Medium | User-facing covariant examples in `README.md` and docs import `generate_covariant_benchmark` from top-level `forecastability`, but the package facade does not export that symbol. | Either re-export benchmark generators from the stable package facade or rewrite every user-facing example to import from `forecastability.utils.synthetic`; the public API page must use one consistent contract. |
+| V3-AI-05 | Documentation freshness | Medium | `docs/implementation_status.md` still reports pre-closure V3-F06 caveats (no covariant notebook, no populated `significance`/`rank`/`interpretation_tag`) and several docs still carry `0.2.0` verification banners after the covariant merge. | Track and execute a dedicated documentation-freshness pass under a separate follow-up plan: `docs/plan/v0_3_2_documentation_quality_improvement_plan.md`. |
 
 ---
 

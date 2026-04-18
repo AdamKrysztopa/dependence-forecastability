@@ -1,6 +1,6 @@
 [project]
 name = "dependence-forecastability"
-version = "0.2.0"
+version = "0.3.0"
 description = "Paper-aligned AMI and extension pAMI diagnostics for forecastability triage"
 readme = "README.md"
 license = { file = "LICENSE" }
