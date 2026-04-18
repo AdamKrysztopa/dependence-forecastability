@@ -15,6 +15,7 @@
 - [v0.3.2 Lagged-Exogenous Triage: Ultimate Release Plan](v0_3_2_lagged_exogenous_triage_ultimate_plan.md)
 - [v0.3.3 Documentation Quality Improvement: Ultimate Release Plan](v0_3_3_documentation_quality_improvement_ultimate_plan.md)
 - [v0.3.4 Routing Validation & Benchmark Hardening: Ultimate Release Plan](v0_3_4_routing_validation_benchmark_hardening_plan.md)
+- [Agent Layer Contract](../agent_layer.md)
 
 **Builds on:**
 
@@ -22,6 +23,8 @@
 - hexagonal architecture, `ScorerRegistry`, port / adapter separation
 - existing AMI / pAMI / directness-ratio logic and profile-oriented interpretation
 - current recommendation and interpretation service patterns
+- existing A1/A2/A3 agent payload / serializer / deterministic-interpretation pattern
+- existing optional live-agent adapter pattern under `src/forecastability/adapters/llm/`
 - existing examples, showcase scripts, notebook contract checks, and CI / release workflows
 
 ---
@@ -58,6 +61,7 @@ This plan therefore reframes the next release around one product question:
 | Clear semantics | Directness is not nonlinearity; keep `directness_ratio` separate from `nonlinear_share` |
 | Product maturation | `0.3.1` should improve the user decision story, not merely add outputs |
 | One facade, many engines | Users call a dedicated fingerprint use case or opt into fingerprint inside existing bundle flows |
+| Agent-ready by construction | The compact fingerprint bundle should be serialisable into a deterministic agent payload before any live narration is added |
 
 ### Reviewer acceptance block
 
@@ -72,8 +76,12 @@ Required reviewer-visible outcomes:
 - the same four fields appear in the CLI / JSON summary surface
 - the same four fields appear in the walkthrough notebook and public example surfaces
   without notebook-only logic
+- the same four fields plus routing/confidence/cautions appear in an agent-ready
+  deterministic payload surface
 - docs define the semantics, caveats, and routing interpretation for the same fields
 - routing guidance consumes these fields through versioned deterministic rules
+- any live agent surface, if shipped, narrates the deterministic fingerprint payload
+  and does not invent metrics, probabilities, or exact-model claims
 
 Reviewer comment crosswalk for this update:
 
@@ -322,6 +330,26 @@ Required confidence semantics for `0.3.1`:
 - confidence is derived from deterministic rule evaluation only; `0.3.1` does not
   claim benchmark-calibrated probabilities
 
+### 2.8. Agent layer contract for `0.3.1`
+
+The fingerprint release should be directly usable by coding agents and LLM-facing
+surfaces, but only through the repo's existing deterministic-first contract.
+
+Required `0.3.1` agent-layer semantics:
+
+- `FingerprintBundle` remains the authoritative result object
+- A1 payload adapters mirror bundle fields in JSON-safe typed form; they do not
+  recompute or reinterpret the fingerprint
+- A2 serialisation adds a versioned envelope for transport, MCP, API, or agent use
+- A3 deterministic interpretation adapters may compress rationale and cautions
+  into a more conversational structure, but they may not change routes, confidence,
+  or the four fingerprint fields
+- an optional live fingerprint agent may narrate or orchestrate only after reading
+  the deterministic payload or calling the fingerprint use case; strict mode must
+  still return deterministic output when narration is disabled or unavailable
+- no agent prompt, notebook cell, or LLM adapter may compute new numeric metrics,
+  tune routing thresholds, or override deterministic caution flags
+
 ---
 
 ## 3. Repo baseline — what already exists
@@ -335,6 +363,8 @@ Required confidence semantics for `0.3.1`:
 | **Pipeline** | `src/forecastability/pipeline/analyzer.py` | existing orchestration pattern | Stable |
 | **Use cases** | `src/forecastability/use_cases/` | existing facade/use-case conventions | Stable |
 | **Utils** | `src/forecastability/utils/types.py` | typed-result pattern | Stable |
+| **Adapters** | `src/forecastability/adapters/agents/` | typed payload / serialiser / deterministic interpretation precedent | Stable |
+| **Adapters** | `src/forecastability/adapters/llm/` | optional live narration / orchestration precedent | Experimental |
 | **Examples** | univariate walkthrough + showcase | user-facing evidence surface | Stable |
 | **CI** | existing matrix, smoke, notebook contract, release checklist | release hygiene baseline | Stable |
 
@@ -348,14 +378,19 @@ Required confidence semantics for `0.3.1`:
 | V3_1-F00.1 | Synthetic fingerprint archetype generators | 0 | Extends `utils/synthetic.py` | `generate_white_noise`, `generate_ar1_monotonic`, `generate_seasonal_periodic`, `generate_nonlinear_mixed`, `generate_mediated_directness_drop` | ✅ **Done** |
 | V3_1-F01 | Linear Gaussian-information baseline | 1 | Reuses Pearson / autocorrelation logic | per-horizon `I_G(h)` service with stable clipping and aggregation | ✅ **Done** |
 | V3_1-F02 | Fingerprint builder service | 1 | Builds on AMI/profile outputs | `information_mass`, `information_horizon`, `information_structure`, `nonlinear_share` | Proposed |
+| V3_1-F02 | Fingerprint builder service | 1 | Builds on AMI/profile outputs | `information_mass`, `information_horizon`, `information_structure`, `nonlinear_share` | ✅ **Done** |
 | V3_1-F03 | Routing policy service | 1 | Extends current recommendation logic | explicit model-family policy keyed by fingerprint buckets | Proposed |
 | V3_1-F04 | Fingerprint orchestration use case | 2 | Follows existing use-case / facade pattern | `run_forecastability_fingerprint()` and optional bundle integration | Proposed |
 | V3_1-F05 | Unified summary rendering | 2 | Extends current reporting helpers | compact summary row / markdown / JSON surface for fingerprint + routing | Proposed |
+| V3_1-F05.1 | Agent-ready fingerprint adapters | 2 | Extends existing A1/A2/A3 agent pattern | `fingerprint_agent_payload_models.py`, versioned serialiser, deterministic interpretation adapter | Proposed |
+| V3_1-F05.2 | Optional live fingerprint agent | 2 | Extends existing `adapters/llm` pattern | `fingerprint_agent.py` consuming deterministic payloads only | Proposed |
 | V3_1-F06 | Tests and regression fixtures | 3 | Follows current deterministic regression pattern | synthetic archetypes, threshold tests, routing invariants | Proposed |
 | V3_1-F07 | Showcase script and notebook | 4 | Follows existing walkthrough / showcase pattern | canonical four-series fingerprint demo | Proposed |
 | V3_1-F08 | Public examples and notebook extensions | 5 | Extends examples taxonomy and walkthrough surfaces | minimal Python example, CLI example, notebook cross-links, and reusable example artifacts | Proposed |
-| V3_1-D01 | README + quickstart routing section | 5 | Extends docs | fingerprint concept and example snippets | Proposed |
+| V3_1-F08.1 | Agent demos and cross-links | 5 | Extends agent examples and notebook/doc surfaces | strict payload demo, optional live-agent demo, and agent-layer discoverability | Proposed |
+| V3_1-D01 | README + quickstart + agent-layer routing section | 5 | Extends docs and `docs/agent_layer.md` cross-links | fingerprint concept and example snippets | Proposed |
 | V3_1-D02 | Theory doc | 5 | New theory page | fingerprint definitions and routing semantics | Proposed |
+| V3_1-D02 | Theory doc | 5 | New theory page | fingerprint definitions and routing semantics | ✅ **Done** |
 | V3_1-D03 | Changelog + migration note | 5 | Release docs | additive feature surface and policy notes | Proposed |
 | V3_1-CI-01 | Routing smoke test in CI | 6 | Extends smoke workflow | import + run on canonical synthetic panel | Proposed |
 | V3_1-CI-02 | Notebook contract extension | 6 | Extends notebook contract checks | fingerprint notebook included | Proposed |
@@ -439,6 +474,18 @@ class FingerprintBundle(BaseModel, frozen=True):
 - routing policy is a service, not a plotting helper
 - fingerprint building can depend on profile outputs, but not on dashboard code
 - the use case composes services and formats typed results; adapters only render
+- agent payload adapters serialise typed fingerprint bundles; they do not own
+  thresholding, routing, or scientific computation
+- optional live fingerprint agents live strictly downstream of deterministic
+  payloads or use cases and may not mutate their numeric or categorical outputs
+- no `pydantic_ai`, provider SDK, or prompt text belongs in `services/`, `utils/`,
+  `pipeline/`, or notebook cells; those dependencies stay in outer adapters only
+- if the live path needs dedicated request/response contracts, add them under
+  `src/forecastability/use_cases/requests.py` / `responses.py` or adapter-local
+  models, never inside domain services
+- agent-related files must remain single-purpose:
+  payload models, serialiser, deterministic interpretation, and live orchestration
+  each get their own module rather than one mixed-responsibility file
 
 ### 5.3. Acceptance criteria
 
@@ -449,6 +496,8 @@ class FingerprintBundle(BaseModel, frozen=True):
 - no existing analyzer public interface is broken
 - reviewer can verify that Peter Catt's four metrics appear unchanged in typed
   Python output, CLI / JSON summary output, example output, notebook output, and docs
+- reviewer can verify that the same fingerprint/routing fields pass unchanged
+  through the agent payload surface and any live narration surface remains optional
 
 ---
 
@@ -636,6 +685,46 @@ Calibration / sanity-check expectations for `nonlinear_share`:
 - recommendation rationale is human-readable
 - output is stable enough for regression tests
 
+#### V3_1-F05.1 — Agent-ready fingerprint adapters
+
+**Goal.** Make the fingerprint bundle directly consumable by agent and MCP surfaces.
+
+**File targets**
+
+- `src/forecastability/adapters/agents/fingerprint_agent_payload_models.py` — new
+- `src/forecastability/adapters/agents/fingerprint_summary_serializer.py` — new
+- `src/forecastability/adapters/agents/fingerprint_agent_interpretation_adapter.py` — new
+
+**Acceptance criteria**
+
+- A1 payload models expose the same four fingerprint fields plus routing,
+  confidence, caution flags, and rationale
+- A2 serialisation uses a versioned envelope and produces JSON-safe output
+- A3 deterministic interpretation adapter never invents metrics, routes, or
+  probabilities and preserves the deterministic caution language
+- payloads are reusable by examples, notebooks, MCP, and optional live-agent paths
+- payload models, serialisation, and deterministic interpretation stay split
+  across separate modules to preserve SOLID boundaries
+
+#### V3_1-F05.2 — Optional live fingerprint agent
+
+**Goal.** Add a thin live narration/orchestration surface without moving any science into the LLM.
+
+**File targets**
+
+- `src/forecastability/adapters/llm/fingerprint_agent.py` — new
+- tests if this live path ships in `0.3.1`
+
+**Acceptance criteria**
+
+- the live adapter calls `run_forecastability_fingerprint()` or consumes the
+  A1/A2 payload rather than recomputing metrics
+- strict mode or equivalent deterministic fallback remains available when live
+  narration is disabled or a provider is unavailable
+- prompt rules explicitly ban new numeric invention and exact-model claims
+- the surface is documented as optional / experimental
+- any LLM/provider dependency is confined to `src/forecastability/adapters/llm/`
+
 ---
 
 ### Phase 3 — Tests and regression
@@ -654,6 +743,9 @@ Calibration / sanity-check expectations for `nonlinear_share`:
 - `test_routing_white_noise_to_naive_family`
 - `test_routing_periodic_to_seasonal_family`
 - `test_routing_nonlinear_to_nonlinear_family`
+- `test_fingerprint_agent_payload_preserves_bundle_fields`
+- `test_fingerprint_agent_interpretation_preserves_route_and_confidence`
+- `test_live_fingerprint_agent_strict_mode_returns_deterministic_payload`
 
 **Acceptance criteria**
 
@@ -662,6 +754,8 @@ Calibration / sanity-check expectations for `nonlinear_share`:
 - routing tests assert family inclusion, not exact full prose strings
 - classifier tests cover tie-breaking, spacing tolerance, and monotonicity tolerance
 - threshold tests cover significance boundary, AMI-floor boundary, and empty-set behavior
+- agent contract tests assert that deterministic fields survive unchanged through
+  payload serialisation and optional narration paths
 
 #### V3_1-F06.1 — Regression fixtures
 
@@ -672,6 +766,7 @@ Calibration / sanity-check expectations for `nonlinear_share`:
 - fixture rebuild script exists
 - drift is visible in CI
 - policy changes require intentional fixture refresh
+- at least one frozen fixture covers the A1/A2 agent payload shape
 
 #### V3_1-F06.2 — Small curated routing-quality panel
 
@@ -744,6 +839,23 @@ Calibration / sanity-check expectations for `nonlinear_share`:
 - examples and notebooks consume reusable services and do not introduce notebook-only
   logic divergence
 
+#### V3_1-F08.1 — Agent demos and cross-links
+
+**Goal.** Make the new fingerprint layer discoverable to agent-oriented users as well.
+
+**File targets**
+
+- `examples/univariate/agents/fingerprint_agent_payload_demo.py` — new
+- optional `examples/univariate/agents/fingerprint_live_agent_demo.py` — new
+- cross-links from docs and notebook surfaces as appropriate
+
+**Acceptance criteria**
+
+- at least one strict deterministic agent-payload demo exists and emits stable artifacts
+- if a live demo is shipped, it is clearly marked experimental and optional
+- demos consume reusable package surfaces rather than notebook-local assembly
+- fingerprint docs, examples, or notebooks link users to the agent-facing surface
+
 #### V3_1-D01 — README + quickstart update
 
 Add a new section:
@@ -752,7 +864,9 @@ Add a new section:
 - how it differs from raw metrics
 - one mandatory short Python snippet showing fingerprint + routing output
 - one mandatory CLI example showing fingerprint + routing output
+- one mandatory agent-payload example or link into `examples/univariate/agents/`
 - links to the example and notebook surfaces added in `V3_1-F08`
+- link to `docs/agent_layer.md` for the deterministic-first contract
 
 These examples are required release artifacts, not optional nice-to-haves.
 
@@ -771,12 +885,13 @@ Must document:
 - confidence penalty rules and their versioned thresholds / tolerances
 - caveats and non-goals
 - univariate-first / AMI-first scope boundary
+- deterministic-first agent contract and why agent narration is downstream only
 - where users can find the public examples and notebook walkthroughs
 
 #### V3_1-D03 — Changelog
 
-Document additive capability, no breaking API, routing caveat, and the new
-public example / notebook surfaces.
+Document additive capability, no breaking API, routing caveat, the agent-layer
+contract additions, and the new public example / notebook surfaces.
 
 ---
 
@@ -799,6 +914,8 @@ public example / notebook surfaces.
 - smoke path completes on CI-supported Python versions
 - notebook contract passes
 - release checklist mentions routing semantics explicitly
+- agent contract tests and strict deterministic fallback tests pass if the agent
+  surface ships in `0.3.1`
 - CI checks run only after example, notebook, and docs surfaces are in place
 
 ---
@@ -813,6 +930,7 @@ public example / notebook surfaces.
 - using pAMI/directness as a proxy for nonlinearity
 - multivariate or conditional-MI fingerprint extensions
 - benchmark-calibrated routing confidence probabilities
+- autonomous agent-driven backtesting, hyperparameter search, or exact-model selection
 
 Scope statement for reviewers:
 
@@ -836,6 +954,8 @@ Scope statement for reviewers:
 - [ ] At least one regression fixture protects routing behavior from silent drift.
 - [ ] A small curated real or semi-real routing-quality panel is run and mismatches are documented.
 - [ ] README / quickstart includes one Python and one CLI fingerprint-routing example.
+- [ ] Agent-ready payload surfaces expose the same four fingerprint fields plus routing/confidence/cautions.
+- [ ] No agent adapter or live narration path overrides deterministic fingerprint or routing outputs.
 - [ ] The release docs state that `0.3.1` is univariate-first / AMI-first and does not include multivariate or conditional-MI extensions.
 - [ ] Reviewer comments 2-10 are each traceable to concrete sections in the plan or explicitly deferred.
 - [ ] No doc, notebook, or bundle string claims the package selects the one true optimal model.
@@ -850,10 +970,11 @@ Scope statement for reviewers:
 3. Fingerprint service
 4. Routing service
 5. Use case / facade
-6. Tests + fixtures
-7. Showcase + notebook
-8. Examples + docs + changelog
-9. CI + release hygiene
+6. Summary rendering + agent adapters
+7. Tests + fixtures
+8. Showcase + notebook + agent demos
+9. Examples + docs + changelog
+10. CI + release hygiene
 ```
 
 
@@ -880,8 +1001,12 @@ flowchart TD
     F --> G
     E --> H["run_forecastability_fingerprint()"]
     F --> H
-    G --> I["CLI / docs / examples / notebook / agents"]
-    H --> I
+    H --> I["Agent adapters A1/A2/A3\n payload / serializer / deterministic interpretation"]
+    I --> J["Optional live fingerprint agent\n narration only"]
+    G --> K["CLI / docs / examples / notebook / MCP"]
+    H --> K
+    I --> K
+    J --> K
 ```
 
 ### 11.2. File map — concrete target placement
@@ -894,18 +1019,51 @@ flowchart TD
 | Services | `src/forecastability/services/fingerprint_service.py` | shared `H_info` mask + fingerprint construction |
 | Services | `src/forecastability/services/routing_policy_service.py` | versioned model-family routing rules |
 | Adapters / renderers | `src/forecastability/adapters/rendering/fingerprint_rendering.py` or existing reporting helper | markdown / dict / JSON summaries |
+| Adapters / agents | `src/forecastability/adapters/agents/fingerprint_agent_payload_models.py` | A1 typed payload models for fingerprint bundles |
+| Adapters / agents | `src/forecastability/adapters/agents/fingerprint_summary_serializer.py` | A2 versioned serialisation envelope |
+| Adapters / agents | `src/forecastability/adapters/agents/fingerprint_agent_interpretation_adapter.py` | A3 deterministic interpretation for agent consumers |
+| Adapters / llm | `src/forecastability/adapters/llm/fingerprint_agent.py` | optional live narration/orchestration over deterministic fingerprint output |
 | Use cases | `src/forecastability/use_cases/run_forecastability_fingerprint.py` | additive public orchestration function |
+| Use cases | `src/forecastability/use_cases/requests.py`, `src/forecastability/use_cases/responses.py` | optional stable request/response seam if live orchestration needs explicit contracts |
 | Tests | `tests/test_linear_information_service.py` | baseline correctness + clipping |
 | Tests | `tests/test_fingerprint_service.py` | semantics of the four fingerprint fields |
 | Tests | `tests/test_routing_policy_service.py` | deterministic mapping + caution logic |
 | Tests | `tests/test_run_forecastability_fingerprint.py` | facade / typed output |
+| Tests | `tests/test_fingerprint_agent_payload_models.py` | agent payload parity with bundle fields |
+| Tests | `tests/test_fingerprint_summary_serializer.py` | versioned transport contract |
+| Tests | `tests/test_fingerprint_agent_interpretation_adapter.py` | deterministic interpretation / caveat preservation |
+| Tests | `tests/test_fingerprint_agent.py` | strict fallback and live-path boundary checks |
 | Tests | `tests/test_fingerprint_regression.py` | frozen fixture drift guard |
 | Examples | `examples/univariate/fingerprint/forecastability_fingerprint_example.py` | minimal Python example |
 | Examples | `examples/univariate/fingerprint/forecastability_routing_cli_example.md` | CLI example surface |
+| Examples | `examples/univariate/agents/fingerprint_agent_payload_demo.py` | deterministic agent payload showcase |
+| Examples | `examples/univariate/agents/fingerprint_live_agent_demo.py` | optional experimental live-agent showcase |
 | Scripts | `scripts/run_showcase_fingerprint.py` | canonical four-series artifact generator |
 | Notebook | `notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb` | pedagogical walkthrough |
 | Docs | `docs/theory/forecastability_fingerprint.md` | mathematical semantics |
-| Docs | `docs/quickstart.md`, `docs/public_api.md`, `README.md` | user-facing additive surface |
+| Docs | `docs/quickstart.md`, `docs/public_api.md`, `README.md`, `docs/agent_layer.md` | user-facing additive surface and agent contract |
+
+### 11.2A. Agent file plan — mandatory HEXAGO / SOLID ownership
+
+> [!IMPORTANT]
+> The `0.3.1` agent extension must follow the existing hexagonal architecture.
+> No LLM concern may leak inward past the adapter boundary.
+
+| Ring | Files | Responsibility | Must not do |
+|---|---|---|---|
+| Domain core | `utils/types.py`, `services/fingerprint_service.py`, `services/routing_policy_service.py`, `services/linear_information_service.py` | compute fingerprint semantics and deterministic routing | import adapter code, prompt code, provider SDKs, or notebook helpers |
+| Application / use case | `use_cases/run_forecastability_fingerprint.py` plus optional `use_cases/requests.py` / `responses.py` seams | orchestrate deterministic services into one typed bundle | own prompt templates, serialisation, or provider-specific logic |
+| Deterministic adapter ring | `adapters/rendering/fingerprint_rendering.py`, `adapters/agents/fingerprint_agent_payload_models.py`, `adapters/agents/fingerprint_summary_serializer.py`, `adapters/agents/fingerprint_agent_interpretation_adapter.py` | transform typed results into stable transport / presentation shapes | recompute AMI, route families, or tune thresholds |
+| Live adapter ring | `adapters/llm/fingerprint_agent.py` | optional narration and tool wiring over deterministic outputs | define scientific formulas, override routes, or become a second use case |
+| Outer surfaces | CLI, examples, notebooks, MCP, docs | consume the use case or adapter contracts | assemble fingerprint logic ad hoc in notebooks |
+
+Mandatory SOLID interpretation for these files:
+
+- `fingerprint_agent_payload_models.py` owns only A1 payload schemas and bundle-to-payload mapping
+- `fingerprint_summary_serializer.py` owns only A2 transport envelopes and JSON-safe serialisation
+- `fingerprint_agent_interpretation_adapter.py` owns only A3 deterministic prose compression / caveat framing
+- `fingerprint_agent.py` owns only live-agent prompt/tool orchestration and strict fallback behavior
+- if a file starts needing two of those responsibilities, split it instead of growing a god-module
 
 ### 11.3. Shared configuration object for semantics
 
@@ -1569,6 +1727,8 @@ def run_forecastability_fingerprint(
 > The placeholder AMI values above are intentional in the plan.
 > The junior developer must wire this use case to the repo’s existing AMI/profile
 > and surrogate-significance machinery rather than duplicating computation locally.
+> This use case must not import `adapters/agents/` or `adapters/llm/`; outer
+> adapters consume the use case, not the other way around.
 
 ### 11.9. Unified summary rendering — recommended output contract
 
@@ -1582,7 +1742,7 @@ from forecastability.utils.types import FingerprintBundle
 
 
 def render_fingerprint_summary(bundle: FingerprintBundle) -> dict[str, object]:
-    """Render a stable dictionary for JSON, docs, and agents.
+    """Render a stable dictionary for JSON, docs, MCP, and agents.
 
     Args:
         bundle: Forecastability fingerprint bundle.
@@ -1604,6 +1764,47 @@ def render_fingerprint_summary(bundle: FingerprintBundle) -> dict[str, object]:
         "rationale": bundle.recommendation.rationale,
     }
 ```
+
+### 11.9A. Agent-ready contract — recommended A1 / A2 / A3 shape
+
+**Files:** `src/forecastability/adapters/agents/fingerprint_agent_payload_models.py`,
+`src/forecastability/adapters/agents/fingerprint_summary_serializer.py`,
+`src/forecastability/adapters/agents/fingerprint_agent_interpretation_adapter.py`
+
+```python
+class FingerprintAgentPayload(BaseModel, frozen=True):
+    """JSON-safe deterministic payload for agent consumers."""
+
+    target_name: str
+    information_mass: float
+    information_horizon: int
+    information_structure: FingerprintStructure
+    nonlinear_share: float
+    directness_ratio: float | None = None
+    primary_families: list[ModelFamilyLabel]
+    secondary_families: list[ModelFamilyLabel] = Field(default_factory=list)
+    confidence_label: RoutingConfidenceLabel
+    caution_flags: list[RoutingCautionFlag] = Field(default_factory=list)
+    rationale: list[str] = Field(default_factory=list)
+    caveats: list[str] = Field(default_factory=list)
+    schema_version: str = "1"
+
+
+def fingerprint_agent_payload(bundle: FingerprintBundle) -> FingerprintAgentPayload:
+    """Build the A1 payload without changing deterministic values."""
+    ...
+```
+
+Required A1 / A2 / A3 rules:
+
+- A1 mirrors deterministic fingerprint and routing outputs exactly
+- A2 wraps the payload in a versioned transport envelope
+- A3 may shorten rationale or caution prose, but may not alter families,
+  confidence labels, caution flags, or any numeric field
+- any live LLM adapter must read A1/A2 output or call the same use case and
+  expose a strict no-narrative mode
+- LLM/provider imports remain confined to `adapters/llm/`; A1/A2/A3 stay pure
+  deterministic adapters with no network/runtime provider dependency
 
 **Stable JSON example expected in docs and tests**
 
@@ -1871,6 +2072,8 @@ print(bundle.recommendation.primary_families)
 | `directness_ratio` remains separate from `nonlinear_share` | explicit fields + negative tests | `test_directness_ratio_not_used_as_nonlinear_share()` |
 | Synthetic generators are deterministic by integer seed | typed seed + fixture test | `seed: int = 42` |
 | Public surfaces expose the same four fingerprint fields | example / notebook / CLI contract tests | JSON + notebook assertions |
+| Agent payloads mirror deterministic bundle values exactly | adapter parity tests | `fingerprint_agent_payload()` |
+| Live narration stays downstream of deterministic output | strict-mode / provider-failure tests | `run_fingerprint_agent(..., strict=True)` |
 | `0.3.1` remains univariate-first / AMI-first | docs review | README + theory page |
 
 ---
@@ -1881,11 +2084,11 @@ print(bundle.recommendation.primary_families)
 |---|---|
 | **0 — Contracts + synthetic panel** | Typed models importable, archetype generator deterministic, no notebook-only logic, linter clean |
 | **1 — Core services** | Linear baseline, fingerprint builder, and routing policy independently testable, threshold semantics centralized |
-| **2 — Facade** | `run_forecastability_fingerprint()` returns `FingerprintBundle`, summary rendering stable, additive public API only |
+| **2 — Facade** | `run_forecastability_fingerprint()` returns `FingerprintBundle`, summary rendering stable, agent adapters preserve deterministic values, additive public API only |
 | **3 — Tests** | Unit + integration + regression fixtures green, semantic edge cases covered, routing-quality panel documented |
 | **4 — Showcase** | Canonical script and notebook run end-to-end, stable artifacts emitted, all four archetypes demonstrated |
-| **5 — Docs / examples** | README, quickstart, theory doc, examples, and notebook all expose the same four fields and same caution language |
-| **6 — CI / release** | Smoke path, notebook contract, artifact checks, and release checklist all mention fingerprint + routing semantics |
+| **5 — Docs / examples** | README, quickstart, theory doc, agent-layer docs, examples, and notebook all expose the same four fields and same caution language |
+| **6 — CI / release** | Smoke path, notebook contract, agent contract checks, artifact checks, and release checklist all mention fingerprint + routing semantics |
 
 ---
 
@@ -1923,12 +2126,17 @@ print(bundle.recommendation.primary_families)
 - [ ] Write `tests/test_routing_policy_service.py`
 - [ ] Verify: mixed/high-nonlinear cases map to nonlinear families
 
-### Epic E — Use case + rendering (Day 6)
+### Epic E — Use case + rendering + agent adapters (Day 6)
 
 - [ ] Create `src/forecastability/use_cases/run_forecastability_fingerprint.py`
 - [ ] Reuse existing AMI/profile machinery; do not recompute AMI ad hoc in the use case
 - [ ] Add stable rendering helper for dict / JSON / markdown output
+- [ ] Create `src/forecastability/adapters/agents/fingerprint_agent_payload_models.py`
+- [ ] Create `src/forecastability/adapters/agents/fingerprint_summary_serializer.py`
+- [ ] Create `src/forecastability/adapters/agents/fingerprint_agent_interpretation_adapter.py`
+- [ ] Optional: create `src/forecastability/adapters/llm/fingerprint_agent.py`
 - [ ] Write `tests/test_run_forecastability_fingerprint.py`
+- [ ] Add agent contract tests for payload parity and strict fallback
 - [ ] Verify additive imports only; no breaking interface changes
 
 ### Epic F — Regression + routing-quality panel (Day 7)
@@ -1943,16 +2151,20 @@ print(bundle.recommendation.primary_families)
 - [ ] Create `scripts/run_showcase_fingerprint.py`
 - [ ] Create `notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb`
 - [ ] Add minimal Python example under `examples/univariate/fingerprint/`
+- [ ] Add deterministic fingerprint agent demo under `examples/univariate/agents/`
+- [ ] Optional: add experimental live fingerprint agent demo
 - [ ] Add CLI example snippet to README / quickstart
 - [ ] Verify notebook uses real package surfaces only
 
 ### Epic H — Docs + CI + release closeout (Day 10)
 
 - [ ] Update `README.md`, `docs/quickstart.md`, `docs/public_api.md`
+- [ ] Update `docs/agent_layer.md` with fingerprint-specific contract examples
 - [ ] Add `docs/theory/forecastability_fingerprint.md`
 - [ ] Update `CHANGELOG.md`
 - [ ] Extend smoke workflow to run fingerprint showcase
 - [ ] Extend notebook contract checker for the new walkthrough
+- [ ] Add agent contract checks if the live/deterministic agent surface ships
 - [ ] Extend release checklist with fingerprint/routing semantics checks
 
 ---
@@ -1974,6 +2186,10 @@ uv run pytest tests/test_linear_information_service.py -q
 uv run pytest tests/test_fingerprint_service.py -q
 uv run pytest tests/test_routing_policy_service.py -q
 uv run pytest tests/test_run_forecastability_fingerprint.py -q
+uv run pytest tests/test_fingerprint_agent_payload_models.py -q
+uv run pytest tests/test_fingerprint_summary_serializer.py -q
+uv run pytest tests/test_fingerprint_agent_interpretation_adapter.py -q
+uv run pytest tests/test_fingerprint_agent.py -q
 uv run pytest tests/test_fingerprint_regression.py -q
 ```
 
