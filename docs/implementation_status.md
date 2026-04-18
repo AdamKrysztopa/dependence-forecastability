@@ -327,8 +327,3 @@ one use-case entry point and one unified row surface.
 - Pairwise or `target_only` rows can still be inflated by autocorrelation or indirect
   paths. Use PCMCI+ or PCMCI-AMI when the question is causal-parent confirmation
   rather than triage.
-- The V3-F07 row grid is present, but the `significance`, `rank`, and
-  `interpretation_tag` fields are not yet populated by the facade.
-- V3-F08 is only partially complete at this revision: focused facade/model tests are
-  in place, but regression fixtures and a dedicated covariant regression suite are
-  not yet shipped.

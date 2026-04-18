@@ -4,7 +4,7 @@
 **Plan type:** Actionable documentation-quality improvement plan  
 **Audience:** Maintainer, reviewer, documentation contributor  
 **Target release:** `0.3.2`  
-**Current released version:** `0.2.0` (runtime metadata still pending v0.3.0 alignment)  
+**Current released version:** `0.3.0`  
 **Status:** Proposed  
 **Last reviewed:** 2026-04-18  
 **Builds on:** [v0.3.0 covariant plan](v0_3_0_covariant_informative_ultimate_plan.md)
@@ -20,7 +20,6 @@ packaging metadata. The main gaps found in review are:
 - public API examples that import symbols the top-level package does not export,
 - stale implementation-status statements that describe already-closed gaps,
 - mixed `0.2.0` vs `0.3.0` release banners across docs,
-- release messaging that is ahead of runtime/package version metadata,
 - missing doc-tooling in the current environment, which blocks normal docs QA.
 
 This plan keeps the follow-up narrow: accuracy, consistency, and maintainability
@@ -73,8 +72,8 @@ This plan therefore separates:
 
 - Reconcile `0.2.0` vs `0.3.0` references across docs and release metadata.
 - Ensure "Last verified" banners are intentionally versioned, not stale leftovers.
-- Keep docs from claiming a released `0.3.0` surface until package/runtime
-  metadata and release checklist state agree.
+- Keep docs and release-checklist references synchronized with package/runtime
+  metadata.
 
 ### DQ-03 — Implementation-status freshness pass
 
