@@ -122,6 +122,18 @@ class _ImportErrorPcmciPort:
 
 
 class _ImportErrorPcmciAmiPort:
+    def discover(
+        self,
+        data: object,
+        var_names: list[str],
+        *,
+        max_lag: int,
+        alpha: float = 0.01,
+        random_state: int = 42,
+    ) -> CausalGraphResult:
+        del data, var_names, max_lag, alpha, random_state
+        raise ImportError("submodule moved")
+
     def discover_full(
         self,
         data: object,

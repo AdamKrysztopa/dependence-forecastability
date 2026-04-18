@@ -12,7 +12,7 @@ import importlib
 from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
-    from forecastability.ports import CausalGraphPort
+    from forecastability.ports import CausalGraphFullPort
 
 __all__ = ["build_pcmci_ami_hybrid"]
 
@@ -24,7 +24,7 @@ def build_pcmci_ami_hybrid(
     n_neighbors: int = 8,
     min_pairs: int = 50,
     shuffle_scheme: Literal["iid", "block"] = "iid",
-) -> CausalGraphPort:
+) -> CausalGraphFullPort:
     """Create a PCMCI-AMI-Hybrid causal discovery adapter.
 
     Args:

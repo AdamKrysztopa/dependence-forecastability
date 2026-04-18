@@ -230,7 +230,7 @@ def test_block_shuffle_scheme_preserves_output_shape() -> None:
 def test_knn_cmi_linear_vectorised_matches_naive() -> None:
     """Vectorised linear-residual shuffle must reproduce the same p-value across reruns."""
     _require_tigramite()
-    from forecastability.adapters.knn_cmi_ci_test import build_knn_cmi_test
+    from forecastability.diagnostics.knn_cmi_ci_test import build_knn_cmi_test
 
     rng = np.random.default_rng(0)
     t_len = 200
@@ -262,7 +262,7 @@ def test_knn_cmi_linear_vectorised_matches_naive() -> None:
 
 def test_linear_residual_projector_matches_ols_refit() -> None:
     """_linear_residual via QR projector must match an explicit OLS refit residual."""
-    from forecastability.adapters.knn_cmi_ci_test import (
+    from forecastability.diagnostics.knn_cmi_ci_test import (
         _build_linear_projector,
         _linear_residual,
     )
@@ -290,7 +290,7 @@ def test_linear_residual_projector_matches_ols_refit() -> None:
 def test_build_knn_cmi_test_rejects_unknown_shuffle_scheme() -> None:
     """Runtime validation must reject mistyped shuffle_scheme values."""
     _require_tigramite()
-    from forecastability.adapters.knn_cmi_ci_test import build_knn_cmi_test
+    from forecastability.diagnostics.knn_cmi_ci_test import build_knn_cmi_test
 
     with pytest.raises(ValueError, match="shuffle_scheme"):
         build_knn_cmi_test(shuffle_scheme="Block")  # type: ignore[arg-type]

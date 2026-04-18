@@ -11,23 +11,11 @@ from typing import Literal
 
 import numpy as np
 
+from forecastability.adapters._tigramite_shared import (
+    _DIRECTED_LINKS,
+    _check_tigramite_available,
+)
 from forecastability.utils.types import CausalGraphResult
-
-# "-->": directed link (lagged or oriented contemporaneous)
-# "o->": directed, uncertain tail — used by LPCMCI; included for forward compatibility
-# "o-o": unoriented contemporaneous adjacency — PCMCI+ specific (Markov equivalent)
-_DIRECTED_LINKS = {"-->", "o->", "o-o"}
-
-
-def _check_tigramite_available() -> None:
-    """Raise a clear error when the optional tigramite dependency is missing."""
-    try:
-        importlib.import_module("tigramite")
-    except ImportError as exc:
-        raise ImportError(
-            "tigramite is required for PCMCI+ causal discovery. "
-            "Install with `uv sync --extra causal` or `pip install tigramite`."
-        ) from exc
 
 
 class TigramiteAdapter:
