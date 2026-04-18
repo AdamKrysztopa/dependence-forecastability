@@ -1,7 +1,7 @@
 <!-- type: reference -->
 # Forecastability Triage Toolkit
 
-A deterministic forecastability triage toolkit with AMI as the paper-aligned foundation and pAMI as a project extension.
+> A deterministic forecastability triage toolkit with AMI as the paper-aligned foundation and **pAMI + covariant analysis** as the project extension. Now with Transfer Entropy, GCMI, and PCMCI+ hybrid in v0.3.0.
 
 [![CI](https://github.com/AdamKrysztopa/dependence-forecastability/actions/workflows/ci.yml/badge.svg)](https://github.com/AdamKrysztopa/dependence-forecastability/actions/workflows/ci.yml)
 [![PyPI Downloads](https://static.pepy.tech/personalized-badge/dependence-forecastability?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/dependence-forecastability)
@@ -10,6 +10,8 @@ A deterministic forecastability triage toolkit with AMI as the paper-aligned fou
 [![Docs](https://img.shields.io/badge/docs-in%20repo-0A7B83.svg)](https://github.com/AdamKrysztopa/dependence-forecastability/tree/main/docs)
 [![Python 3.11-3.12](https://img.shields.io/badge/python-3.11%20to%203.12-blue.svg)](https://python.org)
 [![Research base](https://img.shields.io/badge/research%20base-multi--paper%20%2B%20original%20methods-2E8B57.svg)](https://github.com/AdamKrysztopa/dependence-forecastability/tree/main/docs/theory)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/AdamKrysztopa/dependence-forecastability/blob/main/LICENSE)
+
 
 This repository provides a deterministic triage workflow for deciding whether a time series shows exploitable structure before you commit to expensive model search. The maintained package facade exposes `run_triage`, `run_batch_triage`, analyzers, request/result models, config models, dataset helpers, and the scorer registry through `forecastability` and `forecastability.triage`.
 
