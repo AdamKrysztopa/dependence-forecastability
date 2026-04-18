@@ -59,6 +59,37 @@ This plan therefore reframes the next release around one product question:
 | Product maturation | `0.3.1` should improve the user decision story, not merely add outputs |
 | One facade, many engines | Users call a dedicated fingerprint use case or opt into fingerprint inside existing bundle flows |
 
+### Reviewer acceptance block
+
+For reviewer sign-off, `0.3.1` is successful only if Peter Catt's four requested
+summary metrics are implemented as **stable typed outputs** and exposed
+consistently across all intended user surfaces.
+
+Required reviewer-visible outcomes:
+
+- `information_mass`, `information_horizon`, `information_structure`, and
+  `nonlinear_share` exist on a typed Python result object
+- the same four fields appear in the CLI / JSON summary surface
+- the same four fields appear in the walkthrough notebook and public example surfaces
+  without notebook-only logic
+- docs define the semantics, caveats, and routing interpretation for the same fields
+- routing guidance consumes these fields through versioned deterministic rules
+
+Reviewer comment crosswalk for this update:
+
+- comment 2 (`Catt alignment`) → this block, §5.3, §9
+- comment 3 (thresholding / significance semantics) → §2.2, §2.3, Phase 1
+  acceptance criteria, Phase 3 threshold tests
+- comment 4 (`information_structure` classifier rules) → §2.4, Phase 1
+  acceptance criteria, Phase 3 classifier tests
+- comment 5 (no-overclaim routing rule) → §2.7, §8, §9
+- comment 6 (routing-quality validation task) → V3_1-F06.2, §9
+- comment 7 (`nonlinear_share` calibration) → §6.2, Phase 3 tests
+- comment 8 (routing confidence semantics) → §2.7, V3_1-F03
+- comment 9 (mandatory public-surface examples) → V3_1-F05, V3_1-F08, V3_1-D01, §9
+- comment 10 (univariate-first scope boundary) → planning principles, V3_1-D02,
+  §8, §9
+
 ---
 
 ## 2. Theory-to-code map — mathematical foundations
@@ -80,21 +111,46 @@ single global scalar. That is the correct base for the fingerprint.
 
 ### 2.2. `information_mass`
 
-`information_mass` is the normalized area under the informative portion of the
-AMI profile.
+`information_mass` is the normalized masked area under the informative portion
+of the AMI profile.
 
-Recommended implementation:
+For `0.3.1`, define the informative horizon set as:
 
-$$M = \frac{\sum_{h \in \mathcal{H}_{info}} AMI(h)}{\max(1, |\mathcal{H}_{info}|)}$$
+$$\mathcal{H}_{info} = \{h \in \{1, \dots, H\} : AMI(h) \ge \tau_{AMI} \ \land \ p_{sur}(h) \le \alpha \}$$
 
-where $\mathcal{H}_{info}$ is the set of informative horizons under the existing
-significance / thresholding logic.
+where:
 
-Alternate equivalent implementation is acceptable if and only if:
+- $p_{sur}(h)$ is the per-horizon surrogate-significance p-value already derived
+  from the package's AMI significance machinery
+- $\alpha$ is the configured significance level used by the profile computation
+- $\tau_{AMI}$ is a minimum AMI floor applied after significance to reject
+  numerically tiny but formally significant values
 
-- it is monotone in the total informative AMI signal,
-- it does not inflate long noisy tails,
-- it is documented consistently in code, docs, and notebook outputs.
+Required `0.3.1` semantics:
+
+- `information_mass` and `information_horizon` MUST share the exact same
+  $\mathcal{H}_{info}$ definition
+- routing logic MUST consume the same informative-horizon mask rather than
+  redefining thresholding locally
+- $\mathcal{H}_{info}$ is an operational screening mask, not a claim of
+  simultaneous family-wise significance across all tested horizons
+- if multiple horizons satisfy the conditions, all of them contribute to
+  `information_mass`
+- if no horizons satisfy the conditions, `information_mass = 0.0` and
+  `information_horizon = 0`
+- tie handling is inclusive at the threshold boundary:
+  `AMI(h) == \tau_{AMI}` and `p_{sur}(h) == \alpha` both count as informative
+- edge behavior for invalid or truncated horizons is conservative: horizons
+  lacking a valid AMI estimate or surrogate test result are excluded from
+  $\mathcal{H}_{info}$ rather than imputed as informative
+
+Required implementation on the discrete horizon grid:
+
+$$M = \frac{1}{\max(1, H)} \sum_{h=1}^{H} AMI(h)\,\mathbf{1}[h \in \mathcal{H}_{info}]$$
+
+This is intentionally **not** the mean AMI over informative horizons. It is the
+masked area over the evaluated horizon grid, normalized by the full horizon
+range so that both strength and extent contribute to the final value.
 
 Interpretation:
 
@@ -105,11 +161,21 @@ Interpretation:
 
 `information_horizon` is the latest horizon that remains informative.
 
-Recommended implementation:
+Required implementation:
 
 $$H_{info} = \max(\mathcal{H}_{info})$$
 
 with the convention that if $\mathcal{H}_{info} = \varnothing$, the result is `0`.
+
+Additional required semantics:
+
+- if the final informative horizons are non-contiguous, `information_horizon`
+  still reports the latest informative horizon, not the count of informative
+  horizons
+- if several late horizons tie for the same AMI value, the latest informative
+  horizon still wins because the metric is horizon-index based, not amplitude based
+- routing rules that refer to "short" or "long" horizon MUST use this exact
+  `H_info` output rather than a separate horizon summary
 
 Interpretation:
 
@@ -137,6 +203,33 @@ Recommended rule system:
 
 This must be a **domain service**, not plotting logic.
 
+Required `0.3.1` classifier contract:
+
+- peak detection operates only on informative horizons or on horizons with
+  informative local maxima; non-informative peaks cannot trigger `periodic`
+- a secondary peak counts only if its prominence is at least
+  `max(peak_prominence_abs, peak_prominence_rel * max_informative_ami)`, with
+  both thresholds fixed in the service configuration and documented
+- repeated-peak spacing is considered stable if successive accepted peaks fall
+  within `spacing_tolerance` horizons of the dominant spacing
+- monotonicity is considered satisfied when informative AMI is non-increasing
+  up to a `monotonicity_tolerance`; small local reversals within tolerance do
+  not force `mixed`
+- tie-breaking priority is deterministic:
+  `none` > `periodic` > `monotonic` > `mixed`
+- abstention / edge behavior is explicit:
+  if there are too few informative horizons to support either repeated-peak or
+  monotonic checks robustly, classify as `mixed` and emit a caution rather than
+  inferring `periodic`
+
+Practical interpretation of the tie-breaking rule:
+
+- `none` wins whenever `\mathcal{H}_{info}` is empty
+- `periodic` wins over `monotonic` when both rules appear plausible but the
+  repeated-peak rule passes the documented prominence and spacing checks
+- `monotonic` wins over `mixed` only when no qualifying periodic structure exists
+  and the profile stays within the monotonicity tolerance band
+
 ### 2.5. `nonlinear_share`
 
 `nonlinear_share` must compare AMI against a **linear Gaussian-information baseline**.
@@ -154,6 +247,15 @@ $$E(h) = \max(AMI(h) - I_G(h), 0)$$
 and aggregate over informative horizons:
 
 $$N = \frac{\sum_{h \in \mathcal{H}_{info}} E(h)}{\sum_{h \in \mathcal{H}_{info}} AMI(h) + \epsilon}$$
+
+Required `0.3.1` edge behavior:
+
+- if $\mathcal{H}_{info} = \varnothing$, return `nonlinear_share = 0.0`
+- if the informative-horizon AMI denominator is `<= epsilon`, return
+  `nonlinear_share = 0.0` rather than a noisy tiny ratio
+- if `rho(h)` is invalid or undefined after safe clipping, exclude that horizon
+  from the nonlinear-baseline aggregation and emit a caution rather than treating
+  the horizon as evidence for strong nonlinearity
 
 Interpretation:
 
@@ -183,6 +285,11 @@ The routing object for `0.3.1` should therefore contain at least:
 The goal is not to pick a single exact model. The goal is to route toward
 **model families**.
 
+> [!IMPORTANT]
+> Routing in `0.3.1` is heuristic product guidance. It is not empirical model
+> selection, not a ranking guarantee, and not a promise that a recommended family
+> will outperform all alternatives on a given series.
+
 Initial mapping policy:
 
 | Fingerprint pattern | Recommended families |
@@ -195,6 +302,25 @@ Initial mapping policy:
 
 This routing policy must be explicit and versioned. It is a product rule, not an
 implicit interpretation hidden in notebooks.
+
+Required confidence semantics for `0.3.1`:
+
+- confidence is derived from three deterministic binary penalties:
+  `threshold_margin_penalty`, `taxonomy_uncertainty_penalty`, and
+  `signal_conflict_penalty`
+- `threshold_margin_penalty = 1` if any routing-defining scalar falls within a
+  versioned margin band around its decision threshold
+- `taxonomy_uncertainty_penalty = 1` if `information_structure == "mixed"`, if
+  the classifier relied on a tie-break, or if informative support is below a
+  versioned `min_confident_horizons`
+- `signal_conflict_penalty = 1` if the primary route is supported by one signal
+  but contradicted by another according to a versioned rule table, for example
+  high nonlinear share paired with strongly linear routing or periodic routing
+  with insufficient horizon support
+- map penalty counts deterministically:
+  `0 -> high`, `1 -> medium`, `2 or 3 -> low`
+- confidence is derived from deterministic rule evaluation only; `0.3.1` does not
+  claim benchmark-calibrated probabilities
 
 ---
 
@@ -226,12 +352,13 @@ implicit interpretation hidden in notebooks.
 | V3_1-F05 | Unified summary rendering | 2 | Extends current reporting helpers | compact summary row / markdown / JSON surface for fingerprint + routing | Proposed |
 | V3_1-F06 | Tests and regression fixtures | 3 | Follows current deterministic regression pattern | synthetic archetypes, threshold tests, routing invariants | Proposed |
 | V3_1-F07 | Showcase script and notebook | 4 | Follows existing walkthrough / showcase pattern | canonical four-series fingerprint demo | Proposed |
-| V3_1-CI-01 | Routing smoke test in CI | 5 | Extends smoke workflow | import + run on canonical synthetic panel | Proposed |
-| V3_1-CI-02 | Notebook contract extension | 5 | Extends notebook contract checks | fingerprint notebook included | Proposed |
-| V3_1-CI-03 | Release checklist update | 5 | Extends release template | versioned routing / fingerprint checks | Proposed |
-| V3_1-D01 | README + quickstart routing section | 6 | Extends docs | fingerprint concept and example snippets | Proposed |
-| V3_1-D02 | Theory doc | 6 | New theory page | fingerprint definitions and routing semantics | Proposed |
-| V3_1-D03 | Changelog + migration note | 6 | Release docs | additive feature surface and policy notes | Proposed |
+| V3_1-F08 | Public examples and notebook extensions | 5 | Extends examples taxonomy and walkthrough surfaces | minimal Python example, CLI example, notebook cross-links, and reusable example artifacts | Proposed |
+| V3_1-D01 | README + quickstart routing section | 5 | Extends docs | fingerprint concept and example snippets | Proposed |
+| V3_1-D02 | Theory doc | 5 | New theory page | fingerprint definitions and routing semantics | Proposed |
+| V3_1-D03 | Changelog + migration note | 5 | Release docs | additive feature surface and policy notes | Proposed |
+| V3_1-CI-01 | Routing smoke test in CI | 6 | Extends smoke workflow | import + run on canonical synthetic panel | Proposed |
+| V3_1-CI-02 | Notebook contract extension | 6 | Extends notebook contract checks | fingerprint notebook included | Proposed |
+| V3_1-CI-03 | Release checklist update | 6 | Extends release template | versioned routing / fingerprint checks | Proposed |
 
 ---
 
@@ -242,12 +369,42 @@ implicit interpretation hidden in notebooks.
 **File:** `src/forecastability/utils/types.py`
 
 ```python
+FingerprintStructure = Literal["none", "monotonic", "periodic", "mixed"]
+RoutingConfidenceLabel = Literal["low", "medium", "high"]
+ModelFamilyLabel = Literal[
+    "naive",
+    "seasonal_naive",
+    "downscope",
+    "arima",
+    "ets",
+    "linear_state_space",
+    "dynamic_regression",
+    "harmonic_regression",
+    "tbats",
+    "seasonal_state_space",
+    "tree_on_lags",
+    "tcn",
+    "nbeats",
+    "nhits",
+    "nonlinear_tabular",
+]
+RoutingCautionFlag = Literal[
+    "near_threshold",
+    "mixed_structure",
+    "low_directness",
+    "high_nonlinear_share",
+    "short_information_horizon",
+    "weak_informative_support",
+    "signal_conflict",
+]
+
+
 class ForecastabilityFingerprint(BaseModel, frozen=True):
     """Compact summary of forecastability profile semantics."""
 
     information_mass: float
     information_horizon: int
-    information_structure: str
+    information_structure: FingerprintStructure
     nonlinear_share: float
     directness_ratio: float | None = None
     informative_horizons: list[int] = Field(default_factory=list)
@@ -257,11 +414,11 @@ class ForecastabilityFingerprint(BaseModel, frozen=True):
 class RoutingRecommendation(BaseModel, frozen=True):
     """Model-family recommendation driven by a fingerprint."""
 
-    primary_families: list[str]
-    secondary_families: list[str] = Field(default_factory=list)
+    primary_families: list[ModelFamilyLabel]
+    secondary_families: list[ModelFamilyLabel] = Field(default_factory=list)
     rationale: list[str] = Field(default_factory=list)
-    caution_flags: list[str] = Field(default_factory=list)
-    confidence_label: str = "medium"
+    caution_flags: list[RoutingCautionFlag] = Field(default_factory=list)
+    confidence_label: RoutingConfidenceLabel = "medium"
     metadata: dict[str, str | int | float] = Field(default_factory=dict)
 
 
@@ -285,8 +442,12 @@ class FingerprintBundle(BaseModel, frozen=True):
 ### 5.3. Acceptance criteria
 
 - all new types are importable from the typed surface
+- categorical fingerprint / routing fields use closed literal labels or enums,
+  not free-form strings
 - no route recommendation logic is embedded in notebook cells
 - no existing analyzer public interface is broken
+- reviewer can verify that Peter Catt's four metrics appear unchanged in typed
+  Python output, CLI / JSON summary output, example output, notebook output, and docs
 
 ---
 
@@ -318,10 +479,19 @@ Optional fifth class for stronger mediated structure:
 | nonlinear synthetic | `mixed` | medium/high | high | nonlinear model families |
 | mediated lag process | `monotonic` or `mixed` | medium | variable | caution on directness / state representation |
 
+Calibration / sanity-check expectations for `nonlinear_share`:
+
+- white noise: near `0`, with no spurious high-share route caused by estimation noise
+- AR(1): low and near `0` within tolerance because the dependence is primarily linear
+- seasonal linear process: low to low / medium at most; periodic linear structure
+  alone must not be mislabeled as strongly nonlinear
+- nonlinear synthetic process: materially above the linear cases and high enough
+  to activate the nonlinear-routing branch in at least one canonical example
+
 ### 6.3. Acceptance criteria
 
 - deterministic by seed
-- used in tests, showcase, and notebook
+- used in tests, showcase, examples, and notebooks
 - each archetype has docstring-grounded expected behavior
 - at least one regression asserts routing family output, not only raw metric values
 
@@ -399,6 +569,10 @@ Optional fifth class for stronger mediated structure:
 - computes `nonlinear_share`
 - preserves `directness_ratio` as separate input/output
 - does not require plotting adapter code
+- uses one shared informative-horizon mask for metrics and routing
+- documents the precise `H_info` thresholding semantics, including surrogate
+  significance, AMI floor, tie handling, and invalid-horizon behavior
+- applies deterministic classifier tolerances for prominence, spacing, and monotonicity
 
 #### V3_1-F03 — Routing policy service
 
@@ -416,6 +590,10 @@ Optional fifth class for stronger mediated structure:
 - returns rationale and caution flags
 - confidence label is deterministic and rule-based
 - no single exact-model promise is made
+- includes an explicit non-goal statement that routing is heuristic product
+  guidance, not empirical ranking or performance guarantee
+- confidence label is derived from deterministic margins, taxonomy certainty,
+  and signal consistency rather than prose judgment
 
 ---
 
@@ -447,12 +625,13 @@ Optional fifth class for stronger mediated structure:
 **File targets**
 
 - reporting helper / markdown rendering utilities
-- optional CLI adapter integration
+- CLI / JSON summary adapter integration
 - example JSON artifact builder
 
 **Acceptance criteria**
 
 - fingerprint summary is visible in one compact object
+- CLI / JSON summary surface exposes the same four fingerprint fields plus routing output
 - recommendation rationale is human-readable
 - output is stable enough for regression tests
 
@@ -480,6 +659,8 @@ Optional fifth class for stronger mediated structure:
 - deterministic by seed
 - no fragile exact floating-point thresholds without tolerance
 - routing tests assert family inclusion, not exact full prose strings
+- classifier tests cover tie-breaking, spacing tolerance, and monotonicity tolerance
+- threshold tests cover significance boundary, AMI-floor boundary, and empty-set behavior
 
 #### V3_1-F06.1 — Regression fixtures
 
@@ -490,6 +671,18 @@ Optional fifth class for stronger mediated structure:
 - fixture rebuild script exists
 - drift is visible in CI
 - policy changes require intentional fixture refresh
+
+#### V3_1-F06.2 — Small curated routing-quality panel
+
+**Goal.** Sanity-check routing quality on a small curated real or semi-real panel.
+
+**Acceptance criteria**
+
+- at least a small curated panel of real or semi-real series is evaluated before release
+- expected broad family tags are documented for each case
+- mismatches between expected and observed routing are recorded in docs or release notes
+- the task is explicitly framed as a lightweight `0.3.1` sanity check, with broader
+  calibration and hardening deferred to `0.3.4`
 
 ---
 
@@ -521,10 +714,72 @@ Optional fifth class for stronger mediated structure:
 - shows four canonical archetypes
 - shows recommended families and caution notes
 - no logic divergence from reusable services
+- shows the four Peter Catt metrics directly in notebook outputs
 
 ---
 
-### Phase 5 — CI / release hygiene
+### Phase 5 — Examples, notebooks, and documentation
+
+**Goal:** turn the feature into a complete public surface before CI freezes it.
+
+#### V3_1-F08 — Public examples and notebook extensions
+
+**Goal.** Create or extend example and notebook artifacts beyond the canonical showcase.
+
+**File targets**
+
+- `examples/` additions or refresh for fingerprint-facing usage
+- `notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb`
+- optional extension or cross-link in existing walkthrough / quickstart notebooks
+
+**Acceptance criteria**
+
+- at least one minimal Python example exists in `examples/` or the repo's equivalent
+  example surface
+- at least one CLI example is present in example artifacts, not only in README prose
+- the fingerprint notebook is cross-linked from examples and docs surfaces
+- at least one existing user-facing notebook or walkthrough is extended or linked so
+  the fingerprint surface is discoverable outside the dedicated showcase
+- examples and notebooks consume reusable services and do not introduce notebook-only
+  logic divergence
+
+#### V3_1-D01 — README + quickstart update
+
+Add a new section:
+
+- what the fingerprint is
+- how it differs from raw metrics
+- one mandatory short Python snippet showing fingerprint + routing output
+- one mandatory CLI example showing fingerprint + routing output
+- links to the example and notebook surfaces added in `V3_1-F08`
+
+These examples are required release artifacts, not optional nice-to-haves.
+
+#### V3_1-D02 — Theory doc
+
+**File targets**
+
+- `docs/theory/forecastability_fingerprint.md`
+
+Must document:
+
+- formula definitions
+- the screening-mask meaning of per-horizon surrogate significance
+- shape taxonomy
+- routing semantics
+- confidence penalty rules and their versioned thresholds / tolerances
+- caveats and non-goals
+- univariate-first / AMI-first scope boundary
+- where users can find the public examples and notebook walkthroughs
+
+#### V3_1-D03 — Changelog
+
+Document additive capability, no breaking API, routing caveat, and the new
+public example / notebook surfaces.
+
+---
+
+### Phase 6 — CI / release hygiene
 
 #### V3_1-CI-01 — Routing smoke test
 
@@ -543,35 +798,7 @@ Optional fifth class for stronger mediated structure:
 - smoke path completes on CI-supported Python versions
 - notebook contract passes
 - release checklist mentions routing semantics explicitly
-
----
-
-### Phase 6 — Documentation
-
-#### V3_1-D01 — README + quickstart update
-
-Add a new section:
-
-- what the fingerprint is
-- how it differs from raw metrics
-- how to call it in three to eight lines
-
-#### V3_1-D02 — Theory doc
-
-**File targets**
-
-- `docs/theory/forecastability_fingerprint.md`
-
-Must document:
-
-- formula definitions
-- shape taxonomy
-- routing semantics
-- caveats and non-goals
-
-#### V3_1-D03 — Changelog
-
-Document additive capability, no breaking API, and routing caveat.
+- CI checks run only after example, notebook, and docs surfaces are in place
 
 ---
 
@@ -583,19 +810,33 @@ Document additive capability, no breaking API, and routing caveat.
 - replacing current covariant workflows
 - hiding routing uncertainty behind overconfident labels
 - using pAMI/directness as a proxy for nonlinearity
+- multivariate or conditional-MI fingerprint extensions
+- benchmark-calibrated routing confidence probabilities
+
+Scope statement for reviewers:
+
+- `0.3.1` is intentionally univariate-first and AMI-first
+- multivariate, conditional-MI, or broader empirical routing validation work belongs
+  to follow-up releases, especially `0.3.4`, and is not part of this release
 
 ---
 
 ## 9. Exit criteria
 
-- [ ] Every ticket V3_1-F00 through V3_1-F07.1 is either **Done** or explicitly **Deferred** in §4.
+- [ ] Every ticket V3_1-F00 through V3_1-F08, including sub-items such as V3_1-F00.1, V3_1-F06.1, V3_1-F06.2, and V3_1-F07.1, is either **Done** or explicitly **Deferred** in §4.
+- [ ] Every ticket V3_1-D01 through V3_1-D03 is **Done** before CI / release sign-off.
 - [ ] Every ticket V3_1-CI-01 through V3_1-CI-03 is **Done**.
-- [ ] Every ticket V3_1-D01 through V3_1-D03 is **Done**.
 - [ ] `ForecastabilityFingerprint`, `RoutingRecommendation`, and `FingerprintBundle` exist as typed outputs.
 - [ ] `nonlinear_share` is documented and tested against a linear information baseline.
 - [ ] `directness_ratio` is kept semantically separate from `nonlinear_share` in code, docs, and examples.
 - [ ] The canonical showcase runs on at least four archetypal series.
+- [ ] Public example surfaces under `examples/` or equivalent are created or extended for the fingerprint release.
+- [ ] Notebook surfaces are created or extended beyond the single showcase and are cross-linked from docs.
 - [ ] At least one regression fixture protects routing behavior from silent drift.
+- [ ] A small curated real or semi-real routing-quality panel is run and mismatches are documented.
+- [ ] README / quickstart includes one Python and one CLI fingerprint-routing example.
+- [ ] The release docs state that `0.3.1` is univariate-first / AMI-first and does not include multivariate or conditional-MI extensions.
+- [ ] Reviewer comments 2-10 are each traceable to concrete sections in the plan or explicitly deferred.
 - [ ] No doc, notebook, or bundle string claims the package selects the one true optimal model.
 
 ---
@@ -610,5 +851,6 @@ Document additive capability, no breaking API, and routing caveat.
 5. Use case / facade
 6. Tests + fixtures
 7. Showcase + notebook
-8. CI + docs + changelog
+8. Examples + docs + changelog
+9. CI + release hygiene
 ```
