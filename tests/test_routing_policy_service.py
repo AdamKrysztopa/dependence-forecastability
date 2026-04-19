@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import math
+
+import pytest
+
 from forecastability.services.fingerprint_service import FingerprintThresholdConfig
 from forecastability.services.routing_policy_service import (
     RoutingPolicyConfig,
@@ -227,3 +231,18 @@ def test_metadata_contains_policy_version() -> None:
     """The routing metadata should retain the versioned policy identifier."""
     rec = route_fingerprint(_fp(informative_horizons=[1, 2, 3, 4]))
     assert rec.metadata["policy_version"] == _DEFAULT_CFG.policy_version
+
+
+@pytest.mark.parametrize("invalid_ratio", [-0.01, 1.01, math.inf, math.nan])
+def test_route_fingerprint_rejects_invalid_directness_ratio(invalid_ratio: float) -> None:
+    """Routing seam should reject out-of-contract directness_ratio values."""
+    with pytest.raises(ValueError, match="directness_ratio"):
+        route_fingerprint(
+            _fp(
+                structure="monotonic",
+                mass=0.20,
+                nl_share=0.05,
+                directness_ratio=invalid_ratio,
+                informative_horizons=[1, 2, 3, 4],
+            )
+        )

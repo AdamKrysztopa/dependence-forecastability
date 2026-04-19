@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import math
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from forecastability.services.fingerprint_service import FingerprintThresholdConfig
@@ -35,6 +37,14 @@ class RoutingPolicyConfig(BaseModel):
 
 
 RoutingThresholdConfig = RoutingPolicyConfig
+
+
+def _validate_directness_ratio(directness_ratio: float | None) -> None:
+    """Validate optional directness ratio at the routing seam."""
+    if directness_ratio is None:
+        return
+    if not math.isfinite(directness_ratio) or not (0.0 <= directness_ratio <= 1.0):
+        raise ValueError("directness_ratio must be finite and within [0.0, 1.0]")
 
 
 def _metadata_flag(value: str | int | float | None) -> bool:
@@ -256,6 +266,7 @@ def route_fingerprint(
     fingerprint_config: FingerprintThresholdConfig | None = None,
 ) -> RoutingRecommendation:
     """Map a geometry-backed fingerprint to deterministic model-family guidance."""
+    _validate_directness_ratio(fingerprint.directness_ratio)
     resolved_config = config if config is not None else RoutingPolicyConfig()
     resolved_fingerprint_config = (
         fingerprint_config if fingerprint_config is not None else FingerprintThresholdConfig()

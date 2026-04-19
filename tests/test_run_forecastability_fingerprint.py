@@ -69,6 +69,10 @@ def test_profile_summary_contains_geometry_fields(ar1_bundle: FingerprintBundle)
     assert "geometry_method" in ar1_bundle.profile_summary
     assert "signal_to_noise" in ar1_bundle.profile_summary
     assert "confidence" in ar1_bundle.profile_summary
+    assert ar1_bundle.profile_summary["input_window_contract"] == (
+        "train_window_only_for_rolling_origin"
+    )
+    assert ar1_bundle.metadata["input_window_contract"] == "train_window_only_for_rolling_origin"
 
 
 def test_white_noise_routes_to_naive_families(white_noise_bundle: FingerprintBundle) -> None:

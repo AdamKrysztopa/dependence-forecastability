@@ -69,6 +69,9 @@ def run_forecastability_fingerprint(
 
     The ``ami_floor`` parameter is retained for backward-compatible call sites,
     but the v0.3.1 geometry-backed workflow does not use local AMI-floor gating.
+
+    For rolling-origin evaluation, callers must pass each origin's training
+    window only. This use case intentionally does not perform split logic.
     """
     _validate_directness_ratio(directness_ratio)
     resolved_geometry_config = _resolve_geometry_config(
@@ -115,9 +118,13 @@ def run_forecastability_fingerprint(
         "accepted_horizon_count": len(geometry.informative_horizons),
         "informative_horizons": ",".join(str(item) for item in geometry.informative_horizons),
         "confidence": recommendation.confidence_label,
+        "input_window_contract": "train_window_only_for_rolling_origin",
     }
 
-    metadata: dict[str, str | int | float] = {"release": "0.3.1"}
+    metadata: dict[str, str | int | float] = {
+        "release": "0.3.1",
+        "input_window_contract": "train_window_only_for_rolling_origin",
+    }
     if ami_floor != 0.01:
         metadata["legacy_ami_floor_ignored"] = ami_floor
 
