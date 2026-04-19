@@ -134,7 +134,8 @@ def _compare_value(actual: Any, expected: Any, *, field_path: str) -> list[str]:
     if isinstance(expected, float) and isinstance(actual, float):
         if not math.isclose(actual, expected, rel_tol=_RTOL, abs_tol=_ATOL):
             errors.append(
-                f"{field_path}: value mismatch (actual={actual}, expected={expected}, atol={_ATOL}, rtol={_RTOL})"
+                f"{field_path}: value mismatch (actual={actual}, expected={expected}, "
+                f"atol={_ATOL}, rtol={_RTOL})"
             )
         return errors
 
