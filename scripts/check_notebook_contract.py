@@ -21,6 +21,7 @@ NOTEBOOKS_DIR = REPO_ROOT / "notebooks"
 EXPECTED_NOTEBOOKS = [
     "walkthroughs/00_air_passengers_showcase.ipynb",
     "walkthroughs/01_covariant_informative_showcase.ipynb",
+    "walkthroughs/02_forecastability_fingerprint_showcase.ipynb",
     "walkthroughs/01_canonical_forecastability.ipynb",
     "walkthroughs/02_exogenous_analysis.ipynb",
     "walkthroughs/03_triage_end_to_end.ipynb",
@@ -62,6 +63,9 @@ def check_imports() -> bool:
         ("forecastability.use_cases.run_covariant_analysis", "run_covariant_analysis"),
         ("forecastability.utils.synthetic", "generate_covariant_benchmark"),
         ("forecastability.reporting.covariant_walkthrough", "save_metric_heatmap"),
+        ("forecastability", "generate_fingerprint_archetypes"),
+        ("forecastability", "run_forecastability_fingerprint"),
+        ("forecastability.reporting.fingerprint_showcase", "showcase_summary_frame"),
     ]
 
     for module_name, attr in checks:
@@ -114,6 +118,41 @@ def check_representative_call() -> bool:
         print(f"    Error: {exc}")
         covariant_ok = False
     checks.append(_check("run_covariant_analysis returns the expected summary grid", covariant_ok))
+
+    try:
+        from forecastability import generate_fingerprint_archetypes, run_forecastability_fingerprint
+        from forecastability.reporting.fingerprint_showcase import (
+            build_fingerprint_showcase_record,
+            showcase_summary_frame,
+        )
+        from forecastability.services.linear_information_service import (
+            compute_linear_information_curve,
+        )
+
+        series = generate_fingerprint_archetypes(n=240, seed=42)["seasonal_periodic"]
+        bundle = run_forecastability_fingerprint(
+            series,
+            target_name="seasonal_periodic",
+            max_lag=24,
+            n_surrogates=99,
+            random_state=42,
+        )
+        baseline = compute_linear_information_curve(
+            series,
+            horizons=[point.horizon for point in bundle.geometry.curve if point.valid],
+        )
+        record = build_fingerprint_showcase_record(bundle=bundle, baseline=baseline)
+        frame = showcase_summary_frame([record])
+        fingerprint_ok = len(frame) == 1 and frame.iloc[0]["target_name"] == "seasonal_periodic"
+    except Exception as exc:
+        print(f"    Error: {exc}")
+        fingerprint_ok = False
+    checks.append(
+        _check(
+            "run_forecastability_fingerprint integrates with fingerprint_showcase reporting",
+            fingerprint_ok,
+        )
+    )
 
     return all(checks)
 

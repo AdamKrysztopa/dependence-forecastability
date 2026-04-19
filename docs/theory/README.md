@@ -19,6 +19,7 @@ This repository keeps the paper's AMI framing and extends it with pAMI to separa
 | File | Purpose |
 |---|---|
 | [foundations.md](foundations.md) | Definitions, feasibility constraints, significance logic, and extension boundaries |
+| [forecastability_fingerprint.md](forecastability_fingerprint.md) | V3_1-F02 fingerprint theory/design: informative horizons, structure taxonomy, and nonlinear share semantics |
 | [forecastability_profile.md](forecastability_profile.md) | Forecastability Profile model, informative horizon set, epsilon resolution, and DPI diagnostic |
 | [covariant_informative_walkthrough.md](covariant_informative_walkthrough.md) | Why the covariant walkthrough needs pairwise, directional, and causal sections on the same benchmark |
 | [covariant_summary_table.md](covariant_summary_table.md) | Unified `(driver, lag)` screening table for the covariant surface |

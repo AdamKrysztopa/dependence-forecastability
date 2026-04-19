@@ -101,6 +101,11 @@ If you want the covariant walkthrough introduced in v0.3.0, open
 [../notebooks/walkthroughs/01_covariant_informative_showcase.ipynb](../notebooks/walkthroughs/01_covariant_informative_showcase.ipynb)
 for the benchmark that compares CrossAMI, CrosspAMI, GCMI, TE, PCMCI+, and PCMCI-AMI on one synthetic system.
 
+If you want the v0.3.1 fingerprint walkthrough, open
+[../notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb](../notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb)
+for the prepared synthetic archetype panel that demonstrates geometry,
+fingerprint fields, routing, and the strict deterministic agent summary.
+
 If you want the same AR(1) signal used throughout this ladder, open
 [../notebooks/walkthroughs/03_triage_end_to_end.ipynb](../notebooks/walkthroughs/03_triage_end_to_end.ipynb)
 and run a scratch cell:
@@ -186,6 +191,124 @@ Expected output snippet:
   "primary_lags": [1, 7],
   "recommendation": "HIGH -> Complex structured models (deep AR, nonlinear, LSTM)"
 }
+```
+
+## 11 Minutes: Fingerprint Workflow
+
+Use the geometry-backed fingerprint workflow when you want compact AMI summary
+fields plus deterministic model-family guidance.
+
+```bash
+uv run python - <<'PY'
+from forecastability import generate_fingerprint_archetypes, run_forecastability_fingerprint
+
+series = generate_fingerprint_archetypes(n=320, seed=42)["seasonal_periodic"]
+bundle = run_forecastability_fingerprint(
+    series,
+    target_name="seasonal_periodic",
+    max_lag=24,
+    n_surrogates=99,
+    random_state=42,
+)
+
+print(
+    {
+        "signal_to_noise": bundle.geometry.signal_to_noise,
+        "information_mass": bundle.fingerprint.information_mass,
+        "information_structure": bundle.fingerprint.information_structure,
+        "primary_families": bundle.recommendation.primary_families,
+        "confidence_label": bundle.recommendation.confidence_label,
+    }
+)
+PY
+```
+
+## 11.25 Minutes: Fingerprint Showcase Script
+
+Run the canonical v0.3.1 showcase when you want the full prepared archetype
+panel, strict A1/A2/A3 agent verification, and a final human-language summary
+of what the mathematics did.
+
+```bash
+MPLBACKEND=Agg uv run scripts/run_showcase_fingerprint.py --smoke
+```
+
+Inspect these artifacts after the run:
+
+- `outputs/figures/showcase_fingerprint/fingerprint_profiles.png`
+- `outputs/figures/showcase_fingerprint/fingerprint_metrics.png`
+- `outputs/tables/showcase_fingerprint/fingerprint_summary.csv`
+- `outputs/tables/showcase_fingerprint/fingerprint_routing.csv`
+- `outputs/reports/showcase_fingerprint/showcase_report.md`
+- `outputs/reports/showcase_fingerprint/verification.md`
+
+> [!IMPORTANT]
+> The fingerprint release is intentionally univariate-first and AMI-first. The
+> routing output is heuristic family guidance, not exact-model selection and not
+> a multivariate conditional-MI claim.
+
+## 12 Minutes: CSV Batch Geometry Workflow
+
+Use the CSV adapter when your upstream workflow already has one target series per
+column and you want a summary CSV plus geometry artifacts without notebook-only
+logic.
+
+Build the synthetic input panel from the prepared generators and run the repo
+script:
+
+```bash
+uv run python examples/univariate/fingerprint/ami_information_geometry_csv_example.py
+
+uv run python scripts/run_ami_information_geometry_csv.py \
+  --input-csv outputs/examples/ami_geometry_csv/inputs/synthetic_fingerprint_panel.csv \
+  --output-root outputs/ami_geometry_csv_script \
+  --max-lag 24 \
+  --n-surrogates 99 \
+  --random-state 42
+```
+
+Inspect these artifacts after the run:
+
+- `outputs/ami_geometry_csv_script/tables/ami_geometry_summary.csv`
+- `outputs/ami_geometry_csv_script/figures/ami_geometry_profiles.png`
+- `outputs/ami_geometry_csv_script/reports/ami_geometry_batch.md`
+
+> [!NOTE]
+> The CSV adapter drops missing values column-wise and skips too-short or
+> non-numeric series conservatively instead of forcing a partial analysis.
+
+## 11.5 Minutes: Batch Forecast Routing And Executive Brief
+
+Use the batch workbench when you need one deterministic pass that serves both
+analyst and stakeholder workflows.
+
+```bash
+uv run python - <<'PY'
+from forecastability import (
+    build_batch_forecastability_executive_markdown,
+    build_batch_forecastability_markdown,
+    generate_fingerprint_archetypes,
+    run_batch_forecastability_workbench,
+)
+from forecastability.triage import BatchSeriesRequest, BatchTriageRequest
+
+series_map = generate_fingerprint_archetypes(n=320, seed=42)
+request = BatchTriageRequest(
+    items=[
+        BatchSeriesRequest(series_id=name, series=series.tolist())
+        for name, series in series_map.items()
+    ],
+    max_lag=24,
+    n_surrogates=99,
+    random_state=42,
+)
+result = run_batch_forecastability_workbench(request, top_n=2)
+
+print(result.summary.technical_summary)
+print(result.items[0].next_step.action)
+print(build_batch_forecastability_markdown(result).splitlines()[0])
+print(build_batch_forecastability_executive_markdown(result).splitlines()[0])
+PY
 ```
 
 ## 12 Minutes: Covariant Informative Workflow

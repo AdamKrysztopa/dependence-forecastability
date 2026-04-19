@@ -144,3 +144,218 @@ def generate_directional_pair(
         y[t] = 0.7 * y[t - 1] + 0.5 * x[t - 1] + rng.normal()
 
     return pd.DataFrame({"x": x, "y": y})
+
+
+# ---------------------------------------------------------------------------
+# v0.3.1 Univariate fingerprint archetype generators (V3_1-F00.1)
+# ---------------------------------------------------------------------------
+
+
+def generate_white_noise(
+    n: int = 1000,
+    *,
+    seed: int = 42,
+) -> np.ndarray:
+    """Generate a white noise series with no forecastable structure.
+
+    Expected fingerprint behavior:
+        - information_structure: "none"
+        - information_mass: near 0.0
+        - nonlinear_share: near 0.0 (no signal to attribute)
+        - routing: naive / downscope
+
+    Args:
+        n: Number of time steps.
+        seed: Random seed for reproducibility. Must be int, not np.Generator.
+
+    Returns:
+        1-D numpy array of length n drawn from N(0, 1).
+    """
+    rng = np.random.default_rng(seed)
+    return rng.standard_normal(n)
+
+
+def generate_ar1_monotonic(
+    n: int = 1000,
+    *,
+    phi: float = 0.85,
+    seed: int = 42,
+) -> np.ndarray:
+    """Generate an AR(1) series with strong monotonically decaying autocorrelation.
+
+    Structural equation:
+        x[t] = phi * x[t-1] + ε,   ε ~ N(0, 1)
+
+    Expected fingerprint behavior:
+        - information_structure: "monotonic"
+        - information_mass: medium to high
+        - nonlinear_share: low (predominantly linear dependence)
+        - routing: ARIMA / ETS / linear state-space
+
+    Args:
+        n: Number of time steps.
+        phi: AR(1) coefficient. Use values in (0, 1) for stability.
+        seed: Random seed for reproducibility. Must be int, not np.Generator.
+
+    Returns:
+        1-D numpy array of length n.
+    """
+    rng = np.random.default_rng(seed)
+    x = np.zeros(n)
+    for t in range(1, n):
+        x[t] = phi * x[t - 1] + rng.standard_normal()
+    return x
+
+
+def generate_seasonal_periodic(
+    n: int = 1000,
+    *,
+    period: int = 12,
+    ar_phi: float = 0.5,
+    seasonal_phi: float = 0.8,
+    seed: int = 42,
+) -> np.ndarray:
+    """Generate a seasonal AR series with recurring periodic structure.
+
+    Structural equation (SAR(1) × AR(1)):
+        x[t] = ar_phi * x[t-1] + seasonal_phi * x[t-period] + ε,   ε ~ N(0, 1)
+
+    Expected fingerprint behavior:
+        - information_structure: "periodic"
+        - information_mass: medium to high
+        - nonlinear_share: low (linear periodic dependence)
+        - routing: seasonal families (seasonal_naive, tbats, seasonal_state_space)
+
+    Args:
+        n: Number of time steps.
+        period: Seasonal period (e.g. 12 for monthly, 7 for weekly).
+        ar_phi: Short-range AR(1) coefficient.
+        seasonal_phi: Seasonal AR coefficient.
+        seed: Random seed for reproducibility. Must be int, not np.Generator.
+
+    Returns:
+        1-D numpy array of length n.
+    """
+    rng = np.random.default_rng(seed)
+    x = np.zeros(n)
+    for t in range(max(1, period), n):
+        x[t] = ar_phi * x[t - 1] + seasonal_phi * x[t - period] + rng.standard_normal()
+    return x
+
+
+def generate_nonlinear_mixed(
+    n: int = 1000,
+    *,
+    phi: float = 0.6,
+    nl_strength: float = 0.8,
+    seed: int = 42,
+) -> np.ndarray:
+    """Generate a nonlinear process where AMI substantially exceeds linear baseline.
+
+    Structural equation:
+        x[t] = phi * x[t-1] + nl_strength * (x[t-1]^2 - sigma^2) + ε,
+        ε ~ N(0, 1),  sigma^2 = 1 / (1 - phi^2)
+
+    The quadratic term creates nonlinear dependence invisible to Pearson correlation
+    but detectable by mutual information.
+
+    Expected fingerprint behavior:
+        - information_structure: "mixed" (nonlinear, non-monotone)
+        - information_mass: medium to high
+        - nonlinear_share: high (substantial dependence beyond linear ACF baseline)
+        - routing: nonlinear families (tree_on_lags, tcn, nbeats, nhits)
+
+    Args:
+        n: Number of time steps.
+        phi: Linear AR(1) component coefficient.
+        nl_strength: Weight on the zero-centred quadratic term. Higher values
+            create stronger nonlinear signal.
+        seed: Random seed for reproducibility. Must be int, not np.Generator.
+
+    Returns:
+        1-D numpy array of length n.
+    """
+    rng = np.random.default_rng(seed)
+    sigma_sq = 1.0 / (1.0 - phi**2)
+    x = np.zeros(n)
+    for t in range(1, n):
+        x[t] = phi * x[t - 1] + nl_strength * (x[t - 1] ** 2 - sigma_sq) + rng.standard_normal()
+        # Clip to prevent divergence from the unbounded quadratic feedback term.
+        # ±50 is far outside the stationary linear range (σ ≈ 1.25) but keeps
+        # the nonlinear structure intact without numerical overflow.
+        x[t] = np.clip(x[t], -50.0, 50.0)
+    return x
+
+
+def generate_mediated_directness_drop(
+    n: int = 1000,
+    *,
+    direct_phi: float = 0.8,
+    mediation_strength: float = 0.6,
+    seed: int = 42,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Generate a driver→mediator→target chain to stress mediated lag structure.
+
+    Structural equations:
+        driver[t]  = direct_phi * driver[t-1] + ε₁
+        target[t]  = mediation_strength * driver[t-2] + 0.5 * target[t-1] + ε₂
+
+    Expected fingerprint behavior for target series alone:
+        - information_structure: "monotonic" or "mixed"
+        - information_mass: medium
+        - directness_ratio: lower (mediated, not direct)
+        - routing: caution on directness / prefer richer state representation
+
+    Args:
+        n: Number of time steps.
+        direct_phi: AR(1) coefficient for the driver process.
+        mediation_strength: Coupling strength from driver to target at lag 2.
+        seed: Random seed for reproducibility. Must be int, not np.Generator.
+
+    Returns:
+        Tuple of (driver, target) 1-D numpy arrays, each of length n.
+    """
+    rng = np.random.default_rng(seed)
+    driver = np.zeros(n)
+    target = np.zeros(n)
+    for t in range(2, n):
+        driver[t] = direct_phi * driver[t - 1] + rng.standard_normal()
+        target[t] = mediation_strength * driver[t - 2] + 0.5 * target[t - 1] + rng.standard_normal()
+    return driver, target
+
+
+def generate_fingerprint_archetypes(
+    n: int = 1000,
+    *,
+    seed: int = 42,
+) -> dict[str, np.ndarray]:
+    """Generate the canonical univariate fingerprint archetype panel.
+
+    The helper centralizes the standard synthetic benchmark set used by
+    examples, tests, and documentation so the geometry-backed fingerprint story
+    is exercised on one deterministic panel.
+
+    Args:
+        n: Number of observations per series.
+        seed: Base integer seed used to derive the per-archetype generators.
+
+    Returns:
+        Mapping from archetype label to 1-D numpy array.
+    """
+    return {
+        "white_noise": generate_white_noise(n=n, seed=seed),
+        "ar1_monotonic": generate_ar1_monotonic(n=n, phi=0.85, seed=seed + 1),
+        "seasonal_periodic": generate_seasonal_periodic(
+            n=n,
+            period=12,
+            ar_phi=0.5,
+            seasonal_phi=0.8,
+            seed=seed + 2,
+        ),
+        "nonlinear_mixed": generate_nonlinear_mixed(
+            n=n,
+            phi=0.6,
+            nl_strength=0.8,
+            seed=seed + 3,
+        ),
+    }

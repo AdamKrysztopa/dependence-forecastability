@@ -68,11 +68,60 @@ Equivalent minimal files:
 - Python user: start with [examples/minimal_python.py](examples/minimal_python.py), then [docs/public_api.md](docs/public_api.md).
 - CLI user: run [examples/minimal_cli.sh](examples/minimal_cli.sh), then [docs/quickstart.md](docs/quickstart.md).
 - Notebook user: open the canonical notebook [notebooks/walkthroughs/00_air_passengers_showcase.ipynb](notebooks/walkthroughs/00_air_passengers_showcase.ipynb).
+- Fingerprint user: run [scripts/run_showcase_fingerprint.py](scripts/run_showcase_fingerprint.py), then open [notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb](notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb).
 - Maintainer/contributor: use [docs/maintenance/developer_guide.md](docs/maintenance/developer_guide.md).
 
 ## Canonical walkthrough
 
 The canonical notebook is [notebooks/walkthroughs/00_air_passengers_showcase.ipynb](notebooks/walkthroughs/00_air_passengers_showcase.ipynb).
+
+## V0.3.1 fingerprint showcase
+
+The v0.3.1 fingerprint surface is intentionally univariate-first and AMI-first.
+It packages AMI information geometry, the compact four-field fingerprint,
+deterministic family routing, and a strict agent-layer explanation that stays
+downstream of the deterministic outputs.
+
+Run the canonical showcase:
+
+```bash
+MPLBACKEND=Agg uv run scripts/run_showcase_fingerprint.py --smoke
+```
+
+Minimal Python entry:
+
+```python
+from forecastability import generate_fingerprint_archetypes, run_forecastability_fingerprint
+
+series = generate_fingerprint_archetypes(n=320, seed=42)["seasonal_periodic"]
+bundle = run_forecastability_fingerprint(
+    series,
+    target_name="seasonal_periodic",
+    max_lag=24,
+    n_surrogates=99,
+    random_state=42,
+)
+print(bundle.recommendation.primary_families)
+```
+
+Batch CSV entry:
+
+```bash
+uv run python scripts/run_ami_information_geometry_csv.py \
+  --input-csv outputs/examples/ami_geometry_csv/inputs/synthetic_fingerprint_panel.csv \
+  --output-root outputs/ami_geometry_csv_script \
+  --max-lag 24 \
+  --n-surrogates 99 \
+  --random-state 42
+```
+
+Primary fingerprint surfaces:
+
+- Script: [scripts/run_showcase_fingerprint.py](scripts/run_showcase_fingerprint.py)
+- Notebook: [notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb](notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb)
+- Theory: [docs/theory/forecastability_fingerprint.md](docs/theory/forecastability_fingerprint.md)
+- Code reference: [docs/code/fingerprint_showcase.md](docs/code/fingerprint_showcase.md)
+- Agent contract: [docs/agent_layer.md](docs/agent_layer.md)
 
 ## When to use it
 
@@ -82,6 +131,7 @@ Use this package when you need a deterministic pre-modeling screen to decide whe
 
 - Notebook: [notebooks/walkthroughs/00_air_passengers_showcase.ipynb](notebooks/walkthroughs/00_air_passengers_showcase.ipynb)
 - Notebook (covariant informative): [notebooks/walkthroughs/01_covariant_informative_showcase.ipynb](notebooks/walkthroughs/01_covariant_informative_showcase.ipynb)
+- Notebook (fingerprint showcase): [notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb](notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb)
 - Quickstart: [docs/quickstart.md](docs/quickstart.md)
 - PyPI: [dependence-forecastability](https://pypi.org/project/dependence-forecastability/)
 - Issues: [GitHub Issues](https://github.com/AdamKrysztopa/dependence-forecastability/issues)

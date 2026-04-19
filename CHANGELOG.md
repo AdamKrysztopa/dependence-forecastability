@@ -5,31 +5,58 @@ All notable changes to this project are documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+<!-- markdownlint-disable MD024 -->
+
+## [0.3.1] - 2026-04-19
+
+### Added
+
+- Geometry-backed fingerprint core for the v0.3.1 workflow: typed `AmiInformationGeometry` / `AmiGeometryCurvePoint` outputs, KSG-II + shuffle-surrogate AMI geometry service, and `signal_to_noise` as a first-class deterministic metric.
+- Canonical `generate_fingerprint_archetypes()` helper for the shared univariate synthetic panel used by fingerprint examples and tests.
+- Batch forecastability workbench surface: `run_batch_forecastability_workbench()`, typed next-step planning models, technical markdown output, and executive brief rendering for manager/product-owner workflows.
+
+### Changed
+
+- Refactored `run_forecastability_fingerprint()` to execute geometry first, build the fingerprint from corrected-profile outputs, and then route deterministically from the geometry-backed fingerprint.
+- Extended fingerprint summaries, agent payloads, and live-agent strict fallback so geometry, fingerprint, and routing fields stay aligned across typed objects, markdown/JSON output, and agent-facing contracts.
+- Added a batch example that runs triage, fingerprint routing, and deterministic A1/A3 agent handoff together from the shared synthetic panel.
+- Updated theory/public API/quickstart/agent-layer docs to describe the geometry-backed fingerprint semantics and the new batch forecasting workbench.
+- Clarified geometry horizon resolution semantics so explicit `max_horizon` is authoritative and `max_lag_frac` is only a fallback when explicit cap is absent.
+- Extended `run_forecastability_fingerprint()` summary output with `evaluated_max_horizon` to distinguish requested lag cap from evaluated horizon count.
+
+### Fixed
+
+- Enforced directness-ratio range validation (`[0, 1]`, finite only) at both use-case and fingerprint-service entry seams to keep routing-threshold assumptions consistent.
+- Added deterministic acceptance-mask algebra tests to lock strict `I_c(h) > m * tau(h)` behavior and prevent threshold-regression drift.
 
 ## [0.3.0] - 2026-04-17
 
 ### Added
+
 - First-class covariant analysis facade in the stable package surface via `run_covariant_analysis` and covariant result models (`CovariantAnalysisBundle`, `CovariantSummaryRow`, `TransferEntropyResult`, `GcmiResult`, `CausalGraphResult`, `PcmciAmiResult`, `Phase0MiScore`).
 - Unified covariant summary-table workflow covering `cross_ami`, `cross_pami`, `te`, `gcmi`, and optional causal methods (`pcmci`, `pcmci_ami`) with conditioning-scope metadata.
 - Covariant showcase and walkthrough documentation path for benchmark-driven method comparison and interpretation.
 
 ### Changed
+
 - README updated to present univariate triage and covariant-informative analysis as parallel first-class workflows.
 - Public API and quickstart docs refreshed for v0.3.0 covariant entry points, method tokens, and optional causal install path.
 - CI/release docs alignment extended for v0.3.0 covariant validation expectations.
 
 ### Fixed
+
 - Replaced docs badge that relied on a missing GitHub Pages deployment environment with a stable in-repo docs badge.
 - Replaced single-paper "based on" badge language with repository-consistent multi-paper plus original-method wording.
 
 ### Migration notes
+
 - No breaking import changes for existing univariate triage integrations.
 - Integrators can adopt covariant workflows incrementally through `run_covariant_analysis` without changing existing `run_triage` usage.
 
 ## [0.2.0] - 2026-04-14
 
 ### Changed
+
 - Major source layout cleanup (hexagonal architecture preserved)
 - Examples/scripts/notebooks reorganized and de-duplicated
 - Full documentation sync with current code
@@ -43,7 +70,7 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 First PyPI release: `pip install dependence-forecastability` (distribution name `dependence-forecastability`; import namespace `forecastability` is unchanged).
 
 | Surface | Support status |
-|---|---|
+| --- | --- |
 | Deterministic core (`run_triage`, `run_batch_triage`, `ForecastabilityAnalyzer`, scorers) | **Stable** — primary public API |
 | CLI (`forecastability triage`, `forecastability list-scorers`) | Supported |
 | Dashboard (`forecastability-dashboard`) | Supported (optional) |
@@ -55,6 +82,7 @@ pAMI and all F1–F9 diagnostics are project extensions, not paper-native guaran
 F5 (Largest Lyapunov Exponent) is gated behind `experimental: true` and excluded from composite triage scores.
 
 ### Added
+
 - Core AMI and pAMI forecastability analysis package with horizon-specific dependence curves and surrogate significance bands.
 - Canonical and benchmark execution scripts with report artifact generation.
 - Deterministic interpretation pipeline with Pattern A-E classification and recommendation outputs.
@@ -78,6 +106,7 @@ F5 (Largest Lyapunov Exponent) is gated behind `experimental: true` and excluded
 - Release documentation: repeatable release checklist, v0.1.0 user-facing release notes, and PyPI publication flow guide.
 
 ### Changed
+
 - Established the initial project baseline around paper-aligned AMI plus project-extension pAMI workflows.
 - `run_triage()` output now includes forecastability profile, theoretical limit diagnostics, and (when enabled) spectral/entropy/learning-curve diagnostics.
 - `TriageResult` model extended with optional diagnostic fields for F1-F6 outputs.
@@ -86,14 +115,18 @@ F5 (Largest Lyapunov Exponent) is gated behind `experimental: true` and excluded
 - `ExogenousScreeningWorkbenchConfig` extended with `redundancy_alpha` parameter.
 
 ### Fixed
+
 - No fixes in the initial release.
 
 ### Deprecated
+
 - No deprecations in the initial release.
 
 ### Removed
+
 - No removals in the initial release.
 
 ### Migration notes
+
 - No migration required for v0.1.0.
 - Upgrade notes: [docs/releases/v0.1.0.md](docs/releases/v0.1.0.md)

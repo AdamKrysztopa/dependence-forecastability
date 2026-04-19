@@ -1,0 +1,5 @@
+{
+  "case": "single_early_peak_monotonic",
+  "expected_classifier_used_tiebreak": 1,
+  "notes": "Crafted profile with one dominant early peak should trigger monotonic tie-break metadata."
+}
