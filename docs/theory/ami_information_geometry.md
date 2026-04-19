@@ -83,7 +83,7 @@ The geometry layer classifies the corrected profile into:
 Rules:
 
 1. `none` if `signal_to_noise` is below the configured null threshold or if no
-   horizons satisfy `I_c(h) > 3tau(h)`.
+   horizons satisfy `I_c(h) > 3 * tau(h)`.
 2. `periodic` if accepted repeated peaks survive the corrected-profile
    prominence and spacing checks.
 3. `monotonic` if no qualifying repeated peaks remain and the signal decays in

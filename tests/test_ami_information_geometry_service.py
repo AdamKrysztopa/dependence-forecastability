@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import numpy as np
 import pytest
 
+from forecastability.services import ami_information_geometry_service as geometry_service
 from forecastability.services.ami_information_geometry_service import (
     AmiInformationGeometryConfig,
     compute_ami_information_geometry,
@@ -89,3 +91,45 @@ def test_short_series_rejected_at_geometry_min_n() -> None:
             config=AmiInformationGeometryConfig(n_surrogates=99, min_n=80, max_horizon=12),
             random_state=0,
         )
+
+
+def test_corrected_profile_clamps_negative_values_to_zero(monkeypatch: pytest.MonkeyPatch) -> None:
+    """When raw AMI drops below surrogate bias, corrected AMI should floor at zero."""
+
+    def fake_raw_profile(
+        series: np.ndarray,
+        *,
+        max_horizon: int,
+        config: AmiInformationGeometryConfig,
+        random_state: int,
+    ) -> tuple[np.ndarray, np.ndarray]:
+        del series, config, random_state
+        assert max_horizon == 2
+        return np.array([0.05, 0.30]), np.array([True, True])
+
+    def fake_shuffle_matrix(
+        series: np.ndarray,
+        *,
+        max_horizon: int,
+        config: AmiInformationGeometryConfig,
+        random_state: int,
+    ) -> np.ndarray:
+        del series, config, random_state
+        assert max_horizon == 2
+        return np.tile(np.array([0.10, 0.05]), (99, 1))
+
+    monkeypatch.setattr(geometry_service, "_compute_raw_profile", fake_raw_profile)
+    monkeypatch.setattr(geometry_service, "_compute_shuffle_matrix", fake_shuffle_matrix)
+
+    series = np.linspace(-1.0, 1.0, 120)
+    geometry = compute_ami_information_geometry(
+        series,
+        config=AmiInformationGeometryConfig(min_n=80, n_surrogates=99, max_horizon=2),
+        random_state=123,
+    )
+
+    first_point = geometry.curve[0]
+    assert first_point.valid is True
+    assert first_point.ami_corrected == pytest.approx(0.0)
+    assert first_point.accepted is False
+    assert 0.0 <= geometry.signal_to_noise <= 1.0

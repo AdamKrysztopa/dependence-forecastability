@@ -155,6 +155,29 @@ bundle and must remain verifiable against it.
 > AMI-first. It does not claim multivariate or conditional-MI routing semantics,
 > and it does not identify one true optimal model.
 
+## Curated Routing-Quality Sanity Panel (v0.3.1)
+
+This lightweight panel is the v0.3.1 closure check for routing quality. It is a
+sanity check of broad family direction, not a benchmark calibration study.
+
+| Case ID | Curated panel series | Expected broad family tags | Mismatch note semantics |
+|---|---|---|---|
+| RQP-01 | `white_noise` archetype | `naive`, `baseline` | Record only if a structured family is ranked above baseline; mark as over-ambitious routing. |
+| RQP-02 | `ar1_monotonic` archetype | `ar`, `compact-linear` | Record if primary route excludes compact linear families; mark as under-sensitive to monotonic decay. |
+| RQP-03 | `seasonal_periodic` archetype | `seasonal_naive`, `seasonal_linear` | Record if periodic routes are absent; mark as seasonal-structure miss. |
+| RQP-04 | `nonlinear_mixed` archetype | `nonlinear`, `tree-or-kernel` | Record if nonlinear families are absent from primary or secondary routes; mark as nonlinear under-routing. |
+| RQP-05 | `mediated_directness_drop` archetype | `compact`, `regularized` | Record if routes over-prioritize high-capacity nonlinear families without caution flags; mark as mediation misread. |
+
+Panel rules:
+
+- Keep expectations at broad family level only; do not require one exact model.
+- Capture mismatches explicitly in docs or release notes as `expected_tag`,
+    `observed_primary`, `observed_secondary`, and `mismatch_note`.
+- Do not smooth away disagreement: a mismatch is a release-note input, not a
+    post-hoc relabel.
+- Treat this as a v0.3.1 guardrail. Calibration depth and empirical hardening
+    remain deferred to v0.3.4.
+
 ## Regression Guardrails (v0.3.1 Phase 3)
 
 The fingerprint stack now ships with frozen regression fixtures so policy and

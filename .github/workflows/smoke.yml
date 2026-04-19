@@ -50,6 +50,9 @@ jobs:
       - name: Run fingerprint showcase
         run: uv run scripts/run_showcase_fingerprint.py --smoke --quiet
 
+      - name: Smoke CSV geometry adapter CLI wiring
+        run: uv run scripts/run_ami_information_geometry_csv.py --help
+
       - name: Upload showcase artifacts
         uses: actions/upload-artifact@v7
         with:

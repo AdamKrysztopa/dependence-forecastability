@@ -77,7 +77,7 @@ of the main `0.3.1` release.
 ### Planning principles
 
 | Principle | Implication |
-|---|---|
+| --- | --- |
 | Additive, not disruptive | Stable public univariate/covariant imports remain valid |
 | Preserve `0.3.1` identity | `information_mass`, `information_horizon`, `information_structure`, and `nonlinear_share` remain the main public fingerprint fields |
 | Information Geometry is an engine, not a replacement | Dr. Catt's AMI geometry methods become a service layer beneath fingerprint construction |
@@ -122,20 +122,18 @@ Required reviewer-visible outcomes:
 
 Reviewer comment / source crosswalk for this update:
 
-- comment 2 (`Catt alignment`) → this block, §5.3, §9
-- comment 3 (thresholding / significance semantics) → §2.2, §2.4, §2.5,
-  Phase 1 acceptance criteria, Phase 3 threshold tests
-- comment 4 (`information_structure` classifier rules) → §2.6, Phase 1
-  acceptance criteria, Phase 3 classifier tests
-- comment 5 (no-overclaim routing rule) → §2.9, §8, §9
-- comment 6 (routing-quality validation task) → V3_1-F06.2, §9
-- comment 7 (`nonlinear_share` calibration) → §2.7, §6.2, Phase 3 tests
-- comment 8 (routing confidence semantics) → §2.9, V3_1-F03, V3_1-F03a
-- comment 9 (mandatory public-surface examples) → V3_1-F05, V3_1-F08, V3_1-D01, §9
-- comment 10 (univariate-first scope boundary) → planning principles, V3_1-D02,
-  §8, §9
-- Dr. Catt working note (`AMI Information Geometry`) → §1, §2.2-§2.7,
-  V3_1-F01a, V3_1-F01b, V3_1-F02a, V3_1-F03a, §11
+| Reviewer comment | Requirement focus | Traceability target(s) | Status |
+| --- | --- | --- | --- |
+| 2 | Catt alignment | this block, §5.3, §9 | Done |
+| 3 | thresholding / significance semantics | §2.2, §2.4, §2.5, Phase 1 acceptance criteria, Phase 3 threshold tests | Done |
+| 4 | `information_structure` classifier rules | §2.6, Phase 1 acceptance criteria, Phase 3 classifier tests | Done |
+| 5 | no-overclaim routing rule | §2.9, §8, §9 | Done |
+| 6 | routing-quality validation task | V3_1-F06.2, `docs/theory/forecastability_fingerprint.md` (curated panel note), §9 | Done |
+| 7 | `nonlinear_share` calibration | §2.7, §6.2, Phase 3 tests | Done |
+| 8 | routing confidence semantics | §2.9, V3_1-F03, V3_1-F03a | Done |
+| 9 | mandatory public-surface examples | V3_1-F05, V3_1-F08, V3_1-D01, §9 | Done |
+| 10 | univariate-first scope boundary | planning principles, V3_1-D02, §8, §9 | Done |
+| Dr. Catt working note | AMI Information Geometry alignment | §1, §2.2-§2.7, V3_1-F01a, V3_1-F01b, V3_1-F02a, V3_1-F03a, §11 | Done |
 
 ---
 
@@ -352,7 +350,7 @@ The goal remains the same: route toward **model families**, not one exact winner
 Updated mapping policy:
 
 | Fingerprint / geometry pattern | Recommended families |
-|---|---|
+| --- | --- |
 | low mass, low signal-to-noise, `none` | naïve, seasonal naïve, stop / downscope effort |
 | high mass, monotonic, low nonlinear share, high directness | ARIMA / ETS / linear state-space / dynamic regression |
 | high mass, periodic | seasonal naïve / harmonic regression / TBATS / seasonal state-space |
@@ -406,7 +404,7 @@ Required `0.3.1` agent-layer semantics:
 ## 3. Repo baseline — what already exists
 
 | Layer | Module | What it provides | Status |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **Scorers** | `src/forecastability/metrics/scorers.py` | dependence scorers and registry pattern | Stable |
 | **Services** | `src/forecastability/services/forecastability_profile_service.py` | profile-oriented interpretation surface | Stable |
 | **Services** | `src/forecastability/services/recommendation_service.py` | recommendation/routing precedent | Stable |
@@ -424,7 +422,7 @@ Required `0.3.1` agent-layer semantics:
 ## 4. Feature inventory and overlap assessment
 
 | ID | Feature | Phase | Overlap with existing | Genuine new work | Status |
-|---|---|---:|---|---|---|
+| --- | --- | ---: | --- | --- | --- |
 | V3_1-F00 | Typed fingerprint result models | 0 | Extends `utils/types.py` patterns | `ForecastabilityFingerprint`, `RoutingRecommendation`, `FingerprintBundle` | ✅ **Done** (geometry-aligned) |
 | V3_1-F00.1 | Synthetic fingerprint archetype generators | 0 | Extends `utils/synthetic.py` | `generate_white_noise`, `generate_ar1_monotonic`, `generate_seasonal_periodic`, `generate_nonlinear_mixed`, `generate_mediated_directness_drop` | ✅ **Done** |
 | V3_1-F01 | Linear Gaussian-information baseline | 1 | Reuses Pearson / autocorrelation logic | per-horizon `I_G(h)` service with stable clipping and aggregation | ✅ **Done** |
@@ -450,6 +448,7 @@ Required `0.3.1` agent-layer semantics:
 | V3_1-D02 | Theory docs | 5 | New or split theory pages | fingerprint definitions, geometry semantics, and routing semantics | ✅ **Done** |
 | V3_1-D03 | Changelog + migration note | 5 | Release docs | additive feature surface and policy notes | ✅ **Done** |
 | V3_1-CI-01 | Routing smoke test in CI | 6 | Extends smoke workflow | import + run on canonical synthetic panel | ✅ **Done** (2026-04-19: `.github/workflows/smoke.yml` now runs `scripts/run_showcase_fingerprint.py --smoke --quiet`.) |
+| V3_1-CI-01a | CSV geometry adapter smoke follow-through | 6 | Extends smoke/script checks | add lightweight CI-safe invocation for `run_ami_information_geometry_csv.py` | ✅ **Done** (2026-04-19: `.github/workflows/smoke.yml` now runs `uv run scripts/run_ami_information_geometry_csv.py --help` in the smoke job as `Smoke CSV geometry adapter CLI wiring`.) |
 | V3_1-CI-02 | Notebook contract extension | 6 | Extends notebook contract checks | fingerprint notebook included | ✅ **Done** (2026-04-19: `scripts/check_notebook_contract.py` now tracks the fingerprint notebook and runs a representative fingerprint-to-showcase-reporting integration call.) |
 | V3_1-CI-03 | Release checklist update | 6 | Extends release template | geometry + routing + fingerprint checks | ✅ **Done** (2026-04-19: release checklist now includes the fingerprint showcase command as a release gate.) |
 
@@ -611,12 +610,12 @@ Create a deterministic benchmark generator module for four canonical classes:
 
 Optional fifth class for stronger mediated structure:
 
-5. `mediated_directness_drop`
+1. `mediated_directness_drop`
 
 ### 6.2. Expected fingerprint behavior
 
 | Series archetype | Expected structure | Expected mass | Expected nonlinear share | Expected signal-to-noise | Expected routing |
-|---|---|---|---|---|---|
+| --- | --- | --- | --- | --- | --- |
 | white noise | `none` | low | low | low | naïve / downscope |
 | AR(1) | `monotonic` | medium/high | low | medium/high | ARIMA / ETS |
 | seasonal | `periodic` | medium/high | low/medium | medium/high | seasonal families |
@@ -658,12 +657,12 @@ Calibration / sanity-check expectations:
 
 #### V3_1-F00 — Typed fingerprint result models
 
-**File targets**
+##### V3_1-F00 File targets
 
 - `src/forecastability/utils/types.py`
 - export surfaces if applicable
 
-**Acceptance criteria**
+##### V3_1-F00 Acceptance criteria
 
 - frozen typed models added
 - JSON serialization is stable
@@ -671,12 +670,12 @@ Calibration / sanity-check expectations:
 
 #### V3_1-F00.1 — Synthetic fingerprint archetype generators
 
-**File targets**
+##### V3_1-F00.1 File targets
 
 - `src/forecastability/utils/synthetic.py` or dedicated companion module
 - tests + example helpers
 
-**Acceptance criteria**
+##### V3_1-F00.1 Acceptance criteria
 
 - deterministic by seed
 - benchmark families documented and reusable
@@ -690,14 +689,16 @@ Calibration / sanity-check expectations:
 
 #### V3_1-F01 — Linear Gaussian-information baseline
 
-**Goal.** Compute a per-horizon linear benchmark.
+##### V3_1-F01 Goal
 
-**File targets**
+Compute a per-horizon linear benchmark.
+
+##### V3_1-F01 File targets
 
 - `src/forecastability/services/linear_information_service.py`
 - tests
 
-**Acceptance criteria**
+##### V3_1-F01 Acceptance criteria
 
 - uses autocorrelation / Pearson-derived information proxy
 - clips safely near `|rho| = 1`
@@ -706,14 +707,16 @@ Calibration / sanity-check expectations:
 
 #### V3_1-F01a — AMI Information Geometry engine
 
-**Goal.** Compute robust corrected AMI profiles and geometry summaries.
+##### V3_1-F01a Goal
 
-**File targets**
+Compute robust corrected AMI profiles and geometry summaries.
+
+##### V3_1-F01a File targets
 
 - `src/forecastability/services/ami_information_geometry_service.py` — new
 - tests
 
-**Acceptance criteria**
+##### V3_1-F01a Acceptance criteria
 
 - KSG-II estimator implemented in reusable service form
 - uses median over configurable `k_list`
@@ -730,14 +733,16 @@ Calibration / sanity-check expectations:
 
 #### V3_1-F01b — Geometry result and configuration models
 
-**Goal.** Provide versioned threshold and configuration contracts.
+##### V3_1-F01b Goal
 
-**File targets**
+Provide versioned threshold and configuration contracts.
+
+##### V3_1-F01b File targets
 
 - `src/forecastability/services/ami_information_geometry_service.py`
 - `src/forecastability/utils/types.py`
 
-**Acceptance criteria**
+##### V3_1-F01b Acceptance criteria
 
 - versioned configuration object exists
 - includes defaults aligned to the working note for `k_list`, `n_surrogates`,
@@ -747,27 +752,31 @@ Calibration / sanity-check expectations:
 
 #### V3_1-F02 — Fingerprint builder service
 
-**Goal.** Preserve the completed initial fingerprint builder as the base refactor target.
+##### V3_1-F02 Goal
 
-**File targets**
+Preserve the completed initial fingerprint builder as the base refactor target.
+
+##### V3_1-F02 File targets
 
 - `src/forecastability/services/fingerprint_service.py`
 
-**Acceptance criteria**
+##### V3_1-F02 Acceptance criteria
 
 - the pre-geometry implementation remains referenceable for the refactor diff
 - no one treats the pre-geometry semantics as sufficient for release sign-off
 
 #### V3_1-F02a — Geometry-backed fingerprint refactor
 
-**Goal.** Rebuild the fingerprint from geometry + profile outputs.
+##### V3_1-F02a Goal
 
-**File targets**
+Rebuild the fingerprint from geometry + profile outputs.
+
+##### V3_1-F02a File targets
 
 - `src/forecastability/services/fingerprint_service.py`
 - tests
 
-**Acceptance criteria**
+##### V3_1-F02a Acceptance criteria
 
 - computes `information_mass` from corrected AMI over accepted horizons
 - carries forward canonical `information_horizon`
@@ -780,26 +789,30 @@ Calibration / sanity-check expectations:
 
 #### V3_1-F03 — Routing policy service
 
-**Goal.** Preserve the completed initial routing service as the base refactor target.
+##### V3_1-F03 Goal
 
-**File targets**
+Preserve the completed initial routing service as the base refactor target.
+
+##### V3_1-F03 File targets
 
 - `src/forecastability/services/routing_policy_service.py`
 
-**Acceptance criteria**
+##### V3_1-F03 Acceptance criteria
 
 - the pre-geometry implementation remains referenceable for the refactor diff
 
 #### V3_1-F03a — Geometry-aware routing refactor
 
-**Goal.** Map fingerprint + geometry quality to model families.
+##### V3_1-F03a Goal
 
-**File targets**
+Map fingerprint + geometry quality to model families.
+
+##### V3_1-F03a File targets
 
 - `src/forecastability/services/routing_policy_service.py`
 - tests
 
-**Acceptance criteria**
+##### V3_1-F03a Acceptance criteria
 
 - explicit, versioned bucket rules
 - returns primary + secondary families
@@ -818,27 +831,31 @@ Calibration / sanity-check expectations:
 
 #### V3_1-F04 — Forecastability fingerprint use case
 
-**Goal.** Preserve the completed initial orchestration function as the base refactor target.
+##### V3_1-F04 Goal
 
-**File targets**
+Preserve the completed initial orchestration function as the base refactor target.
+
+##### V3_1-F04 File targets
 
 - `src/forecastability/use_cases/run_forecastability_fingerprint.py`
 
-**Acceptance criteria**
+##### V3_1-F04 Acceptance criteria
 
 - the pre-geometry implementation remains referenceable for the refactor diff
 
 #### V3_1-F04a — Geometry-first use-case refactor
 
-**Goal.** Rewire the public use case around geometry-first deterministic execution.
+##### V3_1-F04a Goal
 
-**File targets**
+Rewire the public use case around geometry-first deterministic execution.
+
+##### V3_1-F04a File targets
 
 - `src/forecastability/use_cases/run_forecastability_fingerprint.py`
 - optional additive export surface
 - optional integration hook in existing triage/use-case bundles
 
-**Acceptance criteria**
+##### V3_1-F04a Acceptance criteria
 
 - accepts series plus existing AMI/profile settings
 - returns `FingerprintBundle`
@@ -847,29 +864,33 @@ Calibration / sanity-check expectations:
 
 #### V3_1-F05 — Unified summary rendering
 
-**Goal.** Preserve the completed initial rendering surface as the base refactor target.
+##### V3_1-F05 Goal
 
-**File targets**
+Preserve the completed initial rendering surface as the base refactor target.
+
+##### V3_1-F05 File targets
 
 - reporting helper / markdown rendering utilities
 - CLI / JSON summary adapter integration
 - example JSON artifact builder
 
-**Acceptance criteria**
+##### V3_1-F05 Acceptance criteria
 
 - the pre-geometry rendering surface remains referenceable for the refactor diff
 
 #### V3_1-F05a — Geometry surfacing refactor
 
-**Goal.** Make the output easy to consume in scripts, agents, docs, and batch adapters.
+##### V3_1-F05a Goal
 
-**File targets**
+Make the output easy to consume in scripts, agents, docs, and batch adapters.
+
+##### V3_1-F05a File targets
 
 - reporting helper / markdown rendering utilities
 - CLI / JSON summary adapter integration
 - example JSON artifact builder
 
-**Acceptance criteria**
+##### V3_1-F05a Acceptance criteria
 
 - fingerprint summary is visible in one compact object
 - geometry summary is visible in the same output family
@@ -879,15 +900,17 @@ Calibration / sanity-check expectations:
 
 #### V3_1-F05.1 — Agent-ready fingerprint adapters
 
-**Goal.** Make the fingerprint bundle directly consumable by agent and MCP surfaces.
+##### V3_1-F05.1 Goal
 
-**File targets**
+Make the fingerprint bundle directly consumable by agent and MCP surfaces.
+
+##### V3_1-F05.1 File targets
 
 - `src/forecastability/adapters/agents/fingerprint_agent_payload_models.py` — new
 - `src/forecastability/adapters/agents/fingerprint_summary_serializer.py` — new
 - `src/forecastability/adapters/agents/fingerprint_agent_interpretation_adapter.py` — new
 
-**Acceptance criteria**
+##### V3_1-F05.1 Acceptance criteria
 
 - A1 payload models expose the same four fingerprint fields plus geometry outputs,
   routing, confidence, caution flags, and rationale
@@ -900,14 +923,16 @@ Calibration / sanity-check expectations:
 
 #### V3_1-F05.2 — Optional live fingerprint agent
 
-**Goal.** Add a thin live narration/orchestration surface without moving any science into the LLM.
+##### V3_1-F05.2 Goal
 
-**File targets**
+Add a thin live narration/orchestration surface without moving any science into the LLM.
+
+##### V3_1-F05.2 File targets
 
 - `src/forecastability/adapters/llm/fingerprint_agent.py` — new
 - tests if this live path ships in `0.3.1`
 
-**Acceptance criteria**
+##### V3_1-F05.2 Acceptance criteria
 
 - the live adapter calls `run_forecastability_fingerprint()` or consumes the
   A1/A2 payload rather than recomputing metrics
@@ -919,14 +944,16 @@ Calibration / sanity-check expectations:
 
 #### V3_1-F05b — CSV batch geometry adapter
 
-**Goal.** Preserve the useful shape of Dr. Catt's prototype script without polluting domain services.
+##### V3_1-F05b Goal
 
-**File targets**
+Preserve the useful shape of Dr. Catt's prototype script without polluting domain services.
+
+##### V3_1-F05b File targets
 
 - `src/forecastability/adapters/csv/ami_geometry_csv_runner.py` — new
 - `scripts/run_ami_information_geometry_csv.py` — new
 
-**Acceptance criteria**
+##### V3_1-F05b Acceptance criteria
 
 - reads CSV with one series per column
 - drops NaNs column-wise
@@ -944,7 +971,7 @@ Calibration / sanity-check expectations:
 
 #### V3_1-F06 — Fingerprint tests
 
-**Required test classes**
+##### V3_1-F06 Required test classes
 
 - `test_information_horizon_zero_when_no_signal`
 - `test_monotonic_structure_on_ar1`
@@ -959,7 +986,7 @@ Calibration / sanity-check expectations:
 - `test_fingerprint_agent_interpretation_preserves_route_and_confidence`
 - `test_live_fingerprint_agent_strict_mode_returns_deterministic_payload`
 
-**Acceptance criteria**
+##### V3_1-F06 Acceptance criteria
 
 - deterministic by seed
 - no fragile exact floating-point thresholds without tolerance
@@ -971,9 +998,11 @@ Calibration / sanity-check expectations:
 
 #### V3_1-F06a — Geometry regression and boundary fixtures
 
-**Goal.** Freeze representative geometry outputs and boundary behavior for canonical examples.
+##### V3_1-F06a Goal
 
-**Acceptance criteria**
+Freeze representative geometry outputs and boundary behavior for canonical examples.
+
+##### V3_1-F06a Acceptance criteria
 
 - fixture rebuild script exists
 - drift is visible in CI
@@ -986,9 +1015,11 @@ Calibration / sanity-check expectations:
 
 #### V3_1-F06.2 — Small curated routing-quality panel
 
-**Goal.** Sanity-check routing quality on a small curated real or semi-real panel.
+##### V3_1-F06.2 Goal
 
-**Acceptance criteria**
+Sanity-check routing quality on a small curated real or semi-real panel.
+
+##### V3_1-F06.2 Acceptance criteria
 
 - at least a small curated panel of real or semi-real series is evaluated before release
 - expected broad family tags are documented for each case
@@ -1004,11 +1035,11 @@ Calibration / sanity-check expectations:
 
 #### V3_1-F07 — Showcase script
 
-**File targets**
+##### V3_1-F07 File targets
 
 - `scripts/run_showcase_fingerprint.py` — new
 
-**Acceptance criteria**
+##### V3_1-F07 Acceptance criteria
 
 - runs four canonical series
 - emits fingerprint + geometry JSON / markdown / figures
@@ -1016,11 +1047,11 @@ Calibration / sanity-check expectations:
 
 #### V3_1-F07.1 — Walkthrough notebook
 
-**File targets**
+##### V3_1-F07.1 File targets
 
 - `notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb`
 
-**Acceptance criteria**
+##### V3_1-F07.1 Acceptance criteria
 
 - explains the fingerprint concept
 - explains the Information Geometry engine concept
@@ -1037,15 +1068,17 @@ Calibration / sanity-check expectations:
 
 #### V3_1-F08 — Public examples and notebook extensions
 
-**Goal.** Create or extend example and notebook artifacts beyond the canonical showcase.
+##### V3_1-F08 Goal
 
-**File targets**
+Create or extend example and notebook artifacts beyond the canonical showcase.
+
+##### V3_1-F08 File targets
 
 - `examples/` additions or refresh for fingerprint-facing usage
 - `notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb`
 - optional extension or cross-link in existing walkthrough / quickstart notebooks
 
-**Acceptance criteria**
+##### V3_1-F08 Acceptance criteria
 
 - at least one minimal Python example exists in `examples/` or the repo's equivalent
   example surface
@@ -1059,15 +1092,17 @@ Calibration / sanity-check expectations:
 
 #### V3_1-F08.1 — Agent demos and cross-links
 
-**Goal.** Make the new fingerprint layer discoverable to agent-oriented users as well.
+##### V3_1-F08.1 Goal
 
-**File targets**
+Make the new fingerprint layer discoverable to agent-oriented users as well.
+
+##### V3_1-F08.1 File targets
 
 - `examples/univariate/agents/fingerprint_agent_payload_demo.py` — new
 - optional `examples/univariate/agents/fingerprint_live_agent_demo.py` — new
 - cross-links from docs and notebook surfaces as appropriate
 
-**Acceptance criteria**
+##### V3_1-F08.1 Acceptance criteria
 
 - at least one strict deterministic agent-payload demo exists and emits stable artifacts
 - if a live demo is shipped, it is clearly marked experimental and optional
@@ -1092,7 +1127,7 @@ These examples are required release artifacts, not optional nice-to-haves.
 
 #### V3_1-D02 — Theory doc
 
-**File targets**
+##### V3_1-D02 File targets
 
 - `docs/theory/forecastability_fingerprint.md`
 - optional split companion:
@@ -1139,7 +1174,7 @@ and the new public example / notebook surfaces.
 
 - add geometry artifact / fixture / docs checks
 
-**Acceptance criteria**
+##### V3_1-CI-03 Acceptance criteria
 
 - smoke path completes on CI-supported Python versions
 - notebook contract passes
@@ -1175,7 +1210,7 @@ Scope statement for reviewers:
 
 ## 9. Exit criteria
 
-- [ ] Every retained base `0.3.1` ticket needed for public release is either **Done** or explicitly **Deferred** in §4.
+- [x] Every retained base `0.3.1` ticket needed for public release is either **Done** or explicitly **Deferred** in §4.
 - [x] Refactor / geometry items `V3_1-F01a`, `V3_1-F01b`, `V3_1-F02a`, `V3_1-F03a`, `V3_1-F04a`, `V3_1-F05a`, `V3_1-F05b`, and `V3_1-F06a` are **Done** or explicitly **Deferred** with justification.
 - [x] Every ticket V3_1-D01 through V3_1-D03 is **Done** before CI / release sign-off.
 - [x] Every ticket V3_1-CI-01 through V3_1-CI-03 is **Done**.
@@ -1189,13 +1224,13 @@ Scope statement for reviewers:
 - [x] Notebook surfaces are created or extended beyond the single showcase and are cross-linked from docs.
 - [x] At least one regression fixture protects geometry behavior from silent drift.
 - [x] At least one regression fixture protects routing behavior from silent drift.
-- [ ] A small curated real or semi-real routing-quality panel is run and mismatches are documented.
+- [x] A small curated real or semi-real routing-quality panel is run and mismatches are documented.
 - [x] README / quickstart includes one Python example, one CLI example, and one batch CSV geometry example.
 - [x] Agent-ready payload surfaces expose the same four fingerprint fields plus geometry, routing, confidence, and cautions.
 - [x] No agent adapter or live narration path overrides deterministic fingerprint, geometry, or routing outputs.
 - [x] The release docs state that `0.3.1` is univariate-first / AMI-first and does not include multivariate or conditional-MI extensions.
-- [ ] Reviewer comments 2-10 are each traceable to concrete sections in the plan or explicitly deferred.
-- [ ] No doc, notebook, or bundle string claims the package selects the one true optimal model.
+- [x] Reviewer comments 2-10 are each traceable to concrete sections in the plan or explicitly deferred.
+- [x] No doc, notebook, or bundle string claims the package selects the one true optimal model.
 
 ---
 
@@ -1215,7 +1250,6 @@ Scope statement for reviewers:
 11. Examples + docs + changelog
 12. CI + release hygiene
 ```
-
 
 ---
 
@@ -1264,7 +1298,7 @@ flowchart TD
 ### 11.2. File map — concrete target placement
 
 | Layer | New / updated file | Purpose |
-|---|---|---|
+| --- | --- | --- |
 | Utils | `src/forecastability/utils/types.py` | typed fingerprint + geometry + routing outputs |
 | Utils | `src/forecastability/utils/synthetic.py` | deterministic archetypal series for geometry / routing validation |
 | Services | `src/forecastability/services/ami_information_geometry_service.py` | KSG-II AMI + surrogate correction + geometry summaries |
@@ -1309,7 +1343,7 @@ flowchart TD
 > No LLM concern may leak inward past the adapter boundary.
 
 | Ring | Files | Responsibility | Must not do |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Domain core | `utils/types.py`, `services/ami_information_geometry_service.py`, `services/fingerprint_service.py`, `services/routing_policy_service.py`, `services/linear_information_service.py` | compute geometry, fingerprint semantics, and deterministic routing | import adapter code, prompt code, provider SDKs, or notebook helpers |
 | Application / use case | `use_cases/run_forecastability_fingerprint.py` plus optional `use_cases/requests.py` / `responses.py` seams | orchestrate deterministic services into one typed bundle | own prompt templates, serialisation, or provider-specific logic |
 | Deterministic adapter ring | `adapters/rendering/fingerprint_rendering.py`, `adapters/csv/ami_geometry_csv_runner.py`, `adapters/agents/fingerprint_agent_payload_models.py`, `adapters/agents/fingerprint_summary_serializer.py`, `adapters/agents/fingerprint_agent_interpretation_adapter.py` | transform typed results into stable transport / presentation shapes | recompute AMI, route families, or tune thresholds |
@@ -1450,10 +1484,10 @@ def generate_fingerprint_archetypes(
     }
 ```
 
-**Expected fingerprint stories**
+#### Expected fingerprint stories
 
 | Archetype | Expected structure | Expected mass | Expected nonlinear share | Expected route |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | `white_noise` | `none` | near zero | near zero | `naive` / `downscope` |
 | `ar1_monotonic` | `monotonic` | low-to-medium | low | linear families |
 | `seasonal_periodic` | `periodic` | medium-to-high | low | seasonal families |
@@ -1569,7 +1603,7 @@ def compute_linear_information_curve(
     return LinearInformationCurve(points=points)
 ```
 
-**Acceptance details beyond the main plan**
+#### Acceptance details beyond the main plan
 
 - uses Pearson/autocorrelation-derived information proxy only
 - clips safely near `|rho| = 1`
@@ -1912,7 +1946,7 @@ def build_routing_recommendation(
     )
 ```
 
-**Mandatory wording rule for every output surface**
+#### Mandatory wording rule for every output surface
 
 - “Recommended families” is allowed
 - “Suggested starting families” is allowed
@@ -2095,7 +2129,7 @@ Required A1 / A2 / A3 rules:
 - LLM/provider imports remain confined to `adapters/llm/`; A1/A2/A3 stay pure
   deterministic adapters with no network/runtime provider dependency
 
-**Stable JSON example expected in docs and tests**
+#### Stable JSON example expected in docs and tests
 
 ```json
 {
@@ -2272,7 +2306,7 @@ if __name__ == "__main__":
     main()
 ```
 
-**Required showcase artifacts**
+#### Required showcase artifacts
 
 - one JSON artifact per canonical series
 - one markdown summary table for docs/screenshots
@@ -2356,7 +2390,7 @@ print(bundle.recommendation.primary_families)
 ## 12. Scientific invariants — mandatory in all new `0.3.1` code
 
 | Invariant | Enforcement | Example |
-|---|---|---|
+| --- | --- | --- |
 | `information_mass` and `information_horizon` use the same geometry acceptance mask | shared helper function + test | `I_c(h) > 3 * tau(h)` |
 | `signal_to_noise` is computed from corrected AMI and `tau(h)` only | service boundary + test | `sum(max(I_c - tau, 0)) / sum(I_c)` |
 | `nonlinear_share` is computed against Gaussian-information baseline only | service boundary + test | `_gaussian_information_from_rho()` |
@@ -2376,7 +2410,7 @@ print(bundle.recommendation.primary_families)
 ## 13. Definition of done — per phase
 
 | Phase | Done when |
-|---|---|
+| --- | --- |
 | **0 — Contracts + synthetic panel** | Typed models importable, archetype generator deterministic, no notebook-only logic, linter clean |
 | **1 — Core services** | Geometry engine, linear baseline, geometry-backed fingerprint builder, and routing policy independently testable, threshold semantics centralized |
 | **2 — Facade** | `run_forecastability_fingerprint()` returns `FingerprintBundle` with geometry, summary rendering stable, agent adapters preserve deterministic values, additive public API only |
@@ -2407,11 +2441,11 @@ print(bundle.recommendation.primary_families)
 
 ### Epic C — Linear-information baseline (Day 3)
 
-- [ ] Create `src/forecastability/services/linear_information_service.py`
-- [ ] Add `LinearInformationPoint` and `LinearInformationCurve`
-- [ ] Implement safe clipping near `|rho| = 1`
-- [ ] Write `tests/test_linear_information_service.py`
-- [ ] Verify: zero-correlation white noise produces near-zero Gaussian information
+- [x] Create `src/forecastability/services/linear_information_service.py`
+- [x] Add `LinearInformationPoint` and `LinearInformationCurve`
+- [x] Implement safe clipping near `|rho| = 1`
+- [x] Write `tests/test_linear_information_service.py`
+- [x] Verify: zero-correlation white noise produces near-zero Gaussian information
 
 ### Epic D — Geometry-backed fingerprint semantics (Days 4-5)
 
@@ -2446,12 +2480,12 @@ print(bundle.recommendation.primary_families)
 
 ### Epic G — Regression + routing-quality panel (Day 8)
 
-- [ ] Freeze expected fixtures in `docs/fixtures/fingerprint_regression/expected/`
-- [ ] Freeze expected geometry fixtures in `docs/fixtures/geometry_regression/expected/`
-- [ ] Add `tests/test_fingerprint_regression.py`
-- [ ] Add `tests/test_geometry_regression.py`
-- [ ] Create a small curated routing-quality panel note under `docs/theory/forecastability_fingerprint.md` or adjacent doc
-- [ ] Document mismatches explicitly rather than smoothing them away
+- [x] Freeze expected fixtures in `docs/fixtures/fingerprint_regression/expected/`
+- [x] Freeze expected geometry fixtures in `docs/fixtures/geometry_regression/expected/`
+- [x] Add `tests/test_fingerprint_regression.py`
+- [x] Add `tests/test_geometry_regression.py`
+- [x] Create a small curated routing-quality panel note under `docs/theory/forecastability_fingerprint.md` or adjacent doc
+- [x] Document mismatches explicitly rather than smoothing them away
 
 ### Epic H — Showcase + notebook + examples (Days 9-10)
 
@@ -2472,7 +2506,7 @@ print(bundle.recommendation.primary_families)
 - [x] Add `docs/theory/ami_information_geometry.md`
 - [x] Update `CHANGELOG.md`
 - [x] Extend smoke workflow to run fingerprint showcase
-- [ ] Extend smoke workflow or script checks for the CSV geometry adapter
+- [x] Extend smoke workflow or script checks for the CSV geometry adapter (`.github/workflows/smoke.yml` now includes `Smoke CSV geometry adapter CLI wiring` running `uv run scripts/run_ami_information_geometry_csv.py --help`)
 - [x] Extend notebook contract checker for the new walkthrough
 - [x] Add agent contract checks if the live/deterministic agent surface ships
 - [x] Extend release checklist with geometry/fingerprint/routing semantics checks
@@ -2516,7 +2550,6 @@ fields are expected to behave.
 
 The base plan remains the source of truth.
 This appendix only makes that plan operational in the same stronger style as `0.3.0`.
-
 
 ---
 
@@ -3433,7 +3466,7 @@ The maintainer should add a small frozen fixture module in the same spirit as `0
 Suggested fixture rows:
 
 | Fixture | Expectation |
-|---|---|
+| --- | --- |
 | `white_noise` | `none`, mass ≈ 0, route contains `downscope` |
 | `ar1_monotonic` | `monotonic`, low nonlinear share, route contains `arima` |
 | `seasonal_periodic` | `periodic`, route contains `tbats` or `harmonic_regression` |
