@@ -6,8 +6,8 @@
 **Target release:** `0.3.1`  
 **Current released version:** `0.3.0`  
 **Branch:** `feat/v0.3.1-forecastability-fingerprint`  
-**Status:** In Progress — Phase 0 complete  
-**Last reviewed:** 2026-04-18  
+**Status:** In Progress — geometry-backed fingerprint core complete; CSV/regression/notebook/CI follow-through pending  
+**Last reviewed:** 2026-04-19  
 
 **Companion refs:**
 
@@ -15,6 +15,7 @@
 - [v0.3.2 Lagged-Exogenous Triage: Ultimate Release Plan](v0_3_2_lagged_exogenous_triage_ultimate_plan.md)
 - [v0.3.3 Documentation Quality Improvement: Ultimate Release Plan](v0_3_3_documentation_quality_improvement_ultimate_plan.md)
 - [v0.3.4 Routing Validation & Benchmark Hardening: Ultimate Release Plan](v0_3_4_routing_validation_benchmark_hardening_plan.md)
+- [v0.3.1.5 Forecastability Fingerprint, Model Routing & AMI Information Geometry: Ultimate Release Plan](v0_3_1_5_fingerprint_information_geometry_ultimate_plan.md)
 - [Agent Layer Contract](../agent_layer.md)
 
 **Builds on:**
@@ -26,6 +27,7 @@
 - existing A1/A2/A3 agent payload / serializer / deterministic-interpretation pattern
 - existing optional live-agent adapter pattern under `src/forecastability/adapters/llm/`
 - existing examples, showcase scripts, notebook contract checks, and CI / release workflows
+- Dr. Peter Catt's AMI Information Geometry working note and prototype semantics
 
 ---
 
@@ -35,68 +37,105 @@
 package still presents many diagnostics as separate outputs instead of a compact,
 decision-ready **forecastability fingerprint**.
 
-Peter Catt's comment points to the right missing abstraction:
+Dr. Peter Catt's original request still points to the right public abstraction:
 
 - `information_mass`
 - `information_horizon`
 - `information_structure`
 - `nonlinear_share`
 
-These should not be implemented as another disconnected metric family. They should
-be the first-class **summary layer over the AMI profile**, and they should drive
-model-family routing.
+Those remain the correct public fingerprint fields for `0.3.1`.
 
-This plan therefore reframes the next release around one product question:
+However, Dr. Catt's later **AMI Information Geometry** note makes one thing clear:
+the release cannot stop at a summary layer. `0.3.1` also needs to ship the
+underlying scientific engine that computes, denoises, and thresholds the AMI curve
+in a concrete, reusable way.
 
-> Given a forecastability profile, what compact fingerprint best describes it,
-> and what model classes should that fingerprint recommend?
+That note adds operational geometry outputs:
+
+- `signal_to_noise`
+- corrected AMI profile semantics
+- threshold profile `tau(h)`
+- geometry-driven `information_horizon`
+- geometry-driven `information_structure`
+
+computed from:
+
+- KSG-II AMI estimation
+- shuffle-surrogate bias correction
+- corrected profile `I_c(h) = max(I(h) - bias(h), 0)`
+- deterministic thresholding against `tau(h)`
+
+This plan therefore keeps the fingerprint and routing story from `0.3.1`, but
+promotes **AMI Information Geometry** from a follow-up idea into a mandatory part
+of the main `0.3.1` release.
+
+> Given a horizon-wise AMI profile, how do we compute it robustly, denoise it,
+> summarize it into a compact fingerprint, and route toward suitable model
+> families without overclaiming exact-model superiority?
 
 ### Planning principles
 
 | Principle | Implication |
 |---|---|
 | Additive, not disruptive | Stable public univariate/covariant imports remain valid |
-| Hexagonal + SOLID | Scorers compute signals; fingerprint services summarize; routing services recommend |
-| AMI-first identity | Fingerprint is derived primarily from horizon-wise AMI behavior |
-| Clear semantics | Directness is not nonlinearity; keep `directness_ratio` separate from `nonlinear_share` |
-| Product maturation | `0.3.1` should improve the user decision story, not merely add outputs |
+| Preserve `0.3.1` identity | `information_mass`, `information_horizon`, `information_structure`, and `nonlinear_share` remain the main public fingerprint fields |
+| Information Geometry is an engine, not a replacement | Dr. Catt's AMI geometry methods become a service layer beneath fingerprint construction |
+| Hexagonal + SOLID | Estimation services compute signals; fingerprint services summarize; routing services recommend |
+| AMI-first identity | Fingerprint remains derived primarily from horizon-wise AMI behavior |
+| Clear semantics | `signal_to_noise` is not `information_mass`; `directness_ratio` is not `nonlinear_share` |
 | One facade, many engines | Users call a dedicated fingerprint use case or opt into fingerprint inside existing bundle flows |
 | Agent-ready by construction | The compact fingerprint bundle should be serialisable into a deterministic agent payload before any live narration is added |
 
 ### Reviewer acceptance block
 
-For reviewer sign-off, `0.3.1` is successful only if Peter Catt's four requested
-summary metrics are implemented as **stable typed outputs** and exposed
-consistently across all intended user surfaces.
+For reviewer sign-off, `0.3.1` is successful only if both layers are visible and
+consistent:
+
+1. **Fingerprint layer**
+   - `information_mass`
+   - `information_horizon`
+   - `information_structure`
+   - `nonlinear_share`
+
+2. **Information Geometry layer**
+   - `signal_to_noise`
+   - corrected AMI profile semantics
+   - surrogate threshold semantics
+   - geometry-driven `information_horizon`
+   - geometry-driven `information_structure`
 
 Required reviewer-visible outcomes:
 
-- `information_mass`, `information_horizon`, `information_structure`, and
-  `nonlinear_share` exist on a typed Python result object
-- the same four fields appear in the CLI / JSON summary surface
-- the same four fields appear in the walkthrough notebook and public example surfaces
-  without notebook-only logic
-- the same four fields plus routing/confidence/cautions appear in an agent-ready
+- the original four fingerprint fields still exist on a typed Python result object
+- Dr. Catt's `signal_to_noise` exists as a typed output and is surfaced consistently
+- the CLI / JSON summary surface includes fingerprint + geometry outputs together
+- the walkthrough notebook and public example surfaces show the same outputs without
+  notebook-only logic
+- the same fields plus routing/confidence/cautions appear in an agent-ready
   deterministic payload surface
-- docs define the semantics, caveats, and routing interpretation for the same fields
-- routing guidance consumes these fields through versioned deterministic rules
-- any live agent surface, if shipped, narrates the deterministic fingerprint payload
-  and does not invent metrics, probabilities, or exact-model claims
+- docs define both the fingerprint semantics and the geometry-engine semantics
+- routing guidance remains driven by deterministic rules and does not claim
+  exact-model optimality
+- any live agent surface, if shipped, narrates deterministic payloads and does not
+  invent metrics, probabilities, or exact-model claims
 
-Reviewer comment crosswalk for this update:
+Reviewer comment / source crosswalk for this update:
 
 - comment 2 (`Catt alignment`) → this block, §5.3, §9
-- comment 3 (thresholding / significance semantics) → §2.2, §2.3, Phase 1
-  acceptance criteria, Phase 3 threshold tests
-- comment 4 (`information_structure` classifier rules) → §2.4, Phase 1
+- comment 3 (thresholding / significance semantics) → §2.2, §2.4, §2.5,
+  Phase 1 acceptance criteria, Phase 3 threshold tests
+- comment 4 (`information_structure` classifier rules) → §2.6, Phase 1
   acceptance criteria, Phase 3 classifier tests
-- comment 5 (no-overclaim routing rule) → §2.7, §8, §9
+- comment 5 (no-overclaim routing rule) → §2.9, §8, §9
 - comment 6 (routing-quality validation task) → V3_1-F06.2, §9
-- comment 7 (`nonlinear_share` calibration) → §6.2, Phase 3 tests
-- comment 8 (routing confidence semantics) → §2.7, V3_1-F03
+- comment 7 (`nonlinear_share` calibration) → §2.7, §6.2, Phase 3 tests
+- comment 8 (routing confidence semantics) → §2.9, V3_1-F03, V3_1-F03a
 - comment 9 (mandatory public-surface examples) → V3_1-F05, V3_1-F08, V3_1-D01, §9
 - comment 10 (univariate-first scope boundary) → planning principles, V3_1-D02,
   §8, §9
+- Dr. Catt working note (`AMI Information Geometry`) → §1, §2.2-§2.7,
+  V3_1-F01a, V3_1-F01b, V3_1-F02a, V3_1-F03a, §11
 
 ---
 
@@ -115,155 +154,166 @@ $$AMI(h) = I(X_t ; X_{t+h})$$
 for horizons $h = 1, \dots, H$.
 
 The package already treats forecastability as **horizon-dependent**, not as a
-single global scalar. That is the correct base for the fingerprint.
+single global scalar. That remains the correct base.
 
-### 2.2. `information_mass`
+`0.3.1` now adds one non-optional requirement:
 
-`information_mass` is the normalized masked area under the informative portion
-of the AMI profile.
+- AMI must be estimable through a concrete Information Geometry engine, not only
+  through abstract profile contracts.
 
-For `0.3.1`, define the informative horizon set as:
+### 2.2. AMI Information Geometry engine
 
-$$\mathcal{H}_{info} = \{h \in \{1, \dots, H\} : AMI(h) \ge \tau_{AMI} \ \land \ p_{sur}(h) \le \alpha \}$$
+Adopt Dr. Catt's KSG-II prototype semantics as a reusable service layer.
 
-where:
+Estimator:
 
-- $p_{sur}(h)$ is the per-horizon surrogate-significance p-value already derived
-  from the package's AMI significance machinery
-- $\alpha$ is the configured significance level used by the profile computation
-- $\tau_{AMI}$ is a minimum AMI floor applied after significance to reject
-  numerically tiny but formally significant values
+$$I(h) = \psi(k) - \frac{1}{k} + \psi(n_h) - \left\langle \psi(n_x(i)) + \psi(n_y(i)) \right\rangle$$
 
-Required `0.3.1` semantics:
+Required `0.3.1` implementation semantics:
 
-- `information_mass` and `information_horizon` MUST share the exact same
-  $\mathcal{H}_{info}$ definition
-- routing logic MUST consume the same informative-horizon mask rather than
-  redefining thresholding locally
-- $\mathcal{H}_{info}$ is an operational screening mask, not a claim of
-  simultaneous family-wise significance across all tested horizons
-- if multiple horizons satisfy the conditions, all of them contribute to
-  `information_mass`
-- if no horizons satisfy the conditions, `information_mass = 0.0` and
-  `information_horizon = 0`
-- tie handling is inclusive at the threshold boundary:
-  `AMI(h) == \tau_{AMI}` and `p_{sur}(h) == \alpha` both count as informative
-- edge behavior for invalid or truncated horizons is conservative: horizons
-  lacking a valid AMI estimate or surrogate test result are excluded from
-  $\mathcal{H}_{info}$ rather than imputed as informative
+- KSG-II estimator
+- Chebyshev joint metric
+- median over configurable `k_list`, with release-default alignment to the working
+  note: `k_list = [3, 5, 8]`
+- one-shot tiny jitter for tie handling with deterministic seed
+- guard for too-small `n-h`
+- shuffle surrogates for bias estimation, with release-default alignment to the
+  working note: `n_surrogates = 200`
+- threshold profile `tau(h)` defined as the surrogate 90th percentile
+- corrected profile:
 
-Required implementation on the discrete horizon grid:
+$$I_c(h) = \max(I(h) - bias(h), 0)$$
 
-$$M = \frac{1}{\max(1, H)} \sum_{h=1}^{H} AMI(h)\,\mathbf{1}[h \in \mathcal{H}_{info}]$$
+where `bias(h)` is the surrogate mean.
 
-This is intentionally **not** the mean AMI over informative horizons. It is the
-masked area over the evaluated horizon grid, normalized by the full horizon
-range so that both strength and extent contribute to the final value.
+This layer must be implemented as a service, not as a CSV-only script or notebook.
+
+### 2.3. `signal_to_noise`
+
+Add Dr. Catt's `signal_to_noise` as a first-class geometry output:
+
+$$S = \frac{\sum_h \max(I_c(h) - \tau(h), 0)}{\sum_h I_c(h) + \epsilon}$$
+
+Required semantics:
+
+- bounded to `[0, 1]`
+- if the denominator is near zero, return `0.0`
+- this is a **quality-of-signal** metric over the corrected AMI profile
+- it is not a replacement for `information_mass`
+- it is not a direct route selector by itself
+- it should influence routing confidence and caution logic
 
 Interpretation:
 
-- low mass → weak overall forecastability
-- high mass → rich usable predictive information
+- low value → corrected AMI exists but little exceeds surrogate threshold
+- high value → corrected AMI is meaningfully above surrogate background
 
-### 2.3. `information_horizon`
+### 2.4. `information_mass`
 
-`information_horizon` is the latest horizon that remains informative.
+Keep `information_mass` as a public fingerprint field, but define it explicitly
+over the **corrected** profile rather than raw AMI.
+
+For `0.3.1`, define the geometry acceptance mask as:
+
+$$\mathcal{H}_{geom} = \{h \in \{1, \dots, H\} : I_c(h) > 3\tau(h)\}$$
 
 Required implementation:
 
-$$H_{info} = \max(\mathcal{H}_{info})$$
+$$M = \frac{1}{\max(1, H)} \sum_{h=1}^{H} I_c(h)\,\mathbf{1}[h \in \mathcal{H}_{geom}]$$
 
-with the convention that if $\mathcal{H}_{info} = \varnothing$, the result is `0`.
+Required semantics:
+
+- `information_mass` and `information_horizon` MUST share the exact same
+  geometry-acceptance mask
+- routing logic MUST consume the same geometry mask rather than redefining
+  thresholding locally
+- invalid or truncated horizons are excluded conservatively
+- if no horizons satisfy the condition, `information_mass = 0.0`
+- this is intentionally **not** the mean AMI over accepted horizons; strength and
+  extent both contribute
+
+Interpretation:
+
+- low mass → weak overall forecastability even after correction
+- high mass → rich usable predictive information over the evaluated horizon grid
+
+### 2.5. `information_horizon`
+
+`information_horizon` remains the latest horizon that stays informative, but
+`0.3.1` now resolves the threshold definition canonically through geometry:
+
+$$H_{info} = \max \{ h : I_c(h) > 3 \cdot \tau(h) \}$$
+
+with the convention that if no such horizon exists, the result is `0`.
 
 Additional required semantics:
 
-- if the final informative horizons are non-contiguous, `information_horizon`
-  still reports the latest informative horizon, not the count of informative
-  horizons
-- if several late horizons tie for the same AMI value, the latest informative
-  horizon still wins because the metric is horizon-index based, not amplitude based
-- routing rules that refer to "short" or "long" horizon MUST use this exact
-  `H_info` output rather than a separate horizon summary
+- invalid horizons are excluded conservatively
+- if accepted horizons are non-contiguous, the latest accepted horizon still wins
+- routing rules referring to "short" or "long" horizon MUST use this exact output
+- the `3 * tau(h)` rule is the canonical horizon acceptance rule for `0.3.1`
+- the plan should document Dr. Catt's rationale that `3 * tau(h)` is intended as a
+  conservative profile-wide screening rule rather than a formal exact guarantee
 
 Interpretation:
 
 - short horizon → prediction decays quickly
 - long horizon → information persists farther into the future
 
-### 2.4. `information_structure`
+### 2.6. `information_structure`
 
-`information_structure` is a categorical label on the shape of the AMI profile.
-
-Initial taxonomy for `0.3.1`:
+Keep the public taxonomy:
 
 - `none`
 - `monotonic`
 - `periodic`
 - `mixed`
 
-Recommended rule system:
-
-1. `none` if no informative horizons exist
-2. `monotonic` if informative AMI decays broadly with horizon and no stable
-   secondary peaks pass the prominence threshold
-3. `periodic` if significant repeated peaks occur near a dominant spacing
-4. `mixed` for everything else
-
-This must be a **domain service**, not plotting logic.
+But source the classifier from the corrected AMI profile and accepted peaks.
 
 Required `0.3.1` classifier contract:
 
-- peak detection operates only on informative horizons or on horizons with
-  informative local maxima; non-informative peaks cannot trigger `periodic`
-- a secondary peak counts only if its prominence is at least
-  `max(peak_prominence_abs, peak_prominence_rel * max_informative_ami)`, with
-  both thresholds fixed in the service configuration and documented
-- repeated-peak spacing is considered stable if successive accepted peaks fall
-  within `spacing_tolerance` horizons of the dominant spacing
-- monotonicity is considered satisfied when informative AMI is non-increasing
-  up to a `monotonicity_tolerance`; small local reversals within tolerance do
-  not force `mixed`
+1. `none` if `signal_to_noise < 0.05` or `information_horizon == 0`
+2. `monotonic` if no qualifying repeated peaks remain and corrected AMI decays broadly
+3. `periodic` if significant repeated peaks occur near a dominant spacing
+4. `mixed` otherwise
+
+Additional required semantics:
+
+- prototype internal label `monotone` maps to public label `monotonic`
+- peak detection operates on corrected AMI and cannot be triggered by non-accepted
+  noise structure alone
+- release-default peak thresholds should align to the working note via documented
+  configuration, including absolute prominence and minimum peak spacing
 - tie-breaking priority is deterministic:
   `none` > `periodic` > `monotonic` > `mixed`
-- abstention / edge behavior is explicit:
-  if there are too few informative horizons to support either repeated-peak or
-  monotonic checks robustly, classify as `mixed` and emit a caution rather than
-  inferring `periodic`
 
-Practical interpretation of the tie-breaking rule:
+### 2.7. `nonlinear_share`
 
-- `none` wins whenever `\mathcal{H}_{info}` is empty
-- `periodic` wins over `monotonic` when both rules appear plausible but the
-  repeated-peak rule passes the documented prominence and spacing checks
-- `monotonic` wins over `mixed` only when no qualifying periodic structure exists
-  and the profile stays within the monotonicity tolerance band
-
-### 2.5. `nonlinear_share`
-
-`nonlinear_share` must compare AMI against a **linear Gaussian-information baseline**.
+`nonlinear_share` remains part of the fingerprint and must stay separate from both
+`signal_to_noise` and `directness_ratio`.
 
 For each horizon $h$, define a Gaussian-information proxy from Pearson autocorrelation:
 
 $$I_G(h) = -\frac{1}{2}\log(1 - \rho(h)^2)$$
 
-when $|\rho(h)| < 1$, with numerically safe clipping.
+with numerically safe clipping.
 
-Then define the nonlinear excess:
+Then define nonlinear excess over **corrected AMI**:
 
-$$E(h) = \max(AMI(h) - I_G(h), 0)$$
+$$E(h) = \max(I_c(h) - I_G(h), 0)$$
 
-and aggregate over informative horizons:
+and aggregate over the geometry acceptance mask:
 
-$$N = \frac{\sum_{h \in \mathcal{H}_{info}} E(h)}{\sum_{h \in \mathcal{H}_{info}} AMI(h) + \epsilon}$$
+$$N = \frac{\sum_{h \in \mathcal{H}_{geom}} E(h)}{\sum_{h \in \mathcal{H}_{geom}} I_c(h) + \epsilon}$$
 
-Required `0.3.1` edge behavior:
+Required edge behavior:
 
-- if $\mathcal{H}_{info} = \varnothing$, return `nonlinear_share = 0.0`
-- if the informative-horizon AMI denominator is `<= epsilon`, return
-  `nonlinear_share = 0.0` rather than a noisy tiny ratio
+- if $\mathcal{H}_{geom} = \varnothing$, return `nonlinear_share = 0.0`
+- if the accepted-horizon corrected-AMI denominator is `<= epsilon`, return
+  `0.0` rather than a noisy tiny ratio
 - if `rho(h)` is invalid or undefined after safe clipping, exclude that horizon
-  from the nonlinear-baseline aggregation and emit a caution rather than treating
-  the horizon as evidence for strong nonlinearity
+  from the nonlinear-baseline aggregation and emit a caution
 
 Interpretation:
 
@@ -273,12 +323,13 @@ Interpretation:
 > [!WARNING]
 > `nonlinear_share` is NOT `1 - directness_ratio`.
 > `directness_ratio` measures direct vs mediated lag structure.
-> `nonlinear_share` measures nonlinear excess over a linear baseline.
+> `signal_to_noise` measures how much corrected AMI rises above surrogate noise.
+> `information_mass` measures accepted AMI area over the horizon grid.
 
-### 2.6. `directness_ratio` stays separate
+### 2.8. `directness_ratio` stays separate
 
 The repo already has the idea of directness / mediated structure.
-That is useful and should remain part of routing, but as a separate field.
+That remains useful for routing, but as a separate field.
 
 The routing object for `0.3.1` should therefore contain at least:
 
@@ -286,69 +337,69 @@ The routing object for `0.3.1` should therefore contain at least:
 - `information_horizon`
 - `information_structure`
 - `nonlinear_share`
+- `signal_to_noise`
 - `directness_ratio`
 
-### 2.7. Model-family routing
+### 2.9. Model-family routing
 
-The goal is not to pick a single exact model. The goal is to route toward
-**model families**.
+The goal remains the same: route toward **model families**, not one exact winner.
 
 > [!IMPORTANT]
 > Routing in `0.3.1` is heuristic product guidance. It is not empirical model
 > selection, not a ranking guarantee, and not a promise that a recommended family
 > will outperform all alternatives on a given series.
 
-Initial mapping policy:
+Updated mapping policy:
 
-| Fingerprint pattern | Recommended families |
+| Fingerprint / geometry pattern | Recommended families |
 |---|---|
-| low mass, `none` | naïve, seasonal naïve, stop / downscope effort |
+| low mass, low signal-to-noise, `none` | naïve, seasonal naïve, stop / downscope effort |
 | high mass, monotonic, low nonlinear share, high directness | ARIMA / ETS / linear state-space / dynamic regression |
 | high mass, periodic | seasonal naïve / harmonic regression / TBATS / seasonal state-space |
 | mixed structure or high nonlinear share | tree-on-lags / TCN / N-BEATS / NHITS / nonlinear tabular baselines |
 | high mass but low directness | increase lookback, inspect mediated structure, prefer richer state representation |
+| high mass but weak signal-to-noise margin | keep primary family suggestion but down-rank confidence |
 
 This routing policy must be explicit and versioned. It is a product rule, not an
 implicit interpretation hidden in notebooks.
 
 Required confidence semantics for `0.3.1`:
 
-- confidence is derived from three deterministic binary penalties:
-  `threshold_margin_penalty`, `taxonomy_uncertainty_penalty`, and
-  `signal_conflict_penalty`
+- confidence is derived from four deterministic binary penalties:
+  `threshold_margin_penalty`, `taxonomy_uncertainty_penalty`,
+  `signal_conflict_penalty`, and `low_signal_quality_penalty`
 - `threshold_margin_penalty = 1` if any routing-defining scalar falls within a
   versioned margin band around its decision threshold
 - `taxonomy_uncertainty_penalty = 1` if `information_structure == "mixed"`, if
-  the classifier relied on a tie-break, or if informative support is below a
+  the classifier relied on a tie-break, or if accepted support is below a
   versioned `min_confident_horizons`
 - `signal_conflict_penalty = 1` if the primary route is supported by one signal
-  but contradicted by another according to a versioned rule table, for example
-  high nonlinear share paired with strongly linear routing or periodic routing
-  with insufficient horizon support
+  but contradicted by another according to a versioned rule table
+- `low_signal_quality_penalty = 1` when `signal_to_noise` is below a versioned
+  confidence threshold, even if the route itself is not forced to `downscope`
 - map penalty counts deterministically:
-  `0 -> high`, `1 -> medium`, `2 or 3 -> low`
+  `0 -> high`, `1 -> medium`, `2+ -> low`
 - confidence is derived from deterministic rule evaluation only; `0.3.1` does not
   claim benchmark-calibrated probabilities
 
-### 2.8. Agent layer contract for `0.3.1`
+### 2.10. Agent layer contract for `0.3.1`
 
-The fingerprint release should be directly usable by coding agents and LLM-facing
+The fingerprint release remains directly usable by coding agents and LLM-facing
 surfaces, but only through the repo's existing deterministic-first contract.
 
 Required `0.3.1` agent-layer semantics:
 
 - `FingerprintBundle` remains the authoritative result object
-- A1 payload adapters mirror bundle fields in JSON-safe typed form; they do not
-  recompute or reinterpret the fingerprint
+- new geometry fields are mirrored into A1 payloads
 - A2 serialisation adds a versioned envelope for transport, MCP, API, or agent use
 - A3 deterministic interpretation adapters may compress rationale and cautions
   into a more conversational structure, but they may not change routes, confidence,
-  or the four fingerprint fields
+  or numeric fields
 - an optional live fingerprint agent may narrate or orchestrate only after reading
   the deterministic payload or calling the fingerprint use case; strict mode must
   still return deterministic output when narration is disabled or unavailable
-- no agent prompt, notebook cell, or LLM adapter may compute new numeric metrics,
-  tune routing thresholds, or override deterministic caution flags
+- no prompt, notebook cell, or LLM adapter may recompute AMI, alter thresholds,
+  or override deterministic caution flags
 
 ---
 
@@ -374,26 +425,33 @@ Required `0.3.1` agent-layer semantics:
 
 | ID | Feature | Phase | Overlap with existing | Genuine new work | Status |
 |---|---|---:|---|---|---|
-| V3_1-F00 | Typed fingerprint result models | 0 | Extends `utils/types.py` patterns | `ForecastabilityFingerprint`, `RoutingRecommendation`, `FingerprintBundle` | ✅ **Done** |
+| V3_1-F00 | Typed fingerprint result models | 0 | Extends `utils/types.py` patterns | `ForecastabilityFingerprint`, `RoutingRecommendation`, `FingerprintBundle` | ✅ **Done** (geometry-aligned) |
 | V3_1-F00.1 | Synthetic fingerprint archetype generators | 0 | Extends `utils/synthetic.py` | `generate_white_noise`, `generate_ar1_monotonic`, `generate_seasonal_periodic`, `generate_nonlinear_mixed`, `generate_mediated_directness_drop` | ✅ **Done** |
 | V3_1-F01 | Linear Gaussian-information baseline | 1 | Reuses Pearson / autocorrelation logic | per-horizon `I_G(h)` service with stable clipping and aggregation | ✅ **Done** |
-| V3_1-F02 | Fingerprint builder service | 1 | Builds on AMI/profile outputs | `information_mass`, `information_horizon`, `information_structure`, `nonlinear_share` | ✅ **Done** |
-| V3_1-F03 | Routing policy service | 1 | Extends current recommendation logic | explicit model-family policy keyed by fingerprint buckets | ✅ **Done** |
-| V3_1-F04 | Fingerprint orchestration use case | 2 | Follows existing use-case / facade pattern | `run_forecastability_fingerprint()` and optional bundle integration | ✅ **Done** |
-| V3_1-F05 | Unified summary rendering | 2 | Extends current reporting helpers | compact summary row / markdown / JSON surface for fingerprint + routing | ✅ **Done** |
-| V3_1-F05.1 | Agent-ready fingerprint adapters | 2 | Extends existing A1/A2/A3 agent pattern | `fingerprint_agent_payload_models.py`, versioned serialiser, deterministic interpretation adapter | ✅ **Done** |
-| V3_1-F05.2 | Optional live fingerprint agent | 2 | Extends existing `adapters/llm` pattern | `fingerprint_agent.py` consuming deterministic payloads only | ✅ **Done** |
-| V3_1-F06 | Tests and regression fixtures | 3 | Follows current deterministic regression pattern | synthetic archetypes, threshold tests, routing invariants | Proposed |
-| V3_1-F07 | Showcase script and notebook | 4 | Follows existing walkthrough / showcase pattern | canonical four-series fingerprint demo | Proposed |
-| V3_1-F08 | Public examples and notebook extensions | 5 | Extends examples taxonomy and walkthrough surfaces | minimal Python example, CLI example, notebook cross-links, and reusable example artifacts | Proposed |
-| V3_1-F08.1 | Agent demos and cross-links | 5 | Extends agent examples and notebook/doc surfaces | strict payload demo, optional live-agent demo, and agent-layer discoverability | Proposed |
-| V3_1-D01 | README + quickstart + agent-layer routing section | 5 | Extends docs and `docs/agent_layer.md` cross-links | fingerprint concept and example snippets | Proposed |
-| V3_1-D02 | Theory doc | 5 | New theory page | fingerprint definitions and routing semantics | Proposed |
-| V3_1-D02 | Theory doc | 5 | New theory page | fingerprint definitions and routing semantics | ✅ **Done** |
-| V3_1-D03 | Changelog + migration note | 5 | Release docs | additive feature surface and policy notes | Proposed |
+| V3_1-F01a | AMI Information Geometry engine | 1 | Builds on AMI/profile infrastructure | KSG-II AMI, shuffle bias correction, `tau(h)`, corrected profile, `signal_to_noise` | ✅ **Done** |
+| V3_1-F01b | Geometry result and configuration models | 1 | Extends typed-result pattern | `AmiInformationGeometry`, `AmiGeometryCurvePoint`, config models | ✅ **Done** |
+| V3_1-F02 | Fingerprint builder service | 1 | Builds on AMI/profile outputs | initial `information_mass`, `information_horizon`, `information_structure`, `nonlinear_share` implementation | ✅ **Done** (geometry-aligned) |
+| V3_1-F02a | Geometry-backed fingerprint refactor | 1 | Refactors completed `V3_1-F02` | fingerprint from corrected AMI + geometry acceptance mask | ✅ **Done** |
+| V3_1-F03 | Routing policy service | 1 | Extends current recommendation logic | initial model-family policy keyed by fingerprint buckets | ✅ **Done** (geometry-aligned) |
+| V3_1-F03a | Geometry-aware routing refactor | 1 | Refactors completed `V3_1-F03` | integrate `signal_to_noise`, geometry cautions, and confidence updates | ✅ **Done** |
+| V3_1-F04 | Fingerprint orchestration use case | 2 | Follows existing use-case / facade pattern | initial `run_forecastability_fingerprint()` bundle integration | ✅ **Done** (geometry-aligned) |
+| V3_1-F04a | Geometry-first use-case refactor | 2 | Refactors completed `V3_1-F04` | use geometry engine first and return bundle-level geometry outputs | ✅ **Done** |
+| V3_1-F05 | Unified summary rendering | 2 | Extends current reporting helpers | initial compact summary row / markdown / JSON surface | ✅ **Done** (geometry-aligned) |
+| V3_1-F05a | Geometry surfacing refactor | 2 | Refactors completed `V3_1-F05` | compact summary row / markdown / JSON surface for fingerprint + routing + geometry | ✅ **Done** |
+| V3_1-F05.1 | Agent-ready fingerprint adapters | 2 | Extends existing A1/A2/A3 agent pattern | payloads with geometry fields, routing, confidence, cautions | ✅ **Done** |
+| V3_1-F05.2 | Optional live fingerprint agent | 2 | Extends existing `adapters/llm` pattern | consume geometry-backed deterministic payloads only | ✅ **Done** |
+| V3_1-F05b | CSV batch geometry adapter | 2 | Inspired by Dr. Catt prototype | column-wise CSV runner producing plot + summary CSV | Proposed |
+| V3_1-F06 | Tests and regression fixtures | 3 | Follows current deterministic regression pattern | synthetic archetypes, threshold tests, routing invariants | Partial — unit/integration tests done; frozen regression fixtures pending |
+| V3_1-F06a | Geometry regression and boundary fixtures | 3 | Extends current deterministic regression pattern | freeze corrected AMI / `tau` / `signal_to_noise` and boundary behavior | Proposed |
+| V3_1-F07 | Showcase script and notebook | 4 | Follows existing walkthrough / showcase pattern | canonical four-series fingerprint + geometry demo | Partial — examples are present, notebook/showcase script still pending |
+| V3_1-F08 | Public examples and notebook extensions | 5 | Extends examples taxonomy and walkthrough surfaces | minimal Python example, CLI example, notebook cross-links, and reusable example artifacts | Partial — minimal and batch workbench examples added; notebook/CLI/README follow-through pending |
+| V3_1-F08.1 | Agent demos and cross-links | 5 | Extends agent examples and notebook/doc surfaces | strict payload demo, optional live-agent demo, and agent-layer discoverability | Partial — strict/live demos exist and batch workbench now feeds A1/A3; notebook cross-links still pending |
+| V3_1-D01 | README + quickstart + agent-layer routing section | 5 | Extends docs and `docs/agent_layer.md` cross-links | fingerprint + geometry concept and example snippets | Partial — quickstart/public API/agent-layer updated; README still pending |
+| V3_1-D02 | Theory docs | 5 | New or split theory pages | fingerprint definitions, geometry semantics, and routing semantics | ✅ **Done** |
+| V3_1-D03 | Changelog + migration note | 5 | Release docs | additive feature surface and policy notes | ✅ **Done** |
 | V3_1-CI-01 | Routing smoke test in CI | 6 | Extends smoke workflow | import + run on canonical synthetic panel | Proposed |
 | V3_1-CI-02 | Notebook contract extension | 6 | Extends notebook contract checks | fingerprint notebook included | Proposed |
-| V3_1-CI-03 | Release checklist update | 6 | Extends release template | versioned routing / fingerprint checks | Proposed |
+| V3_1-CI-03 | Release checklist update | 6 | Extends release template | geometry + routing + fingerprint checks | Proposed |
 
 ---
 
@@ -406,6 +464,7 @@ Required `0.3.1` agent-layer semantics:
 ```python
 FingerprintStructure = Literal["none", "monotonic", "periodic", "mixed"]
 RoutingConfidenceLabel = Literal["low", "medium", "high"]
+GeometryMethodLabel = Literal["ksg2_shuffle_surrogate"]
 ModelFamilyLabel = Literal[
     "naive",
     "seasonal_naive",
@@ -431,7 +490,35 @@ RoutingCautionFlag = Literal[
     "short_information_horizon",
     "weak_informative_support",
     "signal_conflict",
+    "low_signal_to_noise",
+    "geometry_threshold_borderline",
+    "nonstationarity_risk",
 ]
+
+
+class AmiGeometryCurvePoint(BaseModel, frozen=True):
+    """One horizon point in the AMI Information Geometry curve."""
+
+    horizon: int
+    ami_raw: float | None = None
+    ami_bias: float | None = None
+    ami_corrected: float | None = None
+    tau: float | None = None
+    accepted: bool = False
+    valid: bool = True
+    caution: str | None = None
+
+
+class AmiInformationGeometry(BaseModel, frozen=True):
+    """Deterministic AMI Information Geometry outputs."""
+
+    method: GeometryMethodLabel = "ksg2_shuffle_surrogate"
+    signal_to_noise: float
+    information_horizon: int
+    information_structure: FingerprintStructure
+    informative_horizons: list[int] = Field(default_factory=list)
+    curve: list[AmiGeometryCurvePoint] = Field(default_factory=list)
+    metadata: dict[str, str | int | float] = Field(default_factory=dict)
 
 
 class ForecastabilityFingerprint(BaseModel, frozen=True):
@@ -441,6 +528,7 @@ class ForecastabilityFingerprint(BaseModel, frozen=True):
     information_horizon: int
     information_structure: FingerprintStructure
     nonlinear_share: float
+    signal_to_noise: float
     directness_ratio: float | None = None
     informative_horizons: list[int] = Field(default_factory=list)
     metadata: dict[str, str | int | float] = Field(default_factory=dict)
@@ -461,6 +549,7 @@ class FingerprintBundle(BaseModel, frozen=True):
     """Composite output from the forecastability fingerprint use case."""
 
     target_name: str
+    geometry: AmiInformationGeometry
     fingerprint: ForecastabilityFingerprint
     recommendation: RoutingRecommendation
     profile_summary: dict[str, str | int | float]
@@ -469,10 +558,12 @@ class FingerprintBundle(BaseModel, frozen=True):
 
 ### 5.2. Port / service boundary rules
 
+- the Information Geometry engine is a domain/application service, not a script-owned implementation
 - scorers do not emit model recommendations
 - routing policy is a service, not a plotting helper
-- fingerprint building can depend on profile outputs, but not on dashboard code
+- fingerprint building depends on profile / geometry outputs, never on dashboard code
 - the use case composes services and formats typed results; adapters only render
+- CSV reading, plotting, and file writing belong to adapters / scripts, not to geometry services
 - agent payload adapters serialise typed fingerprint bundles; they do not own
   thresholding, routing, or scientific computation
 - optional live fingerprint agents live strictly downstream of deterministic
@@ -485,17 +576,21 @@ class FingerprintBundle(BaseModel, frozen=True):
 - agent-related files must remain single-purpose:
   payload models, serialiser, deterministic interpretation, and live orchestration
   each get their own module rather than one mixed-responsibility file
+- no notebook cell may implement its own AMI thresholding or route logic
 
 ### 5.3. Acceptance criteria
 
 - all new types are importable from the typed surface
 - categorical fingerprint / routing fields use closed literal labels or enums,
   not free-form strings
+- `geometry.information_structure` maps prototype `monotone` to public `monotonic`
 - no route recommendation logic is embedded in notebook cells
 - no existing analyzer public interface is broken
-- reviewer can verify that Peter Catt's four metrics appear unchanged in typed
+- reviewer can verify that the original four fingerprint fields appear unchanged in typed
   Python output, CLI / JSON summary output, example output, notebook output, and docs
-- reviewer can verify that the same fingerprint/routing fields pass unchanged
+- reviewer can verify that geometry fields appear consistently across typed output,
+  CLI / JSON summary output, example output, notebook output, and docs
+- reviewer can verify that the same fingerprint/routing/geometry fields pass unchanged
   through the agent payload surface and any live narration surface remains optional
 
 ---
@@ -520,22 +615,29 @@ Optional fifth class for stronger mediated structure:
 
 ### 6.2. Expected fingerprint behavior
 
-| Series archetype | Expected structure | Expected mass | Expected nonlinear share | Expected routing |
-|---|---|---|---|---|
-| white noise | `none` | low | low | naïve / stop |
-| AR(1) | `monotonic` | medium/high | low | ARIMA / ETS |
-| seasonal | `periodic` | medium/high | low/medium | seasonal families |
-| nonlinear synthetic | `mixed` | medium/high | high | nonlinear model families |
-| mediated lag process | `monotonic` or `mixed` | medium | variable | caution on directness / state representation |
+| Series archetype | Expected structure | Expected mass | Expected nonlinear share | Expected signal-to-noise | Expected routing |
+|---|---|---|---|---|---|
+| white noise | `none` | low | low | low | naïve / downscope |
+| AR(1) | `monotonic` | medium/high | low | medium/high | ARIMA / ETS |
+| seasonal | `periodic` | medium/high | low/medium | medium/high | seasonal families |
+| nonlinear synthetic | `mixed` | medium/high | high | medium/high | nonlinear model families |
+| mediated lag process | `monotonic` or `mixed` | medium | variable | variable | caution on directness / state representation |
 
-Calibration / sanity-check expectations for `nonlinear_share`:
+Calibration / sanity-check expectations:
 
-- white noise: near `0`, with no spurious high-share route caused by estimation noise
-- AR(1): low and near `0` within tolerance because the dependence is primarily linear
-- seasonal linear process: low to low / medium at most; periodic linear structure
-  alone must not be mislabeled as strongly nonlinear
-- nonlinear synthetic process: materially above the linear cases and high enough
-  to activate the nonlinear-routing branch in at least one canonical example
+- `signal_to_noise`
+  - white noise: near `0`
+  - AR(1): clearly above noise
+  - seasonal linear process: clearly above noise
+  - nonlinear synthetic process: above noise, but not necessarily the highest
+  - noisy weak series: can show non-zero corrected AMI with low signal-to-noise
+- `nonlinear_share`
+  - white noise: near `0`, with no spurious high-share route caused by estimation noise
+  - AR(1): low and near `0` within tolerance because the dependence is primarily linear
+  - seasonal linear process: low to low / medium at most; periodic linear structure
+    alone must not be mislabeled as strongly nonlinear
+  - nonlinear synthetic process: materially above the linear cases and high enough
+    to activate the nonlinear-routing branch in at least one canonical example
 
 ### 6.3. Acceptance criteria
 
@@ -543,6 +645,8 @@ Calibration / sanity-check expectations for `nonlinear_share`:
 - used in tests, showcase, examples, and notebooks
 - each archetype has docstring-grounded expected behavior
 - at least one regression asserts routing family output, not only raw metric values
+- at least one regression freezes `signal_to_noise`
+- at least one regression freezes accepted-horizon behavior
 
 ---
 
@@ -582,7 +686,7 @@ Calibration / sanity-check expectations for `nonlinear_share`:
 
 ### Phase 1 — Core services
 
-**Goal:** implement fingerprint semantics and routing behind clean service boundaries.
+**Goal:** implement geometry, fingerprint semantics, and routing behind clean service boundaries.
 
 #### V3_1-F01 — Linear Gaussian-information baseline
 
@@ -590,7 +694,7 @@ Calibration / sanity-check expectations for `nonlinear_share`:
 
 **File targets**
 
-- `src/forecastability/services/linear_information_baseline_service.py` — new
+- `src/forecastability/services/linear_information_service.py`
 - tests
 
 **Acceptance criteria**
@@ -600,36 +704,99 @@ Calibration / sanity-check expectations for `nonlinear_share`:
 - returns horizon-wise and aggregate outputs
 - documented as linear baseline, not as AMI replacement
 
-#### V3_1-F02 — Fingerprint builder service
+#### V3_1-F01a — AMI Information Geometry engine
 
-**Goal.** Build the fingerprint from profile outputs.
+**Goal.** Compute robust corrected AMI profiles and geometry summaries.
 
 **File targets**
 
-- `src/forecastability/services/fingerprint_service.py` — new
-- `src/forecastability/services/forecastability_profile_service.py` — if helper reuse is warranted
+- `src/forecastability/services/ami_information_geometry_service.py` — new
 - tests
 
 **Acceptance criteria**
 
-- computes `information_mass`
-- computes `information_horizon`
-- assigns `information_structure`
-- computes `nonlinear_share`
-- preserves `directness_ratio` as separate input/output
-- does not require plotting adapter code
-- uses one shared informative-horizon mask for metrics and routing
-- documents the precise `H_info` thresholding semantics, including surrogate
-  significance, AMI floor, tie handling, and invalid-horizon behavior
-- applies deterministic classifier tolerances for prominence, spacing, and monotonicity
+- KSG-II estimator implemented in reusable service form
+- uses median over configurable `k_list`
+- applies one-shot jitter with deterministic seed
+- computes surrogate bias profile and `tau(h)`
+- computes corrected profile `I_c(h)`
+- computes `signal_to_noise`
+- computes geometry `information_horizon`
+- computes geometry `information_structure`
+- does not own CSV loading, plotting, or file export
+- exposes configuration for `k_list`, `n_surrogates`, `max_lag_frac`, `min_n`,
+  prominence, spacing, and horizon-threshold multiplier
+- supports a lighter CI / smoke configuration
 
-#### V3_1-F03 — Routing policy service
+#### V3_1-F01b — Geometry result and configuration models
 
-**Goal.** Map fingerprints to model families.
+**Goal.** Provide versioned threshold and configuration contracts.
 
 **File targets**
 
-- `src/forecastability/services/routing_policy_service.py` — new
+- `src/forecastability/services/ami_information_geometry_service.py`
+- `src/forecastability/utils/types.py`
+
+**Acceptance criteria**
+
+- versioned configuration object exists
+- includes defaults aligned to the working note for `k_list`, `n_surrogates`,
+  `peak_prominence_abs`, `peak_spacing`, `signal_to_noise_none_threshold`,
+  `horizon_multiplier_threshold`, `max_lag_frac`, `min_n`, and `epsilon`
+- deterministic metadata is recorded into typed outputs
+
+#### V3_1-F02 — Fingerprint builder service
+
+**Goal.** Preserve the completed initial fingerprint builder as the base refactor target.
+
+**File targets**
+
+- `src/forecastability/services/fingerprint_service.py`
+
+**Acceptance criteria**
+
+- the pre-geometry implementation remains referenceable for the refactor diff
+- no one treats the pre-geometry semantics as sufficient for release sign-off
+
+#### V3_1-F02a — Geometry-backed fingerprint refactor
+
+**Goal.** Rebuild the fingerprint from geometry + profile outputs.
+
+**File targets**
+
+- `src/forecastability/services/fingerprint_service.py`
+- tests
+
+**Acceptance criteria**
+
+- computes `information_mass` from corrected AMI over accepted horizons
+- carries forward canonical `information_horizon`
+- carries forward canonical `information_structure`
+- computes `nonlinear_share` against the linear baseline
+- preserves `directness_ratio` as separate input/output
+- mirrors `signal_to_noise` into the fingerprint object
+- does not require plotting adapter code
+- uses the geometry acceptance mask rather than redefining thresholding locally
+
+#### V3_1-F03 — Routing policy service
+
+**Goal.** Preserve the completed initial routing service as the base refactor target.
+
+**File targets**
+
+- `src/forecastability/services/routing_policy_service.py`
+
+**Acceptance criteria**
+
+- the pre-geometry implementation remains referenceable for the refactor diff
+
+#### V3_1-F03a — Geometry-aware routing refactor
+
+**Goal.** Map fingerprint + geometry quality to model families.
+
+**File targets**
+
+- `src/forecastability/services/routing_policy_service.py`
 - tests
 
 **Acceptance criteria**
@@ -638,11 +805,10 @@ Calibration / sanity-check expectations for `nonlinear_share`:
 - returns primary + secondary families
 - returns rationale and caution flags
 - confidence label is deterministic and rule-based
+- includes `signal_to_noise` in caution / confidence logic
 - no single exact-model promise is made
 - includes an explicit non-goal statement that routing is heuristic product
   guidance, not empirical ranking or performance guarantee
-- confidence label is derived from deterministic margins, taxonomy certainty,
-  and signal consistency rather than prose judgment
 
 ---
 
@@ -652,11 +818,23 @@ Calibration / sanity-check expectations for `nonlinear_share`:
 
 #### V3_1-F04 — Forecastability fingerprint use case
 
-**Goal.** Create a dedicated orchestration function.
+**Goal.** Preserve the completed initial orchestration function as the base refactor target.
 
 **File targets**
 
-- `src/forecastability/use_cases/run_forecastability_fingerprint.py` — new
+- `src/forecastability/use_cases/run_forecastability_fingerprint.py`
+
+**Acceptance criteria**
+
+- the pre-geometry implementation remains referenceable for the refactor diff
+
+#### V3_1-F04a — Geometry-first use-case refactor
+
+**Goal.** Rewire the public use case around geometry-first deterministic execution.
+
+**File targets**
+
+- `src/forecastability/use_cases/run_forecastability_fingerprint.py`
 - optional additive export surface
 - optional integration hook in existing triage/use-case bundles
 
@@ -664,12 +842,26 @@ Calibration / sanity-check expectations for `nonlinear_share`:
 
 - accepts series plus existing AMI/profile settings
 - returns `FingerprintBundle`
-- uses only domain/application services
+- uses geometry engine + deterministic services only
 - stable additive API; no breaking import changes
 
 #### V3_1-F05 — Unified summary rendering
 
-**Goal.** Make the output easy to consume in scripts, agents, and docs.
+**Goal.** Preserve the completed initial rendering surface as the base refactor target.
+
+**File targets**
+
+- reporting helper / markdown rendering utilities
+- CLI / JSON summary adapter integration
+- example JSON artifact builder
+
+**Acceptance criteria**
+
+- the pre-geometry rendering surface remains referenceable for the refactor diff
+
+#### V3_1-F05a — Geometry surfacing refactor
+
+**Goal.** Make the output easy to consume in scripts, agents, docs, and batch adapters.
 
 **File targets**
 
@@ -680,7 +872,8 @@ Calibration / sanity-check expectations for `nonlinear_share`:
 **Acceptance criteria**
 
 - fingerprint summary is visible in one compact object
-- CLI / JSON summary surface exposes the same four fingerprint fields plus routing output
+- geometry summary is visible in the same output family
+- CLI / JSON summary surface exposes the fingerprint fields plus geometry output
 - recommendation rationale is human-readable
 - output is stable enough for regression tests
 
@@ -696,8 +889,8 @@ Calibration / sanity-check expectations for `nonlinear_share`:
 
 **Acceptance criteria**
 
-- A1 payload models expose the same four fingerprint fields plus routing,
-  confidence, caution flags, and rationale
+- A1 payload models expose the same four fingerprint fields plus geometry outputs,
+  routing, confidence, caution flags, and rationale
 - A2 serialisation uses a versioned envelope and produces JSON-safe output
 - A3 deterministic interpretation adapter never invents metrics, routes, or
   probabilities and preserves the deterministic caution language
@@ -724,6 +917,25 @@ Calibration / sanity-check expectations for `nonlinear_share`:
 - the surface is documented as optional / experimental
 - any LLM/provider dependency is confined to `src/forecastability/adapters/llm/`
 
+#### V3_1-F05b — CSV batch geometry adapter
+
+**Goal.** Preserve the useful shape of Dr. Catt's prototype script without polluting domain services.
+
+**File targets**
+
+- `src/forecastability/adapters/csv/ami_geometry_csv_runner.py` — new
+- `scripts/run_ami_information_geometry_csv.py` — new
+
+**Acceptance criteria**
+
+- reads CSV with one series per column
+- drops NaNs column-wise
+- skips too-short series with clear warning
+- writes summary CSV
+- writes plot artifact
+- internally calls reusable geometry service
+- does not duplicate AMI estimation logic from the service layer
+
 ---
 
 ### Phase 3 — Tests and regression
@@ -742,6 +954,7 @@ Calibration / sanity-check expectations for `nonlinear_share`:
 - `test_routing_white_noise_to_naive_family`
 - `test_routing_periodic_to_seasonal_family`
 - `test_routing_nonlinear_to_nonlinear_family`
+- `test_low_signal_to_noise_downgrades_confidence`
 - `test_fingerprint_agent_payload_preserves_bundle_fields`
 - `test_fingerprint_agent_interpretation_preserves_route_and_confidence`
 - `test_live_fingerprint_agent_strict_mode_returns_deterministic_payload`
@@ -752,20 +965,24 @@ Calibration / sanity-check expectations for `nonlinear_share`:
 - no fragile exact floating-point thresholds without tolerance
 - routing tests assert family inclusion, not exact full prose strings
 - classifier tests cover tie-breaking, spacing tolerance, and monotonicity tolerance
-- threshold tests cover significance boundary, AMI-floor boundary, and empty-set behavior
+- threshold tests cover geometry-threshold boundaries and empty-set behavior
 - agent contract tests assert that deterministic fields survive unchanged through
   payload serialisation and optional narration paths
 
-#### V3_1-F06.1 — Regression fixtures
+#### V3_1-F06a — Geometry regression and boundary fixtures
 
-**Goal.** Freeze representative fingerprint bundles for canonical examples.
+**Goal.** Freeze representative geometry outputs and boundary behavior for canonical examples.
 
 **Acceptance criteria**
 
 - fixture rebuild script exists
 - drift is visible in CI
 - policy changes require intentional fixture refresh
-- at least one frozen fixture covers the A1/A2 agent payload shape
+- at least one frozen fixture covers corrected AMI, `tau`, `signal_to_noise`,
+  `information_structure`, and `information_horizon`
+- boundary tests cover the `signal_to_noise < 0.05` null rule
+- boundary tests cover `I_c(h) > 3 * tau(h)` horizon acceptance logic
+- tests cover short-series rejection at configured `min_n`
 
 #### V3_1-F06.2 — Small curated routing-quality panel
 
@@ -794,7 +1011,7 @@ Calibration / sanity-check expectations for `nonlinear_share`:
 **Acceptance criteria**
 
 - runs four canonical series
-- emits fingerprint JSON / markdown / figures
+- emits fingerprint + geometry JSON / markdown / figures
 - can be used in CI smoke mode
 
 #### V3_1-F07.1 — Walkthrough notebook
@@ -806,10 +1023,11 @@ Calibration / sanity-check expectations for `nonlinear_share`:
 **Acceptance criteria**
 
 - explains the fingerprint concept
+- explains the Information Geometry engine concept
 - shows four canonical archetypes
 - shows recommended families and caution notes
 - no logic divergence from reusable services
-- shows the four Peter Catt metrics directly in notebook outputs
+- shows the four fingerprint fields plus Dr. Catt-style geometry outputs directly
 
 ---
 
@@ -832,6 +1050,7 @@ Calibration / sanity-check expectations for `nonlinear_share`:
 - at least one minimal Python example exists in `examples/` or the repo's equivalent
   example surface
 - at least one CLI example is present in example artifacts, not only in README prose
+- at least one batch CSV example is present for the geometry adapter
 - the fingerprint notebook is cross-linked from examples and docs surfaces
 - at least one existing user-facing notebook or walkthrough is extended or linked so
   the fingerprint surface is discoverable outside the dedicated showcase
@@ -860,9 +1079,11 @@ Calibration / sanity-check expectations for `nonlinear_share`:
 Add a new section:
 
 - what the fingerprint is
-- how it differs from raw metrics
-- one mandatory short Python snippet showing fingerprint + routing output
-- one mandatory CLI example showing fingerprint + routing output
+- what the Information Geometry engine is
+- how the fingerprint and geometry layers differ
+- one mandatory short Python snippet showing fingerprint + routing + geometry output
+- one mandatory CLI example showing fingerprint + routing + geometry output
+- one mandatory batch CSV example for the geometry adapter
 - one mandatory agent-payload example or link into `examples/univariate/agents/`
 - links to the example and notebook surfaces added in `V3_1-F08`
 - link to `docs/agent_layer.md` for the deterministic-first contract
@@ -874,23 +1095,33 @@ These examples are required release artifacts, not optional nice-to-haves.
 **File targets**
 
 - `docs/theory/forecastability_fingerprint.md`
+- optional split companion:
+  `docs/theory/ami_information_geometry.md`
 
 Must document:
 
-- formula definitions
-- the screening-mask meaning of per-horizon surrogate significance
+- KSG-II AMI estimator semantics
+- shuffle-surrogate bias correction semantics
+- corrected profile and threshold profile
+- `signal_to_noise`
+- canonical `information_horizon`
+- formula definitions for the fingerprint layer
 - shape taxonomy
+- `information_mass`
+- `nonlinear_share`
 - routing semantics
 - confidence penalty rules and their versioned thresholds / tolerances
 - caveats and non-goals
+- stationarity assumption and shuffle-surrogate limitation
 - univariate-first / AMI-first scope boundary
 - deterministic-first agent contract and why agent narration is downstream only
 - where users can find the public examples and notebook walkthroughs
 
 #### V3_1-D03 — Changelog
 
-Document additive capability, no breaking API, routing caveat, the agent-layer
-contract additions, and the new public example / notebook surfaces.
+Document additive capability, no breaking API, the geometry-engine addition,
+routing caveat, the agent-layer contract additions, the batch CSV adapter,
+and the new public example / notebook surfaces.
 
 ---
 
@@ -906,13 +1137,13 @@ contract additions, and the new public example / notebook surfaces.
 
 #### V3_1-CI-03 — Release checklist update
 
-- add fingerprint artifact / fixture / docs checks
+- add geometry artifact / fixture / docs checks
 
 **Acceptance criteria**
 
 - smoke path completes on CI-supported Python versions
 - notebook contract passes
-- release checklist mentions routing semantics explicitly
+- release checklist mentions geometry and routing semantics explicitly
 - agent contract tests and strict deterministic fallback tests pass if the agent
   surface ships in `0.3.1`
 - CI checks run only after example, notebook, and docs surfaces are in place
@@ -930,10 +1161,13 @@ contract additions, and the new public example / notebook surfaces.
 - multivariate or conditional-MI fingerprint extensions
 - benchmark-calibrated routing confidence probabilities
 - autonomous agent-driven backtesting, hyperparameter search, or exact-model selection
+- IAAFT-based production surrogate switching in this release
+- claiming the geometry CSV adapter is the main package API
 
 Scope statement for reviewers:
 
 - `0.3.1` is intentionally univariate-first and AMI-first
+- Information Geometry strengthens the AMI engine; it does not replace the fingerprint layer
 - multivariate, conditional-MI, or broader empirical routing validation work belongs
   to follow-up releases, especially `0.3.4`, and is not part of this release
 
@@ -941,20 +1175,24 @@ Scope statement for reviewers:
 
 ## 9. Exit criteria
 
-- [ ] Every ticket V3_1-F00 through V3_1-F08, including sub-items such as V3_1-F00.1, V3_1-F06.1, V3_1-F06.2, and V3_1-F07.1, is either **Done** or explicitly **Deferred** in §4.
+- [ ] Every retained base `0.3.1` ticket needed for public release is either **Done** or explicitly **Deferred** in §4.
+- [ ] Refactor / geometry items `V3_1-F01a`, `V3_1-F01b`, `V3_1-F02a`, `V3_1-F03a`, `V3_1-F04a`, `V3_1-F05a`, `V3_1-F05b`, and `V3_1-F06a` are **Done** or explicitly **Deferred** with justification.
 - [ ] Every ticket V3_1-D01 through V3_1-D03 is **Done** before CI / release sign-off.
 - [ ] Every ticket V3_1-CI-01 through V3_1-CI-03 is **Done**.
-- [ ] `ForecastabilityFingerprint`, `RoutingRecommendation`, and `FingerprintBundle` exist as typed outputs.
-- [ ] `nonlinear_share` is documented and tested against a linear information baseline.
+- [x] `AmiInformationGeometry`, `ForecastabilityFingerprint`, `RoutingRecommendation`, and `FingerprintBundle` exist as typed outputs.
+- [x] `signal_to_noise` is documented and tested.
+- [x] `information_mass` is computed from corrected AMI over accepted horizons.
+- [x] `nonlinear_share` is documented and tested against a linear information baseline.
 - [ ] `directness_ratio` is kept semantically separate from `nonlinear_share` in code, docs, and examples.
-- [ ] The canonical showcase runs on at least four archetypal series.
-- [ ] Public example surfaces under `examples/` or equivalent are created or extended for the fingerprint release.
+- [x] The canonical showcase runs on at least four archetypal series.
+- [x] Public example surfaces under `examples/` or equivalent are created or extended for the fingerprint release.
 - [ ] Notebook surfaces are created or extended beyond the single showcase and are cross-linked from docs.
+- [ ] At least one regression fixture protects geometry behavior from silent drift.
 - [ ] At least one regression fixture protects routing behavior from silent drift.
 - [ ] A small curated real or semi-real routing-quality panel is run and mismatches are documented.
-- [ ] README / quickstart includes one Python and one CLI fingerprint-routing example.
-- [ ] Agent-ready payload surfaces expose the same four fingerprint fields plus routing/confidence/cautions.
-- [ ] No agent adapter or live narration path overrides deterministic fingerprint or routing outputs.
+- [ ] README / quickstart includes one Python example, one CLI example, and one batch CSV geometry example.
+- [x] Agent-ready payload surfaces expose the same four fingerprint fields plus geometry, routing, confidence, and cautions.
+- [x] No agent adapter or live narration path overrides deterministic fingerprint, geometry, or routing outputs.
 - [ ] The release docs state that `0.3.1` is univariate-first / AMI-first and does not include multivariate or conditional-MI extensions.
 - [ ] Reviewer comments 2-10 are each traceable to concrete sections in the plan or explicitly deferred.
 - [ ] No doc, notebook, or bundle string claims the package selects the one true optimal model.
@@ -965,15 +1203,17 @@ Scope statement for reviewers:
 
 ```text
 1. Phase 0 models + synthetic archetypes
-2. Linear baseline service
-3. Fingerprint service
-4. Routing service
-5. Use case / facade
-6. Summary rendering + agent adapters
-7. Tests + fixtures
-8. Showcase + notebook + agent demos
-9. Examples + docs + changelog
-10. CI + release hygiene
+2. AMI Information Geometry engine
+3. Linear baseline service
+4. Geometry-backed fingerprint refactor
+5. Geometry-aware routing refactor
+6. Geometry-first use case / facade
+7. Summary rendering + agent adapters
+8. CSV batch geometry adapter
+9. Tests + fixtures
+10. Showcase + notebook + agent demos
+11. Examples + docs + changelog
+12. CI + release hygiene
 ```
 
 
@@ -985,45 +1225,61 @@ Scope statement for reviewers:
 > This appendix does **not** replace any prior section.
 > It exists only to give `0.3.1` the same practical implementation depth that `0.3.0`
 > already had: file-level targets, code skeletons, validation rules, and execution order.
+>
+> Wherever any later historical snippet still refers to raw AMI + `surrogate_p_values`,
+> `ami_floor`, or `_build_informative_mask()` as the canonical thresholding path,
+> treat that snippet as a pre-geometry baseline only. In every such conflict,
+> §2 and the refactor items `V3_1-F01a`, `V3_1-F01b`, `V3_1-F02a`, and `V3_1-F03a`
+> take precedence.
 
 ### 11.1. Reference architecture for the fingerprint release
 
 ```mermaid
 flowchart TD
-    A["Series input"] --> B["Existing AMI/profile computation"]
-    B --> C["Informative-horizon mask\nshared threshold semantics"]
-    B --> D["Linear Gaussian-information baseline"]
-    C --> E["Fingerprint service\n mass / horizon / structure / nonlinear_share"]
-    D --> E
-    E --> F["Routing policy service\n primary / secondary / cautions / confidence"]
-    E --> G["Summary renderer\n dict / markdown / json"]
+    A["Series input"] --> B["AMI Information Geometry engine\n KSG-II / surrogates / tau / I_c"]
+    A --> C["Linear Gaussian-information baseline"]
+    B --> D["Geometry acceptance mask\n I_c(h) > 3 tau(h)"]
+    B --> E["Geometry result\n signal_to_noise / structure / horizon"]
+    D --> F["Fingerprint service\n mass / horizon / structure / nonlinear_share"]
+    C --> F
+    E --> F
+    E --> G["Routing policy service\n primary / secondary / cautions / confidence"]
     F --> G
-    E --> H["run_forecastability_fingerprint()"]
+    E --> H["Summary renderer\n dict / markdown / json"]
     F --> H
-    H --> I["Agent adapters A1/A2/A3\n payload / serializer / deterministic interpretation"]
-    I --> J["Optional live fingerprint agent\n narration only"]
-    G --> K["CLI / docs / examples / notebook / MCP"]
-    H --> K
-    I --> K
-    J --> K
+    G --> H
+    E --> I["run_forecastability_fingerprint()"]
+    F --> I
+    G --> I
+    I --> J["Agent adapters A1/A2/A3\n payload / serializer / deterministic interpretation"]
+    J --> K["Optional live fingerprint agent\n narration only"]
+    B --> L["CSV batch adapter"]
+    H --> M["CLI / docs / examples / notebook / MCP"]
+    I --> M
+    J --> M
+    K --> M
+    L --> M
 ```
 
 ### 11.2. File map — concrete target placement
 
 | Layer | New / updated file | Purpose |
 |---|---|---|
-| Utils | `src/forecastability/utils/types.py` | typed fingerprint + routing outputs |
-| Utils | `src/forecastability/utils/synthetic.py` | deterministic archetypal series for routing tests |
+| Utils | `src/forecastability/utils/types.py` | typed fingerprint + geometry + routing outputs |
+| Utils | `src/forecastability/utils/synthetic.py` | deterministic archetypal series for geometry / routing validation |
+| Services | `src/forecastability/services/ami_information_geometry_service.py` | KSG-II AMI + surrogate correction + geometry summaries |
 | Services | `src/forecastability/services/linear_information_service.py` | Gaussian-information proxy from autocorrelation |
-| Services | `src/forecastability/services/fingerprint_service.py` | shared `H_info` mask + fingerprint construction |
+| Services | `src/forecastability/services/fingerprint_service.py` | geometry-backed fingerprint construction |
 | Services | `src/forecastability/services/routing_policy_service.py` | versioned model-family routing rules |
 | Adapters / renderers | `src/forecastability/adapters/rendering/fingerprint_rendering.py` or existing reporting helper | markdown / dict / JSON summaries |
+| Adapters / CSV | `src/forecastability/adapters/csv/ami_geometry_csv_runner.py` | reusable CSV batch adapter |
 | Adapters / agents | `src/forecastability/adapters/agents/fingerprint_agent_payload_models.py` | A1 typed payload models for fingerprint bundles |
 | Adapters / agents | `src/forecastability/adapters/agents/fingerprint_summary_serializer.py` | A2 versioned serialisation envelope |
 | Adapters / agents | `src/forecastability/adapters/agents/fingerprint_agent_interpretation_adapter.py` | A3 deterministic interpretation for agent consumers |
 | Adapters / llm | `src/forecastability/adapters/llm/fingerprint_agent.py` | optional live narration/orchestration over deterministic fingerprint output |
 | Use cases | `src/forecastability/use_cases/run_forecastability_fingerprint.py` | additive public orchestration function |
 | Use cases | `src/forecastability/use_cases/requests.py`, `src/forecastability/use_cases/responses.py` | optional stable request/response seam if live orchestration needs explicit contracts |
+| Tests | `tests/test_ami_information_geometry_service.py` | geometry correctness + boundary behavior |
 | Tests | `tests/test_linear_information_service.py` | baseline correctness + clipping |
 | Tests | `tests/test_fingerprint_service.py` | semantics of the four fingerprint fields |
 | Tests | `tests/test_routing_policy_service.py` | deterministic mapping + caution logic |
@@ -1033,13 +1289,17 @@ flowchart TD
 | Tests | `tests/test_fingerprint_agent_interpretation_adapter.py` | deterministic interpretation / caveat preservation |
 | Tests | `tests/test_fingerprint_agent.py` | strict fallback and live-path boundary checks |
 | Tests | `tests/test_fingerprint_regression.py` | frozen fixture drift guard |
+| Tests | `tests/test_geometry_regression.py` | frozen corrected AMI / tau / signal-to-noise drift guard |
 | Examples | `examples/univariate/fingerprint/forecastability_fingerprint_example.py` | minimal Python example |
 | Examples | `examples/univariate/fingerprint/forecastability_routing_cli_example.md` | CLI example surface |
+| Examples | `examples/univariate/fingerprint/ami_information_geometry_csv_example.md` | CSV batch example surface |
 | Examples | `examples/univariate/agents/fingerprint_agent_payload_demo.py` | deterministic agent payload showcase |
 | Examples | `examples/univariate/agents/fingerprint_live_agent_demo.py` | optional experimental live-agent showcase |
 | Scripts | `scripts/run_showcase_fingerprint.py` | canonical four-series artifact generator |
+| Scripts | `scripts/run_ami_information_geometry_csv.py` | batch CSV runner |
 | Notebook | `notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb` | pedagogical walkthrough |
-| Docs | `docs/theory/forecastability_fingerprint.md` | mathematical semantics |
+| Docs | `docs/theory/forecastability_fingerprint.md` | fingerprint semantics |
+| Docs | `docs/theory/ami_information_geometry.md` | geometry-engine semantics |
 | Docs | `docs/quickstart.md`, `docs/public_api.md`, `README.md`, `docs/agent_layer.md` | user-facing additive surface and agent contract |
 
 ### 11.2A. Agent file plan — mandatory HEXAGO / SOLID ownership
@@ -1050,9 +1310,9 @@ flowchart TD
 
 | Ring | Files | Responsibility | Must not do |
 |---|---|---|---|
-| Domain core | `utils/types.py`, `services/fingerprint_service.py`, `services/routing_policy_service.py`, `services/linear_information_service.py` | compute fingerprint semantics and deterministic routing | import adapter code, prompt code, provider SDKs, or notebook helpers |
+| Domain core | `utils/types.py`, `services/ami_information_geometry_service.py`, `services/fingerprint_service.py`, `services/routing_policy_service.py`, `services/linear_information_service.py` | compute geometry, fingerprint semantics, and deterministic routing | import adapter code, prompt code, provider SDKs, or notebook helpers |
 | Application / use case | `use_cases/run_forecastability_fingerprint.py` plus optional `use_cases/requests.py` / `responses.py` seams | orchestrate deterministic services into one typed bundle | own prompt templates, serialisation, or provider-specific logic |
-| Deterministic adapter ring | `adapters/rendering/fingerprint_rendering.py`, `adapters/agents/fingerprint_agent_payload_models.py`, `adapters/agents/fingerprint_summary_serializer.py`, `adapters/agents/fingerprint_agent_interpretation_adapter.py` | transform typed results into stable transport / presentation shapes | recompute AMI, route families, or tune thresholds |
+| Deterministic adapter ring | `adapters/rendering/fingerprint_rendering.py`, `adapters/csv/ami_geometry_csv_runner.py`, `adapters/agents/fingerprint_agent_payload_models.py`, `adapters/agents/fingerprint_summary_serializer.py`, `adapters/agents/fingerprint_agent_interpretation_adapter.py` | transform typed results into stable transport / presentation shapes | recompute AMI, route families, or tune thresholds |
 | Live adapter ring | `adapters/llm/fingerprint_agent.py` | optional narration and tool wiring over deterministic outputs | define scientific formulas, override routes, or become a second use case |
 | Outer surfaces | CLI, examples, notebooks, MCP, docs | consume the use case or adapter contracts | assemble fingerprint logic ad hoc in notebooks |
 
@@ -1064,9 +1324,10 @@ Mandatory SOLID interpretation for these files:
 - `fingerprint_agent.py` owns only live-agent prompt/tool orchestration and strict fallback behavior
 - if a file starts needing two of those responsibilities, split it instead of growing a god-module
 
-### 11.3. Shared configuration object for semantics
+### 11.3. Shared configuration objects for geometry and fingerprint semantics
 
-**File:** `src/forecastability/services/fingerprint_service.py`
+**Files:** `src/forecastability/services/ami_information_geometry_service.py`,
+`src/forecastability/services/fingerprint_service.py`
 
 ```python
 from __future__ import annotations
@@ -1075,38 +1336,53 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True, slots=True)
-class FingerprintThresholdConfig:
-    """Versioned threshold and tolerance settings for fingerprint semantics.
+class AmiInformationGeometryConfig:
+    """Versioned threshold and estimator settings for geometry semantics.
 
-    This object centralizes the release semantics so tests, routing, and docs
-    all reference the same thresholds.
+    This object centralizes the Dr. Catt-aligned AMI geometry semantics so tests,
+    routing, and docs reference one source of truth.
 
     Args:
-        alpha: Surrogate significance level.
-        ami_floor: Minimum AMI threshold after significance masking.
-        peak_prominence_abs: Absolute minimum prominence for accepted peaks.
-        peak_prominence_rel: Relative prominence as a fraction of max informative AMI.
-        spacing_tolerance: Allowed deviation from dominant periodic spacing.
-        monotonicity_tolerance: Allowed upward local reversal within monotonic decay.
-        min_confident_horizons: Minimum informative horizons for confident routing.
+        k_list: K values aggregated by median for KSG-II.
+        n_surrogates: Number of shuffle surrogates for bias / tau estimation.
+        max_lag_frac: Max horizon as a fraction of series length.
+        min_n: Minimum series length for valid geometry analysis.
+        peak_prominence_abs: Absolute prominence floor for periodic-peak acceptance.
+        peak_spacing: Minimum spacing between accepted peaks.
+        signal_to_noise_none_threshold: Null-rule cutoff for structure == none.
+        horizon_multiplier_threshold: Acceptance multiplier in I_c(h) > m * tau(h).
         epsilon: Numerical floor used in ratios.
     """
 
-    alpha: float = 0.05
-    ami_floor: float = 0.01
-    peak_prominence_abs: float = 0.02
-    peak_prominence_rel: float = 0.10
-    spacing_tolerance: int = 1
-    monotonicity_tolerance: float = 0.01
+    k_list: tuple[int, ...] = (3, 5, 8)
+    n_surrogates: int = 200
+    max_lag_frac: float = 0.33
+    min_n: int = 80
+    peak_prominence_abs: float = 0.10
+    peak_spacing: int = 2
+    signal_to_noise_none_threshold: float = 0.05
+    horizon_multiplier_threshold: float = 3.0
+    epsilon: float = 1e-8
+
+
+@dataclass(frozen=True, slots=True)
+class FingerprintThresholdConfig:
+    """Downstream fingerprint / routing thresholds.
+
+    Geometry owns AMI correction and acceptance. This config owns only the
+    downstream semantics layered on top of geometry outputs.
+    """
+
     min_confident_horizons: int = 3
+    low_signal_to_noise_confidence_threshold: float = 0.10
     epsilon: float = 1e-12
 ```
 
 > [!NOTE]
-> The exact numeric defaults above are placeholders for the plan.
-> The important requirement is that `0.3.1` defines one versioned configuration
-> surface and reuses it across fingerprint construction, routing, regression,
-> notebook examples, and docs.
+> The exact numeric defaults above should align to the working note unless the
+> maintainer documents a deliberate deviation. The important requirement is that
+> `0.3.1` defines versioned geometry and downstream threshold surfaces and reuses
+> them across services, routing, regression, notebook examples, and docs.
 
 ### 11.4. Synthetic archetype generator — mandatory before routing
 
@@ -1304,6 +1580,13 @@ def compute_linear_information_curve(
 ### 11.6. Fingerprint builder service — detailed code skeleton
 
 **File:** `src/forecastability/services/fingerprint_service.py`
+
+> [!IMPORTANT]
+> The legacy raw-AMI / `surrogate_p_values` sketch below is retained only as a
+> contrast point from the earlier `0.3.1` draft. For the actual release,
+> `V3_1-F02a` supersedes it: the fingerprint builder must consume
+> `AmiInformationGeometry` outputs, the corrected profile `I_c(h)`, and the
+> geometry acceptance mask rather than rebuilding threshold semantics locally.
 
 ```python
 """Forecastability fingerprint construction from AMI profile outputs."""
@@ -1649,8 +1932,11 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from forecastability.services.ami_information_geometry_service import (
+    AmiInformationGeometryConfig,
+    compute_ami_information_geometry,
+)
 from forecastability.services.fingerprint_service import (
-    FingerprintInputs,
     FingerprintThresholdConfig,
     build_forecastability_fingerprint,
 )
@@ -1668,8 +1954,6 @@ def run_forecastability_fingerprint(
     *,
     target_name: str = "target",
     max_lag: int = 24,
-    alpha: float = 0.05,
-    ami_floor: float = 0.01,
     directness_ratio: float | None = None,
 ) -> FingerprintBundle:
     """Run the additive forecastability fingerprint workflow.
@@ -1678,43 +1962,41 @@ def run_forecastability_fingerprint(
         series: Input univariate series.
         target_name: Friendly target label.
         max_lag: Maximum horizon for profile computation.
-        alpha: Surrogate significance threshold.
-        ami_floor: Minimum AMI floor.
         directness_ratio: Optional directness statistic supplied by existing logic.
 
     Returns:
         FingerprintBundle: Typed fingerprint, routing guidance, and compact summary.
     """
     values = np.asarray(series, dtype=float)
-    horizons = list(range(1, max_lag + 1))
 
-    # Placeholder integration point: reuse existing profile / significance machinery.
-    ami_values = [0.0 for _ in horizons]
-    surrogate_p_values = [1.0 for _ in horizons]
-
-    fingerprint_inputs = FingerprintInputs(
-        horizons=horizons,
-        ami_values=ami_values,
-        surrogate_p_values=surrogate_p_values,
-        directness_ratio=directness_ratio,
+    geometry = compute_ami_information_geometry(
+        values,
+        config=AmiInformationGeometryConfig(max_lag_frac=min(0.33, max_lag / max(1, len(values)))),
     )
-    baseline = compute_linear_information_curve(values, horizons=horizons)
-    fingerprint, diagnostics = build_forecastability_fingerprint(
-        fingerprint_inputs,
-        baseline,
-        config=FingerprintThresholdConfig(alpha=alpha, ami_floor=ami_floor),
+
+    baseline = compute_linear_information_curve(
+        values,
+        horizons=[point.horizon for point in geometry.curve if point.valid],
+    )
+    fingerprint, _diagnostics = build_forecastability_fingerprint(
+        geometry=geometry,
+        baseline=baseline,
+        directness_ratio=directness_ratio,
+        config=FingerprintThresholdConfig(),
     )
     recommendation = build_routing_recommendation(
         fingerprint,
         config=RoutingThresholdConfig(),
     )
     profile_summary = {
-        "informative_horizons": ",".join(str(item) for item in diagnostics.informative_horizons),
+        "informative_horizons": ",".join(str(item) for item in geometry.informative_horizons),
         "structure": fingerprint.information_structure,
+        "signal_to_noise": fingerprint.signal_to_noise,
         "confidence": recommendation.confidence_label,
     }
     return FingerprintBundle(
         target_name=target_name,
+        geometry=geometry,
         fingerprint=fingerprint,
         recommendation=recommendation,
         profile_summary=profile_summary,
@@ -1723,9 +2005,9 @@ def run_forecastability_fingerprint(
 ```
 
 > [!IMPORTANT]
-> The placeholder AMI values above are intentional in the plan.
-> The junior developer must wire this use case to the repo’s existing AMI/profile
-> and surrogate-significance machinery rather than duplicating computation locally.
+> The geometry call above is schematic. The junior developer should expose
+> explicit `max_horizon` or `max_lag_frac` handling through the geometry config
+> rather than recomputing AMI ad hoc elsewhere in the use case.
 > This use case must not import `adapters/agents/` or `adapters/llm/`; outer
 > adapters consume the use case, not the other way around.
 
@@ -1751,6 +2033,10 @@ def render_fingerprint_summary(bundle: FingerprintBundle) -> dict[str, object]:
     """
     return {
         "target_name": bundle.target_name,
+        "geometry_method": bundle.geometry.method,
+        "signal_to_noise": bundle.geometry.signal_to_noise,
+        "geometry_information_horizon": bundle.geometry.information_horizon,
+        "geometry_information_structure": bundle.geometry.information_structure,
         "information_mass": bundle.fingerprint.information_mass,
         "information_horizon": bundle.fingerprint.information_horizon,
         "information_structure": bundle.fingerprint.information_structure,
@@ -1775,6 +2061,10 @@ class FingerprintAgentPayload(BaseModel, frozen=True):
     """JSON-safe deterministic payload for agent consumers."""
 
     target_name: str
+    geometry_method: GeometryMethodLabel
+    signal_to_noise: float
+    geometry_information_horizon: int
+    geometry_information_structure: FingerprintStructure
     information_mass: float
     information_horizon: int
     information_structure: FingerprintStructure
@@ -1796,7 +2086,7 @@ def fingerprint_agent_payload(bundle: FingerprintBundle) -> FingerprintAgentPayl
 
 Required A1 / A2 / A3 rules:
 
-- A1 mirrors deterministic fingerprint and routing outputs exactly
+- A1 mirrors deterministic fingerprint, geometry, and routing outputs exactly
 - A2 wraps the payload in a versioned transport envelope
 - A3 may shorten rationale or caution prose, but may not alter families,
   confidence labels, caution flags, or any numeric field
@@ -1810,6 +2100,10 @@ Required A1 / A2 / A3 rules:
 ```json
 {
   "target_name": "seasonal_periodic",
+  "geometry_method": "ksg2_shuffle_surrogate",
+  "signal_to_noise": 0.612,
+  "geometry_information_horizon": 24,
+  "geometry_information_structure": "periodic",
   "information_mass": 0.184,
   "information_horizon": 24,
   "information_structure": "periodic",
@@ -2044,6 +2338,7 @@ uv run python -m forecastability.adapters.cli.fingerprint \
 from forecastability.use_cases.run_forecastability_fingerprint import run_forecastability_fingerprint
 
 bundle = run_forecastability_fingerprint(series, target_name="sales", max_lag=24)
+print(bundle.geometry.signal_to_noise)
 print(bundle.fingerprint.information_structure)
 print(bundle.recommendation.primary_families)
 ```
@@ -2062,15 +2357,16 @@ print(bundle.recommendation.primary_families)
 
 | Invariant | Enforcement | Example |
 |---|---|---|
-| `information_mass` and `information_horizon` use the same `H_info` mask | shared helper function + test | `_build_informative_mask()` |
+| `information_mass` and `information_horizon` use the same geometry acceptance mask | shared helper function + test | `I_c(h) > 3 * tau(h)` |
+| `signal_to_noise` is computed from corrected AMI and `tau(h)` only | service boundary + test | `sum(max(I_c - tau, 0)) / sum(I_c)` |
 | `nonlinear_share` is computed against Gaussian-information baseline only | service boundary + test | `_gaussian_information_from_rho()` |
 | Undefined baseline horizons are excluded conservatively | explicit caution + test | `valid=False` point |
-| `information_structure` is domain logic, not plotting logic | service placement review | `fingerprint_service.py` |
+| Geometry structure is domain logic, not plotting logic | service placement review | `ami_information_geometry_service.py` |
 | Routing is heuristic guidance only | wording grep / doc review | “recommended families” |
 | Confidence is deterministic, never prose-only | threshold tests | penalty-count mapping |
 | `directness_ratio` remains separate from `nonlinear_share` | explicit fields + negative tests | `test_directness_ratio_not_used_as_nonlinear_share()` |
 | Synthetic generators are deterministic by integer seed | typed seed + fixture test | `seed: int = 42` |
-| Public surfaces expose the same four fingerprint fields | example / notebook / CLI contract tests | JSON + notebook assertions |
+| Public surfaces expose the same four fingerprint fields plus geometry outputs | example / notebook / CLI contract tests | JSON + notebook assertions |
 | Agent payloads mirror deterministic bundle values exactly | adapter parity tests | `fingerprint_agent_payload()` |
 | Live narration stays downstream of deterministic output | strict-mode / provider-failure tests | `run_fingerprint_agent(..., strict=True)` |
 | `0.3.1` remains univariate-first / AMI-first | docs review | README + theory page |
@@ -2082,12 +2378,12 @@ print(bundle.recommendation.primary_families)
 | Phase | Done when |
 |---|---|
 | **0 — Contracts + synthetic panel** | Typed models importable, archetype generator deterministic, no notebook-only logic, linter clean |
-| **1 — Core services** | Linear baseline, fingerprint builder, and routing policy independently testable, threshold semantics centralized |
-| **2 — Facade** | `run_forecastability_fingerprint()` returns `FingerprintBundle`, summary rendering stable, agent adapters preserve deterministic values, additive public API only |
-| **3 — Tests** | Unit + integration + regression fixtures green, semantic edge cases covered, routing-quality panel documented |
+| **1 — Core services** | Geometry engine, linear baseline, geometry-backed fingerprint builder, and routing policy independently testable, threshold semantics centralized |
+| **2 — Facade** | `run_forecastability_fingerprint()` returns `FingerprintBundle` with geometry, summary rendering stable, agent adapters preserve deterministic values, additive public API only |
+| **3 — Tests** | Unit + integration + geometry/routing regression fixtures green, semantic edge cases covered, routing-quality panel documented |
 | **4 — Showcase** | Canonical script and notebook run end-to-end, stable artifacts emitted, all four archetypes demonstrated |
-| **5 — Docs / examples** | README, quickstart, theory doc, agent-layer docs, examples, and notebook all expose the same four fields and same caution language |
-| **6 — CI / release** | Smoke path, notebook contract, agent contract checks, artifact checks, and release checklist all mention fingerprint + routing semantics |
+| **5 — Docs / examples** | README, quickstart, theory docs, agent-layer docs, examples, and notebook all expose the same fingerprint + geometry story and same caution language |
+| **6 — CI / release** | Smoke path, notebook contract, agent contract checks, artifact checks, and release checklist all mention fingerprint + geometry + routing semantics |
 
 ---
 
@@ -2095,12 +2391,21 @@ print(bundle.recommendation.primary_families)
 
 ### Epic A — Contracts + synthetic panel (Day 1)
 
-- [ ] Extend `src/forecastability/utils/types.py` with `ForecastabilityFingerprint`, `RoutingRecommendation`, and `FingerprintBundle`
-- [ ] Add `generate_fingerprint_archetypes()` to `src/forecastability/utils/synthetic.py`
-- [ ] Write `tests/test_fingerprint_synthetic.py`
-- [ ] Verify deterministic output by `seed=42`
+- [x] Extend `src/forecastability/utils/types.py` with `AmiInformationGeometry`, `ForecastabilityFingerprint`, `RoutingRecommendation`, and `FingerprintBundle`
+- [x] Add `generate_fingerprint_archetypes()` to `src/forecastability/utils/synthetic.py`
+- [x] Write `tests/test_fingerprint_synthetic.py`
+- [x] Verify deterministic output by `seed=42`
 
-### Epic B — Linear-information baseline (Day 2)
+### Epic B — Geometry engine (Day 2)
+
+- [x] Create `src/forecastability/services/ami_information_geometry_service.py`
+- [x] Add `AmiInformationGeometryConfig`
+- [x] Implement KSG-II estimator with median over `k_list`
+- [x] Implement shuffle bias correction, `tau(h)`, corrected profile `I_c(h)`, and `signal_to_noise`
+- [x] Write `tests/test_ami_information_geometry_service.py`
+- [x] Verify: white noise gives low `signal_to_noise`; seasonal series gives periodic geometry structure
+
+### Epic C — Linear-information baseline (Day 3)
 
 - [ ] Create `src/forecastability/services/linear_information_service.py`
 - [ ] Add `LinearInformationPoint` and `LinearInformationCurve`
@@ -2108,63 +2413,69 @@ print(bundle.recommendation.primary_families)
 - [ ] Write `tests/test_linear_information_service.py`
 - [ ] Verify: zero-correlation white noise produces near-zero Gaussian information
 
-### Epic C — Fingerprint semantics (Days 3-4)
+### Epic D — Geometry-backed fingerprint semantics (Days 4-5)
 
-- [ ] Create `FingerprintThresholdConfig` and `FingerprintInputs`
-- [ ] Implement `_build_informative_mask()`
-- [ ] Implement `_classify_information_structure()`
-- [ ] Implement `build_forecastability_fingerprint()`
-- [ ] Write `tests/test_fingerprint_service.py`
-- [ ] Verify: `ar1_monotonic -> monotonic`, `seasonal_periodic -> periodic`, `white_noise -> none`
+- [x] Refactor `src/forecastability/services/fingerprint_service.py` to consume geometry outputs
+- [x] Mirror `signal_to_noise` into the fingerprint object
+- [x] Implement `build_forecastability_fingerprint()`
+- [x] Write `tests/test_fingerprint_service.py`
+- [x] Verify: `ar1_monotonic -> monotonic`, `seasonal_periodic -> periodic`, `white_noise -> none`
 
-### Epic D — Routing policy (Day 5)
+### Epic E — Routing policy (Day 6)
 
-- [ ] Create `src/forecastability/services/routing_policy_service.py`
-- [ ] Add versioned routing thresholds
-- [ ] Implement caution flags and confidence penalties
-- [ ] Write `tests/test_routing_policy_service.py`
-- [ ] Verify: mixed/high-nonlinear cases map to nonlinear families
+- [x] Create `src/forecastability/services/routing_policy_service.py`
+- [x] Add versioned routing thresholds
+- [x] Implement caution flags and confidence penalties including low-signal-quality handling
+- [x] Write `tests/test_routing_policy_service.py`
+- [x] Verify: mixed/high-nonlinear cases map to nonlinear families
 
-### Epic E — Use case + rendering + agent adapters (Day 6)
+### Epic F — Use case + rendering + agent adapters (Day 7)
 
-- [ ] Create `src/forecastability/use_cases/run_forecastability_fingerprint.py`
-- [ ] Reuse existing AMI/profile machinery; do not recompute AMI ad hoc in the use case
-- [ ] Add stable rendering helper for dict / JSON / markdown output
-- [ ] Create `src/forecastability/adapters/agents/fingerprint_agent_payload_models.py`
-- [ ] Create `src/forecastability/adapters/agents/fingerprint_summary_serializer.py`
-- [ ] Create `src/forecastability/adapters/agents/fingerprint_agent_interpretation_adapter.py`
-- [ ] Optional: create `src/forecastability/adapters/llm/fingerprint_agent.py`
-- [ ] Write `tests/test_run_forecastability_fingerprint.py`
-- [ ] Add agent contract tests for payload parity and strict fallback
-- [ ] Verify additive imports only; no breaking interface changes
+- [x] Create `src/forecastability/use_cases/run_forecastability_fingerprint.py`
+- [x] Call the geometry engine first; do not recompute AMI ad hoc in outer layers
+- [x] Add stable rendering helper for dict / JSON / markdown output
+- [ ] Create `src/forecastability/adapters/csv/ami_geometry_csv_runner.py`
+- [ ] Create `scripts/run_ami_information_geometry_csv.py`
+- [x] Create `src/forecastability/adapters/agents/fingerprint_agent_payload_models.py`
+- [x] Create `src/forecastability/adapters/agents/fingerprint_summary_serializer.py`
+- [x] Create `src/forecastability/adapters/agents/fingerprint_agent_interpretation_adapter.py`
+- [x] Optional: create `src/forecastability/adapters/llm/fingerprint_agent.py`
+- [x] Write `tests/test_run_forecastability_fingerprint.py`
+- [x] Add agent contract tests for payload parity and strict fallback
+- [x] Verify additive imports only; no breaking interface changes
 
-### Epic F — Regression + routing-quality panel (Day 7)
+### Epic G — Regression + routing-quality panel (Day 8)
 
 - [ ] Freeze expected fixtures in `docs/fixtures/fingerprint_regression/expected/`
+- [ ] Freeze expected geometry fixtures in `docs/fixtures/geometry_regression/expected/`
 - [ ] Add `tests/test_fingerprint_regression.py`
+- [ ] Add `tests/test_geometry_regression.py`
 - [ ] Create a small curated routing-quality panel note under `docs/theory/forecastability_fingerprint.md` or adjacent doc
 - [ ] Document mismatches explicitly rather than smoothing them away
 
-### Epic G — Showcase + notebook + examples (Days 8-9)
+### Epic H — Showcase + notebook + examples (Days 9-10)
 
 - [ ] Create `scripts/run_showcase_fingerprint.py`
 - [ ] Create `notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb`
-- [ ] Add minimal Python example under `examples/univariate/fingerprint/`
-- [ ] Add deterministic fingerprint agent demo under `examples/univariate/agents/`
-- [ ] Optional: add experimental live fingerprint agent demo
+- [x] Add minimal Python example under `examples/univariate/fingerprint/`
+- [ ] Add batch CSV geometry example under `examples/univariate/fingerprint/`
+- [x] Add deterministic fingerprint agent demo under `examples/univariate/agents/`
+- [x] Optional: add experimental live fingerprint agent demo
 - [ ] Add CLI example snippet to README / quickstart
 - [ ] Verify notebook uses real package surfaces only
 
-### Epic H — Docs + CI + release closeout (Day 10)
+### Epic I — Docs + CI + release closeout (Day 11)
 
 - [ ] Update `README.md`, `docs/quickstart.md`, `docs/public_api.md`
-- [ ] Update `docs/agent_layer.md` with fingerprint-specific contract examples
-- [ ] Add `docs/theory/forecastability_fingerprint.md`
-- [ ] Update `CHANGELOG.md`
+- [x] Update `docs/agent_layer.md` with fingerprint-specific contract examples
+- [x] Add `docs/theory/forecastability_fingerprint.md`
+- [x] Add `docs/theory/ami_information_geometry.md`
+- [x] Update `CHANGELOG.md`
 - [ ] Extend smoke workflow to run fingerprint showcase
+- [ ] Extend smoke workflow or script checks for the CSV geometry adapter
 - [ ] Extend notebook contract checker for the new walkthrough
 - [ ] Add agent contract checks if the live/deterministic agent surface ships
-- [ ] Extend release checklist with fingerprint/routing semantics checks
+- [ ] Extend release checklist with geometry/fingerprint/routing semantics checks
 
 ---
 
@@ -2176,11 +2487,13 @@ uv run ruff check .
 uv run ty check
 uv run pytest -q
 uv run python scripts/run_showcase_fingerprint.py
+uv run python scripts/run_ami_information_geometry_csv.py --help
 uv run python scripts/check_notebook_contract.py
 uv build
 ```
 
 ```bash
+uv run pytest tests/test_ami_information_geometry_service.py -q
 uv run pytest tests/test_linear_information_service.py -q
 uv run pytest tests/test_fingerprint_service.py -q
 uv run pytest tests/test_routing_policy_service.py -q
@@ -2190,6 +2503,7 @@ uv run pytest tests/test_fingerprint_summary_serializer.py -q
 uv run pytest tests/test_fingerprint_agent_interpretation_adapter.py -q
 uv run pytest tests/test_fingerprint_agent.py -q
 uv run pytest tests/test_fingerprint_regression.py -q
+uv run pytest tests/test_geometry_regression.py -q
 ```
 
 ---

@@ -32,7 +32,7 @@ from forecastability import (
 | --- | --- |
 | Triage entry points | `run_triage`, `run_batch_triage`, `TriageRequest`, `TriageResult` |
 | Covariant entry points | `run_covariant_analysis`, `CovariantAnalysisBundle`, `CovariantSummaryRow`, `TransferEntropyResult`, `GcmiResult`, `CausalGraphResult`, `PcmciAmiResult`, `Phase0MiScore` |
-| Fingerprint entry points | `run_forecastability_fingerprint`, `FingerprintBundle`, `ForecastabilityFingerprint`, `AmiInformationGeometry`, `AmiGeometryCurvePoint` |
+| Fingerprint entry points | `run_forecastability_fingerprint`, `run_batch_forecastability_workbench`, `FingerprintBundle`, `ForecastabilityFingerprint`, `AmiInformationGeometry`, `AmiGeometryCurvePoint`, `BatchForecastabilityWorkbenchResult`, `ForecastingNextStepPlan` |
 | Analyzer facade | `ForecastabilityAnalyzer`, `ForecastabilityAnalyzerExog`, `AnalyzeResult` |
 | Diagnostic and result models | `ForecastabilityProfile`, `PredictiveInfoLearningCurve`, `SpectralPredictabilityResult`, `InterpretationResult`, `Diagnostics`, `MetricCurve`, `CanonicalExampleResult`, `CanonicalSummary`, `SeriesEvaluationResult`, `ForecastResult`, `BackendComparisonResult`, `ExogenousBenchmarkResult`, `RobustnessStudyResult`, `SampleSizeStressResult` |
 | Config models | `BenchmarkDataConfig`, `CMIConfig`, `ExogenousBenchmarkConfig`, `MetricConfig`, `ModelConfig`, `OutputConfig`, `RobustnessStudyConfig`, `RollingOriginConfig`, `SensitivityConfig`, `UncertaintyConfig` |
@@ -62,6 +62,43 @@ Key returned objects:
 - `bundle.geometry`: corrected-profile geometry, `signal_to_noise`, geometry structure, geometry horizon
 - `bundle.fingerprint`: compact fingerprint fields (`information_mass`, `information_horizon`, `information_structure`, `nonlinear_share`, `signal_to_noise`)
 - `bundle.recommendation`: deterministic model-family guidance and caution flags
+
+## Batch Forecastability Workbench
+
+Use `run_batch_forecastability_workbench` when you want one deterministic batch
+pass that combines:
+
+- triage ranking
+- geometry-backed fingerprint routing
+- per-series next-step forecasting plans
+- batch-level technical and executive reporting inputs
+
+```python
+from forecastability import (
+    generate_fingerprint_archetypes,
+    run_batch_forecastability_workbench,
+)
+from forecastability.triage import BatchSeriesRequest, BatchTriageRequest
+
+series_map = generate_fingerprint_archetypes(n=320, seed=42)
+request = BatchTriageRequest(
+    items=[
+        BatchSeriesRequest(series_id=name, series=series.tolist())
+        for name, series in series_map.items()
+    ],
+    max_lag=24,
+    n_surrogates=99,
+    random_state=42,
+)
+result = run_batch_forecastability_workbench(request, top_n=2)
+```
+
+Key returned objects:
+
+- `result.items[*].triage_item`: ranked batch triage outcome
+- `result.items[*].fingerprint_bundle`: geometry + fingerprint + routing when analyzable
+- `result.items[*].next_step`: deterministic next-step forecasting plan
+- `result.summary`: batch counts plus technical/executive summary strings
 
 ## Covariant Method Surface
 

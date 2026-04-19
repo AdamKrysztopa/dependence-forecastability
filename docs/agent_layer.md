@@ -185,6 +185,15 @@ For the fingerprint path:
 2. The A3 deterministic interpretation may shorten prose, but it may not alter numeric fields, route families, or confidence labels.
 3. Any optional live narration surface must read the deterministic payload or call the same deterministic use case and remain verifiable against it.
 
+### Batch workbench handoff
+
+For portfolio workflows, the deterministic handoff now also includes the batch
+forecastability workbench:
+
+1. `run_batch_forecastability_workbench()` decides per-series next-step actions from the same deterministic triage + fingerprint evidence.
+2. Batch examples should feed `fingerprint_agent_payload()` and `interpret_fingerprint_batch()` only from `fingerprint_bundle` outputs returned by the workbench.
+3. Technical and executive reports are rendering layers only; they must not recompute routing, rewrite caution flags, or invent stakeholder claims that disagree with the deterministic bundle.
+
 ### Expanded output shape
 
 With diagnostics enabled, the full agent-ready payload extends the base output:

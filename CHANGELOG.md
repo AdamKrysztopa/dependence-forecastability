@@ -10,11 +10,13 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 ### Added
 - Geometry-backed fingerprint core for the v0.3.1 workflow: typed `AmiInformationGeometry` / `AmiGeometryCurvePoint` outputs, KSG-II + shuffle-surrogate AMI geometry service, and `signal_to_noise` as a first-class deterministic metric.
 - Canonical `generate_fingerprint_archetypes()` helper for the shared univariate synthetic panel used by fingerprint examples and tests.
+- Batch forecastability workbench surface: `run_batch_forecastability_workbench()`, typed next-step planning models, technical markdown output, and executive brief rendering for manager/product-owner workflows.
 
 ### Changed
 - Refactored `run_forecastability_fingerprint()` to execute geometry first, build the fingerprint from corrected-profile outputs, and then route deterministically from the geometry-backed fingerprint.
 - Extended fingerprint summaries, agent payloads, and live-agent strict fallback so geometry, fingerprint, and routing fields stay aligned across typed objects, markdown/JSON output, and agent-facing contracts.
-- Updated theory/public API/quickstart docs to describe the geometry-backed fingerprint semantics instead of the older raw-AMI pre-geometry behavior.
+- Added a batch example that runs triage, fingerprint routing, and deterministic A1/A3 agent handoff together from the shared synthetic panel.
+- Updated theory/public API/quickstart/agent-layer docs to describe the geometry-backed fingerprint semantics and the new batch forecasting workbench.
 
 ## [0.3.0] - 2026-04-17
 

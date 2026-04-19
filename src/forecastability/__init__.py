@@ -21,6 +21,10 @@ from forecastability.reporting.fingerprint_reporting import (
     render_fingerprint_summary_dict,
     save_fingerprint_bundle_json,
 )
+from forecastability.reporting.forecastability_workbench_reporting import (
+    build_batch_forecastability_executive_markdown,
+    build_batch_forecastability_markdown,
+)
 from forecastability.triage.forecastability_profile import ForecastabilityProfile
 from forecastability.triage.models import (
     TriageRequest,
@@ -28,7 +32,18 @@ from forecastability.triage.models import (
 )
 from forecastability.triage.predictive_info_learning_curve import PredictiveInfoLearningCurve
 from forecastability.triage.spectral_predictability import SpectralPredictabilityResult
-from forecastability.use_cases import run_batch_triage, run_covariant_analysis, run_triage
+from forecastability.use_cases import (
+    run_batch_forecastability_workbench,
+    run_batch_triage,
+    run_covariant_analysis,
+    run_triage,
+)
+from forecastability.use_cases.batch_forecastability_workbench_models import (
+    BatchForecastabilityWorkbenchItem,
+    BatchForecastabilityWorkbenchResult,
+    BatchForecastabilityWorkbenchSummary,
+    ForecastingNextStepPlan,
+)
 from forecastability.use_cases.run_forecastability_fingerprint import (
     run_forecastability_fingerprint,
 )
@@ -93,6 +108,9 @@ __all__ = [
     "AnalyzeResult",
     "ar1_theoretical_ami",
     "BackendComparisonResult",
+    "BatchForecastabilityWorkbenchItem",
+    "BatchForecastabilityWorkbenchResult",
+    "BatchForecastabilityWorkbenchSummary",
     "CanonicalExampleResult",
     "CanonicalSummary",
     "CausalGraphResult",
@@ -100,6 +118,8 @@ __all__ = [
     "CovariantAnalysisBundle",
     "CovariantSummaryRow",
     "Diagnostics",
+    "build_batch_forecastability_executive_markdown",
+    "build_batch_forecastability_markdown",
     "build_fingerprint_markdown",
     "build_fingerprint_panel_markdown",
     "build_fingerprint_summary_dict",
@@ -111,6 +131,7 @@ __all__ = [
     "ForecastabilityAnalyzer",
     "ForecastabilityAnalyzerExog",
     "ForecastabilityFingerprint",
+    "ForecastingNextStepPlan",
     "ForecastabilityProfile",
     "ForecastResult",
     "GcmiResult",
@@ -139,6 +160,7 @@ __all__ = [
     "RollingOriginConfig",
     "RoutingRecommendation",
     "run_batch_triage",
+    "run_batch_forecastability_workbench",
     "run_covariant_analysis",
     "run_forecastability_fingerprint",
     "run_triage",

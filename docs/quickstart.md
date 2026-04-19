@@ -218,6 +218,40 @@ print(
 PY
 ```
 
+## 11.5 Minutes: Batch Forecast Routing And Executive Brief
+
+Use the batch workbench when you need one deterministic pass that serves both
+analyst and stakeholder workflows.
+
+```bash
+uv run python - <<'PY'
+from forecastability import (
+    build_batch_forecastability_executive_markdown,
+    build_batch_forecastability_markdown,
+    generate_fingerprint_archetypes,
+    run_batch_forecastability_workbench,
+)
+from forecastability.triage import BatchSeriesRequest, BatchTriageRequest
+
+series_map = generate_fingerprint_archetypes(n=320, seed=42)
+request = BatchTriageRequest(
+    items=[
+        BatchSeriesRequest(series_id=name, series=series.tolist())
+        for name, series in series_map.items()
+    ],
+    max_lag=24,
+    n_surrogates=99,
+    random_state=42,
+)
+result = run_batch_forecastability_workbench(request, top_n=2)
+
+print(result.summary.technical_summary)
+print(result.items[0].next_step.action)
+print(build_batch_forecastability_markdown(result).splitlines()[0])
+print(build_batch_forecastability_executive_markdown(result).splitlines()[0])
+PY
+```
+
 ## 12 Minutes: Covariant Informative Workflow
 
 Run the v0.3.0 covariant bundle with pairwise and directional methods:

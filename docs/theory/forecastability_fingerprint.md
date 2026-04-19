@@ -125,3 +125,13 @@ The v0.3.1 fingerprint no longer rebuilds threshold semantics locally.
 
 That keeps the deterministic core aligned across Python objects, markdown
 reports, JSON output, and agent payloads.
+
+## Batch Operationalization
+
+The batch forecastability workbench introduced on top of the fingerprint stack
+does not add new mathematics. It operationalizes the same deterministic
+geometry, fingerprint, and routing outputs in a portfolio workflow.
+
+- batch triage still ranks readiness and signal quality separately
+- per-series next-step plans are derived from the same routed families and caution flags
+- executive reports are communication surfaces only and must stay downstream of the deterministic bundle

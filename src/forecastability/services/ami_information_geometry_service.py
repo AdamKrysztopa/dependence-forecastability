@@ -245,6 +245,40 @@ def _stable_spacing(
     return bool(np.all(np.abs(spacings - dominant_spacing) <= spacing_tolerance))
 
 
+def _periodic_shift_match(
+    corrected: np.ndarray,
+    accepted: np.ndarray,
+    *,
+    min_period: int,
+    correlation_threshold: float = 0.60,
+) -> bool:
+    """Detect repeated accepted structure when local-peak spacing is too brittle.
+
+    This fallback is aimed at seasonal profiles where the first short-memory peak
+    distorts the spacing sequence, but a later accepted segment still repeats at
+    a materially non-trivial lag.
+    """
+    if corrected.size < 2 * min_period or min_period <= 0:
+        return False
+
+    candidate_horizon = int(np.argmax(corrected[1:]) + 2)
+    if candidate_horizon < min_period or candidate_horizon >= corrected.size:
+        return False
+
+    head = corrected[:-candidate_horizon]
+    tail = corrected[candidate_horizon:]
+    mask = accepted[:-candidate_horizon] & accepted[candidate_horizon:]
+    if int(np.sum(mask)) < 4:
+        return False
+
+    head = head[mask]
+    tail = tail[mask]
+    if np.allclose(head, head[0]) or np.allclose(tail, tail[0]):
+        return False
+
+    return bool(np.corrcoef(head, tail)[0, 1] >= correlation_threshold)
+
+
 def _extract_peak_candidates(
     corrected: np.ndarray,
     accepted: np.ndarray,
@@ -309,6 +343,12 @@ def _classify_information_structure(
     )
     if len(peaks) >= 2 and _stable_spacing(peaks, spacing_tolerance=config.peak_spacing):
         return "periodic", False
+    if _periodic_shift_match(
+        corrected,
+        accepted,
+        min_period=max(6, 2 * config.peak_spacing + 1),
+    ):
+        return "periodic", True
 
     accepted_horizons = np.flatnonzero(accepted)
     early_peak_cutoff = max(4, int(math.ceil(accepted_horizons.size / 4)))

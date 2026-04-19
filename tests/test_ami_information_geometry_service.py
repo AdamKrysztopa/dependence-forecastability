@@ -50,6 +50,19 @@ def test_seasonal_periodic_geometry_detects_periodic_structure() -> None:
     assert len(geometry.informative_horizons) > 0
 
 
+def test_longer_seasonal_window_stays_periodic() -> None:
+    """Longer evaluated windows should not collapse the seasonal archetype to monotonic."""
+    series = generate_seasonal_periodic(n=600, period=12, seed=42)
+    geometry = compute_ami_information_geometry(
+        series,
+        config=_config(max_horizon=24),
+        random_state=42,
+    )
+
+    assert geometry.information_structure == "periodic"
+    assert geometry.information_horizon == 24
+
+
 def test_geometry_curve_points_expose_threshold_fields() -> None:
     """The returned curve points should include corrected AMI and tau values."""
     series = generate_seasonal_periodic(n=240, period=12, seed=9)

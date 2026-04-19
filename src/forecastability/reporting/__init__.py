@@ -8,6 +8,10 @@ from forecastability.reporting.fingerprint_reporting import (
     render_fingerprint_summary_dict,
     save_fingerprint_bundle_json,
 )
+from forecastability.reporting.forecastability_workbench_reporting import (
+    build_batch_forecastability_executive_markdown,
+    build_batch_forecastability_markdown,
+)
 from forecastability.reporting.reporting import (
     build_benchmark_markdown,
     build_canonical_markdown,
@@ -21,6 +25,8 @@ from forecastability.reporting.reporting import (
 )
 
 __all__ = [
+    "build_batch_forecastability_executive_markdown",
+    "build_batch_forecastability_markdown",
     "build_benchmark_markdown",
     "build_canonical_markdown",
     "build_canonical_panel_markdown",
