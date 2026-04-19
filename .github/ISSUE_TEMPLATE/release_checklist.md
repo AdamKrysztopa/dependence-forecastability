@@ -22,6 +22,7 @@ assignees: ""
 ### Showcase and notebook validation
 - [ ] Univariate showcase runs clean: `MPLBACKEND=Agg uv run scripts/run_showcase.py --no-rolling`
 - [ ] Covariant showcase runs clean: `MPLBACKEND=Agg uv run scripts/run_showcase_covariant.py --fast`
+- [ ] Fingerprint showcase runs clean: `MPLBACKEND=Agg uv run scripts/run_showcase_fingerprint.py --smoke`
 - [ ] Notebook contract validated: `uv run python scripts/check_notebook_contract.py`
 
 ### Build and publish validation

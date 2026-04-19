@@ -207,7 +207,7 @@ Standard PCMCI+ MCI testing, but with highly refined, compact, information-dense
 | V3-F01 | Transfer Entropy scorer + service | 1 | Follows `DependenceScorer` pattern | `te_scorer()`, `src/forecastability/services/transfer_entropy_service.py` | **Done** (2026-04-16: diagnostics/service path, analyzer `method="te"`, and tests validated) |
 | V3-F02 | GCMI scorer + service | 1 | Follows `DependenceScorer` pattern | `gcmi_scorer()`, `src/forecastability/services/gcmi_service.py` | **Done** (2026-04-16: diagnostics/service path, 25 tests, theory doc; 2026-04-17: GCMI example finalized at `examples/covariant_informative/information_measures/gcmi_example.py`) |
 | V3-F03 | PCMCI+ adapter | 1 | None (new external integration) | `src/forecastability/adapters/tigramite_adapter.py`, `CausalGraphPort` | **Done** (2026-04-16: adapter, tests, dedicated example, optional causal extra; 2026-04-16b: 8-variable benchmark with two nonlinear drivers, two-story example, `docs/theory/pcmci_plus.md`) |
-| V3-F04 | PCMCI-AMI-Hybrid method | 1 | Builds on AMI kNN + tigramite adapter | `src/forecastability/adapters/pcmci_ami_adapter.py`, `knn_cmi_ci_test.py`, `services/pcmci_ami_service.py`, `PcmciAmiResult` model, Phase 0 AMI triage + kNN MI CI test | **Partial** (2026-04-16: real Phase 0 MI/CrossMI screening via Tigramite `link_assumptions` and residualized kNN CI shipped; stronger MI-ranked conditioning logic remains proposal-only; current comparison evidence is illustrative and benchmark-specific. **MI-ranked conditioning and CrossAMI past-window deferred to v0.3.1.**) |
+| V3-F04 | PCMCI-AMI-Hybrid method | 1 | Builds on AMI kNN + tigramite adapter | `src/forecastability/adapters/pcmci_ami_adapter.py`, `knn_cmi_ci_test.py`, `services/pcmci_ami_service.py`, `PcmciAmiResult` model, Phase 0 AMI triage + kNN MI CI test | **Partial** (2026-04-16: real Phase 0 MI/CrossMI screening via Tigramite `link_assumptions` and residualized kNN CI shipped; stronger MI-ranked conditioning logic remains proposal-only; current comparison evidence is illustrative and benchmark-specific. **A dedicated fixed-lag lagged-exogenous triage follow-up was deferred to v0.3.1: diagnostic lag-0 reporting, standard cross-correlation, fixed-lag crossAMI profiling, crosspAMI-style redundancy pruning, and explicit DTW omission.**) |
 | V3-F04.1 | Full examples taxonomy + cleanup | 4 | Extends current demo/example tree | Relocate every active script out of `examples/triage/` into `examples/univariate/` or `examples/covariant_informative/`; apply subgroup taxonomy, PCMCI renames, output namespacing, and repo-wide path cleanup | **Done** (2026-04-17: active example references now use the `examples/univariate/` and `examples/covariant_informative/` taxonomy; PCMCI benchmarks renamed; repo cleanup applied) |
 | V3-F04.2 | V3-F03/V3-F04 second-loop review + docs alignment | 6 | Builds on V3-F03/V3-F04 + theory/docs/examples | Revisit theory, shipped implementation, and examples for both methods; document pros/cons, theoretical caveats, practical behavior, and exact proposal-vs-implementation boundaries | **Done** (2026-04-17: second-loop review landed in `docs/plan/implemented/v3_f03_v3_f04_second_loop_review.md`; vectorised linear residual + opt-in block-shuffle + ground-truth helper shipped) |
 | V3-F05 | `CausalGraphPort` protocol | 0 | None (new port type) | Graph-returning port for PCMCI+ and PCMCI-AMI | **Done** |
@@ -402,6 +402,12 @@ strong at lag 3 in pCrossAMI or TE. Full lagged-exogenous verification in v0.3.0
 PCMCI+ (V3-F03) or PCMCI-AMI-Hybrid (V3-F04), both of which apply the full MCI conditioning
 on both sides' lagged parents.
 
+The revised v0.3.1 follow-up is intentionally broader than "residualize exogenous
+autohistory". It adds fixed-lag diagnostic profiles on `k = 0..max_lag`, explicitly blocks
+`lag = 0` from predictive selection, introduces standard cross-correlation alongside
+fixed-lag `cross_ami`, treats crosspAMI-style pruning as the sparse lag-selection layer,
+and documents DTW as intentionally omitted.
+
 **Verified in source (as of 2026-04-17):**
 
 - `src/forecastability/services/partial_curve_service.py::_residualize` residualizes the
@@ -448,7 +454,8 @@ flowchart LR
 > of exogenous autocorrelation, use PCMCI+ or PCMCI-AMI-Hybrid in v0.3.0. The CrossMI,
 > pCrossAMI, and TE paths in the covariant bundle are triage signals only and will
 > generally inflate apparent dependence at non-primary lags when the driver itself is
-> autocorrelated. A proper lagged-exogenous residualization path is scheduled for v0.3.1.
+> autocorrelated. The v0.3.1 follow-up is a broader fixed-lag lagged-exogenous triage
+> plan, not only a lightweight residualization patch.
 
 Forward link: [`docs/plan/v0_3_1_lagged_exogenous_triage_plan.md`](v0_3_1_lagged_exogenous_triage_plan.md).
 
@@ -3103,7 +3110,7 @@ a competing PCMCI+ engine. Optional dependency keeps core package lean.
 - [ ] README clearly separates univariate and covariant workflows
 - [ ] README and `docs/quickstart.md` include the §5A conditioning-scope table in plain text (one row per method, `none` / `target_only` / `full_mci`)
 - [ ] `docs/quickstart.md` includes covariant quick-start
-- [ ] `CHANGELOG.md` has complete v0.3.0 entry and an explicit "Known limitations" subsection naming the lagged-exogenous conditioning gap and forward-linking to v0.3.1
+- [ ] `CHANGELOG.md` has complete v0.3.0 entry and an explicit "Known limitations" subsection naming the lagged-exogenous conditioning / fixed-lag triage gap and forward-linking to v0.3.1
 - [ ] ADR for PCMCI-AMI-Hybrid decision exists
 - [ ] `docs/implementation_status.md` updated with new status table
 - [ ] `docs/plan/v0_3_1_lagged_exogenous_triage_plan.md` exists and is linked from this plan's §5A
@@ -3329,8 +3336,8 @@ lagged-exogenous confirmatory toolkit. Before tagging `v0.3.0`, all of the follo
 be true:
 
 - [ ] Every ticket V3-F00 through V3-F10 is either **Done** or explicitly **Deferred** with a
-      one-line reason recorded in §4 (e.g. MI-ranked conditioning and CrossAMI past-window
-      deferred to v0.3.1 under V3-F04).
+      one-line reason recorded in §4 (e.g. the broader fixed-lag lagged-exogenous triage
+      layer deferred to v0.3.1 under V3-F04).
 - [ ] Every ticket V3-CI-01 through V3-CI-07 is **Done**.
 - [ ] Every ticket V3-D01 through V3-D03 is **Done**.
 - [ ] The §5A conditioning-scope table is present in `README.md` and in `docs/quickstart.md`,

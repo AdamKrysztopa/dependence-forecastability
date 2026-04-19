@@ -433,3 +433,153 @@ class CovariantInterpretationResult(BaseModel):
     conditioning_disclaimer: str
     warnings: list[str] = Field(default_factory=list)
     schema_version: str = "1"
+
+
+# ---------------------------------------------------------------------------
+# v0.3.1 Forecastability Fingerprint result containers (V3_1-F00)
+# ---------------------------------------------------------------------------
+
+GeometryMethodLabel = Literal["ksg2_shuffle_surrogate"]
+FingerprintStructure = Literal["none", "monotonic", "periodic", "mixed"]
+RoutingConfidenceLabel = Literal["low", "medium", "high"]
+ModelFamilyLabel = Literal[
+    "naive",
+    "seasonal_naive",
+    "downscope",
+    "arima",
+    "ets",
+    "linear_state_space",
+    "dynamic_regression",
+    "harmonic_regression",
+    "tbats",
+    "seasonal_state_space",
+    "tree_on_lags",
+    "tcn",
+    "nbeats",
+    "nhits",
+    "nonlinear_tabular",
+]
+RoutingCautionFlag = Literal[
+    "near_threshold",
+    "mixed_structure",
+    "low_directness",
+    "high_nonlinear_share",
+    "short_information_horizon",
+    "weak_informative_support",
+    "signal_conflict",
+    "low_signal_to_noise",
+    "geometry_threshold_borderline",
+    "nonstationarity_risk",
+]
+
+
+class AmiGeometryCurvePoint(BaseModel):
+    """One horizon point in the AMI Information Geometry curve."""
+
+    model_config = ConfigDict(frozen=True)
+
+    horizon: int
+    ami_raw: float | None = None
+    ami_bias: float | None = None
+    ami_corrected: float | None = None
+    tau: float | None = None
+    accepted: bool = False
+    valid: bool = True
+    caution: str | None = None
+
+
+class AmiInformationGeometry(BaseModel):
+    """Deterministic AMI Information Geometry outputs."""
+
+    model_config = ConfigDict(frozen=True)
+
+    method: GeometryMethodLabel = "ksg2_shuffle_surrogate"
+    signal_to_noise: float
+    information_horizon: int
+    information_structure: FingerprintStructure
+    informative_horizons: list[int] = Field(default_factory=list)
+    curve: list[AmiGeometryCurvePoint] = Field(default_factory=list)
+    metadata: dict[str, str | int | float] = Field(default_factory=dict)
+
+
+class ForecastabilityFingerprint(BaseModel):
+    """Compact summary of forecastability profile semantics.
+
+    Attributes:
+        information_mass: Normalized masked area under the accepted corrected
+            AMI profile. Low = weak forecastability; high = rich predictive
+            information over the evaluated horizon grid.
+        information_horizon: Latest horizon h still informative under the
+            geometry acceptance rule. Zero when no informative horizons exist.
+        information_structure: Shape label sourced from the corrected AMI
+            profile and geometry classifier.
+            One of: none, monotonic, periodic, mixed.
+        nonlinear_share: Fraction of accepted corrected AMI in excess of a
+            Gaussian-information linear baseline. Zero when no informative
+            horizons or when the corrected-AMI denominator is near zero.
+        signal_to_noise: Share of corrected AMI that sits meaningfully above
+            the surrogate threshold profile.
+        directness_ratio: Direct vs. mediated lag structure ratio, kept semantically
+            separate from nonlinear_share. None if not computed.
+        informative_horizons: List of horizon indices accepted by the geometry mask.
+        metadata: Optional key/value annotations for provenance tracking.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    information_mass: float
+    information_horizon: int
+    information_structure: FingerprintStructure
+    nonlinear_share: float
+    signal_to_noise: float
+    directness_ratio: float | None = None
+    informative_horizons: list[int] = Field(default_factory=list)
+    metadata: dict[str, str | int | float] = Field(default_factory=dict)
+
+
+class RoutingRecommendation(BaseModel):
+    """Model-family recommendation driven by a forecastability fingerprint.
+
+    Routing is heuristic product guidance derived from deterministic bucket rules.
+    It is NOT empirical model selection, a ranking guarantee, or a performance promise.
+
+    Attributes:
+        primary_families: Recommended model family labels for this fingerprint pattern.
+        secondary_families: Secondary / fallback model families to consider.
+        rationale: Human-readable strings explaining routing decisions.
+        caution_flags: Flags indicating uncertainty or conflicting signals.
+        confidence_label: Deterministic confidence level derived from penalty counts.
+            0 penalties -> high; 1 -> medium; 2 or 3 -> low.
+        metadata: Optional annotations for policy versioning.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    primary_families: list[ModelFamilyLabel]
+    secondary_families: list[ModelFamilyLabel] = Field(default_factory=list)
+    rationale: list[str] = Field(default_factory=list)
+    caution_flags: list[RoutingCautionFlag] = Field(default_factory=list)
+    confidence_label: RoutingConfidenceLabel = "medium"
+    metadata: dict[str, str | int | float] = Field(default_factory=dict)
+
+
+class FingerprintBundle(BaseModel):
+    """Composite output from the forecastability fingerprint use case.
+
+    Attributes:
+        target_name: Name of the series being fingerprinted.
+        geometry: Deterministic AMI Information Geometry output.
+        fingerprint: Compact forecastability fingerprint.
+        recommendation: Model-family routing recommendation.
+        profile_summary: Scalar summary of the underlying AMI profile.
+        metadata: Optional annotations for provenance tracking.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    target_name: str
+    geometry: AmiInformationGeometry
+    fingerprint: ForecastabilityFingerprint
+    recommendation: RoutingRecommendation
+    profile_summary: dict[str, str | int | float]
+    metadata: dict[str, str | int | float] = Field(default_factory=dict)

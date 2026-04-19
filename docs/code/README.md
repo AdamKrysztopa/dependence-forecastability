@@ -26,6 +26,7 @@ Both classes expose `compute_raw()`, `compute_partial()`, and
 |---|---|
 | [module_map.md](module_map.md) | Module-by-module reference for every public symbol in `src/forecastability` |
 | [covariant_walkthrough.md](covariant_walkthrough.md) | Live covariant walkthrough notebook contract, section map, and stable artifact paths |
+| [fingerprint_showcase.md](fingerprint_showcase.md) | Developer reference for the v0.3.1 fingerprint showcase script and notebook-facing helpers |
 | [exog_analyzer.md](exog_analyzer.md) | `ForecastabilityAnalyzerExog` user manual v1.0 — quick start, terminology, operating modes, synthetic data generators, and a complete runnable test script |
 | [exog_analyzer_real_data.md](exog_analyzer_real_data.md) | `ForecastabilityAnalyzerExog` user manual v1.1 — real-world datasets, loading snippets, SNR interpretation table, significance bands, and actual run results (2026-03-14) |
 | [exog_benchmark_workflow.md](exog_benchmark_workflow.md) | Fixed exogenous benchmark slice workflow, leakage boundary, outputs, and interpretation policy |

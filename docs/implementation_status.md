@@ -8,6 +8,22 @@ it records implementation status, test coverage, regression fixtures, and links 
 the theory doc, notebooks, and scripts. Read it to understand what is done, what is
 experimental, and where the evidence lives — without reading the source code.
 
+## v0.3.1 Phase 3 — Fingerprint Regression Closure (F06/F06a)
+
+| Evidence | Status | Location |
+|---|---|---|
+| Fingerprint/routing required tests | ✅ | `tests/test_run_forecastability_fingerprint.py`, `tests/test_fingerprint_service.py`, `tests/test_routing_policy_service.py` |
+| Agent contract tests | ✅ | `tests/test_fingerprint_agent_payload_models.py`, `tests/test_fingerprint_agent_interpretation_adapter.py`, `tests/test_fingerprint_agent.py` |
+| Geometry boundary tests | ✅ | `tests/test_geometry_regression.py`, `tests/test_ami_information_geometry_service.py` |
+| Frozen fixture drift guard | ✅ | `tests/test_fingerprint_regression.py`, `docs/fixtures/fingerprint_regression/expected/*.json` |
+| Fixture rebuild workflow | ✅ | `scripts/rebuild_fingerprint_regression_fixtures.py` |
+
+Rebuild and verify command:
+
+```bash
+uv run python scripts/rebuild_fingerprint_regression_fixtures.py --verify
+```
+
 ---
 
 ## Evidence map legend

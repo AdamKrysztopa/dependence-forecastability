@@ -63,6 +63,7 @@ Use this path for method background, caveats, and evidence summaries.
 | Document | Why |
 | --- | --- |
 | [theory/foundations.md](theory/foundations.md) | AMI, pAMI, surrogate significance, and rolling-origin boundaries |
+| [theory/forecastability_fingerprint.md](theory/forecastability_fingerprint.md) | Forecastability fingerprint semantics: M, H*, structure, nonlinear share, and H_info masking |
 | [theory/pami_residual_backends.md](theory/pami_residual_backends.md) | Linear-residual pAMI assumptions and backend caveats |
 | [theory/forecastability_profile.md](theory/forecastability_profile.md) | Forecastability profile model and informative-horizon summary logic |
 | [theory/spectral_predictability.md](theory/spectral_predictability.md) | Spectral predictability interpretation and complementarity with AMI |
