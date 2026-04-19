@@ -32,7 +32,7 @@ from forecastability import (
 | --- | --- |
 | Triage entry points | `run_triage`, `run_batch_triage`, `TriageRequest`, `TriageResult` |
 | Covariant entry points | `run_covariant_analysis`, `CovariantAnalysisBundle`, `CovariantSummaryRow`, `TransferEntropyResult`, `GcmiResult`, `CausalGraphResult`, `PcmciAmiResult`, `Phase0MiScore` |
-| Fingerprint entry points | `run_forecastability_fingerprint`, `run_batch_forecastability_workbench`, `FingerprintBundle`, `ForecastabilityFingerprint`, `AmiInformationGeometry`, `AmiGeometryCurvePoint`, `BatchForecastabilityWorkbenchResult`, `ForecastingNextStepPlan` |
+| Fingerprint entry points | `run_forecastability_fingerprint`, `run_batch_forecastability_workbench`, `run_ami_geometry_csv_batch`, `FingerprintBundle`, `ForecastabilityFingerprint`, `AmiInformationGeometry`, `AmiGeometryCurvePoint`, `BatchForecastabilityWorkbenchResult`, `ForecastingNextStepPlan`, `CsvGeometryBatchItem`, `CsvGeometryBatchResult` |
 | Analyzer facade | `ForecastabilityAnalyzer`, `ForecastabilityAnalyzerExog`, `AnalyzeResult` |
 | Diagnostic and result models | `ForecastabilityProfile`, `PredictiveInfoLearningCurve`, `SpectralPredictabilityResult`, `InterpretationResult`, `Diagnostics`, `MetricCurve`, `CanonicalExampleResult`, `CanonicalSummary`, `SeriesEvaluationResult`, `ForecastResult`, `BackendComparisonResult`, `ExogenousBenchmarkResult`, `RobustnessStudyResult`, `SampleSizeStressResult` |
 | Config models | `BenchmarkDataConfig`, `CMIConfig`, `ExogenousBenchmarkConfig`, `MetricConfig`, `ModelConfig`, `OutputConfig`, `RobustnessStudyConfig`, `RollingOriginConfig`, `SensitivityConfig`, `UncertaintyConfig` |
@@ -62,6 +62,32 @@ Key returned objects:
 - `bundle.geometry`: corrected-profile geometry, `signal_to_noise`, geometry structure, geometry horizon
 - `bundle.fingerprint`: compact fingerprint fields (`information_mass`, `information_horizon`, `information_structure`, `nonlinear_share`, `signal_to_noise`)
 - `bundle.recommendation`: deterministic model-family guidance and caution flags
+
+## CSV Geometry Batch Surface
+
+Use `run_ami_geometry_csv_batch` when you want the deterministic fingerprint
+workflow over a one-series-per-column CSV file with adapter-owned summary and
+artifact writing.
+
+```python
+from pathlib import Path
+
+from forecastability import run_ami_geometry_csv_batch
+
+result = run_ami_geometry_csv_batch(
+    Path("outputs/examples/ami_geometry_csv/inputs/synthetic_fingerprint_panel.csv"),
+    output_root=Path("outputs/examples/ami_geometry_csv"),
+    max_lag=24,
+    n_surrogates=99,
+    random_state=42,
+)
+```
+
+Key returned objects:
+
+- `result.items[*].bundle`: full deterministic bundle when the series is analyzable
+- `result.items[*].skip_reason`: stable reason when a series is skipped conservatively
+- `result.summary_csv_path`, `result.figure_path`, `result.markdown_path`: emitted adapter artifacts
 
 ## Batch Forecastability Workbench
 
@@ -171,6 +197,7 @@ These are the live repo entry points for non-import surfaces.
 | CLI | `forecastability` | Packaged command wired to `forecastability.adapters.cli:main` |
 | Dashboard | `forecastability-dashboard` | Packaged command wired to `forecastability.adapters.dashboard:main` |
 | HTTP API | `forecastability.adapters.api:app` | FastAPI application used with Uvicorn |
+| CSV script | `scripts/run_ami_information_geometry_csv.py` | Repo script for one-series-per-column CSV batch geometry runs |
 
 ## Causal Discovery (v0.3.0+)
 

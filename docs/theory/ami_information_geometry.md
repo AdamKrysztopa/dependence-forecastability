@@ -102,3 +102,27 @@ The geometry service is deterministic domain logic.
 
 That separation is what lets the same geometry outputs survive unchanged through
 the fingerprint builder, routing policy, reporting helpers, and agent payloads.
+
+## CSV Batch Adapter
+
+The repository now includes a dedicated outer-layer CSV adapter for Dr. Catt's
+prototype-shaped workflow:
+
+- `forecastability.run_ami_geometry_csv_batch`
+- `scripts/run_ami_information_geometry_csv.py`
+- `examples/univariate/fingerprint/ami_information_geometry_csv_example.py`
+
+This transport surface is intentionally downstream of the deterministic use case.
+It reads one-series-per-column CSV data, drops missing values column-wise, calls
+`run_forecastability_fingerprint()`, and writes:
+
+- a flat summary CSV
+- one multi-panel geometry figure
+- one markdown batch report
+- optional per-series bundle JSON artifacts
+
+> [!IMPORTANT]
+> The CSV adapter does not implement AMI estimation, thresholding, structure
+> classification, or routing logic. Those semantics stay in the geometry,
+> fingerprint, and routing services so notebook, Python, agent, and CSV paths
+> remain consistent.

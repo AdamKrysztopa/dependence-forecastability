@@ -6,7 +6,7 @@
 **Target release:** `0.3.1`  
 **Current released version:** `0.3.0`  
 **Branch:** `feat/v0.3.1-forecastability-fingerprint`  
-**Status:** In Progress — geometry-backed fingerprint core complete; CSV/regression/notebook/CI follow-through pending  
+**Status:** In Progress — geometry-backed fingerprint core and Phase 2 CSV adapter complete; regression/notebook/CI follow-through pending  
 **Last reviewed:** 2026-04-19  
 
 **Companion refs:**
@@ -440,11 +440,11 @@ Required `0.3.1` agent-layer semantics:
 | V3_1-F05a | Geometry surfacing refactor | 2 | Refactors completed `V3_1-F05` | compact summary row / markdown / JSON surface for fingerprint + routing + geometry | ✅ **Done** |
 | V3_1-F05.1 | Agent-ready fingerprint adapters | 2 | Extends existing A1/A2/A3 agent pattern | payloads with geometry fields, routing, confidence, cautions | ✅ **Done** |
 | V3_1-F05.2 | Optional live fingerprint agent | 2 | Extends existing `adapters/llm` pattern | consume geometry-backed deterministic payloads only | ✅ **Done** |
-| V3_1-F05b | CSV batch geometry adapter | 2 | Inspired by Dr. Catt prototype | column-wise CSV runner producing plot + summary CSV | Proposed |
+| V3_1-F05b | CSV batch geometry adapter | 2 | Inspired by Dr. Catt prototype | column-wise CSV runner producing plot + summary CSV | ✅ **Done** |
 | V3_1-F06 | Tests and regression fixtures | 3 | Follows current deterministic regression pattern | synthetic archetypes, threshold tests, routing invariants | Partial — unit/integration tests done; frozen regression fixtures pending |
 | V3_1-F06a | Geometry regression and boundary fixtures | 3 | Extends current deterministic regression pattern | freeze corrected AMI / `tau` / `signal_to_noise` and boundary behavior | Proposed |
 | V3_1-F07 | Showcase script and notebook | 4 | Follows existing walkthrough / showcase pattern | canonical four-series fingerprint + geometry demo | Partial — examples are present, notebook/showcase script still pending |
-| V3_1-F08 | Public examples and notebook extensions | 5 | Extends examples taxonomy and walkthrough surfaces | minimal Python example, CLI example, notebook cross-links, and reusable example artifacts | Partial — minimal and batch workbench examples added; notebook/CLI/README follow-through pending |
+| V3_1-F08 | Public examples and notebook extensions | 5 | Extends examples taxonomy and walkthrough surfaces | minimal Python example, CLI example, notebook cross-links, and reusable example artifacts | Partial — minimal, batch workbench, and CSV geometry examples added; notebook/CLI/README follow-through pending |
 | V3_1-F08.1 | Agent demos and cross-links | 5 | Extends agent examples and notebook/doc surfaces | strict payload demo, optional live-agent demo, and agent-layer discoverability | Partial — strict/live demos exist and batch workbench now feeds A1/A3; notebook cross-links still pending |
 | V3_1-D01 | README + quickstart + agent-layer routing section | 5 | Extends docs and `docs/agent_layer.md` cross-links | fingerprint + geometry concept and example snippets | Partial — quickstart/public API/agent-layer updated; README still pending |
 | V3_1-D02 | Theory docs | 5 | New or split theory pages | fingerprint definitions, geometry semantics, and routing semantics | ✅ **Done** |
@@ -2434,8 +2434,8 @@ print(bundle.recommendation.primary_families)
 - [x] Create `src/forecastability/use_cases/run_forecastability_fingerprint.py`
 - [x] Call the geometry engine first; do not recompute AMI ad hoc in outer layers
 - [x] Add stable rendering helper for dict / JSON / markdown output
-- [ ] Create `src/forecastability/adapters/csv/ami_geometry_csv_runner.py`
-- [ ] Create `scripts/run_ami_information_geometry_csv.py`
+- [x] Create `src/forecastability/adapters/csv/ami_geometry_csv_runner.py`
+- [x] Create `scripts/run_ami_information_geometry_csv.py`
 - [x] Create `src/forecastability/adapters/agents/fingerprint_agent_payload_models.py`
 - [x] Create `src/forecastability/adapters/agents/fingerprint_summary_serializer.py`
 - [x] Create `src/forecastability/adapters/agents/fingerprint_agent_interpretation_adapter.py`
@@ -2458,7 +2458,7 @@ print(bundle.recommendation.primary_families)
 - [ ] Create `scripts/run_showcase_fingerprint.py`
 - [ ] Create `notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb`
 - [x] Add minimal Python example under `examples/univariate/fingerprint/`
-- [ ] Add batch CSV geometry example under `examples/univariate/fingerprint/`
+- [x] Add batch CSV geometry example under `examples/univariate/fingerprint/`
 - [x] Add deterministic fingerprint agent demo under `examples/univariate/agents/`
 - [x] Optional: add experimental live fingerprint agent demo
 - [ ] Add CLI example snippet to README / quickstart

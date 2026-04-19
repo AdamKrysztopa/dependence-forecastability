@@ -218,6 +218,36 @@ print(
 PY
 ```
 
+## 12 Minutes: CSV Batch Geometry Workflow
+
+Use the CSV adapter when your upstream workflow already has one target series per
+column and you want a summary CSV plus geometry artifacts without notebook-only
+logic.
+
+Build the synthetic input panel from the prepared generators and run the repo
+script:
+
+```bash
+uv run python examples/univariate/fingerprint/ami_information_geometry_csv_example.py
+
+uv run python scripts/run_ami_information_geometry_csv.py \
+  --input-csv outputs/examples/ami_geometry_csv/inputs/synthetic_fingerprint_panel.csv \
+  --output-root outputs/ami_geometry_csv_script \
+  --max-lag 24 \
+  --n-surrogates 99 \
+  --random-state 42
+```
+
+Inspect these artifacts after the run:
+
+- `outputs/ami_geometry_csv_script/tables/ami_geometry_summary.csv`
+- `outputs/ami_geometry_csv_script/figures/ami_geometry_profiles.png`
+- `outputs/ami_geometry_csv_script/reports/ami_geometry_batch.md`
+
+> [!NOTE]
+> The CSV adapter drops missing values column-wise and skips too-short or
+> non-numeric series conservatively instead of forcing a partial analysis.
+
 ## 11.5 Minutes: Batch Forecast Routing And Executive Brief
 
 Use the batch workbench when you need one deterministic pass that serves both

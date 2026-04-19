@@ -1,5 +1,10 @@
 """Forecastability package implementing AMI and pAMI analysis."""
 
+from forecastability.adapters.csv import (
+    CsvGeometryBatchItem,
+    CsvGeometryBatchResult,
+    run_ami_geometry_csv_batch,
+)
 from forecastability.diagnostics.gcmi import compute_gcmi
 from forecastability.metrics.scorers import (
     DependenceScorer,
@@ -124,6 +129,8 @@ __all__ = [
     "build_fingerprint_panel_markdown",
     "build_fingerprint_summary_dict",
     "build_fingerprint_summary_row",
+    "CsvGeometryBatchItem",
+    "CsvGeometryBatchResult",
     "DependenceScorer",
     "ExogenousBenchmarkConfig",
     "ExogenousBenchmarkResult",
@@ -163,6 +170,7 @@ __all__ = [
     "run_batch_forecastability_workbench",
     "run_covariant_analysis",
     "run_forecastability_fingerprint",
+    "run_ami_geometry_csv_batch",
     "run_triage",
     "render_fingerprint_summary_dict",
     "SampleSizeStressResult",
