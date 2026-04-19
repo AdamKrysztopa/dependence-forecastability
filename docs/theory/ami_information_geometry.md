@@ -60,6 +60,24 @@ This mask drives:
 
 No downstream layer should redefine this rule locally.
 
+## Horizon Resolution Contract
+
+The geometry service exposes two horizon controls with explicit precedence:
+
+- `max_horizon` (explicit hard cap)
+- `max_lag_frac` (fractional fallback only when `max_horizon` is unset)
+
+v0.3.1 release behavior is:
+
+1. if `max_horizon` is provided, evaluate up to `min(max_horizon, n - 1)`
+2. otherwise evaluate up to `min(floor(n * max_lag_frac), n - 1)`
+
+The fingerprint use case passes explicit `max_lag` through to geometry as
+`max_horizon`, and surfaces both values in summary output:
+
+- `max_lag` (requested cap)
+- `evaluated_max_horizon` (actual evaluated cap)
+
 ## `signal_to_noise`
 
 `signal_to_noise` is a corrected-profile quality metric:

@@ -6,7 +6,7 @@
 **Target release:** `0.3.1`  
 **Current released version:** `0.3.0`  
 **Branch:** `feat/v0.3.1-forecastability-fingerprint`  
-**Status:** In Progress — geometry-backed fingerprint core and Phase 2 CSV adapter complete; regression/notebook/CI follow-through pending  
+**Status:** In Progress — geometry-backed fingerprint core, Phase 2 CSV adapter, and regression/notebook/CI follow-through complete  
 **Last reviewed:** 2026-04-19  
 
 **Companion refs:**
@@ -15,7 +15,6 @@
 - [v0.3.2 Lagged-Exogenous Triage: Ultimate Release Plan](v0_3_2_lagged_exogenous_triage_ultimate_plan.md)
 - [v0.3.3 Documentation Quality Improvement: Ultimate Release Plan](v0_3_3_documentation_quality_improvement_ultimate_plan.md)
 - [v0.3.4 Routing Validation & Benchmark Hardening: Ultimate Release Plan](v0_3_4_routing_validation_benchmark_hardening_plan.md)
-- [v0.3.1.5 Forecastability Fingerprint, Model Routing & AMI Information Geometry: Ultimate Release Plan](v0_3_1_5_fingerprint_information_geometry_ultimate_plan.md)
 - [Agent Layer Contract](../agent_layer.md)
 
 **Builds on:**

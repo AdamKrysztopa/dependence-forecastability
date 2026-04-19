@@ -6,7 +6,9 @@ import json
 
 import numpy as np
 import pytest
+from pydantic import ValidationError
 
+from forecastability.services.ami_information_geometry_service import AmiInformationGeometryConfig
 from forecastability.services.routing_policy_service import RoutingPolicyConfig
 from forecastability.use_cases.run_forecastability_fingerprint import (
     run_forecastability_fingerprint,
@@ -162,11 +164,37 @@ def test_max_lag_respected_on_geometry_curve() -> None:
         assert horizon <= 12
 
 
+def test_explicit_max_lag_not_reduced_by_default_fractional_cap() -> None:
+    """Explicit max_lag should be the evaluated cap, not clipped by default max_lag_frac."""
+    bundle = run_forecastability_fingerprint(
+        generate_ar1_monotonic(n=120, seed=11),
+        max_lag=60,
+        n_surrogates=_N_SURROGATES,
+        random_state=11,
+    )
+    assert len(bundle.geometry.curve) == 60
+    assert bundle.profile_summary["max_lag"] == 60
+    assert bundle.profile_summary["evaluated_max_horizon"] == 60
+
+
 def test_short_series_raises_value_error() -> None:
     """Short series should still fail fast through the use-case seam."""
     short = np.random.default_rng(0).standard_normal(20)
     with pytest.raises(ValueError):
         run_forecastability_fingerprint(short, max_lag=12, n_surrogates=_N_SURROGATES)
+
+
+@pytest.mark.parametrize("invalid_ratio", [-0.01, 1.01])
+def test_invalid_directness_ratio_raises_value_error(invalid_ratio: float) -> None:
+    """directness_ratio must be bounded on [0, 1] at the use-case seam."""
+    with pytest.raises(ValueError, match="directness_ratio"):
+        run_forecastability_fingerprint(
+            generate_ar1_monotonic(n=_N, seed=12),
+            max_lag=_MAX_LAG,
+            n_surrogates=_N_SURROGATES,
+            random_state=12,
+            directness_ratio=invalid_ratio,
+        )
 
 
 def test_deterministic_for_same_seed() -> None:
@@ -187,3 +215,28 @@ def test_deterministic_for_same_seed() -> None:
     assert first.geometry == second.geometry
     assert first.fingerprint == second.fingerprint
     assert first.recommendation == second.recommendation
+
+
+def test_geometry_config_allows_use_case_overrides() -> None:
+    """Caller-provided geometry config should still allow max_lag and n_surrogates overrides."""
+    bundle = run_forecastability_fingerprint(
+        generate_ar1_monotonic(n=_N, seed=5),
+        max_lag=16,
+        n_surrogates=120,
+        random_state=5,
+        geometry_config=AmiInformationGeometryConfig(n_surrogates=200, max_horizon=8),
+    )
+    assert len(bundle.geometry.curve) == 16
+    assert int(bundle.geometry.metadata["n_surrogates"]) == 120
+
+
+def test_geometry_config_override_revalidates_n_surrogates_floor() -> None:
+    """Use-case overrides should be revalidated against geometry config invariants."""
+    with pytest.raises(ValidationError):
+        run_forecastability_fingerprint(
+            generate_ar1_monotonic(n=_N, seed=6),
+            max_lag=12,
+            n_surrogates=98,
+            random_state=6,
+            geometry_config=AmiInformationGeometryConfig(),
+        )

@@ -37,6 +37,20 @@ class RoutingPolicyConfig(BaseModel):
 RoutingThresholdConfig = RoutingPolicyConfig
 
 
+def _metadata_flag(value: str | int | float | None) -> bool:
+    """Parse heterogeneous metadata flags into a robust boolean."""
+    if value is None:
+        return False
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"1", "true", "t", "yes", "y", "on"}:
+            return True
+        if normalized in {"0", "false", "f", "no", "n", "off", ""}:
+            return False
+        return False
+    return bool(value)
+
+
 def _threshold_margin_penalty(
     fingerprint: ForecastabilityFingerprint,
     *,
@@ -58,7 +72,7 @@ def _threshold_margin_penalty(
 
 def _classifier_used_tiebreak(fingerprint: ForecastabilityFingerprint) -> bool:
     """Return True when the upstream classifier recorded a deterministic tie-break."""
-    return bool(int(fingerprint.metadata.get("classifier_used_tiebreak", 0)))
+    return _metadata_flag(fingerprint.metadata.get("classifier_used_tiebreak"))
 
 
 def _select_route(
@@ -225,15 +239,11 @@ def _build_caution_flags(
         caution_flags.append("weak_informative_support")
     if signal_conflict_penalty:
         caution_flags.append("signal_conflict")
-    if (
-        fingerprint.information_structure != "none"
-        and (
-            fingerprint.signal_to_noise
-            < fingerprint_config.low_signal_to_noise_confidence_threshold
-        )
+    if fingerprint.information_structure != "none" and (
+        fingerprint.signal_to_noise < fingerprint_config.low_signal_to_noise_confidence_threshold
     ):
         caution_flags.append("low_signal_to_noise")
-    if int(fingerprint.metadata.get("geometry_threshold_borderline", 0)):
+    if _metadata_flag(fingerprint.metadata.get("geometry_threshold_borderline")):
         caution_flags.append("geometry_threshold_borderline")
 
     return sorted(set(caution_flags))

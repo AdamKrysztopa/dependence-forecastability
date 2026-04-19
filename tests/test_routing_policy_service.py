@@ -132,7 +132,9 @@ def test_low_signal_to_noise_adds_caution_and_penalty() -> None:
             signal_to_noise=0.05,
             informative_horizons=[1, 2, 3, 4],
         ),
-        fingerprint_config=FingerprintThresholdConfig(low_signal_to_noise_confidence_threshold=0.10),
+        fingerprint_config=FingerprintThresholdConfig(
+            low_signal_to_noise_confidence_threshold=0.10
+        ),
     )
     assert "low_signal_to_noise" in rec.caution_flags
     assert rec.metadata["low_signal_quality_penalty"] == 1
@@ -149,7 +151,9 @@ def test_low_signal_to_noise_downgrades_confidence() -> None:
             directness_ratio=0.80,
             informative_horizons=[1, 2, 3, 4],
         ),
-        fingerprint_config=FingerprintThresholdConfig(low_signal_to_noise_confidence_threshold=0.10),
+        fingerprint_config=FingerprintThresholdConfig(
+            low_signal_to_noise_confidence_threshold=0.10
+        ),
     )
     assert rec.confidence_label in {"medium", "low"}
 
@@ -177,6 +181,31 @@ def test_geometry_threshold_borderline_flag_is_propagated() -> None:
         )
     )
     assert "geometry_threshold_borderline" in rec.caution_flags
+
+
+def test_string_metadata_flags_are_parsed_robustly() -> None:
+    """String-like metadata flags should be parsed safely instead of cast-crashing."""
+    rec_true = route_fingerprint(
+        _fp(
+            metadata={
+                "classifier_used_tiebreak": "true",
+                "geometry_threshold_borderline": "1",
+            },
+            informative_horizons=[1, 2, 3, 4],
+        )
+    )
+    rec_false = route_fingerprint(
+        _fp(
+            metadata={
+                "classifier_used_tiebreak": "false",
+                "geometry_threshold_borderline": "0",
+            },
+            informative_horizons=[1, 2, 3, 4],
+        )
+    )
+    assert rec_true.metadata["taxonomy_uncertainty_penalty"] == 1
+    assert "geometry_threshold_borderline" in rec_true.caution_flags
+    assert "geometry_threshold_borderline" not in rec_false.caution_flags
 
 
 def test_custom_config_overrides_nonlinear_threshold() -> None:

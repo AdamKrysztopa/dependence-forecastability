@@ -29,6 +29,14 @@ class FingerprintThresholdConfig(BaseModel):
     epsilon: float = Field(default=1e-12, gt=0.0)
 
 
+def _validate_directness_ratio(directness_ratio: float | None) -> None:
+    """Validate optional directness ratio across direct service entry points."""
+    if directness_ratio is None:
+        return
+    if not np.isfinite(directness_ratio) or not (0.0 <= directness_ratio <= 1.0):
+        raise ValueError("directness_ratio must be finite and within [0.0, 1.0]")
+
+
 def _accepted_curve_points(geometry: AmiInformationGeometry) -> list[AmiGeometryCurvePoint]:
     """Return the accepted corrected-profile points from the geometry output."""
     return [
@@ -100,6 +108,7 @@ def build_forecastability_fingerprint(
     config: FingerprintThresholdConfig | None = None,
 ) -> ForecastabilityFingerprint:
     """Build the geometry-backed forecastability fingerprint."""
+    _validate_directness_ratio(directness_ratio)
     resolved_config = config if config is not None else FingerprintThresholdConfig()
     accepted_points = _accepted_curve_points(geometry)
     valid_horizon_count = _valid_horizon_count(geometry)
@@ -222,6 +231,7 @@ def build_fingerprint(
         raise ValueError(
             f"ami_values length ({len(ami_values)}) must equal horizons length ({len(horizons)})"
         )
+    _validate_directness_ratio(directness_ratio)
 
     informative_horizons = _build_legacy_informative_horizons(
         ami_values,

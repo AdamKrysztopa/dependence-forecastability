@@ -21,6 +21,13 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - Extended fingerprint summaries, agent payloads, and live-agent strict fallback so geometry, fingerprint, and routing fields stay aligned across typed objects, markdown/JSON output, and agent-facing contracts.
 - Added a batch example that runs triage, fingerprint routing, and deterministic A1/A3 agent handoff together from the shared synthetic panel.
 - Updated theory/public API/quickstart/agent-layer docs to describe the geometry-backed fingerprint semantics and the new batch forecasting workbench.
+- Clarified geometry horizon resolution semantics so explicit `max_horizon` is authoritative and `max_lag_frac` is only a fallback when explicit cap is absent.
+- Extended `run_forecastability_fingerprint()` summary output with `evaluated_max_horizon` to distinguish requested lag cap from evaluated horizon count.
+
+### Fixed
+
+- Enforced directness-ratio range validation (`[0, 1]`, finite only) at both use-case and fingerprint-service entry seams to keep routing-threshold assumptions consistent.
+- Added deterministic acceptance-mask algebra tests to lock strict `I_c(h) > m * tau(h)` behavior and prevent threshold-regression drift.
 
 ## [0.3.0] - 2026-04-17
 

@@ -21,6 +21,14 @@ from forecastability.utils.types import FingerprintBundle
 from forecastability.utils.validation import validate_time_series
 
 
+def _validate_directness_ratio(directness_ratio: float | None) -> None:
+    """Validate optional directness ratio at the use-case seam."""
+    if directness_ratio is None:
+        return
+    if not np.isfinite(directness_ratio) or not (0.0 <= directness_ratio <= 1.0):
+        raise ValueError("directness_ratio must be finite and within [0.0, 1.0]")
+
+
 def _resolve_geometry_config(
     *,
     max_lag: int,
@@ -31,11 +39,14 @@ def _resolve_geometry_config(
     if base_config is None:
         return AmiInformationGeometryConfig(
             n_surrogates=n_surrogates,
+            max_lag_frac=1.0,
             max_horizon=max_lag,
         )
-    return base_config.model_copy(
-        update={
+    return AmiInformationGeometryConfig.model_validate(
+        {
+            **base_config.model_dump(),
             "n_surrogates": n_surrogates,
+            "max_lag_frac": 1.0,
             "max_horizon": max_lag,
         }
     )
@@ -59,6 +70,7 @@ def run_forecastability_fingerprint(
     The ``ami_floor`` parameter is retained for backward-compatible call sites,
     but the v0.3.1 geometry-backed workflow does not use local AMI-floor gating.
     """
+    _validate_directness_ratio(directness_ratio)
     resolved_geometry_config = _resolve_geometry_config(
         max_lag=max_lag,
         n_surrogates=n_surrogates,
@@ -94,6 +106,7 @@ def run_forecastability_fingerprint(
 
     profile_summary: dict[str, str | int | float] = {
         "max_lag": max_lag,
+        "evaluated_max_horizon": len(geometry.curve),
         "n_surrogates": n_surrogates,
         "geometry_method": geometry.method,
         "signal_to_noise": geometry.signal_to_noise,

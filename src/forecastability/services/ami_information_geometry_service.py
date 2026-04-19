@@ -67,11 +67,15 @@ class AmiInformationGeometryConfig(BaseModel):
 
 
 def _resolve_max_horizon(n: int, config: AmiInformationGeometryConfig) -> int:
-    """Resolve the evaluated horizon count from max_horizon and max_lag_frac."""
+    """Resolve evaluated horizon count.
+
+    Explicit ``max_horizon`` takes precedence and is treated as a hard cap.
+    ``max_lag_frac`` is only applied when ``max_horizon`` is not provided.
+    """
+    if config.max_horizon is not None:
+        return min(config.max_horizon, n - 1)
     frac_horizon = max(1, int(math.floor(n * config.max_lag_frac)))
-    if config.max_horizon is None:
-        return min(frac_horizon, n - 1)
-    return min(frac_horizon, config.max_horizon, n - 1)
+    return min(frac_horizon, n - 1)
 
 
 def _guard_pairs_required(config: AmiInformationGeometryConfig) -> int:

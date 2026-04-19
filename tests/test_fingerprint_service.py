@@ -222,3 +222,25 @@ def test_legacy_build_fingerprint_length_mismatch_raises() -> None:
             horizons=[1, 2, 3],
             significant_horizons=[1],
         )
+
+
+@pytest.mark.parametrize("invalid_ratio", [-0.01, 1.01, float("inf"), float("nan")])
+def test_build_forecastability_fingerprint_rejects_invalid_directness_ratio(
+    invalid_ratio: float,
+) -> None:
+    """Service-level builder should enforce the public [0, 1] directness contract."""
+    geometry = _geometry(
+        signal_to_noise=0.40,
+        structure="monotonic",
+        rows=[
+            (1, 0.30, 0.05, True, True),
+            (2, 0.20, 0.04, True, True),
+        ],
+    )
+
+    with pytest.raises(ValueError, match="directness_ratio"):
+        build_forecastability_fingerprint(
+            geometry=geometry,
+            baseline=_baseline({1: 0.10, 2: 0.10}),
+            directness_ratio=invalid_ratio,
+        )

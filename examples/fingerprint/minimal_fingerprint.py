@@ -47,6 +47,8 @@ def _print_bundle(name: str, series: np.ndarray) -> None:
     print(f"  informative_horizons  = {geometry.informative_horizons}")
     print("Fingerprint")
     print(f"  information_mass      = {fingerprint.information_mass:.4f}")
+    print(f"  information_horizon   = {fingerprint.information_horizon}")
+    print(f"  information_structure = {fingerprint.information_structure}")
     print(f"  nonlinear_share       = {fingerprint.nonlinear_share:.4f}")
     print(f"  directness_ratio      = {fingerprint.directness_ratio}")
     print("Routing")
