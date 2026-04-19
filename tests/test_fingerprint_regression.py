@@ -44,6 +44,21 @@ class TestFingerprintRegressionMatchesFrozen:
 class TestFingerprintRegressionDriftDetection:
     """Verification should fail when rebuilt outputs drift from frozen expected."""
 
+    def test_tiny_geometry_float_drift_is_tolerated(self, tmp_path: Path) -> None:
+        """Tiny cross-platform float drift should not fail regression verification."""
+        write_fingerprint_regression_outputs(output_dir=tmp_path)
+
+        path = tmp_path / "white_noise.json"
+        payload = json.loads(path.read_text())
+        payload["geometry"]["signal_to_noise"] += 3e-6
+        payload["fingerprint"]["information_mass"] += 3e-6
+        path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+
+        verify_fingerprint_regression_outputs(
+            actual_dir=tmp_path,
+            expected_dir=_EXPECTED_DIR,
+        )
+
     def test_corrupted_signal_to_noise_flags_drift(self, tmp_path: Path) -> None:
         """Mutating a geometry float should trigger verification failure."""
         write_fingerprint_regression_outputs(output_dir=tmp_path)

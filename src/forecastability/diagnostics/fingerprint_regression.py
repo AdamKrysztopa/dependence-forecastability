@@ -8,6 +8,7 @@ rebuilt outputs against frozen expected files.
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 from typing import Any
 
@@ -16,7 +17,8 @@ from forecastability.use_cases.run_forecastability_fingerprint import (
 )
 from forecastability.utils.synthetic import generate_fingerprint_archetypes
 
-_ATOL = 1e-6
+_ATOL = 5e-6
+_RTOL = 5e-5
 
 FINGERPRINT_FIXTURE_SERIES: dict[str, dict[str, int]] = {
     "white_noise": {"n": 320, "seed": 42},
@@ -127,11 +129,18 @@ def _compare_value(actual: Any, expected: Any, *, field_path: str) -> list[str]:
             )
         return errors
 
-    if isinstance(expected, (int, float)) and isinstance(actual, (int, float)):
-        if abs(float(actual) - float(expected)) > _ATOL:
+    # Keep discrete semantics exact; only continuous float fields tolerate
+    # small cross-platform numeric drift from dependency and BLAS variations.
+    if isinstance(expected, float) and isinstance(actual, float):
+        if not math.isclose(actual, expected, rel_tol=_RTOL, abs_tol=_ATOL):
             errors.append(
-                f"{field_path}: value mismatch (actual={actual}, expected={expected}, atol={_ATOL})"
+                f"{field_path}: value mismatch (actual={actual}, expected={expected}, atol={_ATOL}, rtol={_RTOL})"
             )
+        return errors
+
+    if isinstance(expected, int) and isinstance(actual, int):
+        if actual != expected:
+            errors.append(f"{field_path}: mismatch (actual={actual!r}, expected={expected!r})")
         return errors
 
     if actual != expected:
