@@ -36,6 +36,10 @@ class FingerprintAgentPayload(BaseModel):
     Attributes:
         schema_version: Payload schema version string.
         target_name: Name of the series being fingerprinted.
+        geometry_method: Deterministic geometry engine identifier.
+        signal_to_noise: Geometry signal-quality statistic.
+        geometry_information_horizon: Geometry-derived latest informative horizon.
+        geometry_information_structure: Geometry-derived structure label.
         information_mass: Normalised masked area under the informative AMI profile.
         information_horizon: Latest informative horizon index (0 when none).
         information_structure: Shape label for the AMI profile.
@@ -60,6 +64,10 @@ class FingerprintAgentPayload(BaseModel):
 
     schema_version: str = "1"
     target_name: str
+    geometry_method: str
+    signal_to_noise: float
+    geometry_information_horizon: int
+    geometry_information_structure: str
     # Four fingerprint fields (Peter Catt metrics)
     information_mass: float
     information_horizon: int
@@ -102,9 +110,14 @@ def fingerprint_agent_payload(
         Immutable :class:`FingerprintAgentPayload` ready for A2 serialisation.
     """
     fp = bundle.fingerprint
+    geometry = bundle.geometry
     rec = bundle.recommendation
     return FingerprintAgentPayload(
         target_name=bundle.target_name,
+        geometry_method=str(geometry.method),
+        signal_to_noise=geometry.signal_to_noise,
+        geometry_information_horizon=geometry.information_horizon,
+        geometry_information_structure=str(geometry.information_structure),
         information_mass=fp.information_mass,
         information_horizon=fp.information_horizon,
         information_structure=str(fp.information_structure),

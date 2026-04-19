@@ -75,7 +75,7 @@ class FingerprintDeps:
         max_lag: Maximum horizon H to analyse.
         n_surrogates: Number of surrogates for significance estimation.
         random_state: Seed for deterministic execution.
-        ami_floor: Minimum AMI value to count a horizon as informative.
+        ami_floor: Legacy compatibility argument retained for older callers.
     """
 
     settings: InfraSettings
@@ -99,6 +99,10 @@ class FingerprintExplanation(BaseModel):
 
     Attributes:
         target_name: Series label propagated from the deterministic bundle.
+        geometry_method: Deterministic geometry engine identifier.
+        signal_to_noise: Geometry signal-quality statistic.
+        geometry_information_horizon: Geometry-derived latest informative horizon.
+        geometry_information_structure: Geometry-derived structure label.
         information_mass: Normalised masked AMI area over informative horizons.
         information_horizon: Latest informative horizon index (0 when none).
         information_structure: Shape label for the AMI profile.
@@ -112,6 +116,10 @@ class FingerprintExplanation(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     target_name: str
+    geometry_method: str
+    signal_to_noise: float
+    geometry_information_horizon: int
+    geometry_information_structure: str
     information_mass: float
     information_horizon: int
     information_structure: str
@@ -141,6 +149,9 @@ hallucinate numeric values. Every number you cite must come from a tool output.
 
 ## Fingerprint metric semantics
 
+- **signal_to_noise**: Share of corrected AMI that sits above the surrogate
+  threshold profile. Low → weak margin above surrogate noise; high → clearer
+  usable signal.
 - **information_mass**: Normalised area under the informative AMI profile.
   Low → weak forecastability; high → rich predictive information.
 - **information_horizon**: Latest horizon where AMI remains informative (0 = none).
@@ -226,7 +237,8 @@ def create_fingerprint_agent(
     def run_fingerprint(ctx: RunContext[FingerprintDeps]) -> dict[str, Any]:
         """Compute the forecastability fingerprint for the target series.
 
-        Returns a dict with information_mass, information_horizon,
+        Returns a dict with geometry, fingerprint, and routing fields,
+        including information_mass, information_horizon,
         information_structure, nonlinear_share, directness_ratio,
         informative_horizons, primary_families, secondary_families,
         confidence_label, caution_flags, and rationale.
@@ -242,10 +254,15 @@ def create_fingerprint_agent(
         )
         # Cache the bundle for subsequent tool calls.
         object.__setattr__(deps, "_bundle", bundle)
+        geometry = bundle.geometry
         fp = bundle.fingerprint
         rec = bundle.recommendation
         return {
             "target_name": bundle.target_name,
+            "geometry_method": geometry.method,
+            "signal_to_noise": geometry.signal_to_noise,
+            "geometry_information_horizon": geometry.information_horizon,
+            "geometry_information_structure": geometry.information_structure,
             "information_mass": fp.information_mass,
             "information_horizon": fp.information_horizon,
             "information_structure": fp.information_structure,
@@ -321,9 +338,14 @@ def _strict_explanation(bundle: FingerprintBundle) -> FingerprintExplanation:
     caveats = list(payload.caution_flags) + list(payload.rationale)
 
     fp = bundle.fingerprint
+    geometry = bundle.geometry
     rec = bundle.recommendation
     return FingerprintExplanation(
         target_name=bundle.target_name,
+        geometry_method=str(geometry.method),
+        signal_to_noise=geometry.signal_to_noise,
+        geometry_information_horizon=geometry.information_horizon,
+        geometry_information_structure=str(geometry.information_structure),
         information_mass=fp.information_mass,
         information_horizon=fp.information_horizon,
         information_structure=str(fp.information_structure),
@@ -364,7 +386,8 @@ async def run_fingerprint_agent(
         max_lag: Maximum horizon H to analyse.
         n_surrogates: Number of surrogates for significance estimation.
         random_state: Seed for deterministic execution.
-        ami_floor: Minimum AMI floor for informative-horizon screening.
+        ami_floor: Legacy compatibility argument retained for older callers.
+            The geometry-backed v0.3.1 path ignores it semantically.
         strict: When ``True``, skip the live agent and return the deterministic
             fallback only.
         model: PydanticAI model identifier.  Defaults to ``openai:<settings.openai_model>``.

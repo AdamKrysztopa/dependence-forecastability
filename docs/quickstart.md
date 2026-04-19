@@ -188,6 +188,36 @@ Expected output snippet:
 }
 ```
 
+## 11 Minutes: Fingerprint Workflow
+
+Use the geometry-backed fingerprint workflow when you want compact AMI summary
+fields plus deterministic model-family guidance.
+
+```bash
+uv run python - <<'PY'
+from forecastability import generate_fingerprint_archetypes, run_forecastability_fingerprint
+
+series = generate_fingerprint_archetypes(n=320, seed=42)["seasonal_periodic"]
+bundle = run_forecastability_fingerprint(
+    series,
+    target_name="seasonal_periodic",
+    max_lag=24,
+    n_surrogates=99,
+    random_state=42,
+)
+
+print(
+    {
+        "signal_to_noise": bundle.geometry.signal_to_noise,
+        "information_mass": bundle.fingerprint.information_mass,
+        "information_structure": bundle.fingerprint.information_structure,
+        "primary_families": bundle.recommendation.primary_families,
+        "confidence_label": bundle.recommendation.confidence_label,
+    }
+)
+PY
+```
+
 ## 12 Minutes: Covariant Informative Workflow
 
 Run the v0.3.0 covariant bundle with pairwise and directional methods:

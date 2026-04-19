@@ -439,6 +439,7 @@ class CovariantInterpretationResult(BaseModel):
 # v0.3.1 Forecastability Fingerprint result containers (V3_1-F00)
 # ---------------------------------------------------------------------------
 
+GeometryMethodLabel = Literal["ksg2_shuffle_surrogate"]
 FingerprintStructure = Literal["none", "monotonic", "periodic", "mixed"]
 RoutingConfidenceLabel = Literal["low", "medium", "high"]
 ModelFamilyLabel = Literal[
@@ -466,27 +467,61 @@ RoutingCautionFlag = Literal[
     "short_information_horizon",
     "weak_informative_support",
     "signal_conflict",
+    "low_signal_to_noise",
+    "geometry_threshold_borderline",
+    "nonstationarity_risk",
 ]
+
+
+class AmiGeometryCurvePoint(BaseModel):
+    """One horizon point in the AMI Information Geometry curve."""
+
+    model_config = ConfigDict(frozen=True)
+
+    horizon: int
+    ami_raw: float | None = None
+    ami_bias: float | None = None
+    ami_corrected: float | None = None
+    tau: float | None = None
+    accepted: bool = False
+    valid: bool = True
+    caution: str | None = None
+
+
+class AmiInformationGeometry(BaseModel):
+    """Deterministic AMI Information Geometry outputs."""
+
+    model_config = ConfigDict(frozen=True)
+
+    method: GeometryMethodLabel = "ksg2_shuffle_surrogate"
+    signal_to_noise: float
+    information_horizon: int
+    information_structure: FingerprintStructure
+    informative_horizons: list[int] = Field(default_factory=list)
+    curve: list[AmiGeometryCurvePoint] = Field(default_factory=list)
+    metadata: dict[str, str | int | float] = Field(default_factory=dict)
 
 
 class ForecastabilityFingerprint(BaseModel):
     """Compact summary of forecastability profile semantics.
 
     Attributes:
-        information_mass: Normalized masked area under informative AMI profile.
-            Computed as (1/H) * sum of AMI(h) for informative horizons.
-            Low = weak forecastability; high = rich predictive information.
-        information_horizon: Latest horizon h still informative (max of H_info set).
-            Zero when no informative horizons exist.
-            Short = prediction decays fast; long = information persists.
-        information_structure: Shape label for the AMI profile over informative horizons.
+        information_mass: Normalized masked area under the accepted corrected
+            AMI profile. Low = weak forecastability; high = rich predictive
+            information over the evaluated horizon grid.
+        information_horizon: Latest horizon h still informative under the
+            geometry acceptance rule. Zero when no informative horizons exist.
+        information_structure: Shape label sourced from the corrected AMI
+            profile and geometry classifier.
             One of: none, monotonic, periodic, mixed.
-        nonlinear_share: Fraction of informative-horizon AMI in excess of a
-            Gaussian-information linear baseline. Zero when no informative horizons
-            or when AMI denominator is near zero.
+        nonlinear_share: Fraction of accepted corrected AMI in excess of a
+            Gaussian-information linear baseline. Zero when no informative
+            horizons or when the corrected-AMI denominator is near zero.
+        signal_to_noise: Share of corrected AMI that sits meaningfully above
+            the surrogate threshold profile.
         directness_ratio: Direct vs. mediated lag structure ratio, kept semantically
             separate from nonlinear_share. None if not computed.
-        informative_horizons: List of horizon indices h in H_info.
+        informative_horizons: List of horizon indices accepted by the geometry mask.
         metadata: Optional key/value annotations for provenance tracking.
     """
 
@@ -496,6 +531,7 @@ class ForecastabilityFingerprint(BaseModel):
     information_horizon: int
     information_structure: FingerprintStructure
     nonlinear_share: float
+    signal_to_noise: float
     directness_ratio: float | None = None
     informative_horizons: list[int] = Field(default_factory=list)
     metadata: dict[str, str | int | float] = Field(default_factory=dict)
@@ -532,6 +568,7 @@ class FingerprintBundle(BaseModel):
 
     Attributes:
         target_name: Name of the series being fingerprinted.
+        geometry: Deterministic AMI Information Geometry output.
         fingerprint: Compact forecastability fingerprint.
         recommendation: Model-family routing recommendation.
         profile_summary: Scalar summary of the underlying AMI profile.
@@ -541,6 +578,7 @@ class FingerprintBundle(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     target_name: str
+    geometry: AmiInformationGeometry
     fingerprint: ForecastabilityFingerprint
     recommendation: RoutingRecommendation
     profile_summary: dict[str, str | int | float]

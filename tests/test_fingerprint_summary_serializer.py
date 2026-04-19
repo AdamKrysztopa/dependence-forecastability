@@ -14,6 +14,8 @@ from forecastability.adapters.agents.fingerprint_summary_serializer import (
     serialise_fingerprint_to_json,
 )
 from forecastability.utils.types import (
+    AmiGeometryCurvePoint,
+    AmiInformationGeometry,
     FingerprintBundle,
     ForecastabilityFingerprint,
     RoutingRecommendation,
@@ -26,16 +28,36 @@ def _make_payload(
     mass: float = 0.12,
     horizon: int = 8,
     nonlinear_share: float = 0.05,
+    signal_to_noise: float = 0.33,
     primary_families: list[str] | None = None,
     confidence_label: str = "high",
     narrative: str | None = None,
 ) -> FingerprintAgentPayload:
     """Build a minimal :class:`FingerprintAgentPayload` for testing."""
+    geometry = AmiInformationGeometry(
+        signal_to_noise=signal_to_noise,
+        information_horizon=horizon,
+        information_structure=structure,  # type: ignore[arg-type]
+        informative_horizons=[1, 2, 3, horizon],
+        curve=[
+            AmiGeometryCurvePoint(
+                horizon=item,
+                ami_raw=0.18,
+                ami_bias=0.04,
+                ami_corrected=0.14,
+                tau=0.03,
+                accepted=True,
+                valid=True,
+            )
+            for item in range(1, horizon + 1)
+        ],
+    )
     fp = ForecastabilityFingerprint(
         information_mass=mass,
         information_horizon=horizon,
         information_structure=structure,  # type: ignore[arg-type]
         nonlinear_share=nonlinear_share,
+        signal_to_noise=signal_to_noise,
         directness_ratio=0.72,
         informative_horizons=[1, 2, 3, horizon],
     )
@@ -47,6 +69,7 @@ def _make_payload(
     )
     bundle = FingerprintBundle(
         target_name="serialiser_test",
+        geometry=geometry,
         fingerprint=fp,
         recommendation=rec,
         profile_summary={"n_sig_lags": 3},
@@ -84,6 +107,15 @@ class TestSerialisedFingerprintSummaryEnvelope:
         assert inner["information_mass"] == 0.20
         assert inner["information_horizon"] == 5
         assert inner["information_structure"] == "periodic"
+
+    def test_envelope_payload_contains_geometry_fields(self) -> None:
+        payload = _make_payload(signal_to_noise=0.44)
+        summary = serialise_fingerprint_payload(payload)
+
+        inner = summary.payload
+        assert inner["geometry_method"] == "ksg2_shuffle_surrogate"
+        assert inner["signal_to_noise"] == 0.44
+        assert inner["geometry_information_horizon"] == 8
 
     def test_envelope_payload_contains_routing_fields(self) -> None:
         payload = _make_payload(primary_families=["tbats"], confidence_label="medium")

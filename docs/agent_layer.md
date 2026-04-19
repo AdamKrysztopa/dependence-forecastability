@@ -150,6 +150,41 @@ The agent contract still applies: **agents narrate deterministic outputs, never
 invent numbers.** Experimental diagnostics (F5 Lyapunov exponent) are
 explicitly flagged in payloads so agents can include appropriate caveats.
 
+## Fingerprint Contract (v0.3.1)
+
+The same deterministic-first rules apply to the fingerprint workflow.
+Agent-facing fingerprint payloads must mirror geometry, fingerprint, and
+routing outputs exactly.
+
+```json
+{
+  "target_name": "seasonal_periodic",
+  "geometry_method": "ksg2_shuffle_surrogate",
+  "signal_to_noise": 0.61,
+  "geometry_information_horizon": 24,
+  "geometry_information_structure": "periodic",
+  "information_mass": 0.18,
+  "information_horizon": 24,
+  "information_structure": "periodic",
+  "nonlinear_share": 0.07,
+  "directness_ratio": null,
+  "primary_families": ["seasonal_naive", "harmonic_regression", "tbats"],
+  "secondary_families": ["seasonal_state_space"],
+  "confidence_label": "high",
+  "caution_flags": [],
+  "rationale": [
+    "Stable repeated informative peaks indicate seasonal structure."
+  ],
+  "narrative": null
+}
+```
+
+For the fingerprint path:
+
+1. `geometry_method`, `signal_to_noise`, geometry horizon, and geometry structure must survive unchanged into A1 payloads.
+2. The A3 deterministic interpretation may shorten prose, but it may not alter numeric fields, route families, or confidence labels.
+3. Any optional live narration surface must read the deterministic payload or call the same deterministic use case and remain verifiable against it.
+
 ### Expanded output shape
 
 With diagnostics enabled, the full agent-ready payload extends the base output:

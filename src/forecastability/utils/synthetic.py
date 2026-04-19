@@ -322,3 +322,40 @@ def generate_mediated_directness_drop(
         driver[t] = direct_phi * driver[t - 1] + rng.standard_normal()
         target[t] = mediation_strength * driver[t - 2] + 0.5 * target[t - 1] + rng.standard_normal()
     return driver, target
+
+
+def generate_fingerprint_archetypes(
+    n: int = 1000,
+    *,
+    seed: int = 42,
+) -> dict[str, np.ndarray]:
+    """Generate the canonical univariate fingerprint archetype panel.
+
+    The helper centralizes the standard synthetic benchmark set used by
+    examples, tests, and documentation so the geometry-backed fingerprint story
+    is exercised on one deterministic panel.
+
+    Args:
+        n: Number of observations per series.
+        seed: Base integer seed used to derive the per-archetype generators.
+
+    Returns:
+        Mapping from archetype label to 1-D numpy array.
+    """
+    return {
+        "white_noise": generate_white_noise(n=n, seed=seed),
+        "ar1_monotonic": generate_ar1_monotonic(n=n, phi=0.85, seed=seed + 1),
+        "seasonal_periodic": generate_seasonal_periodic(
+            n=n,
+            period=12,
+            ar_phi=0.5,
+            seasonal_phi=0.8,
+            seed=seed + 2,
+        ),
+        "nonlinear_mixed": generate_nonlinear_mixed(
+            n=n,
+            phi=0.6,
+            nl_strength=0.8,
+            seed=seed + 3,
+        ),
+    }

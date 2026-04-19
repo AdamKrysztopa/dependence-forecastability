@@ -1,177 +1,127 @@
 <!-- type: explanation -->
-# Forecastability Fingerprint (V3_1-F02)
+# Forecastability Fingerprint
 
-This page documents the theory and design contract for the
-`ForecastabilityFingerprint` summary layer introduced in V3_1-F02.
-
-The fingerprint converts horizon-wise AMI profile evidence into a compact,
-typed result that is easier to route into model-family guidance.
+`ForecastabilityFingerprint` is the compact public summary layer used by the
+v0.3.1 fingerprint workflow. It sits *above* the AMI Information Geometry
+engine and *below* routing, reporting, and agent adapters.
 
 > [!IMPORTANT]
-> The paper-native core is AMI. pAMI and fingerprint-based routing are project
-> extensions in this repository.
+> The fingerprint is not a replacement for the AMI curve. It is a deterministic
+> summary of geometry-backed horizon-wise AMI behavior.
 
-## Why This Object Exists
+## Position in the Stack
 
-The AMI profile is horizon-specific:
+```mermaid
+flowchart LR
+    A["Input series"] --> B["AMI Information Geometry"]
+    B --> C["Linear-information baseline"]
+    B --> D["ForecastabilityFingerprint"]
+    C --> D
+    D --> E["RoutingRecommendation"]
+    D --> F["Rendering / JSON / agents"]
+```
+
+The authoritative implementation lives in:
+
+- `forecastability.services.ami_information_geometry_service`
+- `forecastability.services.fingerprint_service`
+- `forecastability.services.routing_policy_service`
+
+## Public Fields
+
+The fingerprint keeps the original four public fields and now mirrors
+`signal_to_noise` from the geometry layer.
+
+### `information_mass`
+
+`information_mass` is computed on the **corrected** AMI profile and only over
+the geometry-accepted horizons:
 
 $$
-AMI(h) = I(X_t; X_{t+h}), \quad h = 1, \dots, H
-$$
-
-It is statistically rich but operationally verbose. `ForecastabilityFingerprint`
-provides a deterministic summary so that downstream routing and interpretation
-can consume one compact object with stable semantics.
-
-`ForecastabilityFingerprint` is defined in
-`forecastability.utils.types.ForecastabilityFingerprint` and built by
-`forecastability.services.fingerprint_service.build_fingerprint`.
-
-## Core Fields
-
-The fingerprint reports four primary fields.
-
-### `information_mass` (M)
-
-Normalized masked area under the informative AMI profile:
-
-$$
-M = \frac{1}{\max(1, H)} \sum_{h=1}^{H} AMI(h)\,\mathbf{1}[h \in \mathcal{H}_{info}]
+M = \frac{1}{\max(1, H_{valid})} \sum_{h=1}^{H} I_c(h)\,\mathbf{1}[I_c(h) > 3\tau(h)]
 $$
 
 Interpretation:
 
-- low `M`: weak aggregate usable dependence
-- high `M`: stronger and/or broader informative dependence
+- low mass: little usable predictive information survives correction/thresholding
+- high mass: stronger and/or broader usable signal across the evaluated horizon grid
 
-### `information_horizon` (H*)
+### `information_horizon`
 
-Latest informative horizon:
+`information_horizon` is the latest accepted horizon:
 
 $$
-H^* = \max(\mathcal{H}_{info})
+H_{info} = \max \{ h : I_c(h) > 3\tau(h) \}
 $$
 
-with `H* = 0` when `H_info` is empty.
-
-Interpretation:
-
-- short horizon: predictive information decays quickly
-- long horizon: information persists farther into the forecast horizon
+with `0` when no horizons satisfy the geometry rule.
 
 ### `information_structure`
 
-Shape label over informative-horizon AMI values:
+The public structure taxonomy remains:
 
 - `none`
-- `periodic`
 - `monotonic`
+- `periodic`
 - `mixed`
 
-Deterministic tie-break precedence is:
+The label is sourced from the corrected profile, not from raw AMI. The
+deterministic precedence is:
 
 `none` > `periodic` > `monotonic` > `mixed`
 
 ### `nonlinear_share`
 
-Fraction of informative AMI that exceeds a Gaussian linear-information baseline.
-For each horizon:
+`nonlinear_share` measures how much accepted corrected AMI exceeds a linear
+Gaussian-information baseline:
 
 $$
-I_G(h) = -\frac{1}{2}\log\bigl(1 - \rho(h)^2\bigr)
+I_G(h) = -\frac{1}{2}\log(1-\rho(h)^2)
 $$
 
 $$
-E(h) = \max\bigl(AMI(h) - I_G(h), 0\bigr)
+E(h) = \max(I_c(h) - I_G(h), 0)
 $$
 
-Aggregate ratio:
-
 $$
-N = \frac{\sum E(h)}{\sum AMI(h) + \varepsilon}
-$$
-
-where the sums are taken over valid informative horizons used in the nonlinear
-baseline computation.
-
-> [!IMPORTANT]
-> Important denominator fix: the denominator includes only informative horizons
-> where `I_G(h)` is valid. Horizons with invalid `I_G(h)` are excluded from both
-> numerator and denominator to avoid dilution or inflation from undefined linear
-> baseline values.
-
-## Informative Horizons `H_info`
-
-The informative horizon set is:
-
-$$
-\mathcal{H}_{info} = \{ h \in \{1,\dots,H\} : AMI(h) \ge \tau_{AMI} \;\land\; h \in H_{sig} \}
+N = \frac{\sum_{h \in \mathcal{H}_{geom}} E(h)}
+         {\sum_{h \in \mathcal{H}_{geom}} I_c(h) + \epsilon}
 $$
 
-where:
+Horizons with invalid `I_G(h)` are excluded conservatively from both numerator
+and denominator.
 
-- $\tau_{AMI}$ is the AMI floor (`ami_floor`)
-- $H_{sig}$ is the set of surrogate-significant horizons
+### `signal_to_noise`
 
-Operationally in V3_1-F02 this is implemented as:
-
-- `AMI(h) >= ami_floor`
-- and horizon `h` is in `significant_horizons`
-
-If `H_info` is empty, the service returns:
-
-- `information_mass = 0.0`
-- `information_horizon = 0`
-- `information_structure = "none"`
-- `nonlinear_share = 0.0`
-
-## Structure Classification Rules
-
-The structure classifier is deterministic and follows this sequence:
-
-1. `none` when no informative horizons exist.
-2. `periodic` when informative-horizon AMI has repeated peaks that pass
-   prominence criteria and spacing stability checks.
-3. `monotonic` when informative-horizon AMI is approximately non-increasing
-   within the configured monotonicity tolerance.
-4. `mixed` otherwise.
-
-Periodic checks use both absolute and relative prominence thresholds:
+`signal_to_noise` is mirrored into the fingerprint object, but it remains a
+geometry-quality metric:
 
 $$
-\text{prominence} \ge \max(\text{peak\_prominence\_abs},\; \text{peak\_prominence\_rel} \cdot \max AMI_{info})
+S = \frac{\sum_h \max(I_c(h)-\tau(h), 0)}{\sum_h I_c(h) + \epsilon}
 $$
 
-Spacing stability is controlled by `spacing_tolerance` on inter-peak spacing,
-and periodic inference is gated by `min_horizons_for_periodic`.
+Interpretation:
 
-## Surrogate-Gated vs Floor-Only Usage
+- low value: corrected AMI exists, but little clears the surrogate threshold margin
+- high value: corrected AMI rises clearly above the surrogate background
 
-V3_1-F02 supports two practical usage modes, demonstrated in
-`examples/fingerprint/minimal_fingerprint.py`.
+## What the Fingerprint Does Not Mean
 
-### Surrogate-gated mode (default analysis semantics)
+The fingerprint does **not** identify the one true best model.
 
-- `significant_horizons` comes from surrogate significance (`sig_raw_lags`)
-- informative horizons require both significance and floor
-- conservative: linear processes may correctly yield sparse or empty `H_info`
+- `information_mass` is not `signal_to_noise`
+- `signal_to_noise` is not `nonlinear_share`
+- `nonlinear_share` is not `1 - directness_ratio`
+- routing is heuristic model-family guidance, not an empirical winner guarantee
 
-### Floor-only mode (shape-inspection mode)
+## Geometry Coupling
 
-- caller treats every horizon with `AMI(h) >= ami_floor` as significant
-- bypasses surrogate gating to inspect geometric profile shape
-- useful for pedagogical comparisons and diagnostic exploration
+The v0.3.1 fingerprint no longer rebuilds threshold semantics locally.
 
-> [!NOTE]
-> Floor-only mode is a deliberate diagnostic simplification. It is not a
-> substitute for significance-gated interpretation in decision workflows.
+- accepted horizons come from `AmiInformationGeometry.curve[*].accepted`
+- `information_horizon` and `information_mass` use the same acceptance mask
+- structure comes from the geometry classifier
+- `signal_to_noise` is copied from geometry without reinterpretation
 
-## Scope Boundary and Semantics
-
-- AMI framing is paper-native.
-- pAMI and fingerprint summarization are repository extensions.
-- `directness_ratio` remains a separate field from `nonlinear_share` and is
-  passed through by the fingerprint service when provided.
-
-These distinctions prevent conflating mediated-lag structure (`directness`) with
-linear-vs-nonlinear dependence share (`nonlinear_share`).
+That keeps the deterministic core aligned across Python objects, markdown
+reports, JSON output, and agent payloads.

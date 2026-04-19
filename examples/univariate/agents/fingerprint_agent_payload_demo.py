@@ -25,6 +25,7 @@ Usage:
 from __future__ import annotations
 
 import json
+import math
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -47,30 +48,20 @@ from forecastability.adapters.agents.fingerprint_agent_payload_models import (
 from forecastability.adapters.agents.fingerprint_summary_serializer import (
     serialise_fingerprint_to_json,
 )
-from forecastability.diagnostics.surrogates import compute_significance_bands
-from forecastability.metrics.metrics import compute_ami
 from forecastability.use_cases.run_forecastability_fingerprint import (
     run_forecastability_fingerprint,
 )
-from forecastability.utils.synthetic import (
-    generate_ar1_monotonic,
-    generate_nonlinear_mixed,
-    generate_seasonal_periodic,
-    generate_white_noise,
-)
+from forecastability.utils.synthetic import generate_fingerprint_archetypes
 from forecastability.utils.types import FingerprintBundle
 
 # ---------------------------------------------------------------------------
 # Constants
 # ---------------------------------------------------------------------------
 
-_N: int = 500
+_N: int = 600
 _SEED: int = 42
 _MAX_LAG: int = 24
 _N_SURROGATES: int = 99
-_AMI_FLOOR: float = 0.01
-_NONLINEAR_DEMO_N: int = 700
-_NONLINEAR_DEMO_STRENGTH: float = 0.9
 
 _FIG_DIR = Path("outputs/figures/examples/univariate/agents")
 _JSON_DIR = Path("outputs/json/examples/univariate/agents")
@@ -95,29 +86,25 @@ _FALLBACK_FAMILIES: frozenset[str] = frozenset({"naive", "seasonal_naive", "down
 
 
 @dataclass(frozen=True)
-class _GatingDiagnostics:
-    """Deterministic diagnostics for informative-horizon gating.
+class _GeometryDiagnostics:
+    """Deterministic geometry diagnostics mirrored into the agent payload."""
 
-    Attributes:
-        horizons_above_ami_floor: Horizons where AMI >= ami_floor.
-        surrogate_significant_horizons: Horizons where AMI exceeds upper surrogate band.
-        informative_horizons_intersection: Intersection of floor and significance gates.
-        profile_sig_horizons_count: Optional count from profile_summary when present.
-    """
-
-    horizons_above_ami_floor: list[int]
-    surrogate_significant_horizons: list[int]
-    informative_horizons_intersection: list[int]
-    profile_sig_horizons_count: int | None
+    method: str
+    signal_to_noise: float
+    information_horizon: int
+    information_structure: str
+    informative_horizons: list[int]
+    threshold_borderline: bool
 
 
 @dataclass(frozen=True)
 class _ArchetypeRun:
     """Aggregated deterministic outputs for one archetype run."""
 
+    bundle: FingerprintBundle
     payload: FingerprintAgentPayload
     interpretation: FingerprintAgentInterpretation
-    gating: _GatingDiagnostics
+    geometry: _GeometryDiagnostics
 
 
 @dataclass(frozen=True)
@@ -143,19 +130,7 @@ def _build_series_map(*, n: int, seed: int) -> dict[str, np.ndarray]:
     Returns:
         Ordered mapping from archetype name to 1-D numpy array.
     """
-    return {
-        "white_noise": generate_white_noise(n=n, seed=seed),
-        "ar1_monotonic": generate_ar1_monotonic(n=n, phi=0.85, seed=seed),
-        "seasonal_periodic": generate_seasonal_periodic(
-            n=n, period=12, ar_phi=0.5, seasonal_phi=0.8, seed=seed
-        ),
-        "nonlinear_mixed": generate_nonlinear_mixed(
-            n=max(n, _NONLINEAR_DEMO_N),
-            phi=0.6,
-            nl_strength=_NONLINEAR_DEMO_STRENGTH,
-            seed=seed,
-        ),
-    }
+    return generate_fingerprint_archetypes(n=n, seed=seed)
 
 
 # ---------------------------------------------------------------------------
@@ -182,64 +157,39 @@ def _run_pipeline(
         max_lag=_MAX_LAG,
         n_surrogates=_N_SURROGATES,
         random_state=_SEED,
-        ami_floor=_AMI_FLOOR,
     )
     payload = fingerprint_agent_payload(bundle, narrative=None)  # strict mode
     interpretation = interpret_fingerprint_payload(payload)
-    gating = _compute_gating_diagnostics(series=series, bundle=bundle)
-    return _ArchetypeRun(payload=payload, interpretation=interpretation, gating=gating)
+    geometry = _compute_geometry_diagnostics(bundle=bundle)
+    return _ArchetypeRun(
+        bundle=bundle,
+        payload=payload,
+        interpretation=interpretation,
+        geometry=geometry,
+    )
 
 
-def _compute_gating_diagnostics(
+def _compute_geometry_diagnostics(
     *,
-    series: np.ndarray,
     bundle: FingerprintBundle,
-) -> _GatingDiagnostics:
-    """Reconstruct informative-horizon gates for transparent diagnostics.
+) -> _GeometryDiagnostics:
+    """Collect the canonical geometry outputs for transparent diagnostics.
 
     Args:
-        series: Source time series for this archetype.
         bundle: Deterministic fingerprint bundle.
 
     Returns:
-        Gating diagnostics derived from deterministic AMI and surrogate bands.
+        Geometry diagnostics derived directly from the bundle contract.
     """
-    ami = compute_ami(
-        series,
-        _MAX_LAG,
-        n_neighbors=8,
-        min_pairs=30,
-        random_state=_SEED,
+    geometry = bundle.geometry
+    return _GeometryDiagnostics(
+        method=str(geometry.method),
+        signal_to_noise=geometry.signal_to_noise,
+        information_horizon=geometry.information_horizon,
+        information_structure=str(geometry.information_structure),
+        informative_horizons=list(geometry.informative_horizons),
+        threshold_borderline=bool(geometry.metadata.get("geometry_threshold_borderline", 0)),
     )
-    _, upper = compute_significance_bands(
-        series,
-        metric_name="ami",
-        max_lag=_MAX_LAG,
-        n_surrogates=_N_SURROGATES,
-        random_state=_SEED,
-        n_jobs=1,
-    )
-
-    horizons_above_ami_floor = [int(h + 1) for h, v in enumerate(ami) if float(v) >= _AMI_FLOOR]
-    surrogate_significant = [int(h + 1) for h, v in enumerate(ami) if float(v) > float(upper[h])]
-    informative = sorted(set(horizons_above_ami_floor).intersection(surrogate_significant))
-    profile_sig_count = _safe_int(bundle.profile_summary.get("sig_horizons_count"))
-
-    return _GatingDiagnostics(
-        horizons_above_ami_floor=horizons_above_ami_floor,
-        surrogate_significant_horizons=surrogate_significant,
-        informative_horizons_intersection=informative,
-        profile_sig_horizons_count=profile_sig_count,
-    )
-
-
-def _safe_int(value: str | int | float | None) -> int | None:
-    """Convert a scalar summary value to int when possible."""
-    if isinstance(value, int):
-        return value
-    if isinstance(value, float):
-        return int(value)
-    return None
 
 
 def _contains_any(families: list[str], allowed: frozenset[str]) -> bool:
@@ -264,13 +214,21 @@ def _print_archetype_report(
     """
     payload = run.payload
     interpretation = run.interpretation
-    gating = run.gating
+    geometry = run.geometry
 
     separator = "─" * 68
     print(f"\n{separator}")
     print(f"  ARCHETYPE: {name.upper()}")
     print(f"  Hint: {_ARCHETYPES[name]}")
     print(separator)
+
+    print("\n  ── Geometry (deterministic) ──────────────────────────────")
+    print(f"  geometry_method       : {payload.geometry_method}")
+    print(f"  signal_to_noise       : {payload.signal_to_noise:.6f}")
+    print(f"  geometry_horizon      : {payload.geometry_information_horizon}")
+    print(f"  geometry_structure    : {payload.geometry_information_structure}")
+    print(f"  informative_horizons  : {geometry.informative_horizons}")
+    print(f"  threshold_borderline  : {geometry.threshold_borderline}")
 
     print("\n  ── Fingerprint (A1) ──────────────────────────────────────")
     print(f"  information_mass      : {payload.information_mass:.6f}")
@@ -279,14 +237,6 @@ def _print_archetype_report(
     print(f"  nonlinear_share       : {payload.nonlinear_share:.6f}")
     print(f"  directness_ratio      : {payload.directness_ratio}")
     print(f"  informative_horizons  : {payload.informative_horizons}")
-
-    print("\n  ── Gating Diagnostics (deterministic) ───────────────────")
-    print(f"  horizons_above_floor  : {gating.horizons_above_ami_floor}")
-    print(f"  surrogate_significant : {gating.surrogate_significant_horizons}")
-    print(f"  informative_intersect : {gating.informative_horizons_intersection}")
-    print(f"  informative_count     : {len(payload.informative_horizons)}")
-    if gating.profile_sig_horizons_count is not None:
-        print(f"  profile.sig_count     : {gating.profile_sig_horizons_count}")
 
     print("\n  ── Routing (A1) ──────────────────────────────────────────")
     print(f"  primary_families      : {payload.primary_families}")
@@ -316,7 +266,7 @@ def _print_cross_archetype_summary(
     print("  CROSS-ARCHETYPE SUMMARY")
     print("═" * 80)
     header = (
-        f"  {'Archetype':<22} {'Structure':<12} {'Mass':>8}"
+        f"  {'Archetype':<22} {'Geom':<12} {'S/N':>7} {'Mass':>8}"
         f" {'NL Share':>9} {'Confidence':<12} {'Route'}"
     )
     print(header)
@@ -325,8 +275,9 @@ def _print_cross_archetype_summary(
         payload = run.payload
         families = ", ".join(payload.primary_families[:2]) if payload.primary_families else "none"
         print(
-            f"  {name:<22} {payload.information_structure:<12} "
-            f"{payload.information_mass:>8.4f} {payload.nonlinear_share:>9.4f} "
+            f"  {name:<22} {payload.geometry_information_structure:<12} "
+            f"{payload.signal_to_noise:>7.4f} {payload.information_mass:>8.4f} "
+            f"{payload.nonlinear_share:>9.4f} "
             f"{payload.confidence_label:<12} {families}"
         )
 
@@ -387,9 +338,9 @@ def _save_figure(
     payloads = [results[n].payload for n in names]
 
     mass_vals = [p.information_mass for p in payloads]
-    horizon_vals = [float(p.information_horizon) for p in payloads]
+    horizon_vals = [float(p.geometry_information_horizon) for p in payloads]
     nl_vals = [p.nonlinear_share for p in payloads]
-    n_informative = [float(len(p.informative_horizons)) for p in payloads]
+    signal_vals = [p.signal_to_noise for p in payloads]
 
     colors = ["#4C72B0", "#DD8452", "#55A868", "#C44E52"]
     x = np.arange(len(names))
@@ -400,9 +351,9 @@ def _save_figure(
 
     panels = [
         (axes[0, 0], mass_vals, "information_mass", "Normalised masked AMI area"),
-        (axes[0, 1], horizon_vals, "information_horizon", "Latest informative horizon"),
+        (axes[0, 1], horizon_vals, "geometry_horizon", "Latest geometry horizon"),
         (axes[1, 0], nl_vals, "nonlinear_share", "Fraction of AMI above linear baseline"),
-        (axes[1, 1], n_informative, "# informative horizons", "Count of H_info set members"),
+        (axes[1, 1], signal_vals, "signal_to_noise", "Corrected AMI above surrogate noise"),
     ]
 
     for ax, vals, title, ylabel in panels:
@@ -430,16 +381,17 @@ def _save_figure(
 def _verify_routing(
     results: dict[str, _ArchetypeRun],
 ) -> None:
-    """Print routing verification against expected archetype behaviour.
+    """Print payload parity and routing verification against expected behaviour.
 
     Args:
         results: Mapping from archetype name to (payload, interpretation) pair.
     """
-    print("\n  ── Routing Verification ──────────────────────────────────")
+    print("\n  ── Payload Verification ──────────────────────────────────")
     all_passed = True
 
     for name, run in results.items():
-        issues = _verify_archetype(name=name, run=run)
+        issues = _verify_payload_parity(run=run)
+        issues.extend(_verify_archetype(name=name, run=run))
         if issues:
             all_passed = False
             for issue in issues:
@@ -452,6 +404,64 @@ def _verify_routing(
         print("\n  ✓ All routing checks passed.")
     else:
         print("\n  ⚠ Some routing checks produced mismatches — review above.")
+
+
+def _verify_payload_parity(*, run: _ArchetypeRun) -> list[_VerificationIssue]:
+    """Verify that the A1 payload mirrors the deterministic bundle exactly."""
+    payload = run.payload
+    bundle = run.bundle
+    geometry = bundle.geometry
+    fingerprint = bundle.fingerprint
+    recommendation = bundle.recommendation
+    issues: list[_VerificationIssue] = []
+
+    numeric_pairs = [
+        ("signal_to_noise", payload.signal_to_noise, geometry.signal_to_noise),
+        ("information_mass", payload.information_mass, fingerprint.information_mass),
+        ("nonlinear_share", payload.nonlinear_share, fingerprint.nonlinear_share),
+    ]
+    for label, actual, expected in numeric_pairs:
+        if not math.isclose(actual, expected, rel_tol=1e-9, abs_tol=1e-9):
+            issues.append(
+                _VerificationIssue(
+                    category="behavioral_contradiction",
+                    message=f"payload {label} mismatch: expected {expected}, got {actual}",
+                )
+            )
+
+    exact_pairs = [
+        ("geometry_method", payload.geometry_method, str(geometry.method)),
+        (
+            "geometry_information_horizon",
+            payload.geometry_information_horizon,
+            geometry.information_horizon,
+        ),
+        (
+            "geometry_information_structure",
+            payload.geometry_information_structure,
+            str(geometry.information_structure),
+        ),
+        ("information_horizon", payload.information_horizon, fingerprint.information_horizon),
+        (
+            "information_structure",
+            payload.information_structure,
+            str(fingerprint.information_structure),
+        ),
+        ("primary_families", payload.primary_families, list(recommendation.primary_families)),
+        ("secondary_families", payload.secondary_families, list(recommendation.secondary_families)),
+        ("caution_flags", payload.caution_flags, list(recommendation.caution_flags)),
+        ("confidence_label", payload.confidence_label, str(recommendation.confidence_label)),
+    ]
+    for label, actual, expected in exact_pairs:
+        if actual != expected:
+            issues.append(
+                _VerificationIssue(
+                    category="behavioral_contradiction",
+                    message=f"payload {label} mismatch: expected {expected}, got {actual}",
+                )
+            )
+
+    return issues
 
 
 def _verify_archetype(*, name: str, run: _ArchetypeRun) -> list[_VerificationIssue]:
@@ -560,7 +570,7 @@ def _verify_archetype(*, name: str, run: _ArchetypeRun) -> list[_VerificationIss
             )
 
     if name == "nonlinear_mixed":
-        informative_count = len(payload.informative_horizons)
+        informative_count = len(run.geometry.informative_horizons)
         if payload.information_mass < 0.02 or informative_count < 2:
             issues.append(
                 _VerificationIssue(

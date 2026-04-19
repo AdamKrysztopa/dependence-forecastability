@@ -48,6 +48,7 @@ class FingerprintInterpretationEvidence(BaseModel):
         informative_horizon_count: Number of informative horizons from A1.
         information_mass_bucket: Coarse bucket derived from mass value.
         nonlinear_share_bucket: Coarse bucket derived from nonlinear share.
+        signal_to_noise_bucket: Coarse bucket derived from signal_to_noise.
         has_directness_ratio: Whether directness ratio was computed.
         caution_count: Number of caution flags in A1.
     """
@@ -60,6 +61,7 @@ class FingerprintInterpretationEvidence(BaseModel):
     informative_horizon_count: int
     information_mass_bucket: Literal["low", "medium", "high"]
     nonlinear_share_bucket: Literal["low", "medium", "high"]
+    signal_to_noise_bucket: Literal["low", "medium", "high"]
     has_directness_ratio: bool
     caution_count: int
 
@@ -134,6 +136,15 @@ def _nonlinear_bucket(share: float) -> Literal["low", "medium", "high"]:
     return "high"
 
 
+def _signal_to_noise_bucket(value: float) -> Literal["low", "medium", "high"]:
+    """Map signal_to_noise to a coarse quality bucket."""
+    if value < 0.10:
+        return "low"
+    if value < 0.35:
+        return "medium"
+    return "high"
+
+
 def _extract_payload(
     source: FingerprintInterpretationInput,
 ) -> tuple[FingerprintAgentPayload, str | None]:
@@ -167,6 +178,7 @@ def _build_deterministic_summary(
     payload: FingerprintAgentPayload,
     mass_bkt: Literal["low", "medium", "high"],
     nl_bkt: Literal["low", "medium", "high"],
+    snr_bkt: Literal["low", "medium", "high"],
 ) -> str:
     """Build a one-line deterministic summary from payload fields.
 
@@ -183,7 +195,7 @@ def _build_deterministic_summary(
     families = ", ".join(payload.primary_families) if payload.primary_families else "none"
     return (
         f"[{payload.target_name}] structure={structure}, mass={mass_bkt}, "
-        f"nonlinear={nl_bkt}, horizon={horizon}, "
+        f"nonlinear={nl_bkt}, signal={snr_bkt}, horizon={horizon}, "
         f"confidence={payload.confidence_label}, route=[{families}]"
     )
 
@@ -257,6 +269,12 @@ def _build_cautionary_narrative(
             f"'{payload.target_name}' due to: {flag_text}. "
             "Review the rationale and caution flags before committing to a model family."
         )
+    if payload.signal_to_noise < 0.10:
+        return (
+            f"Corrected AMI exists for '{payload.target_name}', but the margin above the "
+            "surrogate threshold is weak. Treat the suggested families as cautious starting "
+            "points rather than a strong routing verdict."
+        )
     return None
 
 
@@ -283,6 +301,7 @@ def interpret_fingerprint_payload(
 
     mass_bkt = _mass_bucket(payload.information_mass)
     nl_bkt = _nonlinear_bucket(payload.nonlinear_share)
+    snr_bkt = _signal_to_noise_bucket(payload.signal_to_noise)
 
     evidence = FingerprintInterpretationEvidence(
         information_structure=payload.information_structure,
@@ -291,11 +310,12 @@ def interpret_fingerprint_payload(
         informative_horizon_count=len(payload.informative_horizons),
         information_mass_bucket=mass_bkt,
         nonlinear_share_bucket=nl_bkt,
+        signal_to_noise_bucket=snr_bkt,
         has_directness_ratio=payload.directness_ratio is not None,
         caution_count=len(payload.caution_flags),
     )
 
-    deterministic_summary = _build_deterministic_summary(payload, mass_bkt, nl_bkt)
+    deterministic_summary = _build_deterministic_summary(payload, mass_bkt, nl_bkt, snr_bkt)
     rich_signal_narrative = _build_rich_signal_narrative(payload, mass_bkt)
     cautionary_narrative = _build_cautionary_narrative(payload, mass_bkt)
 

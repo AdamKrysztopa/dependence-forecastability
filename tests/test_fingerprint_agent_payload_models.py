@@ -12,6 +12,8 @@ from forecastability.adapters.agents.fingerprint_agent_payload_models import (
     fingerprint_agent_payload,
 )
 from forecastability.utils.types import (
+    AmiGeometryCurvePoint,
+    AmiInformationGeometry,
     FingerprintBundle,
     ForecastabilityFingerprint,
     RoutingRecommendation,
@@ -24,6 +26,7 @@ def _make_bundle(
     mass: float = 0.12,
     horizon: int = 8,
     nonlinear_share: float = 0.10,
+    signal_to_noise: float = 0.35,
     directness_ratio: float | None = 0.72,
     informative_horizons: list[int] | None = None,
     primary_families: list[str] | None = None,
@@ -33,17 +36,33 @@ def _make_bundle(
     rationale: list[str] | None = None,
 ) -> FingerprintBundle:
     """Build a minimal :class:`FingerprintBundle` for testing."""
+    informative = informative_horizons if informative_horizons is not None else [1, 2, 3, 8]
+    geometry = AmiInformationGeometry(
+        signal_to_noise=signal_to_noise,
+        information_horizon=horizon,
+        information_structure=structure,  # type: ignore[arg-type]
+        informative_horizons=list(informative),
+        curve=[
+            AmiGeometryCurvePoint(
+                horizon=item,
+                ami_raw=0.20,
+                ami_bias=0.05,
+                ami_corrected=0.15,
+                tau=0.04,
+                accepted=item in informative,
+                valid=True,
+            )
+            for item in range(1, horizon + 1)
+        ],
+    )
     fp = ForecastabilityFingerprint(
         information_mass=mass,
         information_horizon=horizon,
         information_structure=structure,  # type: ignore[arg-type]
         nonlinear_share=nonlinear_share,
+        signal_to_noise=signal_to_noise,
         directness_ratio=directness_ratio,
-        informative_horizons=(
-            informative_horizons
-            if informative_horizons is not None
-            else [1, 2, 3, 8]
-        ),
+        informative_horizons=list(informative),
     )
     rec = RoutingRecommendation(
         primary_families=primary_families or ["arima"],  # type: ignore[list-item]
@@ -54,6 +73,7 @@ def _make_bundle(
     )
     return FingerprintBundle(
         target_name="test_series",
+        geometry=geometry,
         fingerprint=fp,
         recommendation=rec,
         profile_summary={"n_sig_lags": 4, "max_ami": 0.30},
@@ -71,6 +91,18 @@ class TestFingerprintAgentPayloadFields:
         assert payload.information_horizon == bundle.fingerprint.information_horizon
         assert payload.information_structure == str(bundle.fingerprint.information_structure)
         assert payload.nonlinear_share == bundle.fingerprint.nonlinear_share
+
+    def test_geometry_fields_present(self) -> None:
+        bundle = _make_bundle(signal_to_noise=0.41)
+        payload = fingerprint_agent_payload(bundle)
+
+        assert payload.geometry_method == bundle.geometry.method
+        assert payload.signal_to_noise == bundle.geometry.signal_to_noise
+        assert payload.geometry_information_horizon == bundle.geometry.information_horizon
+        assert (
+            payload.geometry_information_structure
+            == bundle.geometry.information_structure
+        )
 
     def test_routing_fields_present(self) -> None:
         bundle = _make_bundle()

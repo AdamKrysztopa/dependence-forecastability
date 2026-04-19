@@ -16,6 +16,8 @@ from forecastability.adapters.agents.fingerprint_summary_serializer import (
     serialise_fingerprint_payload,
 )
 from forecastability.utils.types import (
+    AmiGeometryCurvePoint,
+    AmiInformationGeometry,
     FingerprintBundle,
     ForecastabilityFingerprint,
     RoutingRecommendation,
@@ -28,19 +30,40 @@ def _make_bundle(
     mass: float = 0.20,
     horizon: int = 8,
     nonlinear_share: float = 0.08,
+    signal_to_noise: float = 0.36,
     directness_ratio: float | None = 0.75,
     informative_horizons: list[int] | None = None,
     primary_families: list[str] | None = None,
     caution_flags: list[str] | None = None,
     confidence_label: str = "high",
 ) -> FingerprintBundle:
+    informative = informative_horizons or [1, 2, 3, 8]
+    geometry = AmiInformationGeometry(
+        signal_to_noise=signal_to_noise,
+        information_horizon=horizon,
+        information_structure=structure,  # type: ignore[arg-type]
+        informative_horizons=list(informative),
+        curve=[
+            AmiGeometryCurvePoint(
+                horizon=item,
+                ami_raw=0.16,
+                ami_bias=0.03,
+                ami_corrected=0.13,
+                tau=0.02,
+                accepted=item in informative,
+                valid=True,
+            )
+            for item in range(1, horizon + 1)
+        ],
+    )
     fp = ForecastabilityFingerprint(
         information_mass=mass,
         information_horizon=horizon,
         information_structure=structure,  # type: ignore[arg-type]
         nonlinear_share=nonlinear_share,
+        signal_to_noise=signal_to_noise,
         directness_ratio=directness_ratio,
-        informative_horizons=informative_horizons or [1, 2, 3, 8],
+        informative_horizons=list(informative),
     )
     rec = RoutingRecommendation(
         primary_families=primary_families or ["arima"],  # type: ignore[list-item]
@@ -51,6 +74,7 @@ def _make_bundle(
     )
     return FingerprintBundle(
         target_name="interp_test",
+        geometry=geometry,
         fingerprint=fp,
         recommendation=rec,
         profile_summary={"n_sig_lags": 4},
@@ -164,6 +188,13 @@ class TestInterpretFingerprintPayload:
 
         assert result_with.evidence.has_directness_ratio is True
         assert result_without.evidence.has_directness_ratio is False
+
+    def test_evidence_has_signal_to_noise_bucket(self) -> None:
+        bundle = _make_bundle(signal_to_noise=0.05)
+        payload = fingerprint_agent_payload(bundle)
+        result = interpret_fingerprint_payload(payload)
+
+        assert result.evidence.signal_to_noise_bucket == "low"
 
     def test_source_payload_type_constant(self) -> None:
         bundle = _make_bundle()

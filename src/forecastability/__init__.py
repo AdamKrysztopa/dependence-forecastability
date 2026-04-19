@@ -16,7 +16,9 @@ from forecastability.pipeline.analyzer import (
 from forecastability.reporting.fingerprint_reporting import (
     build_fingerprint_markdown,
     build_fingerprint_panel_markdown,
+    build_fingerprint_summary_dict,
     build_fingerprint_summary_row,
+    render_fingerprint_summary_dict,
     save_fingerprint_bundle_json,
 )
 from forecastability.triage.forecastability_profile import ForecastabilityProfile
@@ -51,11 +53,14 @@ from forecastability.utils.synthetic import (
     generate_ar1_monotonic,
     generate_covariant_benchmark,
     generate_directional_pair,
+    generate_fingerprint_archetypes,
     generate_mediated_directness_drop,
     generate_nonlinear_mixed,
     generate_seasonal_periodic,
 )
 from forecastability.utils.types import (
+    AmiGeometryCurvePoint,
+    AmiInformationGeometry,
     BackendComparisonResult,
     CanonicalExampleResult,
     CanonicalSummary,
@@ -83,6 +88,8 @@ from forecastability.utils.validation import validate_time_series
 __version__ = "0.3.0"
 
 __all__ = [
+    "AmiGeometryCurvePoint",
+    "AmiInformationGeometry",
     "AnalyzeResult",
     "ar1_theoretical_ami",
     "BackendComparisonResult",
@@ -95,6 +102,7 @@ __all__ = [
     "Diagnostics",
     "build_fingerprint_markdown",
     "build_fingerprint_panel_markdown",
+    "build_fingerprint_summary_dict",
     "build_fingerprint_summary_row",
     "DependenceScorer",
     "ExogenousBenchmarkConfig",
@@ -112,6 +120,7 @@ __all__ = [
     "generate_ar1_monotonic",
     "generate_covariant_benchmark",
     "generate_directional_pair",
+    "generate_fingerprint_archetypes",
     "generate_mediated_directness_drop",
     "generate_nonlinear_mixed",
     "generate_seasonal_periodic",
@@ -133,6 +142,7 @@ __all__ = [
     "run_covariant_analysis",
     "run_forecastability_fingerprint",
     "run_triage",
+    "render_fingerprint_summary_dict",
     "SampleSizeStressResult",
     "ScorerInfo",
     "ScorerRegistry",

@@ -74,6 +74,10 @@ class TestStrictExplanation:
         )
         explanation = _strict_explanation(bundle)
 
+        assert isinstance(explanation.geometry_method, str)
+        assert isinstance(explanation.signal_to_noise, float)
+        assert isinstance(explanation.geometry_information_horizon, int)
+        assert isinstance(explanation.geometry_information_structure, str)
         assert isinstance(explanation.information_mass, float)
         assert isinstance(explanation.information_horizon, int)
         assert isinstance(explanation.information_structure, str)
@@ -160,6 +164,7 @@ class TestRunFingerprintAgentStrictMode:
         assert e1.information_horizon == e2.information_horizon
         assert e1.information_structure == e2.information_structure
         assert e1.nonlinear_share == e2.nonlinear_share
+        assert e1.signal_to_noise == e2.signal_to_noise
         assert e1.primary_families == e2.primary_families
 
 

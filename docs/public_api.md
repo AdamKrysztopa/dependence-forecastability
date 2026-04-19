@@ -3,7 +3,7 @@
 
 A deterministic forecastability triage toolkit with AMI as the paper-aligned foundation and pAMI as a project extension.
 
-_Last verified for release 0.3.0 documentation update on 2026-04-17._
+_Last verified for the in-repo v0.3.1 fingerprint refactor on 2026-04-19._
 
 This page lists the import roots and runtime entry points that are treated as the supported public surface of the live repository.
 
@@ -32,11 +32,36 @@ from forecastability import (
 | --- | --- |
 | Triage entry points | `run_triage`, `run_batch_triage`, `TriageRequest`, `TriageResult` |
 | Covariant entry points | `run_covariant_analysis`, `CovariantAnalysisBundle`, `CovariantSummaryRow`, `TransferEntropyResult`, `GcmiResult`, `CausalGraphResult`, `PcmciAmiResult`, `Phase0MiScore` |
+| Fingerprint entry points | `run_forecastability_fingerprint`, `FingerprintBundle`, `ForecastabilityFingerprint`, `AmiInformationGeometry`, `AmiGeometryCurvePoint` |
 | Analyzer facade | `ForecastabilityAnalyzer`, `ForecastabilityAnalyzerExog`, `AnalyzeResult` |
 | Diagnostic and result models | `ForecastabilityProfile`, `PredictiveInfoLearningCurve`, `SpectralPredictabilityResult`, `InterpretationResult`, `Diagnostics`, `MetricCurve`, `CanonicalExampleResult`, `CanonicalSummary`, `SeriesEvaluationResult`, `ForecastResult`, `BackendComparisonResult`, `ExogenousBenchmarkResult`, `RobustnessStudyResult`, `SampleSizeStressResult` |
 | Config models | `BenchmarkDataConfig`, `CMIConfig`, `ExogenousBenchmarkConfig`, `MetricConfig`, `ModelConfig`, `OutputConfig`, `RobustnessStudyConfig`, `RollingOriginConfig`, `SensitivityConfig`, `UncertaintyConfig` |
 | Dataset helpers | `generate_ar1`, `generate_white_noise`, `ar1_theoretical_ami` |
 | Registry and validation helpers | `DependenceScorer`, `ScorerInfo`, `ScorerRegistry`, `default_registry`, `validate_time_series` |
+
+## Fingerprint Surface
+
+Use `run_forecastability_fingerprint` when you want the compact forecastability
+fingerprint, AMI information geometry, and deterministic routing in one bundle.
+
+```python
+from forecastability import generate_fingerprint_archetypes, run_forecastability_fingerprint
+
+series = generate_fingerprint_archetypes(n=320, seed=42)["seasonal_periodic"]
+bundle = run_forecastability_fingerprint(
+    series,
+    target_name="seasonal_periodic",
+    max_lag=24,
+    n_surrogates=99,
+    random_state=42,
+)
+```
+
+Key returned objects:
+
+- `bundle.geometry`: corrected-profile geometry, `signal_to_noise`, geometry structure, geometry horizon
+- `bundle.fingerprint`: compact fingerprint fields (`information_mass`, `information_horizon`, `information_structure`, `nonlinear_share`, `signal_to_noise`)
+- `bundle.recommendation`: deterministic model-family guidance and caution flags
 
 ## Covariant Method Surface
 

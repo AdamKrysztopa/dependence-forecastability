@@ -1,7 +1,7 @@
 """Fingerprint rendering helpers — V3_1-F05.
 
 Compact rendering surface for :class:`FingerprintBundle` results: markdown
-summaries, summary rows for tabular display, and JSON serialisation.
+summaries, stable summary dicts, tabular summary rows, and JSON serialisation.
 All functions are pure renderers — no scientific computation.
 """
 
@@ -19,6 +19,31 @@ _logger = logging.getLogger(__name__)
 _SEPARATOR = "\n---\n"
 
 
+def render_fingerprint_summary_dict(bundle: FingerprintBundle) -> dict[str, object]:
+    """Render a stable compact summary dict for JSON, docs, and agent surfaces."""
+    fp = bundle.fingerprint
+    geometry = bundle.geometry
+    rec = bundle.recommendation
+    return {
+        "target_name": bundle.target_name,
+        "geometry_method": geometry.method,
+        "signal_to_noise": geometry.signal_to_noise,
+        "geometry_information_horizon": geometry.information_horizon,
+        "geometry_information_structure": geometry.information_structure,
+        "information_mass": fp.information_mass,
+        "information_horizon": fp.information_horizon,
+        "information_structure": fp.information_structure,
+        "nonlinear_share": fp.nonlinear_share,
+        "directness_ratio": fp.directness_ratio,
+        "informative_horizons": list(fp.informative_horizons),
+        "primary_families": list(rec.primary_families),
+        "secondary_families": list(rec.secondary_families),
+        "confidence_label": rec.confidence_label,
+        "caution_flags": list(rec.caution_flags),
+        "rationale": list(rec.rationale),
+    }
+
+
 def build_fingerprint_markdown(bundle: FingerprintBundle) -> str:
     """Build a markdown summary for a single :class:`FingerprintBundle`.
 
@@ -29,6 +54,7 @@ def build_fingerprint_markdown(bundle: FingerprintBundle) -> str:
         Markdown-formatted string summarising fingerprint and routing.
     """
     fp = bundle.fingerprint
+    geometry = bundle.geometry
     rec = bundle.recommendation
 
     if fp.directness_ratio is not None:
@@ -52,11 +78,18 @@ def build_fingerprint_markdown(bundle: FingerprintBundle) -> str:
 
     return f"""# {bundle.target_name}
 
+## Geometry
+- method: {geometry.method}
+- signal_to_noise: {geometry.signal_to_noise:.4f}
+- geometry_information_horizon: {geometry.information_horizon}
+- geometry_information_structure: {geometry.information_structure}
+
 ## Fingerprint
 - information_mass: {fp.information_mass:.4f}
 - information_horizon: {fp.information_horizon}
 - information_structure: {fp.information_structure}
 - nonlinear_share: {fp.nonlinear_share:.4f}
+- signal_to_noise: {fp.signal_to_noise:.4f}
 - directness_ratio: {dr_str}
 - informative_horizons: [{horizons_str}]
 
@@ -100,9 +133,13 @@ def build_fingerprint_summary_row(bundle: FingerprintBundle) -> dict[str, str | 
         Dictionary with scalar fields from fingerprint and recommendation.
     """
     fp = bundle.fingerprint
+    geometry = bundle.geometry
     rec = bundle.recommendation
     return {
         "target_name": bundle.target_name,
+        "signal_to_noise": geometry.signal_to_noise,
+        "geometry_information_horizon": geometry.information_horizon,
+        "geometry_information_structure": geometry.information_structure,
         "information_mass": fp.information_mass,
         "information_horizon": fp.information_horizon,
         "information_structure": fp.information_structure,
@@ -133,3 +170,6 @@ def save_fingerprint_bundle_json(
     payload = bundle.model_dump()
     output_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
     _logger.debug("Saved fingerprint bundle JSON to %s", output_path)
+
+
+build_fingerprint_summary_dict = render_fingerprint_summary_dict

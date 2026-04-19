@@ -6,8 +6,8 @@ Demonstrates the full V3_1 forecastability fingerprint pipeline via the public
 1. Generates five synthetic archetypes (white noise, AR(1) monotonic, seasonal
    periodic, nonlinear mixed, mediated directness drop).
 2. Runs the full use-case ``run_forecastability_fingerprint()`` for each
-   archetype — this integrates triage, ``build_fingerprint()``, and
-   ``route_fingerprint()`` in one call.
+   archetype — this integrates AMI information geometry, fingerprint building,
+   and deterministic routing in one call.
 3. Renders a full markdown summary per archetype using
    ``build_fingerprint_markdown()``.
 4. Prints a compact summary table built from ``build_fingerprint_summary_row()``.
@@ -34,11 +34,8 @@ from forecastability import (
     save_fingerprint_bundle_json,
 )
 from forecastability.utils.synthetic import (
-    generate_ar1_monotonic,
+    generate_fingerprint_archetypes,
     generate_mediated_directness_drop,
-    generate_nonlinear_mixed,
-    generate_seasonal_periodic,
-    generate_white_noise,
 )
 
 # ---------------------------------------------------------------------------
@@ -57,17 +54,14 @@ OUTPUT_REPORTS_DIR = Path("outputs/reports")
 # Archetype registry
 # ---------------------------------------------------------------------------
 
-# generate_mediated_directness_drop returns (driver, target); fingerprint the target only.
-_ARCHETYPES: list[tuple[str, np.ndarray]] = [
-    ("white_noise", generate_white_noise(N_SAMPLES, seed=RANDOM_STATE)),
-    ("ar1_monotonic", generate_ar1_monotonic(N_SAMPLES, seed=RANDOM_STATE)),
-    ("seasonal_periodic", generate_seasonal_periodic(N_SAMPLES, seed=RANDOM_STATE)),
-    ("nonlinear_mixed", generate_nonlinear_mixed(N_SAMPLES, seed=RANDOM_STATE)),
-    (
-        "mediated_directness_drop",
-        generate_mediated_directness_drop(N_SAMPLES, seed=RANDOM_STATE)[1],
-    ),
-]
+def _build_archetypes() -> list[tuple[str, np.ndarray]]:
+    """Build the canonical synthetic example panel from the shared helper module."""
+    series_map = generate_fingerprint_archetypes(n=N_SAMPLES, seed=RANDOM_STATE)
+    series_map["mediated_directness_drop"] = generate_mediated_directness_drop(
+        N_SAMPLES,
+        seed=RANDOM_STATE,
+    )[1]
+    return list(series_map.items())
 
 
 # ---------------------------------------------------------------------------
@@ -78,8 +72,9 @@ _ARCHETYPES: list[tuple[str, np.ndarray]] = [
 def main() -> None:
     """Run fingerprint pipeline for all archetypes and render reports."""
     bundles: list[FingerprintBundle] = []
+    archetypes = _build_archetypes()
 
-    for name, series in _ARCHETYPES:
+    for name, series in archetypes:
         print(f"\n{'=' * 60}")
         print(f"Archetype: {name}")
         print(f"{'=' * 60}")
@@ -108,6 +103,8 @@ def main() -> None:
     print("=" * 60)
     header_fields = [
         "target_name",
+        "signal_to_noise",
+        "geometry_information_structure",
         "information_mass",
         "information_horizon",
         "information_structure",
