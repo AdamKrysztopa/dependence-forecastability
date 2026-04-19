@@ -47,6 +47,9 @@ jobs:
       - name: Run covariant showcase
         run: uv run scripts/run_showcase_covariant.py --fast
 
+      - name: Run fingerprint showcase
+        run: uv run scripts/run_showcase_fingerprint.py --smoke --quiet
+
       - name: Upload showcase artifacts
         uses: actions/upload-artifact@v7
         with:

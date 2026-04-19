@@ -136,6 +136,25 @@ geometry, fingerprint, and routing outputs in a portfolio workflow.
 - per-series next-step plans are derived from the same routed families and caution flags
 - executive reports are communication surfaces only and must stay downstream of the deterministic bundle
 
+## Canonical showcase surface
+
+The v0.3.1 showcase script and notebook operationalize the same mathematics on
+the prepared archetype panel from `forecastability.utils.synthetic`.
+
+- Script: `scripts/run_showcase_fingerprint.py`
+- Notebook: `notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb`
+- Reporting helpers: `forecastability.reporting.fingerprint_showcase`
+
+Those surfaces are designed to make the math legible without moving any
+scientific logic into notebook code, markdown glue, or the optional agent
+layer. The final plain-language explanation is downstream of the deterministic
+bundle and must remain verifiable against it.
+
+> [!IMPORTANT]
+> The v0.3.1 fingerprint release is intentionally univariate-first and
+> AMI-first. It does not claim multivariate or conditional-MI routing semantics,
+> and it does not identify one true optimal model.
+
 ## Regression Guardrails (v0.3.1 Phase 3)
 
 The fingerprint stack now ships with frozen regression fixtures so policy and

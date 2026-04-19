@@ -3,7 +3,7 @@
 
 This repository maintains two long-lived notebook families.
 
-_Last verified for release 0.2.0 consolidation on 2026-04-14._
+_Last verified for the v0.3.1 fingerprint showcase update on 2026-04-19._
 
 ## Canonical Notebook
 
@@ -21,8 +21,9 @@ The canonical walkthrough notebook is
 
 1. Start with the canonical notebook: [../../notebooks/walkthroughs/00_air_passengers_showcase.ipynb](../../notebooks/walkthroughs/00_air_passengers_showcase.ipynb).
 2. Continue with [../../notebooks/walkthroughs/01_covariant_informative_showcase.ipynb](../../notebooks/walkthroughs/01_covariant_informative_showcase.ipynb).
-3. Continue through the remaining walkthrough notebooks in order.
-4. Move to `notebooks/triage/` when you want method-specific depth.
+3. Continue with [../../notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb](../../notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb) for the geometry-backed routing and agent-summary surface.
+4. Continue through the remaining walkthrough notebooks in order.
+5. Move to `notebooks/triage/` when you want method-specific depth.
 
 ## Walkthrough Notebooks
 
@@ -30,6 +31,7 @@ The canonical walkthrough notebook is
 | --- | --- |
 | [../../notebooks/walkthroughs/00_air_passengers_showcase.ipynb](../../notebooks/walkthroughs/00_air_passengers_showcase.ipynb) | Canonical walkthrough |
 | [../../notebooks/walkthroughs/01_covariant_informative_showcase.ipynb](../../notebooks/walkthroughs/01_covariant_informative_showcase.ipynb) | Covariant informative walkthrough: pairwise, directional, and causal comparisons on the synthetic benchmark |
+| [../../notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb](../../notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb) | Fingerprint walkthrough: prepared univariate archetypes, geometry, routing, and strict deterministic agent summary |
 | [../../notebooks/walkthroughs/01_canonical_forecastability.ipynb](../../notebooks/walkthroughs/01_canonical_forecastability.ipynb) | Canonical AMI and pAMI walkthrough |
 | [../../notebooks/walkthroughs/02_exogenous_analysis.ipynb](../../notebooks/walkthroughs/02_exogenous_analysis.ipynb) | Exogenous analysis walkthrough |
 | [../../notebooks/walkthroughs/03_triage_end_to_end.ipynb](../../notebooks/walkthroughs/03_triage_end_to_end.ipynb) | End-to-end triage walkthrough |

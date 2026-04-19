@@ -101,6 +101,11 @@ If you want the covariant walkthrough introduced in v0.3.0, open
 [../notebooks/walkthroughs/01_covariant_informative_showcase.ipynb](../notebooks/walkthroughs/01_covariant_informative_showcase.ipynb)
 for the benchmark that compares CrossAMI, CrosspAMI, GCMI, TE, PCMCI+, and PCMCI-AMI on one synthetic system.
 
+If you want the v0.3.1 fingerprint walkthrough, open
+[../notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb](../notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb)
+for the prepared synthetic archetype panel that demonstrates geometry,
+fingerprint fields, routing, and the strict deterministic agent summary.
+
 If you want the same AR(1) signal used throughout this ladder, open
 [../notebooks/walkthroughs/03_triage_end_to_end.ipynb](../notebooks/walkthroughs/03_triage_end_to_end.ipynb)
 and run a scratch cell:
@@ -217,6 +222,30 @@ print(
 )
 PY
 ```
+
+## 11.25 Minutes: Fingerprint Showcase Script
+
+Run the canonical v0.3.1 showcase when you want the full prepared archetype
+panel, strict A1/A2/A3 agent verification, and a final human-language summary
+of what the mathematics did.
+
+```bash
+MPLBACKEND=Agg uv run scripts/run_showcase_fingerprint.py --smoke
+```
+
+Inspect these artifacts after the run:
+
+- `outputs/figures/showcase_fingerprint/fingerprint_profiles.png`
+- `outputs/figures/showcase_fingerprint/fingerprint_metrics.png`
+- `outputs/tables/showcase_fingerprint/fingerprint_summary.csv`
+- `outputs/tables/showcase_fingerprint/fingerprint_routing.csv`
+- `outputs/reports/showcase_fingerprint/showcase_report.md`
+- `outputs/reports/showcase_fingerprint/verification.md`
+
+> [!IMPORTANT]
+> The fingerprint release is intentionally univariate-first and AMI-first. The
+> routing output is heuristic family guidance, not exact-model selection and not
+> a multivariate conditional-MI claim.
 
 ## 12 Minutes: CSV Batch Geometry Workflow
 

@@ -198,6 +198,7 @@ These are the live repo entry points for non-import surfaces.
 | Dashboard | `forecastability-dashboard` | Packaged command wired to `forecastability.adapters.dashboard:main` |
 | HTTP API | `forecastability.adapters.api:app` | FastAPI application used with Uvicorn |
 | CSV script | `scripts/run_ami_information_geometry_csv.py` | Repo script for one-series-per-column CSV batch geometry runs |
+| Fingerprint showcase script | `scripts/run_showcase_fingerprint.py` | Canonical v0.3.1 prepared-archetype showcase with strict A1/A2/A3 verification |
 
 ## Causal Discovery (v0.3.0+)
 

@@ -443,15 +443,15 @@ Required `0.3.1` agent-layer semantics:
 | V3_1-F05b | CSV batch geometry adapter | 2 | Inspired by Dr. Catt prototype | column-wise CSV runner producing plot + summary CSV | ✅ **Done** |
 | V3_1-F06 | Tests and regression fixtures | 3 | Follows current deterministic regression pattern | synthetic archetypes, threshold tests, routing invariants | ✅ **Done** |
 | V3_1-F06a | Geometry regression and boundary fixtures | 3 | Extends current deterministic regression pattern | freeze corrected AMI / `tau` / `signal_to_noise` and boundary behavior | ✅ **Done** |
-| V3_1-F07 | Showcase script and notebook | 4 | Follows existing walkthrough / showcase pattern | canonical four-series fingerprint + geometry demo | Partial — examples are present, notebook/showcase script still pending |
-| V3_1-F08 | Public examples and notebook extensions | 5 | Extends examples taxonomy and walkthrough surfaces | minimal Python example, CLI example, notebook cross-links, and reusable example artifacts | Partial — minimal, batch workbench, and CSV geometry examples added; notebook/CLI/README follow-through pending |
-| V3_1-F08.1 | Agent demos and cross-links | 5 | Extends agent examples and notebook/doc surfaces | strict payload demo, optional live-agent demo, and agent-layer discoverability | Partial — strict/live demos exist and batch workbench now feeds A1/A3; notebook cross-links still pending |
-| V3_1-D01 | README + quickstart + agent-layer routing section | 5 | Extends docs and `docs/agent_layer.md` cross-links | fingerprint + geometry concept and example snippets | Partial — quickstart/public API/agent-layer updated; README still pending |
+| V3_1-F07 | Showcase script and notebook | 4 | Follows existing walkthrough / showcase pattern | canonical four-series fingerprint + geometry demo | ✅ **Done** (2026-04-19: `scripts/run_showcase_fingerprint.py` shipped with canonical archetype panel, strict A1/A2/A3 verification, profile/metric figures, summary/routing tables, JSON artifacts, `--smoke` mode, and the paired walkthrough notebook `02_forecastability_fingerprint_showcase.ipynb`.) |
+| V3_1-F08 | Public examples and notebook extensions | 5 | Extends examples taxonomy and walkthrough surfaces | minimal Python example, CLI example, notebook cross-links, and reusable example artifacts | ✅ **Done** (2026-04-19: fingerprint notebook and showcase are cross-linked from README/quickstart/notebook/code docs; reusable example surfaces remain in place; notebook uses reusable package/reporting helpers only.) |
+| V3_1-F08.1 | Agent demos and cross-links | 5 | Extends agent examples and notebook/doc surfaces | strict payload demo, optional live-agent demo, and agent-layer discoverability | ✅ **Done** (2026-04-19: deterministic agent demo and live demo remain linked; the showcase now uses the strict A3 agent summary and the docs surface the deterministic-first agent contract.) |
+| V3_1-D01 | README + quickstart + agent-layer routing section | 5 | Extends docs and `docs/agent_layer.md` cross-links | fingerprint + geometry concept and example snippets | ✅ **Done** (2026-04-19: README, quickstart, public API, notebook guide, and code reference now link the fingerprint showcase plus Python/CLI/CSV entry routes and the deterministic-first agent contract.) |
 | V3_1-D02 | Theory docs | 5 | New or split theory pages | fingerprint definitions, geometry semantics, and routing semantics | ✅ **Done** |
 | V3_1-D03 | Changelog + migration note | 5 | Release docs | additive feature surface and policy notes | ✅ **Done** |
-| V3_1-CI-01 | Routing smoke test in CI | 6 | Extends smoke workflow | import + run on canonical synthetic panel | Proposed |
-| V3_1-CI-02 | Notebook contract extension | 6 | Extends notebook contract checks | fingerprint notebook included | Proposed |
-| V3_1-CI-03 | Release checklist update | 6 | Extends release template | geometry + routing + fingerprint checks | Proposed |
+| V3_1-CI-01 | Routing smoke test in CI | 6 | Extends smoke workflow | import + run on canonical synthetic panel | ✅ **Done** (2026-04-19: `.github/workflows/smoke.yml` now runs `scripts/run_showcase_fingerprint.py --smoke --quiet`.) |
+| V3_1-CI-02 | Notebook contract extension | 6 | Extends notebook contract checks | fingerprint notebook included | ✅ **Done** (2026-04-19: `scripts/check_notebook_contract.py` now tracks the fingerprint notebook and runs a representative fingerprint-to-showcase-reporting integration call.) |
+| V3_1-CI-03 | Release checklist update | 6 | Extends release template | geometry + routing + fingerprint checks | ✅ **Done** (2026-04-19: release checklist now includes the fingerprint showcase command as a release gate.) |
 
 ---
 
@@ -1177,8 +1177,8 @@ Scope statement for reviewers:
 
 - [ ] Every retained base `0.3.1` ticket needed for public release is either **Done** or explicitly **Deferred** in §4.
 - [x] Refactor / geometry items `V3_1-F01a`, `V3_1-F01b`, `V3_1-F02a`, `V3_1-F03a`, `V3_1-F04a`, `V3_1-F05a`, `V3_1-F05b`, and `V3_1-F06a` are **Done** or explicitly **Deferred** with justification.
-- [ ] Every ticket V3_1-D01 through V3_1-D03 is **Done** before CI / release sign-off.
-- [ ] Every ticket V3_1-CI-01 through V3_1-CI-03 is **Done**.
+- [x] Every ticket V3_1-D01 through V3_1-D03 is **Done** before CI / release sign-off.
+- [x] Every ticket V3_1-CI-01 through V3_1-CI-03 is **Done**.
 - [x] `AmiInformationGeometry`, `ForecastabilityFingerprint`, `RoutingRecommendation`, and `FingerprintBundle` exist as typed outputs.
 - [x] `signal_to_noise` is documented and tested.
 - [x] `information_mass` is computed from corrected AMI over accepted horizons.
@@ -1186,14 +1186,14 @@ Scope statement for reviewers:
 - [x] `directness_ratio` is kept semantically separate from `nonlinear_share` in code, docs, and examples.
 - [x] The canonical showcase runs on at least four archetypal series.
 - [x] Public example surfaces under `examples/` or equivalent are created or extended for the fingerprint release.
-- [ ] Notebook surfaces are created or extended beyond the single showcase and are cross-linked from docs.
+- [x] Notebook surfaces are created or extended beyond the single showcase and are cross-linked from docs.
 - [x] At least one regression fixture protects geometry behavior from silent drift.
 - [x] At least one regression fixture protects routing behavior from silent drift.
 - [ ] A small curated real or semi-real routing-quality panel is run and mismatches are documented.
-- [ ] README / quickstart includes one Python example, one CLI example, and one batch CSV geometry example.
+- [x] README / quickstart includes one Python example, one CLI example, and one batch CSV geometry example.
 - [x] Agent-ready payload surfaces expose the same four fingerprint fields plus geometry, routing, confidence, and cautions.
 - [x] No agent adapter or live narration path overrides deterministic fingerprint, geometry, or routing outputs.
-- [ ] The release docs state that `0.3.1` is univariate-first / AMI-first and does not include multivariate or conditional-MI extensions.
+- [x] The release docs state that `0.3.1` is univariate-first / AMI-first and does not include multivariate or conditional-MI extensions.
 - [ ] Reviewer comments 2-10 are each traceable to concrete sections in the plan or explicitly deferred.
 - [ ] No doc, notebook, or bundle string claims the package selects the one true optimal model.
 
@@ -2455,27 +2455,27 @@ print(bundle.recommendation.primary_families)
 
 ### Epic H — Showcase + notebook + examples (Days 9-10)
 
-- [ ] Create `scripts/run_showcase_fingerprint.py`
-- [ ] Create `notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb`
+- [x] Create `scripts/run_showcase_fingerprint.py`
+- [x] Create `notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb`
 - [x] Add minimal Python example under `examples/univariate/fingerprint/`
 - [x] Add batch CSV geometry example under `examples/univariate/fingerprint/`
 - [x] Add deterministic fingerprint agent demo under `examples/univariate/agents/`
 - [x] Optional: add experimental live fingerprint agent demo
-- [ ] Add CLI example snippet to README / quickstart
-- [ ] Verify notebook uses real package surfaces only
+- [x] Add CLI example snippet to README / quickstart
+- [x] Verify notebook uses real package surfaces only
 
 ### Epic I — Docs + CI + release closeout (Day 11)
 
-- [ ] Update `README.md`, `docs/quickstart.md`, `docs/public_api.md`
+- [x] Update `README.md`, `docs/quickstart.md`, `docs/public_api.md`
 - [x] Update `docs/agent_layer.md` with fingerprint-specific contract examples
 - [x] Add `docs/theory/forecastability_fingerprint.md`
 - [x] Add `docs/theory/ami_information_geometry.md`
 - [x] Update `CHANGELOG.md`
-- [ ] Extend smoke workflow to run fingerprint showcase
+- [x] Extend smoke workflow to run fingerprint showcase
 - [ ] Extend smoke workflow or script checks for the CSV geometry adapter
-- [ ] Extend notebook contract checker for the new walkthrough
-- [ ] Add agent contract checks if the live/deterministic agent surface ships
-- [ ] Extend release checklist with geometry/fingerprint/routing semantics checks
+- [x] Extend notebook contract checker for the new walkthrough
+- [x] Add agent contract checks if the live/deterministic agent surface ships
+- [x] Extend release checklist with geometry/fingerprint/routing semantics checks
 
 ---
 
