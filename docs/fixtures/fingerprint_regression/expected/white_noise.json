@@ -1,0 +1,114 @@
+{
+  "fingerprint": {
+    "directness_ratio": null,
+    "information_horizon": 0,
+    "information_mass": 0.0,
+    "information_structure": "none",
+    "informative_horizons": [],
+    "nonlinear_share": 0.0,
+    "signal_to_noise": 0.24009014730743633
+  },
+  "geometry": {
+    "curve": [
+      {
+        "accepted": false,
+        "ami_corrected": 0.0,
+        "horizon": 1,
+        "tau": 0.04260003932781391,
+        "valid": true
+      },
+      {
+        "accepted": false,
+        "ami_corrected": 0.07645117761158089,
+        "horizon": 2,
+        "tau": 0.042055787397472254,
+        "valid": true
+      },
+      {
+        "accepted": false,
+        "ami_corrected": 0.017685086110446193,
+        "horizon": 3,
+        "tau": 0.025843857140251107,
+        "valid": true
+      },
+      {
+        "accepted": false,
+        "ami_corrected": 0.0,
+        "horizon": 4,
+        "tau": 0.037734193447782796,
+        "valid": true
+      },
+      {
+        "accepted": false,
+        "ami_corrected": 0.022837233833624907,
+        "horizon": 5,
+        "tau": 0.02947341348266975,
+        "valid": true
+      },
+      {
+        "accepted": false,
+        "ami_corrected": 0.0,
+        "horizon": 6,
+        "tau": 0.05508019039857875,
+        "valid": true
+      },
+      {
+        "accepted": false,
+        "ami_corrected": 0.0,
+        "horizon": 7,
+        "tau": 0.04158910077993312,
+        "valid": true
+      },
+      {
+        "accepted": false,
+        "ami_corrected": 0.0005115081702244501,
+        "horizon": 8,
+        "tau": 0.034766430890601545,
+        "valid": true
+      },
+      {
+        "accepted": false,
+        "ami_corrected": 0.04831863168332644,
+        "horizon": 9,
+        "tau": 0.03660292991787539,
+        "valid": true
+      },
+      {
+        "accepted": false,
+        "ami_corrected": 0.0,
+        "horizon": 10,
+        "tau": 0.03565836399484539,
+        "valid": true
+      },
+      {
+        "accepted": false,
+        "ami_corrected": 0.0,
+        "horizon": 11,
+        "tau": 0.04193241129075674,
+        "valid": true
+      },
+      {
+        "accepted": false,
+        "ami_corrected": 0.036090797116332674,
+        "horizon": 12,
+        "tau": 0.03372902216920349,
+        "valid": true
+      }
+    ],
+    "information_horizon": 0,
+    "information_structure": "none",
+    "informative_horizons": [],
+    "signal_to_noise": 0.24009014730743633
+  },
+  "recommendation": {
+    "caution_flags": [],
+    "confidence_label": "high",
+    "primary_families": [
+      "naive",
+      "seasonal_naive",
+      "downscope"
+    ],
+    "secondary_families": []
+  },
+  "target_name": "white_noise"
+}

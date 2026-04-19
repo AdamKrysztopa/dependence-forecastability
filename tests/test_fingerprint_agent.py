@@ -168,6 +168,33 @@ class TestRunFingerprintAgentStrictMode:
         assert e1.primary_families == e2.primary_families
 
 
+def test_live_fingerprint_agent_strict_mode_returns_deterministic_payload(
+    ar1_series: np.ndarray,
+) -> None:
+    """Strict-mode live-agent facade must match deterministic bundle-derived values."""
+    bundle = run_forecastability_fingerprint(
+        ar1_series,
+        max_lag=12,
+        n_surrogates=99,
+        random_state=42,
+    )
+    explanation = asyncio.run(
+        run_fingerprint_agent(
+            ar1_series,
+            max_lag=12,
+            n_surrogates=99,
+            random_state=42,
+            strict=True,
+        )
+    )
+
+    assert explanation.information_mass == pytest.approx(bundle.fingerprint.information_mass)
+    assert explanation.information_horizon == bundle.fingerprint.information_horizon
+    assert explanation.information_structure == bundle.fingerprint.information_structure
+    assert explanation.nonlinear_share == pytest.approx(bundle.fingerprint.nonlinear_share)
+    assert explanation.signal_to_noise == pytest.approx(bundle.geometry.signal_to_noise)
+
+
 class TestFingerprintDepsDataclass:
     """Test the FingerprintDeps dependency container."""
 

@@ -88,6 +88,23 @@ def test_ar1_bundle_keeps_geometry_and_fingerprint_aligned(ar1_bundle: Fingerpri
     assert ar1_bundle.fingerprint.information_structure == ar1_bundle.geometry.information_structure
 
 
+def test_monotonic_structure_on_ar1(ar1_bundle: FingerprintBundle) -> None:
+    """AR(1) archetype should preserve the monotonic structure contract."""
+    assert ar1_bundle.fingerprint.information_structure == "monotonic"
+
+
+def test_periodic_structure_on_seasonal_series() -> None:
+    """Seasonal archetype should preserve the periodic structure contract."""
+    bundle = run_forecastability_fingerprint(
+        generate_seasonal_periodic(n=_N, period=12, seed=42),
+        target_name="seasonal_periodic",
+        max_lag=24,
+        n_surrogates=_N_SURROGATES,
+        random_state=42,
+    )
+    assert bundle.fingerprint.information_structure == "periodic"
+
+
 def test_target_name_preserved() -> None:
     """Custom target names should survive the full use case."""
     bundle = run_forecastability_fingerprint(
@@ -116,6 +133,20 @@ def test_bundle_is_json_serializable(ar1_bundle: FingerprintBundle) -> None:
     """The full bundle should remain JSON-serializable after adding geometry."""
     dumped = json.dumps(ar1_bundle.model_dump())
     assert isinstance(dumped, str)
+
+
+def test_routing_periodic_to_seasonal_family() -> None:
+    """Seasonal archetype should route to at least one seasonal model family."""
+    bundle = run_forecastability_fingerprint(
+        generate_seasonal_periodic(n=_N, period=12, seed=13),
+        max_lag=24,
+        n_surrogates=_N_SURROGATES,
+        random_state=13,
+    )
+    assert any(
+        family in bundle.recommendation.primary_families
+        for family in ("seasonal_naive", "harmonic_regression", "tbats")
+    )
 
 
 def test_max_lag_respected_on_geometry_curve() -> None:

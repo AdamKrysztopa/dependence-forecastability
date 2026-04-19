@@ -138,6 +138,22 @@ def test_low_signal_to_noise_adds_caution_and_penalty() -> None:
     assert rec.metadata["low_signal_quality_penalty"] == 1
 
 
+def test_low_signal_to_noise_downgrades_confidence() -> None:
+    """Low signal quality should reduce confidence even without other major conflicts."""
+    rec = route_fingerprint(
+        _fp(
+            structure="monotonic",
+            mass=0.20,
+            nl_share=0.05,
+            signal_to_noise=0.05,
+            directness_ratio=0.80,
+            informative_horizons=[1, 2, 3, 4],
+        ),
+        fingerprint_config=FingerprintThresholdConfig(low_signal_to_noise_confidence_threshold=0.10),
+    )
+    assert rec.confidence_label in {"medium", "low"}
+
+
 def test_low_directness_adds_caution() -> None:
     """Low directness should be surfaced separately from nonlinear share."""
     rec = route_fingerprint(

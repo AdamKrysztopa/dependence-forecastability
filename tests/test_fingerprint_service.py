@@ -176,6 +176,29 @@ def test_invalid_baseline_horizons_are_excluded_from_nonlinear_share_denominator
     assert "excluded h=2" in str(fingerprint.metadata)
 
 
+def test_directness_ratio_not_used_as_nonlinear_share() -> None:
+    """nonlinear_share must not be inferred from directness_ratio."""
+    geometry = _geometry(
+        signal_to_noise=0.40,
+        structure="monotonic",
+        rows=[
+            (1, 0.30, 0.05, True, True),
+            (2, 0.20, 0.04, True, True),
+        ],
+    )
+    baseline = _baseline({1: 0.10, 2: 0.10})
+
+    fingerprint = build_forecastability_fingerprint(
+        geometry=geometry,
+        baseline=baseline,
+        directness_ratio=0.05,
+    )
+
+    assert fingerprint.directness_ratio == pytest.approx(0.05)
+    assert fingerprint.nonlinear_share != pytest.approx(0.95)
+    assert fingerprint.nonlinear_share == pytest.approx((0.20 + 0.10) / 0.50)
+
+
 def test_legacy_build_fingerprint_keeps_backward_compatible_surface() -> None:
     """The pre-geometry wrapper should still produce a valid fingerprint object."""
     series = generate_ar1_monotonic(n=256, seed=42)

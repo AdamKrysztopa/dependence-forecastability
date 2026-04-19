@@ -126,3 +126,19 @@ It reads one-series-per-column CSV data, drops missing values column-wise, calls
 > classification, or routing logic. Those semantics stay in the geometry,
 > fingerprint, and routing services so notebook, Python, agent, and CSV paths
 > remain consistent.
+
+## Regression and Boundary Validation (v0.3.1 Phase 3)
+
+Phase 3 adds frozen geometry/fingerprint fixtures and explicit boundary tests
+for the canonical null and acceptance rules.
+
+- Frozen fixtures: `docs/fixtures/fingerprint_regression/expected/*.json`
+- Rebuild workflow: `scripts/rebuild_fingerprint_regression_fixtures.py --verify`
+- Drift guard tests: `tests/test_fingerprint_regression.py`
+- Boundary tests: `tests/test_geometry_regression.py`
+
+Boundary assertions include:
+
+- null classifier rule: `signal_to_noise < 0.05 -> information_structure == "none"`
+- acceptance rule: strict `I_c(h) > 3 * tau(h)` (not `>=`)
+- short-series rejection at configured `min_n`

@@ -441,8 +441,8 @@ Required `0.3.1` agent-layer semantics:
 | V3_1-F05.1 | Agent-ready fingerprint adapters | 2 | Extends existing A1/A2/A3 agent pattern | payloads with geometry fields, routing, confidence, cautions | ✅ **Done** |
 | V3_1-F05.2 | Optional live fingerprint agent | 2 | Extends existing `adapters/llm` pattern | consume geometry-backed deterministic payloads only | ✅ **Done** |
 | V3_1-F05b | CSV batch geometry adapter | 2 | Inspired by Dr. Catt prototype | column-wise CSV runner producing plot + summary CSV | ✅ **Done** |
-| V3_1-F06 | Tests and regression fixtures | 3 | Follows current deterministic regression pattern | synthetic archetypes, threshold tests, routing invariants | Partial — unit/integration tests done; frozen regression fixtures pending |
-| V3_1-F06a | Geometry regression and boundary fixtures | 3 | Extends current deterministic regression pattern | freeze corrected AMI / `tau` / `signal_to_noise` and boundary behavior | Proposed |
+| V3_1-F06 | Tests and regression fixtures | 3 | Follows current deterministic regression pattern | synthetic archetypes, threshold tests, routing invariants | ✅ **Done** |
+| V3_1-F06a | Geometry regression and boundary fixtures | 3 | Extends current deterministic regression pattern | freeze corrected AMI / `tau` / `signal_to_noise` and boundary behavior | ✅ **Done** |
 | V3_1-F07 | Showcase script and notebook | 4 | Follows existing walkthrough / showcase pattern | canonical four-series fingerprint + geometry demo | Partial — examples are present, notebook/showcase script still pending |
 | V3_1-F08 | Public examples and notebook extensions | 5 | Extends examples taxonomy and walkthrough surfaces | minimal Python example, CLI example, notebook cross-links, and reusable example artifacts | Partial — minimal, batch workbench, and CSV geometry examples added; notebook/CLI/README follow-through pending |
 | V3_1-F08.1 | Agent demos and cross-links | 5 | Extends agent examples and notebook/doc surfaces | strict payload demo, optional live-agent demo, and agent-layer discoverability | Partial — strict/live demos exist and batch workbench now feeds A1/A3; notebook cross-links still pending |
@@ -1176,19 +1176,19 @@ Scope statement for reviewers:
 ## 9. Exit criteria
 
 - [ ] Every retained base `0.3.1` ticket needed for public release is either **Done** or explicitly **Deferred** in §4.
-- [ ] Refactor / geometry items `V3_1-F01a`, `V3_1-F01b`, `V3_1-F02a`, `V3_1-F03a`, `V3_1-F04a`, `V3_1-F05a`, `V3_1-F05b`, and `V3_1-F06a` are **Done** or explicitly **Deferred** with justification.
+- [x] Refactor / geometry items `V3_1-F01a`, `V3_1-F01b`, `V3_1-F02a`, `V3_1-F03a`, `V3_1-F04a`, `V3_1-F05a`, `V3_1-F05b`, and `V3_1-F06a` are **Done** or explicitly **Deferred** with justification.
 - [ ] Every ticket V3_1-D01 through V3_1-D03 is **Done** before CI / release sign-off.
 - [ ] Every ticket V3_1-CI-01 through V3_1-CI-03 is **Done**.
 - [x] `AmiInformationGeometry`, `ForecastabilityFingerprint`, `RoutingRecommendation`, and `FingerprintBundle` exist as typed outputs.
 - [x] `signal_to_noise` is documented and tested.
 - [x] `information_mass` is computed from corrected AMI over accepted horizons.
 - [x] `nonlinear_share` is documented and tested against a linear information baseline.
-- [ ] `directness_ratio` is kept semantically separate from `nonlinear_share` in code, docs, and examples.
+- [x] `directness_ratio` is kept semantically separate from `nonlinear_share` in code, docs, and examples.
 - [x] The canonical showcase runs on at least four archetypal series.
 - [x] Public example surfaces under `examples/` or equivalent are created or extended for the fingerprint release.
 - [ ] Notebook surfaces are created or extended beyond the single showcase and are cross-linked from docs.
-- [ ] At least one regression fixture protects geometry behavior from silent drift.
-- [ ] At least one regression fixture protects routing behavior from silent drift.
+- [x] At least one regression fixture protects geometry behavior from silent drift.
+- [x] At least one regression fixture protects routing behavior from silent drift.
 - [ ] A small curated real or semi-real routing-quality panel is run and mismatches are documented.
 - [ ] README / quickstart includes one Python example, one CLI example, and one batch CSV geometry example.
 - [x] Agent-ready payload surfaces expose the same four fingerprint fields plus geometry, routing, confidence, and cautions.

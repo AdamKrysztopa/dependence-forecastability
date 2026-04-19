@@ -135,3 +135,27 @@ geometry, fingerprint, and routing outputs in a portfolio workflow.
 - batch triage still ranks readiness and signal quality separately
 - per-series next-step plans are derived from the same routed families and caution flags
 - executive reports are communication surfaces only and must stay downstream of the deterministic bundle
+
+## Regression Guardrails (v0.3.1 Phase 3)
+
+The fingerprint stack now ships with frozen regression fixtures so policy and
+estimation drift are intentional and reviewable.
+
+- Frozen expected artifacts: `docs/fixtures/fingerprint_regression/expected/*.json`
+- Rebuild script: `scripts/rebuild_fingerprint_regression_fixtures.py`
+- Verification tests: `tests/test_fingerprint_regression.py`
+
+Rebuild + verify command:
+
+```bash
+uv run python scripts/rebuild_fingerprint_regression_fixtures.py --verify
+```
+
+Each fixture captures the deterministic surfaces required by v0.3.1 release
+semantics:
+
+- geometry: corrected AMI curve (`ami_corrected`), `tau`, accepted mask,
+  `signal_to_noise`, `information_horizon`, `information_structure`
+- fingerprint: `information_mass`, `information_horizon`,
+  `information_structure`, `nonlinear_share`, mirrored `signal_to_noise`
+- routing: primary and secondary families, confidence label, caution flags

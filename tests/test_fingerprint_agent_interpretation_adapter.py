@@ -204,6 +204,20 @@ class TestInterpretFingerprintPayload:
         assert result.source_payload_type == "FingerprintAgentPayload"
 
 
+def test_fingerprint_agent_interpretation_preserves_route_and_confidence() -> None:
+    """A3 interpretation must not mutate route families or confidence labels."""
+    bundle = _make_bundle(
+        structure="periodic",
+        primary_families=["tbats", "harmonic_regression"],
+        confidence_label="medium",
+    )
+    payload = fingerprint_agent_payload(bundle)
+    result = interpret_fingerprint_payload(payload)
+
+    assert result.primary_families == payload.primary_families
+    assert result.confidence_label == payload.confidence_label
+
+
 class TestInterpretFromSerialisedSummary:
     """Test that A3 can reconstruct from A2 serialised input."""
 

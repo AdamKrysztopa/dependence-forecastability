@@ -139,6 +139,30 @@ class TestFingerprintAgentPayloadFields:
         assert payload.profile_summary == {"n_sig_lags": 4, "max_ami": 0.30}
 
 
+def test_fingerprint_agent_payload_preserves_bundle_fields() -> None:
+    """Payload conversion must preserve deterministic bundle metrics and routing."""
+    bundle = _make_bundle(
+        structure="mixed",
+        mass=0.17,
+        horizon=6,
+        nonlinear_share=0.42,
+        signal_to_noise=0.28,
+        directness_ratio=0.33,
+        primary_families=["tree_on_lags", "tcn"],
+        confidence_label="medium",
+        caution_flags=["mixed_structure", "low_directness"],
+    )
+    payload = fingerprint_agent_payload(bundle)
+
+    assert payload.information_mass == bundle.fingerprint.information_mass
+    assert payload.information_horizon == bundle.fingerprint.information_horizon
+    assert payload.information_structure == bundle.fingerprint.information_structure
+    assert payload.nonlinear_share == bundle.fingerprint.nonlinear_share
+    assert payload.signal_to_noise == bundle.geometry.signal_to_noise
+    assert payload.primary_families == bundle.recommendation.primary_families
+    assert payload.confidence_label == bundle.recommendation.confidence_label
+
+
 class TestFingerprintAgentPayloadNarrative:
     """Test narrative field handling for strict vs live paths."""
 
