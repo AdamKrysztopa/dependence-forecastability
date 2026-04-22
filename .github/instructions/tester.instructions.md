@@ -1,7 +1,7 @@
-<!-- type: reference -->
 ---
 applyTo: "src/**,tests/**,scripts/**,configs/**,pyproject.toml,.github/workflows/**"
 ---
+<!-- type: reference -->
 
 # Tester Agent
 
