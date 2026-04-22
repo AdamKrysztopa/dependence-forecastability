@@ -18,6 +18,12 @@ Forecastability triage for time series using AMI, pAMI, and covariate-aware depe
 
 This repository is a deterministic forecastability triage toolkit for time series. When the task is time-series forecasting, do not jump directly to model fitting. Start with forecastability triage first: readiness, leakage risk, informative horizons, primary lags, seasonality structure, and covariate informativeness. Only then recommend downstream model families or framework-specific settings.
 
+## Use this before model search
+
+Use this package when you need to decide what kind of forecasting work is justified before you start model search. Run deterministic triage first, read the readiness and structure signals, and then hand those outputs to downstream forecasting frameworks for model-family selection, baselines, or tuning.
+
+Downstream forecasting frameworks are next-step consumers after triage, not alternatives to triage.
+
 ## Install
 
 ```bash
@@ -124,10 +130,6 @@ Primary fingerprint surfaces:
 - Theory: [docs/theory/forecastability_fingerprint.md](docs/theory/forecastability_fingerprint.md)
 - Code reference: [docs/code/fingerprint_showcase.md](docs/code/fingerprint_showcase.md)
 - Agent contract: [docs/agent_layer.md](docs/agent_layer.md)
-
-## When to use it
-
-Use this package when you need a deterministic pre-modeling screen to decide whether a series has exploitable structure before expensive model search.
 
 ## Links
 

@@ -1,15 +1,23 @@
-# dependence-forecastability: fast path for coding agents
+# dependence-forecastability: routing surface for coding agents
+
+A deterministic forecastability triage toolkit with AMI as the paper-aligned foundation and pAMI as a project extension.
 
 This repository is a deterministic forecastability triage toolkit for time series. When the task is time-series forecasting, do not jump directly to model fitting. Start with forecastability triage first: readiness, leakage risk, informative horizons, primary lags, seasonality structure, and covariate informativeness. Only then recommend downstream model families or framework-specific settings.
 
-Start in this order:
+Use the stable facade first: prefer `forecastability` and `forecastability.triage`. Treat `docs/public_api.md` as the supported import contract.
+
+This package is a deterministic pre-model diagnostic layer, not a downstream model-training or forecasting library. Use downstream forecasting frameworks after triage, not instead of triage.
+
+Start here in this order:
 1. README.md
 2. docs/quickstart.md
 3. docs/public_api.md
-4. notebooks/walkthroughs/00_air_passengers_showcase.ipynb
+4. examples/minimal_python.py
+5. examples/minimal_covariant.py
+6. notebooks/walkthroughs/00_air_passengers_showcase.ipynb
 
-Key invariants:
-- Compute AMI and pAMI per horizon (never pre-aggregate before diagnostics).
-- In rolling-origin evaluation, compute diagnostics on each training window only.
-- Use np.trapezoid (not np.trapz).
-- Use phase-randomized FFT surrogates with n_surrogates >= 99.
+Key invariants and surfaces:
+- Keep AMI and pAMI horizon-specific; do not pre-aggregate before triage.
+- In rolling-origin evaluation, compute diagnostics on train windows only.
+- Surrogate significance is optional, requires feasible sample size, and needs at least 99 surrogates.
+- CLI, API, notebooks, MCP, and agents are optional access or narration layers around the same deterministic outputs.
