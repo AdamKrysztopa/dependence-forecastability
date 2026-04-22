@@ -13,8 +13,8 @@
 
 - [v0.3.0 Covariant Informative: Ultimate Release Plan](implemented/v0_3_0_covariant_informative_ultimate_plan.md)
 - [v0.3.1 Forecastability Fingerprint & Model Routing: Ultimate Release Plan](implemented/v0_3_1_forecastability_fingerprint_model_routing_plan.md)
-- [v0.3.3 Documentation Quality Improvement: Ultimate Release Plan](v0_3_3_documentation_quality_improvement_ultimate_plan.md)
-- [v0.3.4 Routing Validation & Benchmark Hardening: Ultimate Release Plan](v0_3_4_routing_validation_benchmark_hardening_plan.md)
+- [v0.3.5 Documentation Quality Improvement: Ultimate Release Plan](v0_3_5_documentation_quality_improvement_ultimate_plan.md)
+- [v0.3.3 Routing Validation & Benchmark Hardening: Ultimate Release Plan](v0_3_3_routing_validation_benchmark_hardening_plan.md)
 
 **Builds on:**
 
@@ -996,7 +996,7 @@ Add a new section in each:
 - committing downstream architecture to a single neural or tabular family
 - introducing a PMIME-style selector under the existing `cross_pami` label
 - benchmark-calibrated thresholds for `tau_select` / `tau_rel` (deferred to
-  v0.3.4)
+  v0.3.3)
 - multivariate (multi-target) extensions of the lagged-exog facade
 
 ---
@@ -1124,7 +1124,7 @@ class SparseLagSelectionConfig:
     """Versioned thresholds for the xami_sparse lag selector.
 
     These defaults are intentionally conservative for v0.3.2. Calibration
-    against a curated panel and rolling-origin evaluation is deferred to v0.3.4.
+    against a curated panel and rolling-origin evaluation is deferred to v0.3.3.
 
     Attributes:
         selector_name: Closed literal that identifies the selector in

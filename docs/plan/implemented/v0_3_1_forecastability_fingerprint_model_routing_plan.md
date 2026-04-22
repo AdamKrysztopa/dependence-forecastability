@@ -13,8 +13,8 @@
 
 - [v0.3.0 Covariant Informative: Ultimate Release Plan](v0_3_0_covariant_informative_ultimate_plan.md)
 - [v0.3.2 Lagged-Exogenous Triage: Ultimate Release Plan](v0_3_2_lagged_exogenous_triage_ultimate_plan.md)
-- [v0.3.3 Documentation Quality Improvement: Ultimate Release Plan](v0_3_3_documentation_quality_improvement_ultimate_plan.md)
-- [v0.3.4 Routing Validation & Benchmark Hardening: Ultimate Release Plan](v0_3_4_routing_validation_benchmark_hardening_plan.md)
+- [v0.3.5 Documentation Quality Improvement: Ultimate Release Plan](v0_3_5_documentation_quality_improvement_ultimate_plan.md)
+- [v0.3.3 Routing Validation & Benchmark Hardening: Ultimate Release Plan](v0_3_3_routing_validation_benchmark_hardening_plan.md)
 - [Agent Layer Contract](../agent_layer.md)
 
 **Builds on:**
@@ -1024,7 +1024,7 @@ Sanity-check routing quality on a small curated real or semi-real panel.
 - expected broad family tags are documented for each case
 - mismatches between expected and observed routing are recorded in docs or release notes
 - the task is explicitly framed as a lightweight `0.3.1` sanity check, with broader
-  calibration and hardening deferred to `0.3.4`
+  calibration and hardening deferred to `0.3.3`
 
 ---
 
@@ -1203,7 +1203,7 @@ Scope statement for reviewers:
 - `0.3.1` is intentionally univariate-first and AMI-first
 - Information Geometry strengthens the AMI engine; it does not replace the fingerprint layer
 - multivariate, conditional-MI, or broader empirical routing validation work belongs
-  to follow-up releases, especially `0.3.4`, and is not part of this release
+  to follow-up releases, especially `0.3.3`, and is not part of this release
 
 ---
 
@@ -2327,7 +2327,7 @@ Sections to include:
 7. `nonlinear_share` walkthrough against Gaussian baseline
 8. Routing walkthrough with caution flags and confidence labels
 9. Caveats: heuristic routing, univariate-first, no exact-model claim
-10. Cross-links to `0.3.0` and planned `0.3.4` validation hardening
+10. Cross-links to `0.3.0` and planned `0.3.3` validation hardening
 
 ### 11.14. Public examples — mandatory additive surfaces
 
