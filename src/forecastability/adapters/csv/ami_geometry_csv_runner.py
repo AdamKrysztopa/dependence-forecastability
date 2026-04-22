@@ -12,6 +12,7 @@ No thresholding, routing, or AMI estimation logic is implemented here.
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 from typing import Literal
 
@@ -34,9 +35,6 @@ from forecastability.use_cases.run_forecastability_fingerprint import (
     run_forecastability_fingerprint,
 )
 from forecastability.utils.types import FingerprintBundle
-
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 
 CsvGeometryStatus = Literal["analyzed", "skipped"]
 
@@ -168,8 +166,33 @@ def _save_markdown_report(items: list[CsvGeometryBatchItem], output_path: Path) 
     output_path.write_text("\n".join(sections), encoding="utf-8")
 
 
+def _configure_matplotlib_backend_for_batch_plots() -> None:
+    """Configure a deterministic non-interactive backend for file-only plotting.
+
+    The CSV adapter must be safe for headless script execution while avoiding
+    backend changes at import time, which would interfere with notebooks.
+    """
+    if "matplotlib.pyplot" in sys.modules:
+        return
+
+    backend = str(matplotlib.get_backend()).lower()
+    notebook_backend_tokens = (
+        "module://matplotlib_inline",
+        "nbagg",
+        "widget",
+        "ipympl",
+    )
+    if any(token in backend for token in notebook_backend_tokens):
+        return
+
+    matplotlib.use("Agg", force=False)
+
+
 def _save_placeholder_figure(output_path: Path) -> None:
     """Write a stable placeholder figure when no analyzable series exist."""
+    _configure_matplotlib_backend_for_batch_plots()
+    import matplotlib.pyplot as plt
+
     fig, axis = plt.subplots(figsize=(8.0, 3.5))
     axis.text(
         0.5,
@@ -190,6 +213,9 @@ def _plot_geometry_panel(bundles: list[FingerprintBundle], output_path: Path) ->
     if not bundles:
         _save_placeholder_figure(output_path)
         return
+
+    _configure_matplotlib_backend_for_batch_plots()
+    import matplotlib.pyplot as plt
 
     n_cols = min(2, max(1, len(bundles)))
     n_rows = int(np.ceil(len(bundles) / n_cols))

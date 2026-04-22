@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+import importlib
+import sys
 from pathlib import Path
 
+import matplotlib
 import pandas as pd
+import pytest
 
 from forecastability.adapters.csv import (
     CsvGeometryBatchResult,
@@ -99,3 +103,80 @@ def test_csv_runner_handles_non_numeric_column_after_nan_drop(tmp_path: Path) ->
     skipped = next(item for item in result.skipped_items if item.series_id == "labels")
     assert skipped.skip_reason == "no_numeric_values_after_nan_drop"
     assert any("labels: no_numeric_values_after_nan_drop" == warning for warning in result.warnings)
+
+
+def test_csv_runner_module_import_does_not_force_backend(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Importing the CSV runner module must not change Matplotlib backend."""
+    module_name = "forecastability.adapters.csv.ami_geometry_csv_runner"
+    use_calls: list[tuple[str, bool]] = []
+
+    def _spy_use(backend: str, *, force: bool = True) -> None:
+        use_calls.append((backend, force))
+
+    monkeypatch.setattr(matplotlib, "use", _spy_use)
+    sys.modules.pop(module_name, None)
+
+    importlib.import_module(module_name)
+
+    assert use_calls == []
+
+
+def test_top_level_import_does_not_force_backend(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Importing forecastability should not force Agg through CSV adapter imports."""
+    use_calls: list[tuple[str, bool]] = []
+
+    def _spy_use(backend: str, *, force: bool = True) -> None:
+        use_calls.append((backend, force))
+
+    monkeypatch.setattr(matplotlib, "use", _spy_use)
+    sys.modules.pop("forecastability", None)
+    sys.modules.pop("forecastability.adapters.csv", None)
+    sys.modules.pop("forecastability.adapters.csv.ami_geometry_csv_runner", None)
+
+    importlib.import_module("forecastability")
+
+    assert use_calls == []
+
+
+def test_lazy_backend_config_prefers_agg_for_headless_rendering(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Headless plotting path should select Agg lazily before pyplot import."""
+    use_calls: list[tuple[str, bool]] = []
+
+    from forecastability.adapters.csv import ami_geometry_csv_runner
+
+    monkeypatch.delitem(sys.modules, "matplotlib.pyplot", raising=False)
+    monkeypatch.setattr(matplotlib, "get_backend", lambda: "MacOSX")
+
+    def _spy_use(backend: str, *, force: bool = True) -> None:
+        use_calls.append((backend, force))
+
+    monkeypatch.setattr(matplotlib, "use", _spy_use)
+
+    ami_geometry_csv_runner._configure_matplotlib_backend_for_batch_plots()
+
+    assert use_calls == [("Agg", False)]
+
+
+def test_lazy_backend_config_keeps_inline_backend_in_notebooks(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Notebook-like inline backend should not be overridden by CSV adapter plotting."""
+    use_calls: list[tuple[str, bool]] = []
+
+    from forecastability.adapters.csv import ami_geometry_csv_runner
+
+    monkeypatch.delitem(sys.modules, "matplotlib.pyplot", raising=False)
+    monkeypatch.setattr(
+        matplotlib, "get_backend", lambda: "module://matplotlib_inline.backend_inline"
+    )
+
+    def _spy_use(backend: str, *, force: bool = True) -> None:
+        use_calls.append((backend, force))
+
+    monkeypatch.setattr(matplotlib, "use", _spy_use)
+
+    ami_geometry_csv_runner._configure_matplotlib_backend_for_batch_plots()
+
+    assert use_calls == []
