@@ -24,7 +24,14 @@ assignees: ""
 - [ ] Univariate showcase runs clean: `MPLBACKEND=Agg uv run scripts/run_showcase.py --no-rolling`
 - [ ] Covariant showcase runs clean: `MPLBACKEND=Agg uv run scripts/run_showcase_covariant.py --fast`
 - [ ] Fingerprint showcase runs clean: `MPLBACKEND=Agg uv run scripts/run_showcase_fingerprint.py --smoke`
+- [ ] Lagged-exogenous triage showcase runs clean: `MPLBACKEND=Agg uv run scripts/run_showcase_lagged_exogenous.py --smoke`
 - [ ] Notebook contract validated: `uv run python scripts/check_notebook_contract.py`
+
+### Lagged-exogenous triage invariants (v0.3.2+)
+- [ ] Zero-lag ban holds: no `selected_for_tensor=True` at `lag=0` in default triage call (no `known_future_drivers` opt-in)
+- [ ] Sparse lag map emitted: at least one `LaggedExogSelectionRow` per `(target, driver)` pair with `selected_for_tensor` populated
+- [ ] Known-future opt-in path works: `known_future_drivers={"driver": True}` flips `lag=0` row to `selected_for_tensor=True`
+- [ ] `run_showcase_lagged_exogenous.py --smoke` regression fixtures verify passes: `uv run python scripts/rebuild_lagged_exog_regression_fixtures.py --verify`
 
 ### Build and publish validation
 - [ ] `uv build` succeeds and produces both sdist and wheel
