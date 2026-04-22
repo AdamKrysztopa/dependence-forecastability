@@ -1,7 +1,7 @@
-<!-- type: reference -->
 ---
 applyTo: "src/**,tests/**,scripts/**,configs/**,pyproject.toml,.github/workflows/**,.github/agents/*.agent.md,.github/instructions/*.instructions.md"
 ---
+<!-- type: reference -->
 
 # Rubber Duck Agent
 
