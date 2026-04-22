@@ -41,6 +41,7 @@ from forecastability.use_cases import (
     run_batch_forecastability_workbench,
     run_batch_triage,
     run_covariant_analysis,
+    run_lagged_exogenous_triage,
     run_triage,
 )
 from forecastability.use_cases.batch_forecastability_workbench_models import (
@@ -188,6 +189,7 @@ __all__ = [
     "run_batch_triage",
     "run_batch_forecastability_workbench",
     "run_covariant_analysis",
+    "run_lagged_exogenous_triage",
     "run_forecastability_fingerprint",
     "run_ami_geometry_csv_batch",
     "run_triage",

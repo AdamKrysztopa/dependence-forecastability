@@ -6,7 +6,7 @@
 **Target release:** `0.3.2`
 **Current released version:** `0.3.1`
 **Branch:** `feat/v0.3.2-lagged-exogenous-triage`
-**Status:** In progress — Phases 0 and 1 completed
+**Status:** In progress — Phases 0, 1, and 2 completed
 **Last reviewed:** 2026-04-22
 
 **Companion refs:**
@@ -276,9 +276,9 @@ release.
 | V3_2-F03 | Extended `cross_ami` lag profile | 1 | Extends `services/exog_raw_curve_service.py` | `compute_exog_raw_curve_with_zero_lag()` + `lag_role` tagging | Done |
 | V3_2-F04 | Sparse lag selector (`xami_sparse`) | 1 | New service modelled on existing partial-curve flow | `services/sparse_lag_selection_service.py`, additive selector contract | Done |
 | V3_2-F04a | Selector significance reuse | 1 | Reuses `significance_service` | extend phase-surrogate bands to `0..max_lag`, no parallel surrogate engine | Done |
-| V3_2-F05 | Lagged-exogenous orchestration use case | 2 | Follows `use_cases/` pattern | `use_cases/run_lagged_exogenous_triage.py` returning `LaggedExogBundle` | Proposed |
-| V3_2-F05a | Known-future opt-in | 2 | Argument extension on use case | `known_future_drivers: dict[str, bool]` honored in selector, with caution flag | Proposed |
-| V3_2-F06 | Integration with covariant bundle | 2 | Additive on `run_covariant_analysis` | optional `lagged_exog: LaggedExogBundle | None` field on `CovariantAnalysisBundle` | Proposed |
+| V3_2-F05 | Lagged-exogenous orchestration use case | 2 | Follows `use_cases/` pattern | `use_cases/run_lagged_exogenous_triage.py` returning `LaggedExogBundle` | Done |
+| V3_2-F05a | Known-future opt-in | 2 | Argument extension on use case | `known_future_drivers: dict[str, bool]` honored in selector, with caution flag | Done |
+| V3_2-F06 | Integration with covariant bundle | 2 | Additive on `run_covariant_analysis` | optional `lagged_exog: LaggedExogBundle | None` field on `CovariantAnalysisBundle` | Done |
 | V3_2-F07 | Tests and regression fixtures | 3 | Follows current deterministic regression pattern | lag-role invariants, zero-lag ban, selection drift, known-future opt-in path | Proposed |
 | V3_2-F08 | Plotting refresh | 4 | Extends covariant plot helpers | correlogram-first lag-profile figure with `lag = 0` visually separated | Proposed |
 | V3_2-F08.1 | Walkthrough notebook | 4 | Follows existing walkthrough pattern | `notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb` | Proposed |
@@ -683,6 +683,8 @@ def select_sparse_lags(
 ---
 
 ### Phase 2 — Orchestration and integration
+
+Implemented in this branch (validated): V3_2-F05, V3_2-F05a, and V3_2-F06. Validation executed with targeted tests: `uv run pytest tests/test_run_lagged_exogenous_triage.py tests/test_covariant_facade.py -q`.
 
 #### V3_2-F05 — `run_lagged_exogenous_triage()`
 

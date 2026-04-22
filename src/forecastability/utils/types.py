@@ -452,6 +452,7 @@ class CovariantAnalysisBundle(BaseModel):
     gcmi_results: list[GcmiResult] | None = None
     pcmci_graph: CausalGraphResult | None = None
     pcmci_ami_result: PcmciAmiResult | None = None
+    lagged_exog: LaggedExogBundle | None = None
     target_name: str
     driver_names: list[str]
     horizons: list[int]
