@@ -26,14 +26,14 @@ The live repository already has a strong public skeleton:
 
 That is good.
 
-However, the current machine-guidance layer is still thin:
+The machine-guidance layer now covers the core repo-wide routing surfaces:
 
-- `llms.txt` is only 13 lines and acts more like a pointer file than a true routing surface.
-- the repository root now exposes a minimal `AGENTS.md` baseline, but the broader agent-navigation layer is still intentionally thin.
-- `.github` now includes a minimal `.github/copilot-instructions.md` baseline and existing path-specific instruction files, but the repo-wide guidance is still intentionally compact.
-- the package keywords are still compact and mostly research-facing rather than forecasting-tooling-facing.
+- `llms.txt` now acts as a concise routing surface with the triage-first rule, key invariants, and start-here anchors.
+- the repository root `AGENTS.md` now provides repo-wide agent navigation, routing rules, editing rules by area, and validation commands.
+- `.github/copilot-instructions.md` now provides repo-wide Copilot guidance, and `.github/instructions/` includes the additional Python, notebook, and planning-doc instruction files.
+- package and repository discovery surfaces have been reviewed so forecastability-triage positioning is visible beyond research-only wording.
 
-That means the repo is already readable, but not yet **assertive** enough for Copilot/Codex-style tooling.
+That means the repo is already readable and materially more **assertive** for Copilot/Codex-style tooling, with the remaining work concentrated in examples, evaluation, and release hygiene.
 
 ---
 
@@ -127,16 +127,16 @@ The same repo identity must appear everywhere:
 | ID | Feature | Phase | Overlap with existing | Genuine new work | Status |
 | --- | --- | ---: | --- | --- | --- |
 | VIS-F00 | Canonical routing paragraph (source-of-truth wording) | 0 | Reuses canonical wording from `docs/wording_policy.md` across `README.md`, `llms.txt`, `docs/quickstart.md`, and `docs/public_api.md` | Same canonical paragraph now reused on the repo-wide `.github/copilot-instructions.md` and `AGENTS.md` intro surfaces with only light surrounding context | ✅ **Implemented** |
-| VIS-F01 | `.github/copilot-instructions.md` repo-wide guidance | 1 | New file; complements existing `README.md` / `docs/public_api.md` | Minimal Phase 0 Copilot guidance centered on the canonical triage-first routing paragraph; richer Phase 1 navigation can remain additive later | ✅ **Phase 0 baseline implemented** |
-| VIS-F02 | Root `AGENTS.md` for Codex / agent tools | 1 | New file; mirrors identity from `README.md` and `docs/quickstart.md` | Minimal Phase 0 agent guidance centered on the canonical triage-first routing paragraph; fuller navigation and editing rules remain deferred | ✅ **Phase 0 baseline implemented** |
-| VIS-F03 | Path-specific `.github/instructions/*.instructions.md` surfaces | 2 | Adds the proposed visibility-layer instruction trio inside the existing `.github/instructions/` directory, which already contains other path- and role-specific instruction files | Per-surface `applyTo` instructions (Python, notebooks, plans) so agent edits respect the differing rules of each area | ⏳ **Not started** |
-| VIS-F03.1 | `python.instructions.md` (src / tests / examples / scripts) | 2 | Codifies existing facade and additivity conventions | `applyTo` block targeting `src/**/*.py,tests/**/*.py,examples/**/*.py,scripts/**/*.py` with stable-facade and deterministic-first rules | ⏳ **Not started** |
-| VIS-F03.2 | `notebooks.instructions.md` | 2 | Codifies existing notebook conventions in `notebooks/walkthroughs/` | `applyTo` block targeting `notebooks/**/*.ipynb` enforcing demonstration-only, no hidden bypass logic | ⏳ **Not started** |
-| VIS-F03.3 | `docs_plan.instructions.md` | 2 | Codifies existing planning-doc conventions under `docs/plan/` | `applyTo` block targeting `docs/plan/**/*.md` preserving plan structure, file targets, acceptance criteria | ⏳ **Not started** |
-| VIS-F04 | Expand `llms.txt` into a routing surface | 3 | Replaces current 13-line pointer file | Pointer-oriented but assertive `llms.txt` with explicit routing rule, key invariants, and important surfaces | ⏳ **Not started** |
-| VIS-F05 | README "Use this before model search" section | 3 | Extends existing top-of-README narrative | New near-top section positioning downstream frameworks as next-step consumers, not competitors | ⏳ **Not started** |
-| VIS-F06 | Expand `pyproject.toml` keywords | 4 | Extends current keyword list | Faithful keyword additions covering lag selection, seasonality, exogenous variables, and downstream-framework hand-off vocabulary | ⏳ **Not started** |
-| VIS-F06.1 | GitHub topics review | 4 | Repository settings task; no file change | Curated GitHub topics aligned with the package surface (no vanity tags) | ⏳ **Not started** |
+| VIS-F01 | `.github/copilot-instructions.md` repo-wide guidance | 1 | New file; complements existing `README.md` / `docs/public_api.md` | Repo-wide Copilot guidance now pairs the canonical triage-first routing paragraph with start-here anchors and concrete repository rules | ✅ **Implemented** |
+| VIS-F02 | Root `AGENTS.md` for Codex / agent tools | 1 | New file; mirrors identity from `README.md` and `docs/quickstart.md` | Root agent guidance now includes navigation order, forecasting-task routing rules, editing rules by area, validation commands, and common mistakes to avoid | ✅ **Implemented** |
+| VIS-F03 | Path-specific `.github/instructions/*.instructions.md` surfaces | 2 | Adds the visibility-layer instruction trio inside the existing `.github/instructions/` directory, which already contains other path- and role-specific instruction files | Surface-specific `applyTo` instructions now keep Python, notebook, and planning-doc edits aligned with each area's rules | ✅ **Implemented** |
+| VIS-F03.1 | `python.instructions.md` (src / tests / examples / scripts) | 2 | Codifies existing facade and additivity conventions | `applyTo` guidance now targets `src/**/*.py,tests/**/*.py,examples/**/*.py,scripts/**/*.py` with stable-facade, additive-surface, and deterministic-first rules | ✅ **Implemented** |
+| VIS-F03.2 | `notebooks.instructions.md` | 2 | Codifies existing notebook conventions in `notebooks/walkthroughs/` | `applyTo` guidance now targets `notebooks/**/*.ipynb` and keeps notebooks demonstrative, with reusable logic in package code | ✅ **Implemented** |
+| VIS-F03.3 | `docs_plan.instructions.md` | 2 | Codifies existing planning-doc conventions under `docs/plan/` | `applyTo` guidance now targets `docs/plan/**/*.md` and preserves plan structure, file targets, acceptance criteria, and domain language | ✅ **Implemented** |
+| VIS-F04 | Expand `llms.txt` into a routing surface | 3 | Replaces the original pointer-only draft | `llms.txt` now serves as a concise routing surface with the explicit forecasting-task rule, stable-import guidance, key invariants, and important entry surfaces | ✅ **Implemented** |
+| VIS-F05 | README "Use this before model search" section | 3 | Extends existing top-of-README narrative | README guidance now positions the package as triage before downstream model search and frames forecasting frameworks as post-triage hand-off targets | ✅ **Implemented** |
+| VIS-F06 | Expand `pyproject.toml` keywords | 4 | Extends current keyword list | Package discovery metadata has been aligned with forecastability-triage, diagnostics, covariate, and downstream hand-off language | ✅ **Implemented** |
+| VIS-F06.1 | GitHub topics review | 4 | Repository settings task; no file change | Repository topics have been reviewed and aligned with the package surface rather than vanity discovery tags | ✅ **Implemented** |
 | VIS-F07 | Agent-facing examples and prompt anchors | 5 | Extends `examples/` taxonomy and `scripts/` showcase pattern | `examples/forecasting_triage_first.py`, `examples/forecasting_triage_then_handoff.md`, `scripts/run_triage_handoff_demo.py` demonstrating triage-then-hand-off | ⏳ **Not started** |
 | VIS-F08 | LLM-visibility evaluation harness | 6 | New maintenance doc; complements existing test fixtures | `docs/maintenance/llm_visibility_eval.md` with benchmark prompts and "good behavior" expectations to verify guidance impact | ⏳ **Not started** |
 | VIS-F09 | Release hygiene and maintainer docs | 7 | Extends `CHANGELOG.md`, `docs/surface_guide.md`, `docs/maintenance/developer_guide.md` | Changelog entry for the machine-guidance layer plus maintainer notes on keeping instruction surfaces fresh | ⏳ **Not started** |
@@ -314,7 +314,7 @@ File targets
 - `.github/instructions/notebooks.instructions.md`
 - `.github/instructions/docs_plan.instructions.md`
 
-The repository already contains other instruction files under `.github/instructions/`. This Phase 2 item refers only to the additional visibility-layer instruction set listed above, which is still not started.
+The repository already contains other instruction files under `.github/instructions/`. This Phase 2 item refers only to the additional visibility-layer instruction set listed above, which has now landed alongside the broader instruction catalog.
 
 #### VIS-F03.1 — Python source rules
 
@@ -383,9 +383,9 @@ File target
 
 - `llms.txt`
 
-Current problem
+Original problem
 
-The current file is useful but too thin. It points to the right places and lists a few invariants, but it does not strongly encode the forecasting-task routing behavior.
+The starting file was useful but too thin. It pointed to the right places and listed a few invariants, but it did not strongly encode the forecasting-task routing behavior.
 
 Recommended replacement shape
 
@@ -465,7 +465,7 @@ File target
 
 - `pyproject.toml`
 
-Current keywords are valid but too narrow:
+Original keyword set was valid but too narrow:
 
 - forecasting
 - time-series
