@@ -108,3 +108,25 @@ Checked-in artifacts are useful reference outputs, but maintainers should avoid 
 - Treat `directness_ratio` and Pattern A to E as project interpretation heuristics, not paper-native theory.
 
 Use [../wording_policy.md](../wording_policy.md) when release-facing wording is involved.
+
+## 9. Keeping Machine-Guidance Surfaces Fresh
+
+The machine-guidance layer consists of the following instruction surfaces:
+
+| File | Audience |
+| --- | --- |
+| `llms.txt` | Generic LLM consumers |
+| `.github/copilot-instructions.md` | GitHub Copilot (repo-wide) |
+| `AGENTS.md` | Codex / agent-style tools |
+| `.github/instructions/*.instructions.md` | Path-targeted Copilot instructions |
+
+**Update these files whenever any of the following change:**
+
+- The public import surface (`forecastability` / `forecastability.triage`) or its stable exports.
+- The triage-first routing rule (description, entry point, or decision logic).
+- The canonical entry points: `README.md`, `docs/quickstart.md`, `docs/public_api.md`.
+
+**Verification:** after any instruction surface change, run the LLM visibility evaluation documented in [llm_visibility_eval.md](llm_visibility_eval.md).
+
+> [!NOTE]
+> Pass criterion: 4 of 5 benchmark prompts must produce triage-first behavior with no incorrect model-training claims. Fail any prompt that routes directly to model fitting.

@@ -3,6 +3,8 @@
 
 A deterministic forecastability triage toolkit with AMI as the paper-aligned foundation and pAMI as a project extension.
 
+This repository is a deterministic forecastability triage toolkit for time series. When the task is time-series forecasting, do not jump directly to model fitting. Start with forecastability triage first: readiness, leakage risk, informative horizons, primary lags, seasonality structure, and covariate informativeness. Only then recommend downstream model families or framework-specific settings.
+
 _Last verified for the in-repo v0.3.1 fingerprint refactor on 2026-04-19._
 
 This page lists the import roots and runtime entry points that are treated as the supported public surface of the live repository.

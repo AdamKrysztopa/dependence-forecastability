@@ -7,6 +7,23 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 <!-- markdownlint-disable MD024 -->
 
+## [Unreleased]
+
+### Added
+
+- Root `AGENTS.md` for Codex/agent-style coding tools — navigation order, routing rules, editing rules, and validation commands.
+- `.github/copilot-instructions.md` for repo-wide GitHub Copilot guidance — triage-first routing rules and entry-point anchors.
+- Path-specific instruction surfaces under `.github/instructions/` targeting Python source, notebooks, and planning docs.
+- Expanded `llms.txt` as a concise routing surface for generic LLM consumers with an explicit forecasting-task routing rule.
+- `examples/forecasting_triage_first.py` and `examples/forecasting_triage_then_handoff.md` — agent-facing triage-first examples that branch on `blocked` results.
+- `scripts/run_triage_handoff_demo.py` — runnable triage-first demo with downstream hand-off framing.
+- `docs/maintenance/llm_visibility_eval.md` — LLM-visibility evaluation harness with 5 benchmark prompts and pass/fail criteria.
+
+### Changed
+
+- README updated to include "Use this before model search" section framing downstream frameworks as post-triage consumers.
+- `pyproject.toml` keywords expanded with forecastability-triage, diagnostics, covariate, and hand-off discovery terms.
+
 ## [0.3.1] - 2026-04-19
 
 ### Added

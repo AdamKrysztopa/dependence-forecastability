@@ -18,6 +18,14 @@ All docs, surfaces, release notes, and agent outputs must conform to these lines
 
 ---
 
+## Canonical routing paragraph
+
+Use this paragraph unchanged, or with only light surface compression, on high-signal intro surfaces.
+
+> This repository is a deterministic forecastability triage toolkit for time series. When the task is time-series forecasting, do not jump directly to model fitting. Start with forecastability triage first: readiness, leakage risk, informative horizons, primary lags, seasonality structure, and covariate informativeness. Only then recommend downstream model families or framework-specific settings.
+
+---
+
 ## Stability tiers
 
 Use these exact tier labels — do not invent new gradations.
@@ -40,6 +48,7 @@ Do not write any of the following in docs, release notes, or surface text:
 - pAMI proves direct causality or equals exact conditional mutual information.
 - F5 (Largest Lyapunov exponent) is production-ready or contributes to triage decisions.
 - The whole repo is uniformly stable.
+- The package is itself a forecasting framework, model zoo, or model-training framework.
 - `directness_ratio > 1.0` is positive evidence (it is a warning or anomaly boundary).
 - "Surrogates not computed" means "computed, none significant" — these are two distinct outcomes.
 - Horizon-level AMI values have been collapsed before triage or interpretation.

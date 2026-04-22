@@ -72,7 +72,21 @@ These surfaces are intentionally outside the main trust path.
 > [!WARNING]
 > Agents and MCP do not compute or validate the science. They route or narrate deterministic outputs. When numeric correctness matters, trace back to `TriageResult` and the stable package facade.
 
-## 5. What Most Users Should Ignore At First
+## 5. Machine-Guidance Surfaces
+
+These files bias coding assistants and LLM consumers toward triage-first behavior on forecasting prompts. They carry no runtime logic — they are instruction surfaces only.
+
+| Surface | Audience | Purpose |
+| --- | --- | --- |
+| `llms.txt` | Generic LLM consumers | Concise routing surface; explicit forecasting-task routing rule |
+| `.github/copilot-instructions.md` | GitHub Copilot (repo-wide) | Triage-first routing rule and canonical entry-point anchors |
+| `AGENTS.md` | Codex / agent-style tools | Navigation order, routing rules, editing rules, validation commands |
+| `.github/instructions/*.instructions.md` | Path-targeted Copilot instructions | Per-role rules for Python source, notebooks, planning docs |
+
+> [!NOTE]
+> Update these files whenever the public API, import surface, or triage-first routing rules change. See [docs/maintenance/llm_visibility_eval.md](maintenance/llm_visibility_eval.md) for the evaluation harness and pass/fail criteria.
+
+## 6. What Most Users Should Ignore At First
 
 Most users only need three things in order:
 
