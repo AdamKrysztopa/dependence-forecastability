@@ -6,7 +6,7 @@
 **Target release:** `0.3.2`
 **Current released version:** `0.3.1`
 **Branch:** `feat/v0.3.2-lagged-exogenous-triage`
-**Status:** In progress — Phases 0, 1, 2, 3, 4, and 5 completed
+**Status:** Complete — Phases 0, 1, 2, 3, 4, 5, and 6 completed
 **Last reviewed:** 2026-04-22
 
 **Companion refs:**
@@ -288,9 +288,9 @@ release.
 | V3_2-CI-01 | Smoke path for lagged-exog triage | 5 | Extends `.github/workflows/smoke.yml` | run showcase script in `--smoke` mode | Done |
 | V3_2-CI-02 | Notebook contract extension | 5 | Extends `scripts/check_notebook_contract.py` | track new walkthrough notebook | Done |
 | V3_2-CI-03 | Release checklist update | 5 | Extends `.github/ISSUE_TEMPLATE/release_checklist.md` | zero-lag ban, sparse map, known-future opt-in checks | Done |
-| V3_2-D01 | Theory doc | 6 | New docs page | `docs/theory/lagged_exogenous_triage.md` covering role taxonomy, sparse selection, DTW omission | Proposed |
-| V3_2-D02 | README + quickstart + public API update | 6 | Extends `README.md`, `docs/quickstart.md`, `docs/public_api.md` | document `LaggedExogBundle`, role taxonomy, known-future opt-in | Proposed |
-| V3_2-D03 | Forward-link repointing + changelog | 6 | Extends `run_covariant_analysis._FORWARD_LINK`, `CHANGELOG.md` | repoint to v0.3.2 plan, document additive semantics | Proposed |
+| V3_2-D01 | Theory doc | 6 | New docs page | `docs/theory/lagged_exogenous_triage.md` covering role taxonomy, sparse selection, DTW omission | Done |
+| V3_2-D02 | README + quickstart + public API update | 6 | Extends `README.md`, `docs/quickstart.md`, `docs/public_api.md` | document `LaggedExogBundle`, role taxonomy, known-future opt-in | Done |
+| V3_2-D03 | Forward-link repointing + changelog | 6 | Extends `run_covariant_analysis._FORWARD_LINK`, `CHANGELOG.md` | repoint to v0.3.2 plan, document additive semantics | Done |
 
 ---
 

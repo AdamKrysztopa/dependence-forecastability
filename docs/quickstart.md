@@ -367,6 +367,69 @@ Expected output shape:
 > pip install "dependence-forecastability[causal]"
 > ```
 
+## 13 Minutes: Lagged-Exogenous Triage
+
+Use the v0.3.2 lagged-exogenous triage surface when you want to classify each
+exogenous driver by lag role (contemporaneous vs predictive), apply sparse lag
+selection, and produce a typed lag map ready for forecasting tensor construction.
+
+```python
+from forecastability import generate_lagged_exog_panel, run_lagged_exogenous_triage
+
+df = generate_lagged_exog_panel(n=1500, seed=42)
+target = df["target"].to_numpy()
+drivers = {name: df[name].to_numpy() for name in df.columns if name != "target"}
+
+bundle = run_lagged_exogenous_triage(
+    target,
+    drivers,
+    target_name="target",
+    max_lag=6,
+    n_surrogates=99,
+    random_state=42,
+)
+
+# Sparse selected lags for tensor construction
+for row in bundle.selected_lags:
+    if row.selected_for_tensor:
+        print(f"  {row.driver} @ lag={row.lag}  tensor_role={row.tensor_role}")
+```
+
+Known-future opt-in for features whose contemporaneous value is available at prediction time
+(e.g. calendar flags, planned promotions, regulator-set prices):
+
+```python
+bundle = run_lagged_exogenous_triage(
+    target,
+    drivers,
+    target_name="target",
+    max_lag=6,
+    n_surrogates=99,
+    random_state=42,
+    known_future_drivers={"holiday_flag": True},
+)
+```
+
+CLI smoke run:
+
+```bash
+MPLBACKEND=Agg uv run scripts/run_showcase_lagged_exogenous.py --smoke
+```
+
+> [!IMPORTANT]
+> `selected_for_tensor=True` is impossible at `lag=0` by default. Use `known_future_drivers` to
+> explicitly opt in for features whose contemporaneous value is legitimately available at
+> prediction time.
+
+> [!NOTE]
+> `lag_role="instant"` rows at `lag=0` are diagnostic. They quantify contemporaneous association
+> (contemporaneous-cross_ami, cross-correlation) but are not selected for forecasting tensors
+> without the opt-in.
+
+Walkthrough notebook: [notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb](../notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb)
+
+Theory background: [docs/theory/lagged_exogenous_triage.md](theory/lagged_exogenous_triage.md)
+
 ## 15 Minutes: HTTP API Call
 
 Terminal A: start the API server.

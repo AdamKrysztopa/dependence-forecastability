@@ -81,6 +81,7 @@ Equivalent minimal files:
 - CLI user: run [examples/minimal_cli.sh](examples/minimal_cli.sh), then [docs/quickstart.md](docs/quickstart.md).
 - Notebook user: open the canonical notebook [notebooks/walkthroughs/00_air_passengers_showcase.ipynb](notebooks/walkthroughs/00_air_passengers_showcase.ipynb).
 - Fingerprint user: run [scripts/run_showcase_fingerprint.py](scripts/run_showcase_fingerprint.py), then open [notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb](notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb).
+- Lagged-exogenous user: run [scripts/run_showcase_lagged_exogenous.py](scripts/run_showcase_lagged_exogenous.py), then open [notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb](notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb).
 - Maintainer/contributor: use [docs/maintenance/developer_guide.md](docs/maintenance/developer_guide.md).
 
 ## Canonical walkthrough
@@ -135,11 +136,60 @@ Primary fingerprint surfaces:
 - Code reference: [docs/code/fingerprint_showcase.md](docs/code/fingerprint_showcase.md)
 - Agent contract: [docs/agent_layer.md](docs/agent_layer.md)
 
-## Links
+## V0.3.2 Lagged-Exogenous Triage
+
+The v0.3.2 surface classifies each exogenous driver by lag role (contemporaneous
+vs predictive), applies sparse lag selection, and emits a typed lag map ready
+for forecasting tensor construction.
+
+Run the canonical showcase:
+
+```bash
+MPLBACKEND=Agg uv run scripts/run_showcase_lagged_exogenous.py --smoke
+```
+
+Minimal Python entry:
+
+```python
+from forecastability import generate_lagged_exog_panel, run_lagged_exogenous_triage
+
+df = generate_lagged_exog_panel(n=1500, seed=42)
+target = df["target"].to_numpy()
+drivers = {name: df[name].to_numpy() for name in df.columns if name != "target"}
+
+bundle = run_lagged_exogenous_triage(
+    target,
+    drivers,
+    target_name="target",
+    max_lag=6,
+    n_surrogates=99,
+    random_state=42,
+)
+
+# Sparse selected lags ready for tensor construction
+for row in bundle.selected_lags:
+    if row.selected_for_tensor:
+        print(f"  {row.driver} @ lag={row.lag}  tensor_role={row.tensor_role}")
+```
+
+Primary lagged-exogenous triage surfaces:
+
+- Script: [scripts/run_showcase_lagged_exogenous.py](scripts/run_showcase_lagged_exogenous.py)
+- Notebook: [notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb](notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb)
+- Theory: [docs/theory/lagged_exogenous_triage.md](docs/theory/lagged_exogenous_triage.md)
+
+> [!IMPORTANT]
+> `selected_for_tensor=True` is impossible at `lag=0` by default. Use the
+> `known_future_drivers` parameter to opt in for features whose contemporaneous
+> value is legitimately available at prediction time (calendar flags, planned
+> promotions, regulator-set prices).
+
+
 
 - Notebook: [notebooks/walkthroughs/00_air_passengers_showcase.ipynb](notebooks/walkthroughs/00_air_passengers_showcase.ipynb)
 - Notebook (covariant informative): [notebooks/walkthroughs/01_covariant_informative_showcase.ipynb](notebooks/walkthroughs/01_covariant_informative_showcase.ipynb)
 - Notebook (fingerprint showcase): [notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb](notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb)
+- Notebook (lagged-exogenous triage): [notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb](notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb)
 - Quickstart: [docs/quickstart.md](docs/quickstart.md)
 - PyPI: [dependence-forecastability](https://pypi.org/project/dependence-forecastability/)
 - Issues: [GitHub Issues](https://github.com/AdamKrysztopa/dependence-forecastability/issues)

@@ -161,6 +161,78 @@ bundle = run_covariant_analysis(
 > [!IMPORTANT]
 > `n_surrogates` must be at least 99 for covariant runs because the bundle includes phase-surrogate significance semantics for CrossAMI rows.
 
+## Lagged-Exogenous Triage Surface (v0.3.2+)
+
+Use `run_lagged_exogenous_triage` when you need to classify each exogenous
+driver as contemporaneous (multivariate diagnostic) or predictively useful at
+specific lags, and to obtain a sparse lag map for forecasting tensor construction.
+
+```python
+from forecastability import generate_lagged_exog_panel, run_lagged_exogenous_triage
+
+df = generate_lagged_exog_panel(n=1500, seed=42)
+target = df["target"].to_numpy()
+drivers = {name: df[name].to_numpy() for name in df.columns if name != "target"}
+
+bundle = run_lagged_exogenous_triage(
+    target,
+    drivers,
+    target_name="target",
+    max_lag=6,
+    n_surrogates=99,
+    random_state=42,
+)
+
+# Inspect the sparse selected lags
+for row in bundle.selected_lags:
+    if row.selected_for_tensor:
+        print(f"  {row.driver} @ lag={row.lag}  tensor_role={row.tensor_role}")
+```
+
+Known-future opt-in (e.g. calendar features whose $k=0$ value is available at prediction time):
+
+```python
+bundle = run_lagged_exogenous_triage(
+    target,
+    drivers,
+    target_name="target",
+    max_lag=6,
+    n_surrogates=99,
+    random_state=42,
+    known_future_drivers={"holiday_flag": True},
+)
+```
+
+CLI equivalent (smoke run):
+
+```bash
+MPLBACKEND=Agg uv run scripts/run_showcase_lagged_exogenous.py --smoke
+```
+
+| Type | Description |
+| --- | --- |
+| `LaggedExogBundle` | Composite typed output: profile rows, selection rows, driver list, known-future list |
+| `LaggedExogProfileRow` | One lag-domain diagnostic row — correlation, cross_ami, cross_pami, lag_role, tensor_role, significance |
+| `LaggedExogSelectionRow` | One sparse selection row — `selected_for_tensor`, `selector_name`, `tensor_role` |
+| `LagRoleLabel` | `Literal["instant", "predictive"]` — chronological role at this lag |
+| `TensorRoleLabel` | `Literal["diagnostic", "predictive", "known_future"]` — tensor-eligibility classification |
+| `LagSelectorLabel` | `Literal["xcorr_top_k", "xami_sparse"]` — which selector produced the row |
+| `LagSignificanceSource` | `Literal["phase_surrogate_xami", "phase_surrogate_xcorr", "not_computed"]` |
+
+> [!IMPORTANT]
+> `selected_for_tensor=True` is impossible at `lag=0` by default. Use `known_future_drivers`
+> to opt in for features whose contemporaneous value is legitimately available at prediction time.
+
+> [!NOTE]
+> `lag_role="instant"` rows at `lag=0` are diagnostic. They document contemporaneous association
+> but do not enter forecasting tensors without the `known_future_drivers` opt-in.
+
+For method semantics, DTW omission rationale, and the sparse selector algorithm, see
+[docs/theory/lagged_exogenous_triage.md](theory/lagged_exogenous_triage.md).
+
+For the walkthrough notebook, open
+[notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb](../../notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb).
+
 > [!NOTE]
 > Optional causal methods (`pcmci`, `pcmci_ami`) are skipped when causal dependencies are unavailable; the bundle records skipped methods in `metadata`.
 
