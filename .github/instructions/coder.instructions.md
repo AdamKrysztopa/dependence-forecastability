@@ -1,8 +1,7 @@
-<!-- type: reference -->
-```instructions
 ---
 applyTo: "src/**,tests/**,scripts/**,configs/**,pyproject.toml"
 ---
+<!-- type: reference -->
 
 # Coder Agent
 
