@@ -6,7 +6,7 @@
 **Target release:** `0.3.2`
 **Current released version:** `0.3.1`
 **Branch:** `feat/v0.3.2-lagged-exogenous-triage`
-**Status:** In progress — Phases 0, 1, 2, and 3 completed
+**Status:** In progress — Phases 0, 1, 2, 3, and 4 completed
 **Last reviewed:** 2026-04-22
 
 **Companion refs:**
@@ -281,10 +281,10 @@ release.
 | V3_2-F06 | Integration with covariant bundle | 2 | Additive on `run_covariant_analysis` | optional `lagged_exog: LaggedExogBundle \| None` field on `CovariantAnalysisBundle` | Done |
 | V3_2-F07 | Lag semantics tests | 3 | Follows current deterministic regression pattern | lag-role invariants, zero-lag ban by default, known-future opt-in path, cross-pAMI contract guard | Done |
 | V3_2-F07.1 | Regression fixtures and rebuilder | 3 | Follows current deterministic regression pattern | frozen lag-map/default-call-path fixtures + rebuild/verify script | Done |
-| V3_2-F08 | Plotting refresh | 4 | Extends covariant plot helpers | correlogram-first lag-profile figure with `lag = 0` visually separated | Proposed |
-| V3_2-F08.1 | Walkthrough notebook | 4 | Follows existing walkthrough pattern | `notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb` | Proposed |
-| V3_2-F08.2 | Public examples | 4 | Extends `examples/covariant_informative/` | `examples/covariant_informative/lagged_exogenous/{python,cli,known_future}.{py,md}` | Proposed |
-| V3_2-F09 | Showcase script | 4 | Mirrors `scripts/run_showcase_covariant.py` | `scripts/run_showcase_lagged_exogenous.py` with `--smoke` mode | Proposed |
+| V3_2-F08 | Plotting refresh | 4 | Extends covariant plot helpers | correlogram-first lag-profile figure with `lag = 0` visually separated | Done |
+| V3_2-F08.1 | Walkthrough notebook | 4 | Follows existing walkthrough pattern | `notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb` | Done |
+| V3_2-F08.2 | Public examples | 4 | Extends `examples/covariant_informative/` | `examples/covariant_informative/lagged_exogenous/{python,cli,known_future}.{py,md}` | Done |
+| V3_2-F09 | Showcase script | 4 | Mirrors `scripts/run_showcase_covariant.py` | `scripts/run_showcase_lagged_exogenous.py` with `--smoke` mode | Done |
 | V3_2-CI-01 | Smoke path for lagged-exog triage | 5 | Extends `.github/workflows/smoke.yml` | run showcase script in `--smoke` mode | Proposed |
 | V3_2-CI-02 | Notebook contract extension | 5 | Extends `scripts/check_notebook_contract.py` | track new walkthrough notebook | Proposed |
 | V3_2-CI-03 | Release checklist update | 5 | Extends `.github/ISSUE_TEMPLATE/release_checklist.md` | zero-lag ban, sparse map, known-future opt-in checks | Proposed |
@@ -831,6 +831,25 @@ Implemented files:
 ---
 
 ### Phase 4 — Plotting, notebook, examples, showcase
+
+Implemented in this branch (validated): V3_2-F08, V3_2-F08.1, V3_2-F08.2, and V3_2-F09.
+
+Validation executed:
+
+- `uv run python examples/covariant_informative/lagged_exogenous/lagged_exog_python_example.py`
+- `uv run python examples/covariant_informative/lagged_exogenous/known_future_opt_in_example.py`
+- `uv run python scripts/check_notebook_contract.py`
+- `uv run pytest -q -ra tests/test_lagged_exog_plots.py`
+
+Implemented files:
+
+- `src/forecastability/adapters/rendering/lagged_exog_plots.py`
+- `tests/test_lagged_exog_plots.py`
+- `notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb`
+- `examples/covariant_informative/lagged_exogenous/lagged_exog_python_example.py`
+- `examples/covariant_informative/lagged_exogenous/lagged_exog_cli_example.md`
+- `examples/covariant_informative/lagged_exogenous/known_future_opt_in_example.py`
+- `scripts/run_showcase_lagged_exogenous.py`
 
 #### V3_2-F08 — Plotting refresh
 
