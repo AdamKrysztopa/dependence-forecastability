@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
+import forecastability.pipeline.pipeline as _pipeline_impl
 from forecastability.pipeline import (
     run_canonical_example,
     run_exogenous_rolling_origin_evaluation,
@@ -84,7 +85,8 @@ def test_run_canonical_example_dispatches_selected_backend(monkeypatch) -> None:
         return np.full(max_lag, 0.05)
 
     monkeypatch.setattr(
-        "forecastability.pipeline.compute_pami_with_backend",
+        _pipeline_impl,
+        "compute_pami_with_backend",
         _stub_compute_pami_with_backend,
     )
 
@@ -179,7 +181,7 @@ def test_exogenous_rolling_origin_pipeline_is_train_only_for_diagnostics(monkeyp
             del train_target, method, min_pairs, exog
             return np.full(max_lag, 0.3)
 
-    monkeypatch.setattr("forecastability.pipeline.ForecastabilityAnalyzerExog", StubAnalyzer)
+    monkeypatch.setattr(_pipeline_impl, "ForecastabilityAnalyzerExog", StubAnalyzer)
 
     result = run_exogenous_rolling_origin_evaluation(
         ts,
