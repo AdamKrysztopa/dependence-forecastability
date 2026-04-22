@@ -1,4 +1,8 @@
 <!-- type: reference -->
+<p align="center">
+  <img src="docs/img/df-banner.png" alt="Forecastability Triage Toolkit" width="100%">
+</p>
+
 # Forecastability Triage Toolkit
 
 > Forecastability triage for time series using AMI, pAMI, and covariate-aware dependence diagnostics before expensive model search.

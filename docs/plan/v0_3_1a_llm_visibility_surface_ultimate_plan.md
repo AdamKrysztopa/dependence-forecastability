@@ -139,7 +139,7 @@ The same repo identity must appear everywhere:
 | VIS-F06.1 | GitHub topics review | 4 | Repository settings task; no file change | Repository topics have been reviewed and aligned with the package surface rather than vanity discovery tags | ✅ **Implemented** |
 | VIS-F07 | Agent-facing examples and prompt anchors | 5 | Extends `examples/` taxonomy and `scripts/` showcase pattern | The repo now includes tiny triage-first example and demo anchors that branch on blocked results, surface `primary_lags`, and frame downstream forecasting tools as post-triage hand-off targets | ✅ **Implemented** |
 | VIS-F08 | LLM-visibility evaluation harness | 6 | New maintenance doc; complements existing test fixtures | `docs/maintenance/llm_visibility_eval.md` with benchmark prompts and "good behavior" expectations to verify guidance impact | ✅ **Implemented** |
-| VIS-F09 | Release hygiene and maintainer docs | 7 | Extends `CHANGELOG.md`, `docs/surface_guide.md`, `docs/maintenance/developer_guide.md` | Changelog entry for the machine-guidance layer plus maintainer notes on keeping instruction surfaces fresh | ⏳ **Not started** |
+| VIS-F09 | Release hygiene and maintainer docs | 7 | Extends `CHANGELOG.md`, `docs/surface_guide.md`, `docs/maintenance/developer_guide.md` | Changelog entry for the machine-guidance layer plus maintainer notes on keeping instruction surfaces fresh | ✅ **Implemented** |
 
 ---
 
