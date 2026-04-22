@@ -180,9 +180,7 @@ def _print_ground_truth_verification(bundle: CovariantAnalysisBundle) -> None:
     )
     for r in sorted(bundle.summary_table, key=lambda x: x.lag):
         if r.driver == "driver_nonlin_sq":
-            print(
-                f"         lag {r.lag}: cross_ami={r.cross_ami:.4f}, sig={r.significance}"
-            )
+            print(f"         lag {r.lag}: cross_ami={r.cross_ami:.4f}, sig={r.significance}")
 
     # Check 4: driver_nonlin_sq cross_ami > driver_nonlin_sq gcmi
     # GCMI (Gaussian copula) is near-zero for quadratic coupling (non-monotone pattern)

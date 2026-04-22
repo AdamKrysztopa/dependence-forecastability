@@ -211,9 +211,7 @@ def _plot_geometry_panel(bundles: list[FingerprintBundle], output_path: Path) ->
         tau = [point.tau or 0.0 for point in curve if point.valid]
         accepted_horizons = [point.horizon for point in curve if point.valid and point.accepted]
         accepted_values = [
-            point.ami_corrected or 0.0
-            for point in curve
-            if point.valid and point.accepted
+            point.ami_corrected or 0.0 for point in curve if point.valid and point.accepted
         ]
 
         axis.plot(horizons, ami_raw, label="AMI raw", color="steelblue", linewidth=1.5)

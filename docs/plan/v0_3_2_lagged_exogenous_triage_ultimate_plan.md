@@ -6,7 +6,7 @@
 **Target release:** `0.3.2`
 **Current released version:** `0.3.1`
 **Branch:** `feat/v0.3.2-lagged-exogenous-triage`
-**Status:** Proposed — ultimate plan
+**Status:** In progress — Phases 0 and 1 completed
 **Last reviewed:** 2026-04-22
 
 **Companion refs:**
@@ -269,13 +269,13 @@ release.
 
 | ID | Feature | Phase | Overlap with existing | Genuine new work | Status |
 | --- | --- | ---: | --- | --- | --- |
-| V3_2-F00 | Typed lagged-exogenous result models | 0 | Extends `utils/types.py` patterns | `LagRoleLabel`, `TensorRoleLabel`, `LaggedExogProfileRow`, `LaggedExogSelectionRow`, `LaggedExogBundle` | Proposed |
-| V3_2-F00.1 | Lagged-exogenous benchmark generators | 0 | Extends `utils/synthetic.py` | `generate_lagged_exog_panel`, `generate_known_future_calendar_pair`, `generate_contemporaneous_only_pair` | Proposed |
-| V3_2-F01 | Zero-lag-aware lag plumbing | 1 | Extends `raw_curve_service`, `exog_raw_curve_service`, `exog_partial_curve_service` | `lag_range` argument, additive `0..max_lag` support, role tagging at the boundary | Proposed |
-| V3_2-F02 | Standard cross-correlation profile service | 1 | New service modelled on existing curve services | `services/cross_correlation_profile_service.py` with `0..max_lag` signed profile | Proposed |
-| V3_2-F03 | Extended `cross_ami` lag profile | 1 | Extends `services/exog_raw_curve_service.py` | `compute_exog_raw_curve_with_zero_lag()` + `lag_role` tagging | Proposed |
-| V3_2-F04 | Sparse lag selector (`xami_sparse`) | 1 | New service modelled on existing partial-curve flow | `services/sparse_lag_selection_service.py`, additive selector contract | Proposed |
-| V3_2-F04a | Selector significance reuse | 1 | Reuses `significance_service` | extend phase-surrogate bands to `0..max_lag`, no parallel surrogate engine | Proposed |
+| V3_2-F00 | Typed lagged-exogenous result models | 0 | Extends `utils/types.py` patterns | `LagRoleLabel`, `TensorRoleLabel`, `LaggedExogProfileRow`, `LaggedExogSelectionRow`, `LaggedExogBundle` | Done |
+| V3_2-F00.1 | Lagged-exogenous benchmark generators | 0 | Extends `utils/synthetic.py` | `generate_lagged_exog_panel`, `generate_known_future_calendar_pair`, `generate_contemporaneous_only_pair` | Done |
+| V3_2-F01 | Zero-lag-aware lag plumbing | 1 | Extends `raw_curve_service`, `exog_raw_curve_service`, `exog_partial_curve_service` | `lag_range` argument, additive `0..max_lag` support, role tagging at the boundary | Done |
+| V3_2-F02 | Standard cross-correlation profile service | 1 | New service modelled on existing curve services | `services/cross_correlation_profile_service.py` with `0..max_lag` signed profile | Done |
+| V3_2-F03 | Extended `cross_ami` lag profile | 1 | Extends `services/exog_raw_curve_service.py` | `compute_exog_raw_curve_with_zero_lag()` + `lag_role` tagging | Done |
+| V3_2-F04 | Sparse lag selector (`xami_sparse`) | 1 | New service modelled on existing partial-curve flow | `services/sparse_lag_selection_service.py`, additive selector contract | Done |
+| V3_2-F04a | Selector significance reuse | 1 | Reuses `significance_service` | extend phase-surrogate bands to `0..max_lag`, no parallel surrogate engine | Done |
 | V3_2-F05 | Lagged-exogenous orchestration use case | 2 | Follows `use_cases/` pattern | `use_cases/run_lagged_exogenous_triage.py` returning `LaggedExogBundle` | Proposed |
 | V3_2-F05a | Known-future opt-in | 2 | Argument extension on use case | `known_future_drivers: dict[str, bool]` honored in selector, with caution flag | Proposed |
 | V3_2-F06 | Integration with covariant bundle | 2 | Additive on `run_covariant_analysis` | optional `lagged_exog: LaggedExogBundle | None` field on `CovariantAnalysisBundle` | Proposed |
@@ -515,6 +515,8 @@ A companion `generate_known_future_calendar_pair()` and
 ---
 
 ### Phase 1 — Core methods
+
+Implemented in this branch (validated): V3_2-F01, V3_2-F02, V3_2-F03, V3_2-F04, and V3_2-F04a. Validation executed with targeted tests: `uv run pytest tests/test_raw_curve_service.py tests/test_exog_curve_services.py tests/test_cross_correlation_profile_service.py tests/test_sparse_lag_selection_service.py tests/test_significance_service.py -q`.
 
 ```mermaid
 flowchart TD

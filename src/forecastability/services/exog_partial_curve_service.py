@@ -16,6 +16,7 @@ def compute_exog_partial_curve(
     *,
     min_pairs: int = 50,
     random_state: int = 42,
+    lag_range: tuple[int, int] | None = None,
 ) -> np.ndarray:
     """Compute partial cross-dependence curve (exog_t → target_{t+h}, residualized).
 
@@ -29,9 +30,12 @@ def compute_exog_partial_curve(
         scorer: Callable dependence scorer.
         min_pairs: Minimum number of sample pairs required per lag.
         random_state: Base random seed for the scorer.
+        lag_range: Optional inclusive lag bounds ``(start_lag, end_lag)``.
+            ``None`` preserves the legacy predictive-only domain ``1..max_lag``.
+            Use ``(0, max_lag)`` to include a zero-lag contemporaneous row.
 
     Returns:
-        1-D array of shape ``(max_lag,)`` with partial cross-dependence at each lag.
+        1-D array aligned to the evaluated lag range.
     """
     return compute_partial_curve(
         target,
@@ -40,4 +44,5 @@ def compute_exog_partial_curve(
         exog=exog,
         min_pairs=min_pairs,
         random_state=random_state,
+        lag_range=lag_range,
     )

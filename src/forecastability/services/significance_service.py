@@ -26,6 +26,7 @@ def compute_significance_bands_generic(
     exog: np.ndarray | None = None,
     min_pairs: int,
     n_jobs: int,
+    lag_range: tuple[int, int] | None = None,
 ) -> tuple[np.ndarray, np.ndarray]:
     """Compute surrogate significance bands for any scorer.
 
@@ -43,9 +44,12 @@ def compute_significance_bands_generic(
         exog: Optional cached exogenous series.
         min_pairs: Minimum sample pairs per horizon.
         n_jobs: Thread-pool workers.  ``-1`` = all CPUs.  ``1`` = serial.
+        lag_range: Optional inclusive lag bounds passed to curve computation.
+            ``None`` preserves legacy ``1..max_lag`` behavior. Use
+            ``(0, max_lag)`` to include a lag-0 surrogate band.
 
     Returns:
-        ``(lower_band, upper_band)`` arrays of shape ``(max_lag,)``.
+        ``(lower_band, upper_band)`` arrays aligned to the evaluated lag range.
     """
     surr = phase_surrogates(series, n_surrogates=n_surrogates, random_state=random_state)
     compute_fn = compute_raw_curve if which == "raw" else compute_partial_curve
@@ -55,7 +59,13 @@ def compute_significance_bands_generic(
     def _eval(idx: int) -> np.ndarray:
         seed = random_state + idx + 1
         return compute_fn(
-            surr[idx], max_lag, bivariate_scorer, exog=exog, min_pairs=min_pairs, random_state=seed
+            surr[idx],
+            max_lag,
+            bivariate_scorer,
+            exog=exog,
+            min_pairs=min_pairs,
+            random_state=seed,
+            lag_range=lag_range,
         )
 
     if n_workers == 1:

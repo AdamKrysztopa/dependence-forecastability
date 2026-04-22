@@ -99,10 +99,7 @@ class TestFingerprintAgentPayloadFields:
         assert payload.geometry_method == bundle.geometry.method
         assert payload.signal_to_noise == bundle.geometry.signal_to_noise
         assert payload.geometry_information_horizon == bundle.geometry.information_horizon
-        assert (
-            payload.geometry_information_structure
-            == bundle.geometry.information_structure
-        )
+        assert payload.geometry_information_structure == bundle.geometry.information_structure
 
     def test_routing_fields_present(self) -> None:
         bundle = _make_bundle()

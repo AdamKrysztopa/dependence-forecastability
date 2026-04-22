@@ -54,6 +54,7 @@ OUTPUT_REPORTS_DIR = Path("outputs/reports")
 # Archetype registry
 # ---------------------------------------------------------------------------
 
+
 def _build_archetypes() -> list[tuple[str, np.ndarray]]:
     """Build the canonical synthetic example panel from the shared helper module."""
     series_map = generate_fingerprint_archetypes(n=N_SAMPLES, seed=RANDOM_STATE)

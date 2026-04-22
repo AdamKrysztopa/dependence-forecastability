@@ -309,9 +309,7 @@ def _save_json_artifacts(
 
         # A3 interpretation
         a3_path = json_dir / f"fingerprint_{name}_a3_interpretation.json"
-        a3_path.write_text(
-            json.dumps(interpretation.model_dump(), indent=2), encoding="utf-8"
-        )
+        a3_path.write_text(json.dumps(interpretation.model_dump(), indent=2), encoding="utf-8")
 
     print(f"\n  JSON artifacts saved to: {json_dir.resolve()}")
 
@@ -494,8 +492,7 @@ def _verify_archetype(*, name: str, run: _ArchetypeRun) -> list[_VerificationIss
                 _VerificationIssue(
                     category="behavioral_contradiction",
                     message=(
-                        "expected fallback routing families for white noise, "
-                        f"got {all_families}"
+                        f"expected fallback routing families for white noise, got {all_families}"
                     ),
                 )
             )

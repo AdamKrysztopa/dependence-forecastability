@@ -24,9 +24,7 @@ def main() -> None:
             None if result.interpretation is None else result.interpretation.forecastability_class
         ),
         "primary_lags": (
-            []
-            if result.interpretation is None
-            else list(result.interpretation.primary_lags)
+            [] if result.interpretation is None else list(result.interpretation.primary_lags)
         ),
     }
     print(summary)

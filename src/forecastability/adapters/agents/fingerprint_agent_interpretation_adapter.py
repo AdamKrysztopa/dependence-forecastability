@@ -32,9 +32,7 @@ __all__ = [
     "interpret_fingerprint_batch",
 ]
 
-FingerprintInterpretationInput: TypeAlias = (
-    FingerprintAgentPayload | SerialisedFingerprintSummary
-)
+FingerprintInterpretationInput: TypeAlias = FingerprintAgentPayload | SerialisedFingerprintSummary
 StructureBucket: TypeAlias = Literal["none", "monotonic", "periodic", "mixed"]
 
 
