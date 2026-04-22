@@ -24,3 +24,8 @@ notebooks/.ipynb_checkpoints/
 docs/plan/aux_documents/
 docs/input_papers/
 dist/
+
+# Keep instruction surfaces tracked.
+!.github/instructions/
+!.github/instructions/**
+!.github/copilot-instructions.md
