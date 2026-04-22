@@ -50,6 +50,10 @@ jobs:
       - name: Run fingerprint showcase
         run: uv run scripts/run_showcase_fingerprint.py --smoke --quiet
 
+      # --smoke uses n=700 and max_lag=4 for a fast CI-friendly run.
+      - name: Run lagged-exogenous triage showcase
+        run: uv run scripts/run_showcase_lagged_exogenous.py --smoke --quiet
+
       - name: Smoke CSV geometry adapter CLI wiring
         run: uv run scripts/run_ami_information_geometry_csv.py --help
 

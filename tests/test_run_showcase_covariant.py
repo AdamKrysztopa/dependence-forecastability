@@ -143,8 +143,7 @@ def test_verify_redundant_not_pcmci_ami_parent_passes() -> None:
     bundle = _stub_bundle(driver_redundant_is_pcmci_ami_parent=False)
     interpretation = MagicMock()
     interpretation.driver_roles = [
-        MagicMock(driver=d, role="noise_or_weak", best_lag=1)
-        for d in bundle.driver_names
+        MagicMock(driver=d, role="noise_or_weak", best_lag=1) for d in bundle.driver_names
     ]
     interpretation.primary_drivers = []
     violations = module._verify_against_ground_truth(bundle, interpretation)
@@ -158,8 +157,7 @@ def test_verify_redundant_as_pcmci_ami_parent_is_a_violation() -> None:
     bundle = _stub_bundle(driver_redundant_is_pcmci_ami_parent=True)
     interpretation = MagicMock()
     interpretation.driver_roles = [
-        MagicMock(driver=d, role="noise_or_weak", best_lag=1)
-        for d in bundle.driver_names
+        MagicMock(driver=d, role="noise_or_weak", best_lag=1) for d in bundle.driver_names
     ]
     interpretation.primary_drivers = []
     violations = module._verify_against_ground_truth(bundle, interpretation)

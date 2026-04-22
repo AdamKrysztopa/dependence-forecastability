@@ -175,6 +175,38 @@ def test_bundle_has_one_row_per_driver_lag_for_non_optional_methods(
     assert result.pcmci_ami_result is None
 
 
+def test_lagged_exog_bundle_is_opt_in_on_covariant_facade(
+    benchmark_df: pd.DataFrame,
+) -> None:
+    """Phase 2 lagged-exog output should be attached only when explicitly enabled."""
+    drivers = {"driver_direct": benchmark_df["driver_direct"].to_numpy()}
+
+    baseline = run_covariant_analysis(
+        benchmark_df["target"].to_numpy(),
+        drivers,
+        max_lag=2,
+        methods=["te"],
+        n_surrogates=99,
+        random_state=42,
+    )
+    assert baseline.lagged_exog is None
+
+    with_lagged = run_covariant_analysis(
+        benchmark_df["target"].to_numpy(),
+        drivers,
+        max_lag=2,
+        methods=["te"],
+        n_surrogates=99,
+        random_state=42,
+        include_lagged_exog_triage=True,
+    )
+    assert with_lagged.lagged_exog is not None
+    assert all(row.lag >= 1 for row in with_lagged.lagged_exog.selected_lags)
+    lag0_rows = [row for row in with_lagged.lagged_exog.profile_rows if row.lag == 0]
+    assert len(lag0_rows) == 1
+    assert lag0_rows[0].tensor_role == "diagnostic"
+
+
 @pytest.mark.parametrize(
     ("methods", "requested_field", "unrequested_field", "requested_conditioning", "has_disclaimer"),
     [
@@ -265,7 +297,7 @@ def test_lagged_exog_conditioning_metadata_is_truthful(
     assert "pCrossAMI and TE rows are `target_only`" in disclaimer
     assert "only PCMCI+ and PCMCI-AMI are `full_mci`" in disclaimer
     assert result.metadata["conditioning_scope_forward_link"] == (
-        "docs/plan/v0_3_1_lagged_exogenous_triage_plan.md"
+        "docs/plan/v0_3_2_lagged_exogenous_triage_ultimate_plan.md"
     )
 
 

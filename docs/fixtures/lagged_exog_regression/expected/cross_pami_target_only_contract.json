@@ -1,0 +1,10 @@
+{
+  "all_target_only": true,
+  "conditioning_tags": [
+    "target_only",
+    "target_only",
+    "target_only"
+  ],
+  "contains_target_only_methods": 1,
+  "disclaimer_mentions_target_only": true
+}

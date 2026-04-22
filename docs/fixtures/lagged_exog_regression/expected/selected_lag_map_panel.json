@@ -1,0 +1,35 @@
+{
+  "lag0_role_labels": {
+    "direct_lag2": "instant",
+    "mediated_lag1": "instant",
+    "redundant": "instant"
+  },
+  "lag0_tensor_roles": {
+    "direct_lag2": "diagnostic",
+    "mediated_lag1": "diagnostic",
+    "redundant": "diagnostic"
+  },
+  "selected_lag_map": {
+    "direct_lag2": [
+      2
+    ],
+    "mediated_lag1": [
+      1
+    ],
+    "redundant": [
+      2
+    ]
+  },
+  "selected_row_count": 3,
+  "selected_score_map": {
+    "direct_lag2": [
+      0.6311540102096584
+    ],
+    "mediated_lag1": [
+      0.6701657246690864
+    ],
+    "redundant": [
+      0.5841566687125752
+    ]
+  }
+}

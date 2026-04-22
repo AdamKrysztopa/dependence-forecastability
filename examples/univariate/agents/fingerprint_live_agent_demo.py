@@ -422,9 +422,7 @@ async def _run_all_archetypes(*, strict: bool) -> None:
         _verify_explanation(name=name, run=run)
 
     print("\n  ── Cross-archetype summary ───────────────────────────────")
-    print(
-        f"  {'Archetype':<22} {'Geom':<12} {'S/N':>7} {'Mass':>8} {'NL Share':>9} {'Families'}"
-    )
+    print(f"  {'Archetype':<22} {'Geom':<12} {'S/N':>7} {'Mass':>8} {'NL Share':>9} {'Families'}")
     print("  " + "─" * 76)
     for name, run in runs:
         exp = run.explanation

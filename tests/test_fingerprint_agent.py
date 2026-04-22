@@ -131,9 +131,7 @@ class TestRunFingerprintAgentStrictMode:
         assert isinstance(explanation, FingerprintExplanation)
         assert explanation.target_name == "strict_test"
 
-    def test_strict_mode_when_pydantic_ai_unavailable(
-        self, ar1_series: np.ndarray
-    ) -> None:
+    def test_strict_mode_when_pydantic_ai_unavailable(self, ar1_series: np.ndarray) -> None:
         with patch(
             "forecastability.adapters.llm.fingerprint_agent._PYDANTIC_AI_AVAILABLE",
             False,
@@ -152,12 +150,14 @@ class TestRunFingerprintAgentStrictMode:
     def test_strict_mode_fields_are_deterministic(self, ar1_series: np.ndarray) -> None:
         """Running strict mode twice with the same seed must produce identical outputs."""
         e1 = asyncio.run(
-            run_fingerprint_agent(ar1_series, max_lag=12, n_surrogates=99,
-                                   random_state=42, strict=True)
+            run_fingerprint_agent(
+                ar1_series, max_lag=12, n_surrogates=99, random_state=42, strict=True
+            )
         )
         e2 = asyncio.run(
-            run_fingerprint_agent(ar1_series, max_lag=12, n_surrogates=99,
-                                   random_state=42, strict=True)
+            run_fingerprint_agent(
+                ar1_series, max_lag=12, n_surrogates=99, random_state=42, strict=True
+            )
         )
 
         assert e1.information_mass == e2.information_mass

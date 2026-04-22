@@ -22,6 +22,7 @@ EXPECTED_NOTEBOOKS = [
     "walkthroughs/00_air_passengers_showcase.ipynb",
     "walkthroughs/01_covariant_informative_showcase.ipynb",
     "walkthroughs/02_forecastability_fingerprint_showcase.ipynb",
+    "walkthroughs/03_lagged_exogenous_triage_showcase.ipynb",
     "walkthroughs/01_canonical_forecastability.ipynb",
     "walkthroughs/02_exogenous_analysis.ipynb",
     "walkthroughs/03_triage_end_to_end.ipynb",
@@ -55,12 +56,17 @@ def check_imports() -> bool:
         ("forecastability", None),
         ("forecastability", "ForecastabilityAnalyzer"),
         ("forecastability", "ForecastabilityAnalyzerExog"),
+        ("forecastability", "LaggedExogBundle"),
+        ("forecastability", "generate_lagged_exog_panel"),
+        ("forecastability", "run_lagged_exogenous_triage"),
         ("forecastability.pipeline", None),
         ("forecastability.pipeline", "run_canonical_example"),
         ("forecastability.pipeline", "run_rolling_origin_evaluation"),
         ("forecastability.utils.config", "MetricConfig"),
         ("forecastability.utils.datasets", "generate_ar1"),
         ("forecastability.use_cases.run_covariant_analysis", "run_covariant_analysis"),
+        ("forecastability.adapters.rendering", "save_lagged_exog_profile_figure"),
+        ("forecastability.adapters.rendering", "save_lagged_exog_selection_heatmap"),
         ("forecastability.utils.synthetic", "generate_covariant_benchmark"),
         ("forecastability.reporting.covariant_walkthrough", "save_metric_heatmap"),
         ("forecastability", "generate_fingerprint_archetypes"),
@@ -151,6 +157,60 @@ def check_representative_call() -> bool:
         _check(
             "run_forecastability_fingerprint integrates with fingerprint_showcase reporting",
             fingerprint_ok,
+        )
+    )
+
+    try:
+        from forecastability import generate_lagged_exog_panel, run_lagged_exogenous_triage
+
+        lagged_df = generate_lagged_exog_panel(n=700, seed=42)
+        lagged_target = lagged_df["target"].to_numpy()
+        lagged_drivers = {
+            "known_future_calendar": lagged_df["known_future_calendar"].to_numpy(),
+            "instant_only": lagged_df["instant_only"].to_numpy(),
+        }
+
+        default_bundle = run_lagged_exogenous_triage(
+            lagged_target,
+            lagged_drivers,
+            target_name="target",
+            max_lag=4,
+            n_surrogates=99,
+            random_state=42,
+        )
+        opt_in_bundle = run_lagged_exogenous_triage(
+            lagged_target,
+            lagged_drivers,
+            target_name="target",
+            max_lag=4,
+            n_surrogates=99,
+            random_state=42,
+            known_future_drivers={"known_future_calendar": True},
+        )
+
+        default_has_lag_zero_selection = any(
+            row.selected_for_tensor and row.lag == 0 for row in default_bundle.selected_lags
+        )
+        opt_in_known_future_has_lag_zero_selection = any(
+            row.driver == "known_future_calendar" and row.selected_for_tensor and row.lag == 0
+            for row in opt_in_bundle.selected_lags
+        )
+        opt_in_non_known_future_lag_zero_selected = any(
+            row.driver != "known_future_calendar" and row.selected_for_tensor and row.lag == 0
+            for row in opt_in_bundle.selected_lags
+        )
+        lagged_exog_opt_in_ok = (
+            not default_has_lag_zero_selection
+            and opt_in_known_future_has_lag_zero_selection
+            and not opt_in_non_known_future_lag_zero_selected
+        )
+    except Exception as exc:
+        print(f"    Error: {exc}")
+        lagged_exog_opt_in_ok = False
+    checks.append(
+        _check(
+            "run_lagged_exogenous_triage requires explicit known-future opt-in for lag=0 selection",
+            lagged_exog_opt_in_ok,
         )
     )
 

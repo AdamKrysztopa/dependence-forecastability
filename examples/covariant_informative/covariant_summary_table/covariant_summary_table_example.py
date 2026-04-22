@@ -10,6 +10,7 @@ Expected patterns (ground truth from synthetic.py structural equations):
 - driver_nonlin_sq / driver_nonlin_abs: may surface as pairwise_informative because
   kNN MI detects nonlinear dependence even though Pearson/Spearman would miss it
 """
+
 from __future__ import annotations
 
 import sys
@@ -60,11 +61,7 @@ def _print_significance_distribution(df: pd.DataFrame, report: StringIO) -> None
     print(line)
     report.write(f"{line}\n{header}\n{line}\n")
 
-    sig_counts = (
-        df.groupby(["driver", "significance"], dropna=False)
-        .size()
-        .unstack(fill_value=0)
-    )
+    sig_counts = df.groupby(["driver", "significance"], dropna=False).size().unstack(fill_value=0)
     for column in ("above_band", "below_band", None):
         if column not in sig_counts.columns:
             sig_counts[column] = 0
@@ -209,11 +206,13 @@ def _run_ground_truth_checks(df: pd.DataFrame, report: StringIO) -> bool:
     # strongly informative relative to noise, even if not rank 1.
     top10_drivers = set(df.sort_values("rank").head(10)["driver"].tolist())
     check1_pass = "driver_direct" in top10_drivers
-    results.append((
-        "driver_direct in top-10 rows by rank (cross_ami ranks dependence, not causation)",
-        check1_pass,
-        f"top-10 drivers: {sorted(top10_drivers)}",
-    ))
+    results.append(
+        (
+            "driver_direct in top-10 rows by rank (cross_ami ranks dependence, not causation)",
+            check1_pass,
+            f"top-10 drivers: {sorted(top10_drivers)}",
+        )
+    )
 
     # Check 2: driver_noise has no above_band rows (or far fewer than driver_direct)
     noise_above = (
@@ -227,21 +226,25 @@ def _run_ground_truth_checks(df: pd.DataFrame, report: StringIO) -> bool:
         else 0
     )
     check2_pass = noise_above == 0 or noise_above < direct_above
-    results.append((
-        "driver_noise has no above_band rows (or far fewer than driver_direct)",
-        check2_pass,
-        f"driver_noise above_band={noise_above}, driver_direct above_band={direct_above}",
-    ))
+    results.append(
+        (
+            "driver_noise has no above_band rows (or far fewer than driver_direct)",
+            check2_pass,
+            f"driver_noise above_band={noise_above}, driver_direct above_band={direct_above}",
+        )
+    )
 
     # Check 3: rank-1 row has above_band significance
     rank1_rows = df[df["rank"] == 1]
     check3_pass = not rank1_rows.empty and rank1_rows.iloc[0]["significance"] == "above_band"
     detail = rank1_rows.iloc[0]["significance"] if not rank1_rows.empty else "no rank-1 row"
-    results.append((
-        "rank-1 row has above_band significance",
-        check3_pass,
-        f"rank-1 significance: {detail}",
-    ))
+    results.append(
+        (
+            "rank-1 row has above_band significance",
+            check3_pass,
+            f"rank-1 significance: {detail}",
+        )
+    )
 
     # Check 4: driver_direct has at least one row with a non-noise tag
     non_noise_tags = {
@@ -252,11 +255,13 @@ def _run_ground_truth_checks(df: pd.DataFrame, report: StringIO) -> bool:
     }
     direct_tags = set(df[df["driver"] == "driver_direct"]["interpretation_tag"].dropna().tolist())
     check4_pass = bool(direct_tags & non_noise_tags)
-    results.append((
-        "driver_direct has at least one informative interpretation tag",
-        check4_pass,
-        f"driver_direct tags: {sorted(direct_tags)}",
-    ))
+    results.append(
+        (
+            "driver_direct has at least one informative interpretation tag",
+            check4_pass,
+            f"driver_direct tags: {sorted(direct_tags)}",
+        )
+    )
 
     for description, passed, detail in results:
         status = "PASS" if passed else "FAIL"
@@ -356,7 +361,7 @@ def main() -> None:
         "SUMMARY STATISTICS",
         "-" * 70,
         f"  Total rows          : {len(df)}",
-        f"  Unique (driver,lag) : {df[['driver','lag']].drop_duplicates().shape[0]}",
+        f"  Unique (driver,lag) : {df[['driver', 'lag']].drop_duplicates().shape[0]}",
         f"  Unique drivers      : {df['driver'].nunique()}",
         f"  Lag range           : {df['lag'].min()} – {df['lag'].max()}",
     ]

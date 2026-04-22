@@ -24,6 +24,58 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - README updated to include "Use this before model search" section framing downstream frameworks as post-triage consumers.
 - `pyproject.toml` keywords expanded with forecastability-triage, diagnostics, covariate, and hand-off discovery terms.
 
+## [0.3.2] - 2026-05-01
+
+### Added
+
+- `run_lagged_exogenous_triage()` — first-class lagged-exogenous triage facade classifying each
+  exogenous driver by lag role and emitting a typed sparse lag map for forecasting tensor
+  construction.
+- `generate_lagged_exog_panel()` — synthetic panel generator for the lagged-exogenous triage
+  surface (instantaneous, predictive-lagged, and uncorrelated driver archetypes).
+- `LaggedExogBundle` — composite typed result: profile rows, selection rows, driver registry,
+  and known-future driver list.
+- `LaggedExogProfileRow` — one lag-domain diagnostic row covering standard cross-correlation,
+  cross_ami (extended to `lag=0`), cross_pami, lag_role, tensor_role, and significance source.
+- `LaggedExogSelectionRow` — one sparse selection row carrying `selected_for_tensor`,
+  `selector_name`, and `tensor_role`.
+- `LagRoleLabel` typed alias: `Literal["instant", "predictive"]` — chronological role at a lag.
+- `TensorRoleLabel` typed alias: `Literal["diagnostic", "predictive", "known_future"]` —
+  tensor-eligibility classification.
+- `LagSelectorLabel` typed alias: `Literal["xcorr_top_k", "xami_sparse"]` — which selector
+  produced the row.
+- `LagSignificanceSource` typed alias: `Literal["phase_surrogate_xami",
+  "phase_surrogate_xcorr", "not_computed"]`.
+- `known_future_drivers` parameter on `run_lagged_exogenous_triage()` for explicit `lag=0`
+  opt-in for features whose contemporaneous value is legitimately available at prediction time.
+- Zero-lag ban enforced by default: `selected_for_tensor=True` is structurally impossible at
+  `lag=0` without the `known_future_drivers` opt-in.
+- Showcase script `scripts/run_showcase_lagged_exogenous.py` with `--smoke` and `--quiet` flags
+  and strict agent-layer verification.
+- CI smoke step added to `.github/workflows/smoke.yml` for the lagged-exogenous showcase.
+- Release checklist extended with lagged-exogenous triage invariant checks.
+- Theory document `docs/theory/lagged_exogenous_triage.md` covering role taxonomy, method
+  semantics, sparse selector algorithm, known-future opt-in, and DTW omission rationale.
+- Walkthrough notebook `notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb`.
+
+### Changed
+
+- `cross_ami` lag profile extended to include `lag=0` so the contemporaneous MI diagnostic is
+  visible alongside the predictive profile.
+- README updated to present lagged-exogenous triage as a first-class workflow alongside
+  univariate, covariant, and fingerprint surfaces.
+- Public API and quickstart docs refreshed with lagged-exogenous triage entry points,
+  known-future opt-in semantics, and cross-links.
+
+### Migration notes
+
+- No breaking import changes. All v0.3.0 and v0.3.1 surfaces remain unchanged.
+- Integrators can adopt lagged-exogenous triage incrementally through
+  `run_lagged_exogenous_triage()` without changing existing `run_triage()` or
+  `run_covariant_analysis()` usage.
+- `cross_ami` at `lag=0` is now included in the profile but was not emitted in v0.3.0/v0.3.1
+  covariant bundles; existing integrations that skip `lag=0` rows are unaffected.
+
 ## [0.3.1] - 2026-04-19
 
 ### Added

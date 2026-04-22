@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Literal
 
 import numpy as np
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class MetricCurve(BaseModel):
@@ -263,6 +263,76 @@ class RobustnessStudyResult(BaseModel):
 
 
 LaggedExogConditioningTag = Literal["none", "target_only", "full_mci"]
+LagRoleLabel = Literal["instant", "predictive"]
+TensorRoleLabel = Literal["diagnostic", "predictive", "known_future"]
+LagSelectorLabel = Literal["xcorr_top_k", "xami_sparse"]
+LagSignificanceSource = Literal[
+    "phase_surrogate_xami",
+    "phase_surrogate_xcorr",
+    "not_computed",
+]
+
+
+class LaggedExogProfileRow(BaseModel):
+    """One lag-domain diagnostic row for a target-driver pair."""
+
+    model_config = ConfigDict(frozen=True)
+
+    target: str
+    driver: str
+    lag: int
+    lag_role: LagRoleLabel
+    tensor_role: TensorRoleLabel
+    correlation: float | None = None
+    cross_ami: float | None = None
+    cross_pami: float | None = None
+    significance: str | None = None
+    significance_source: LagSignificanceSource = "not_computed"
+    metadata: dict[str, str | int | float] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def _check_significance_consistency(self) -> LaggedExogProfileRow:
+        """Enforce consistency between significance and significance_source."""
+        if self.significance_source == "not_computed" and self.significance is not None:
+            raise ValueError("significance must be None when significance_source is 'not_computed'")
+        if self.significance_source != "not_computed" and (
+            self.significance is None or self.significance == ""
+        ):
+            raise ValueError(
+                "significance must be non-None and non-empty "
+                "when significance_source is not 'not_computed'"
+            )
+        return self
+
+
+class LaggedExogSelectionRow(BaseModel):
+    """Sparse predictive lag selection row."""
+
+    model_config = ConfigDict(frozen=True)
+
+    target: str
+    driver: str
+    lag: int
+    selected_for_tensor: bool
+    selection_order: int | None = None
+    selector_name: LagSelectorLabel
+    score: float | None = None
+    tensor_role: TensorRoleLabel = "predictive"
+    metadata: dict[str, str | int | float] = Field(default_factory=dict)
+
+
+class LaggedExogBundle(BaseModel):
+    """Composite output from fixed-lag exogenous triage."""
+
+    model_config = ConfigDict(frozen=True)
+
+    target_name: str
+    driver_names: list[str]
+    max_lag: int
+    profile_rows: list[LaggedExogProfileRow]
+    selected_lags: list[LaggedExogSelectionRow]
+    known_future_drivers: list[str] = Field(default_factory=list)
+    metadata: dict[str, str | int | float] = Field(default_factory=dict)
 
 
 class CovariantMethodConditioning(BaseModel):
@@ -382,6 +452,7 @@ class CovariantAnalysisBundle(BaseModel):
     gcmi_results: list[GcmiResult] | None = None
     pcmci_graph: CausalGraphResult | None = None
     pcmci_ami_result: PcmciAmiResult | None = None
+    lagged_exog: LaggedExogBundle | None = None
     target_name: str
     driver_names: list[str]
     horizons: list[int]

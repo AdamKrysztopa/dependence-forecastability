@@ -20,12 +20,16 @@ from forecastability.services.pcmci_ami_service import build_pcmci_ami_hybrid
 from forecastability.services.pcmci_plus_service import build_pcmci_plus
 from forecastability.services.significance_service import compute_significance_bands_generic
 from forecastability.services.transfer_entropy_service import compute_transfer_entropy_curve
+from forecastability.use_cases.run_lagged_exogenous_triage import (
+    run_lagged_exogenous_triage,
+)
 from forecastability.utils.types import (
     CausalGraphResult,
     CovariantAnalysisBundle,
     CovariantMethodConditioning,
     CovariantSummaryRow,
     GcmiResult,
+    LaggedExogBundle,
     LaggedExogConditioningTag,
     PcmciAmiResult,
     TransferEntropyResult,
@@ -64,7 +68,7 @@ _CONDITIONING_DISCLAIMER = (
     "PCMCI-AMI are `full_mci`. See section 5A in "
     "docs/plan/v0_3_0_covariant_informative_ultimate_plan.md."
 )
-_FORWARD_LINK = "docs/plan/v0_3_1_lagged_exogenous_triage_plan.md"
+_FORWARD_LINK = "docs/plan/v0_3_2_lagged_exogenous_triage_ultimate_plan.md"
 
 
 def _resolve_requested_methods(methods: list[str] | None) -> tuple[str, ...]:
@@ -441,6 +445,7 @@ def run_covariant_analysis(
     alpha: float = 0.01,
     n_surrogates: int = 99,
     random_state: int = 42,
+    include_lagged_exog_triage: bool = False,
 ) -> CovariantAnalysisBundle:
     """Run the covariant analysis bundle and assemble a unified summary table.
 
@@ -454,6 +459,8 @@ def run_covariant_analysis(
         alpha: Significance threshold for PCMCI-family CI tests.
         n_surrogates: Reserved bundle-level surrogate contract; must be >= 99.
         random_state: Deterministic random seed.
+        include_lagged_exog_triage: When ``True``, attach a Phase 2
+            lagged-exogenous triage bundle.
 
     Returns:
         CovariantAnalysisBundle with pairwise, directional, and causal results.
@@ -483,6 +490,7 @@ def run_covariant_analysis(
     gcmi_results: list[GcmiResult] = []
     pcmci_graph: CausalGraphResult | None = None
     pcmci_ami_result: PcmciAmiResult | None = None
+    lagged_exog: LaggedExogBundle | None = None
 
     if {"cross_ami", "cross_pami"} & requested_method_set:
         cross_ami_curves, cross_pami_curves = _compute_cross_curves(
@@ -651,12 +659,24 @@ def run_covariant_analysis(
 
     rows = _assign_ranks(rows)
 
+    if include_lagged_exog_triage:
+        lagged_exog = run_lagged_exogenous_triage(
+            validated_target,
+            validated_drivers,
+            target_name=target_name,
+            max_lag=max_lag,
+            n_surrogates=n_surrogates,
+            alpha=alpha,
+            random_state=random_state,
+        )
+
     return CovariantAnalysisBundle(
         summary_table=rows,
         te_results=te_results or None,
         gcmi_results=gcmi_results or None,
         pcmci_graph=pcmci_graph,
         pcmci_ami_result=pcmci_ami_result,
+        lagged_exog=lagged_exog,
         target_name=target_name,
         driver_names=list(validated_drivers.keys()),
         horizons=horizons,
