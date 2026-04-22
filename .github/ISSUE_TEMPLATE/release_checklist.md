@@ -18,6 +18,7 @@ assignees: ""
 - [ ] `uv run pytest -q -ra` passes on Python 3.12
 - [ ] `uv run ruff check .` — zero errors
 - [ ] `uv run ty check` — zero errors
+- [ ] `uv run python scripts/rebuild_lagged_exog_regression_fixtures.py --verify` passes
 
 ### Showcase and notebook validation
 - [ ] Univariate showcase runs clean: `MPLBACKEND=Agg uv run scripts/run_showcase.py --no-rolling`

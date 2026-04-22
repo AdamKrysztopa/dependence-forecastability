@@ -6,7 +6,7 @@
 **Target release:** `0.3.2`
 **Current released version:** `0.3.1`
 **Branch:** `feat/v0.3.2-lagged-exogenous-triage`
-**Status:** In progress — Phases 0, 1, and 2 completed
+**Status:** In progress — Phases 0, 1, 2, and 3 completed
 **Last reviewed:** 2026-04-22
 
 **Companion refs:**
@@ -278,8 +278,9 @@ release.
 | V3_2-F04a | Selector significance reuse | 1 | Reuses `significance_service` | extend phase-surrogate bands to `0..max_lag`, no parallel surrogate engine | Done |
 | V3_2-F05 | Lagged-exogenous orchestration use case | 2 | Follows `use_cases/` pattern | `use_cases/run_lagged_exogenous_triage.py` returning `LaggedExogBundle` | Done |
 | V3_2-F05a | Known-future opt-in | 2 | Argument extension on use case | `known_future_drivers: dict[str, bool]` honored in selector, with caution flag | Done |
-| V3_2-F06 | Integration with covariant bundle | 2 | Additive on `run_covariant_analysis` | optional `lagged_exog: LaggedExogBundle | None` field on `CovariantAnalysisBundle` | Done |
-| V3_2-F07 | Tests and regression fixtures | 3 | Follows current deterministic regression pattern | lag-role invariants, zero-lag ban, selection drift, known-future opt-in path | Proposed |
+| V3_2-F06 | Integration with covariant bundle | 2 | Additive on `run_covariant_analysis` | optional `lagged_exog: LaggedExogBundle \| None` field on `CovariantAnalysisBundle` | Done |
+| V3_2-F07 | Lag semantics tests | 3 | Follows current deterministic regression pattern | lag-role invariants, zero-lag ban by default, known-future opt-in path, cross-pAMI contract guard | Done |
+| V3_2-F07.1 | Regression fixtures and rebuilder | 3 | Follows current deterministic regression pattern | frozen lag-map/default-call-path fixtures + rebuild/verify script | Done |
 | V3_2-F08 | Plotting refresh | 4 | Extends covariant plot helpers | correlogram-first lag-profile figure with `lag = 0` visually separated | Proposed |
 | V3_2-F08.1 | Walkthrough notebook | 4 | Follows existing walkthrough pattern | `notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb` | Proposed |
 | V3_2-F08.2 | Public examples | 4 | Extends `examples/covariant_informative/` | `examples/covariant_informative/lagged_exogenous/{python,cli,known_future}.{py,md}` | Proposed |
@@ -764,9 +765,16 @@ def run_lagged_exogenous_triage(
 
 ### Phase 3 — Tests and regression
 
+Implemented in this branch (validated): V3_2-F07 and V3_2-F07.1.
+Validation executed:
+
+- `uv run pytest tests/test_run_lagged_exogenous_triage.py tests/test_lagged_exog_role_invariants.py tests/test_lagged_exog_regression.py -q`
+- `uv run python scripts/rebuild_lagged_exog_regression_fixtures.py --verify`
+- `uv run pytest -q -ra`
+
 #### V3_2-F07 — Lag semantics tests
 
-Required test classes (in `tests/test_run_lagged_exogenous_triage.py` and
+Implemented test classes (in `tests/test_run_lagged_exogenous_triage.py` and
 `tests/test_lagged_exog_role_invariants.py`):
 
 - `test_zero_lag_row_is_diagnostic_only`
@@ -780,6 +788,11 @@ Required test classes (in `tests/test_run_lagged_exogenous_triage.py` and
 - `test_shipped_cross_pami_semantics_not_overwritten`
 - `test_no_default_callsite_behavior_change_in_existing_curve_services`
 
+Implemented files:
+
+- `tests/test_run_lagged_exogenous_triage.py`
+- `tests/test_lagged_exog_role_invariants.py`
+
 **Acceptance criteria:**
 
 - deterministic by seed
@@ -792,8 +805,18 @@ Required test classes (in `tests/test_run_lagged_exogenous_triage.py` and
 **File targets:**
 
 - `docs/fixtures/lagged_exog_regression/expected/` (frozen JSON)
-- `scripts/rebuild_lagged_exog_regression_fixtures.py` (new)
+- `scripts/rebuild_lagged_exog_regression_fixtures.py`
 - `src/forecastability/diagnostics/lagged_exog_regression.py` (rebuilder helpers)
+
+Implemented files:
+
+- `docs/fixtures/lagged_exog_regression/expected/selected_lag_map_panel.json`
+- `docs/fixtures/lagged_exog_regression/expected/default_curve_call_path.json`
+- `docs/fixtures/lagged_exog_regression/expected/cross_pami_target_only_contract.json`
+- `scripts/rebuild_lagged_exog_regression_fixtures.py`
+- `src/forecastability/diagnostics/lagged_exog_regression.py`
+- `tests/test_lagged_exog_regression.py`
+- `.github/ISSUE_TEMPLATE/release_checklist.md`
 
 **Acceptance criteria:**
 
@@ -977,9 +1000,9 @@ Add a new section in each:
 - [ ] No active docs or notebook imply DTW is a recommended triage path.
 - [ ] No active docs or notebook redescribe shipped `cross_pami` as a
       fully conditioned selector.
-- [ ] At least one regression fixture protects the §6 panel selected-lag map
+- [x] At least one regression fixture protects the §6 panel selected-lag map
       from silent drift.
-- [ ] At least one regression fixture protects existing default-call-path
+- [x] At least one regression fixture protects existing default-call-path
       curves from byte-level drift introduced by the new `lag_range` argument.
 
 ---
