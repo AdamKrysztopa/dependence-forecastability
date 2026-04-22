@@ -30,6 +30,9 @@ def run_canonical_example(
     """Compatibility wrapper for canonical pipeline execution."""
     from forecastability.pipeline import pipeline as _pipeline_module
 
+    # Preserve monkeypatch behavior for tests targeting forecastability.pipeline.* symbols.
+    _pipeline_module.compute_pami_with_backend = compute_pami_with_backend
+
     return _pipeline_module.run_canonical_example(
         series_name,
         ts,
@@ -91,6 +94,9 @@ def run_exogenous_rolling_origin_evaluation(
 ) -> ExogenousBenchmarkResult:
     """Compatibility wrapper for exogenous rolling-origin evaluation."""
     from forecastability.pipeline import pipeline as _pipeline_module
+
+    # Preserve monkeypatch behavior for tests targeting forecastability.pipeline.* symbols.
+    _pipeline_module.ForecastabilityAnalyzerExog = ForecastabilityAnalyzerExog
 
     return _pipeline_module.run_exogenous_rolling_origin_evaluation(
         target,
