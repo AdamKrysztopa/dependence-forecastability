@@ -33,12 +33,12 @@ from forecastability import (
 | Category | Exports |
 | --- | --- |
 | Triage entry points | `run_triage`, `run_batch_triage`, `TriageRequest`, `TriageResult` |
-| Covariant entry points | `run_covariant_analysis`, `CovariantAnalysisBundle`, `CovariantSummaryRow`, `TransferEntropyResult`, `GcmiResult`, `CausalGraphResult`, `PcmciAmiResult`, `Phase0MiScore` |
+| Covariant entry points | `run_covariant_analysis`, `CovariantAnalysisBundle`, `CovariantSummaryRow`, `TransferEntropyResult`, `GcmiResult`, `CausalGraphResult`, `PcmciAmiResult`, `Phase0MiScore`, `LaggedExogBundle`, `LaggedExogProfileRow`, `LaggedExogSelectionRow`, `LagRoleLabel`, `TensorRoleLabel`, `LagSelectorLabel`, `LagSignificanceSource` |
 | Fingerprint entry points | `run_forecastability_fingerprint`, `run_batch_forecastability_workbench`, `run_ami_geometry_csv_batch`, `FingerprintBundle`, `ForecastabilityFingerprint`, `AmiInformationGeometry`, `AmiGeometryCurvePoint`, `BatchForecastabilityWorkbenchResult`, `ForecastingNextStepPlan`, `CsvGeometryBatchItem`, `CsvGeometryBatchResult` |
 | Analyzer facade | `ForecastabilityAnalyzer`, `ForecastabilityAnalyzerExog`, `AnalyzeResult` |
 | Diagnostic and result models | `ForecastabilityProfile`, `PredictiveInfoLearningCurve`, `SpectralPredictabilityResult`, `InterpretationResult`, `Diagnostics`, `MetricCurve`, `CanonicalExampleResult`, `CanonicalSummary`, `SeriesEvaluationResult`, `ForecastResult`, `BackendComparisonResult`, `ExogenousBenchmarkResult`, `RobustnessStudyResult`, `SampleSizeStressResult` |
 | Config models | `BenchmarkDataConfig`, `CMIConfig`, `ExogenousBenchmarkConfig`, `MetricConfig`, `ModelConfig`, `OutputConfig`, `RobustnessStudyConfig`, `RollingOriginConfig`, `SensitivityConfig`, `UncertaintyConfig` |
-| Dataset helpers | `generate_ar1`, `generate_white_noise`, `ar1_theoretical_ami` |
+| Dataset helpers | `generate_ar1`, `generate_white_noise`, `ar1_theoretical_ami`, `generate_lagged_exog_panel`, `generate_known_future_calendar_pair`, `generate_contemporaneous_only_pair` |
 | Registry and validation helpers | `DependenceScorer`, `ScorerInfo`, `ScorerRegistry`, `default_registry`, `validate_time_series` |
 
 ## Fingerprint Surface

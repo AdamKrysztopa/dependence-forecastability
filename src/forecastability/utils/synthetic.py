@@ -146,6 +146,148 @@ def generate_directional_pair(
     return pd.DataFrame({"x": x, "y": y})
 
 
+def generate_lagged_exog_panel(
+    n: int = 1500,
+    *,
+    seed: int = 42,
+) -> pd.DataFrame:
+    """Generate a 7-driver lagged-exogenous benchmark panel.
+
+    Drivers follow the Phase 0 lagged-exogenous semantics:
+        - direct_lag2: true predictive lag at k=2
+        - mediated_lag1: AR(1) driver also driven by direct_lag2 at lag 1; carries both
+          a direct structural contribution and a mediated contribution from direct_lag2
+          (direct + mediated signal, predictive at k=1)
+        - redundant: correlated with direct_lag2, minimal independent signal
+        - noise: independent noise
+        - instant_only: contemporaneous coupling only
+        - nonlinear_lag1: quadratic coupling at k=1 with low Pearson correlation
+        - known_future_calendar: deterministic calendar-like feature
+
+    Args:
+        n: Number of time steps. Must be >= 200.
+        seed: Random seed for reproducibility. Must be int.
+
+    Returns:
+        DataFrame with columns: target, direct_lag2, mediated_lag1, redundant,
+        noise, instant_only, nonlinear_lag1, known_future_calendar.
+    """
+    if n < 200:
+        raise ValueError(f"n must be >= 200, got {n}")
+
+    rng = np.random.default_rng(seed)
+    direct_lag2 = np.zeros(n)
+    mediated_lag1 = np.zeros(n)
+    noise = rng.normal(0.0, 1.0, size=n)
+    instant_only = rng.normal(0.0, 1.0, size=n)
+    nonlinear_lag1 = np.zeros(n)
+    target = np.zeros(n)
+
+    # Deterministic weekly-like calendar with a monthly pulse.
+    t_idx = np.arange(n)
+    known_future_calendar = (
+        np.sin(2.0 * np.pi * t_idx / 7.0)
+        + 0.5 * np.cos(2.0 * np.pi * t_idx / 30.0)
+        + (t_idx % 30 == 0).astype(float)
+    )
+
+    nonlinear_var = 1.0 / (1.0 - 0.6**2)
+
+    for t in range(2, n):
+        direct_lag2[t] = 0.78 * direct_lag2[t - 1] + rng.normal(0.0, 1.0)
+        mediated_lag1[t] = (
+            0.45 * mediated_lag1[t - 1] + 0.72 * direct_lag2[t - 1] + rng.normal(0.0, 0.8)
+        )
+        nonlinear_lag1[t] = 0.6 * nonlinear_lag1[t - 1] + rng.normal(0.0, 1.0)
+
+        target[t] = (
+            0.25 * target[t - 1]
+            + 0.95 * direct_lag2[t - 2]
+            + 0.55 * mediated_lag1[t - 1]
+            + 0.75 * instant_only[t]
+            + 0.45 * (nonlinear_lag1[t - 1] ** 2 - nonlinear_var)
+            + 0.35 * known_future_calendar[t]
+            + rng.normal(0.0, 1.0)
+        )
+
+    redundant = 0.92 * direct_lag2 + rng.normal(0.0, 0.35, size=n)
+
+    return pd.DataFrame(
+        {
+            "target": target,
+            "direct_lag2": direct_lag2,
+            "mediated_lag1": mediated_lag1,
+            "redundant": redundant,
+            "noise": noise,
+            "instant_only": instant_only,
+            "nonlinear_lag1": nonlinear_lag1,
+            "known_future_calendar": known_future_calendar,
+        }
+    )
+
+
+def generate_known_future_calendar_pair(
+    n: int = 1200,
+    *,
+    seed: int = 42,
+) -> pd.DataFrame:
+    """Generate a target/calendar pair with contemporaneous known-future structure.
+
+    Args:
+        n: Number of time steps. Must be >= 200.
+        seed: Random seed for reproducibility. Must be int.
+
+    Returns:
+        DataFrame with columns: known_future_calendar, target.
+    """
+    if n < 200:
+        raise ValueError(f"n must be >= 200, got {n}")
+
+    rng = np.random.default_rng(seed)
+    t_idx = np.arange(n)
+    known_future_calendar = (
+        np.sin(2.0 * np.pi * t_idx / 7.0)
+        + 0.5 * np.cos(2.0 * np.pi * t_idx / 30.0)
+        + (t_idx % 30 == 0).astype(float)
+    )
+    target = np.zeros(n)
+    for t in range(1, n):
+        target[t] = 0.2 * target[t - 1] + 0.9 * known_future_calendar[t] + rng.normal(0.0, 1.0)
+
+    return pd.DataFrame(
+        {
+            "known_future_calendar": known_future_calendar,
+            "target": target,
+        }
+    )
+
+
+def generate_contemporaneous_only_pair(
+    n: int = 1200,
+    *,
+    seed: int = 42,
+) -> pd.DataFrame:
+    """Generate a pair with strong lag-0 coupling and weak lagged dependence.
+
+    Args:
+        n: Number of time steps. Must be >= 200.
+        seed: Random seed for reproducibility. Must be int.
+
+    Returns:
+        DataFrame with columns: instant_only, target.
+    """
+    if n < 200:
+        raise ValueError(f"n must be >= 200, got {n}")
+
+    rng = np.random.default_rng(seed)
+    instant_only = rng.normal(0.0, 1.0, size=n)
+    target = np.zeros(n)
+    for t in range(1, n):
+        target[t] = 0.2 * target[t - 1] + 0.9 * instant_only[t] + rng.normal(0.0, 1.0)
+
+    return pd.DataFrame({"instant_only": instant_only, "target": target})
+
+
 # ---------------------------------------------------------------------------
 # v0.3.1 Univariate fingerprint archetype generators (V3_1-F00.1)
 # ---------------------------------------------------------------------------
