@@ -33,7 +33,7 @@ The machine-guidance layer now covers the core repo-wide routing surfaces:
 - `.github/copilot-instructions.md` now provides repo-wide Copilot guidance, and `.github/instructions/` includes the additional Python, notebook, and planning-doc instruction files.
 - package and repository discovery surfaces have been reviewed so forecastability-triage positioning is visible beyond research-only wording.
 
-That means the repo is already readable and materially more **assertive** for Copilot/Codex-style tooling, with the remaining work concentrated in examples, evaluation, and release hygiene.
+That means the repo is already readable and materially more **assertive** for Copilot/Codex-style tooling, with the remaining work concentrated in evaluation and release hygiene.
 
 ---
 
@@ -137,7 +137,7 @@ The same repo identity must appear everywhere:
 | VIS-F05 | README "Use this before model search" section | 3 | Extends existing top-of-README narrative | README guidance now positions the package as triage before downstream model search and frames forecasting frameworks as post-triage hand-off targets | ✅ **Implemented** |
 | VIS-F06 | Expand `pyproject.toml` keywords | 4 | Extends current keyword list | Package discovery metadata has been aligned with forecastability-triage, diagnostics, covariate, and downstream hand-off language | ✅ **Implemented** |
 | VIS-F06.1 | GitHub topics review | 4 | Repository settings task; no file change | Repository topics have been reviewed and aligned with the package surface rather than vanity discovery tags | ✅ **Implemented** |
-| VIS-F07 | Agent-facing examples and prompt anchors | 5 | Extends `examples/` taxonomy and `scripts/` showcase pattern | `examples/forecasting_triage_first.py`, `examples/forecasting_triage_then_handoff.md`, `scripts/run_triage_handoff_demo.py` demonstrating triage-then-hand-off | ⏳ **Not started** |
+| VIS-F07 | Agent-facing examples and prompt anchors | 5 | Extends `examples/` taxonomy and `scripts/` showcase pattern | The repo now includes tiny triage-first example and demo anchors that branch on blocked results, surface `primary_lags`, and frame downstream forecasting tools as post-triage hand-off targets | ✅ **Implemented** |
 | VIS-F08 | LLM-visibility evaluation harness | 6 | New maintenance doc; complements existing test fixtures | `docs/maintenance/llm_visibility_eval.md` with benchmark prompts and "good behavior" expectations to verify guidance impact | ⏳ **Not started** |
 | VIS-F09 | Release hygiene and maintainer docs | 7 | Extends `CHANGELOG.md`, `docs/surface_guide.md`, `docs/maintenance/developer_guide.md` | Changelog entry for the machine-guidance layer plus maintainer notes on keeping instruction surfaces fresh | ⏳ **Not started** |
 
