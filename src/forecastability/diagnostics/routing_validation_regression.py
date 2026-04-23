@@ -51,10 +51,10 @@ from forecastability.utils.types import (
 _logger = logging.getLogger(__name__)
 
 # Tolerance for cross-platform float comparison (per repo memory note).
-# The weak-seasonal pinned calibration is intentionally close to the audit
-# margin boundary, so Linux/macOS numeric kernels can drift by a few ppm while
-# leaving the routed outcome and confidence unchanged.
-_ATOL = 1e-5
+# The weak-seasonal and mediated-low-directness fixture paths can drift by a
+# few 1e-5 across Linux/macOS numeric stacks while leaving the routed outcome
+# and confidence unchanged.
+_ATOL = 5e-5
 _RTOL = 1e-4
 
 # Canonical rebuild parameters (seed, n_per_archetype).

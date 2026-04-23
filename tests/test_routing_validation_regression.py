@@ -50,6 +50,31 @@ def _load_expected(filename: str) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _prepare_rebuild_root(repo_root: Path) -> Path:
+    dest_dir = repo_root / _EXPECTED_SUBDIR
+    dest_dir.mkdir(parents=True, exist_ok=True)
+
+    cal_src = _EXPECTED_DIR / _CALIBRATION_FILE
+    if cal_src.exists():
+        (dest_dir / _CALIBRATION_FILE).write_bytes(cal_src.read_bytes())
+
+    return dest_dir
+
+
+@pytest.fixture(scope="module")
+def rebuilt_fixture_root(tmp_path_factory: pytest.TempPathFactory) -> tuple[Path, Path]:
+    repo_root = tmp_path_factory.mktemp("routing_validation_regression")
+    dest_dir = _prepare_rebuild_root(repo_root)
+    rc = rebuild_fixtures(repo_root)
+    assert rc == 0
+    return repo_root, dest_dir
+
+
+@pytest.fixture(scope="module")
+def calibration_result() -> dict[str, Any]:
+    return calibrate_near_threshold_amplitude()
+
+
 # ---------------------------------------------------------------------------
 # Smoke tests: frozen fixtures are present and parseable
 # ---------------------------------------------------------------------------
@@ -223,9 +248,10 @@ class TestPinnedCalibrationPath:
 
         assert actual_case.outcome == expected_case["outcome"]
         assert actual_case.confidence_label == expected_case["confidence_label"]
-        assert sorted(actual_case.observed_primary_families) == expected_case[
-            "observed_primary_families"
-        ]
+        assert (
+            sorted(actual_case.observed_primary_families)
+            == expected_case["observed_primary_families"]
+        )
         assert math.isclose(
             actual_case.threshold_margin,
             expected_case["threshold_margin"],
@@ -240,41 +266,23 @@ class TestPinnedCalibrationPath:
 
 
 class TestRebuildRoundTrip:
-    def test_rebuild_exits_zero(self, tmp_path: Path) -> None:
+    def test_rebuild_exits_zero(self, rebuilt_fixture_root: tuple[Path, Path]) -> None:
         """rebuild_fixtures(tmp_path) should succeed."""
-        # Copy calibration.json if present so the amplitude is pinned.
-        cal_src = _EXPECTED_DIR / _CALIBRATION_FILE
-        if cal_src.exists():
-            dest = tmp_path / _EXPECTED_SUBDIR
-            dest.mkdir(parents=True, exist_ok=True)
-            (dest / _CALIBRATION_FILE).write_bytes(cal_src.read_bytes())
-        rc = rebuild_fixtures(tmp_path)
-        assert rc == 0
+        _, dest_dir = rebuilt_fixture_root
+        assert dest_dir.exists()
 
-    def test_rebuild_writes_three_files(self, tmp_path: Path) -> None:
-        cal_src = _EXPECTED_DIR / _CALIBRATION_FILE
-        if cal_src.exists():
-            dest = tmp_path / _EXPECTED_SUBDIR
-            dest.mkdir(parents=True, exist_ok=True)
-            (dest / _CALIBRATION_FILE).write_bytes(cal_src.read_bytes())
-        rebuild_fixtures(tmp_path)
-        expected_dir = tmp_path / _EXPECTED_SUBDIR
+    def test_rebuild_writes_three_files(self, rebuilt_fixture_root: tuple[Path, Path]) -> None:
+        _, expected_dir = rebuilt_fixture_root
         assert (expected_dir / _SYNTHETIC_PANEL_FILE).exists()
         assert (expected_dir / _AUDIT_SUMMARY_FILE).exists()
         assert (expected_dir / _CONFIDENCE_LABELS_FILE).exists()
 
-    def test_rebuild_output_matches_frozen(self, tmp_path: Path) -> None:
+    def test_rebuild_output_matches_frozen(self, rebuilt_fixture_root: tuple[Path, Path]) -> None:
         """Rebuilding in a temp dir should reproduce the frozen fixture exactly."""
         if not (_EXPECTED_DIR / _SYNTHETIC_PANEL_FILE).exists():
             pytest.skip("Frozen fixtures not present — run rebuild script first")
 
-        cal_src = _EXPECTED_DIR / _CALIBRATION_FILE
-        dest_dir = tmp_path / _EXPECTED_SUBDIR
-        dest_dir.mkdir(parents=True, exist_ok=True)
-        if cal_src.exists():
-            (dest_dir / _CALIBRATION_FILE).write_bytes(cal_src.read_bytes())
-
-        rebuild_fixtures(tmp_path)
+        _, dest_dir = rebuilt_fixture_root
 
         for fname in (_SYNTHETIC_PANEL_FILE, _AUDIT_SUMMARY_FILE, _CONFIDENCE_LABELS_FILE):
             actual = json.loads((dest_dir / fname).read_text(encoding="utf-8"))
@@ -306,15 +314,13 @@ def _assert_deep_equal(actual: Any, expected: Any, *, path: str) -> None:
 
 
 class TestVerifyFixtures:
-    def test_verify_returns_zero_after_rebuild(self, tmp_path: Path) -> None:
+    def test_verify_returns_zero_after_rebuild(
+        self,
+        rebuilt_fixture_root: tuple[Path, Path],
+    ) -> None:
         """verify_fixtures must return 0 when expected dir contains a fresh rebuild."""
-        cal_src = _EXPECTED_DIR / _CALIBRATION_FILE
-        dest_dir = tmp_path / _EXPECTED_SUBDIR
-        dest_dir.mkdir(parents=True, exist_ok=True)
-        if cal_src.exists():
-            (dest_dir / _CALIBRATION_FILE).write_bytes(cal_src.read_bytes())
-        rebuild_fixtures(tmp_path)
-        rc = verify_fixtures(tmp_path)
+        repo_root, _ = rebuilt_fixture_root
+        rc = verify_fixtures(repo_root)
         assert rc == 0
 
     def test_verify_returns_two_when_file_missing(self, tmp_path: Path) -> None:
@@ -324,11 +330,7 @@ class TestVerifyFixtures:
 
     def test_verify_returns_two_on_tampered_outcome(self, tmp_path: Path) -> None:
         """Mutating a discrete outcome field should cause verify to report failure."""
-        cal_src = _EXPECTED_DIR / _CALIBRATION_FILE
-        dest_dir = tmp_path / _EXPECTED_SUBDIR
-        dest_dir.mkdir(parents=True, exist_ok=True)
-        if cal_src.exists():
-            (dest_dir / _CALIBRATION_FILE).write_bytes(cal_src.read_bytes())
+        dest_dir = _prepare_rebuild_root(tmp_path)
         rebuild_fixtures(tmp_path)
 
         # Tamper with one outcome in the panel fixture.
@@ -351,20 +353,24 @@ class TestVerifyFixtures:
 
 @pytest.mark.slow
 class TestCalibrateNearThresholdAmplitude:
-    def test_calibration_finds_amplitude_in_target_band(self) -> None:
+    def test_calibration_finds_amplitude_in_target_band(
+        self,
+        calibration_result: dict[str, Any],
+    ) -> None:
         cfg = RoutingPolicyAuditConfig()
         target_low = 0.5 * cfg.tau_margin_medium
         target_high = 0.5 * cfg.tau_margin
-        result = calibrate_near_threshold_amplitude(sweep_seed=42, sweep_n=600, config=cfg)
-        amp = result["calibrated_amplitude"]
-        margin = result["threshold_margin_at_calibration"]
+        amp = calibration_result["calibrated_amplitude"]
+        margin = calibration_result["threshold_margin_at_calibration"]
         assert 0.5 < amp < 3.0, f"Calibrated amplitude {amp} is outside plausible range"
         assert target_low <= margin <= target_high, (
             f"d_theta={margin:.6f} not in [{target_low:.4f}, {target_high:.4f}]"
         )
 
-    def test_calibration_result_has_expected_keys(self) -> None:
-        result = calibrate_near_threshold_amplitude()
+    def test_calibration_result_has_expected_keys(
+        self,
+        calibration_result: dict[str, Any],
+    ) -> None:
         expected_keys = {
             "calibrated_amplitude",
             "threshold_margin_at_calibration",
@@ -375,4 +381,4 @@ class TestCalibrateNearThresholdAmplitude:
             "sweep_seed",
             "sweep_n",
         }
-        assert expected_keys <= result.keys()
+        assert expected_keys <= calibration_result.keys()

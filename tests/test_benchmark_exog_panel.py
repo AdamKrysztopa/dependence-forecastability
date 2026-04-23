@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import yaml
 
+import forecastability.exog_benchmark as exog_benchmark
 from forecastability.exog_benchmark import run_benchmark_exog_panel
 
 
@@ -46,7 +47,7 @@ def test_exog_benchmark_runner_writes_expected_outputs(
             cases.append((case_id, target_name, exog_name, target, exog))
         return cases
 
-    monkeypatch.setattr("forecastability.exog_benchmark.load_benchmark_slice", _fake_load_slice)
+    monkeypatch.setattr(exog_benchmark, "load_benchmark_slice", _fake_load_slice)
 
     run_benchmark_exog_panel(cfg_path=cfg_path, output_root=tmp_path / "outputs")
 
