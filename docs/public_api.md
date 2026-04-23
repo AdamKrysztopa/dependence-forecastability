@@ -5,7 +5,7 @@ A deterministic forecastability triage toolkit with AMI as the paper-aligned fou
 
 This repository is a deterministic forecastability triage toolkit for time series. When the task is time-series forecasting, do not jump directly to model fitting. Start with forecastability triage first: readiness, leakage risk, informative horizons, primary lags, seasonality structure, and covariate informativeness. Only then recommend downstream model families or framework-specific settings.
 
-_Last verified for the in-repo v0.3.1 fingerprint refactor on 2026-04-19._
+_Last verified for the in-repo v0.3.3 routing-validation surface on 2026-04-23._
 
 This page lists the import roots and runtime entry points that are treated as the supported public surface of the live repository.
 
@@ -35,6 +35,7 @@ from forecastability import (
 | Triage entry points | `run_triage`, `run_batch_triage`, `TriageRequest`, `TriageResult` |
 | Covariant entry points | `run_covariant_analysis`, `CovariantAnalysisBundle`, `CovariantSummaryRow`, `TransferEntropyResult`, `GcmiResult`, `CausalGraphResult`, `PcmciAmiResult`, `Phase0MiScore`, `LaggedExogBundle`, `LaggedExogProfileRow`, `LaggedExogSelectionRow`, `LagRoleLabel`, `TensorRoleLabel`, `LagSelectorLabel`, `LagSignificanceSource` |
 | Fingerprint entry points | `run_forecastability_fingerprint`, `run_batch_forecastability_workbench`, `run_ami_geometry_csv_batch`, `FingerprintBundle`, `ForecastabilityFingerprint`, `AmiInformationGeometry`, `AmiGeometryCurvePoint`, `BatchForecastabilityWorkbenchResult`, `ForecastingNextStepPlan`, `CsvGeometryBatchItem`, `CsvGeometryBatchResult` |
+| Routing-validation entry points | `run_routing_validation`, `RoutingValidationBundle`, `RoutingValidationCase`, `RoutingPolicyAudit`, `RoutingValidationOutcome`, `RoutingValidationSourceKind`, `RoutingPolicyAuditConfig` |
 | Analyzer facade | `ForecastabilityAnalyzer`, `ForecastabilityAnalyzerExog`, `AnalyzeResult` |
 | Diagnostic and result models | `ForecastabilityProfile`, `PredictiveInfoLearningCurve`, `SpectralPredictabilityResult`, `InterpretationResult`, `Diagnostics`, `MetricCurve`, `CanonicalExampleResult`, `CanonicalSummary`, `SeriesEvaluationResult`, `ForecastResult`, `BackendComparisonResult`, `ExogenousBenchmarkResult`, `RobustnessStudyResult`, `SampleSizeStressResult` |
 | Config models | `BenchmarkDataConfig`, `CMIConfig`, `ExogenousBenchmarkConfig`, `MetricConfig`, `ModelConfig`, `OutputConfig`, `RobustnessStudyConfig`, `RollingOriginConfig`, `SensitivityConfig`, `UncertaintyConfig` |
@@ -64,6 +65,46 @@ Key returned objects:
 - `bundle.geometry`: corrected-profile geometry, `signal_to_noise`, geometry structure, geometry horizon
 - `bundle.fingerprint`: compact fingerprint fields (`information_mass`, `information_horizon`, `information_structure`, `nonlinear_share`, `signal_to_noise`)
 - `bundle.recommendation`: deterministic model-family guidance and caution flags
+
+> [!NOTE]
+> `bundle.recommendation.confidence_label` is widened additively in v0.3.3.
+> The original `high`, `medium`, and `low` meanings remain unchanged, and the
+> new `abstain` value is emitted only when the routing policy returns zero
+> primary families.
+
+## Routing Validation Surface (v0.3.3+)
+
+Use `run_routing_validation` when you need a typed audit of deterministic
+family routing across the synthetic validation panel and, optionally, the
+real-series sanity panel.
+
+```python
+from forecastability import RoutingPolicyAuditConfig, run_routing_validation
+
+bundle = run_routing_validation(
+    n_per_archetype=200,
+    real_panel_path=None,
+    config=RoutingPolicyAuditConfig(),
+)
+```
+
+Key returned objects:
+
+- `bundle.cases[*]`: per-case expected families, observed families, outcome, calibrated confidence label, threshold margin, and rule-stability
+- `bundle.audit`: aggregate `pass` / `downgrade` / `fail` / `abstain` counts
+- `bundle.config`: frozen versioned scalars used for the audit and calibration run
+
+Operational notes:
+
+- `RoutingValidationBundle` is additive on the stable `forecastability` facade.
+- `RoutingValidationCase.confidence_label` and routed recommendation confidence labels now admit the additive `abstain` value.
+- The canonical clean-checkout report command is `uv run python scripts/run_routing_validation_report.py --smoke --no-real-panel`.
+- The report script writes the canonical markdown report to `outputs/reports/routing_validation/report.md`; the saved JSON bundle and report manifest live under `outputs/json/routing_validation/`.
+- The deterministic-first agent example is `examples/univariate/agents/routing_validation_agent_review.py`; it recomputes a fresh deterministic bundle, and the saved report artifacts are authoritative for exact smoke-report counts.
+- The optional live path remains downstream of the deterministic bundle.
+
+For the outcome semantics and calibration math, see
+[docs/theory/routing_validation.md](theory/routing_validation.md).
 
 ## CSV Geometry Batch Surface
 
@@ -222,7 +263,6 @@ MPLBACKEND=Agg uv run scripts/run_showcase_lagged_exogenous.py --smoke
 > [!IMPORTANT]
 > `selected_for_tensor=True` is impossible at `lag=0` by default. Use `known_future_drivers`
 > to opt in for features whose contemporaneous value is legitimately available at prediction time.
-
 > [!NOTE]
 > `lag_role="instant"` rows at `lag=0` are diagnostic. They document contemporaneous association
 > but do not enter forecasting tensors without the `known_future_drivers` opt-in.
@@ -273,6 +313,7 @@ These are the live repo entry points for non-import surfaces.
 | HTTP API | `forecastability.adapters.api:app` | FastAPI application used with Uvicorn |
 | CSV script | `scripts/run_ami_information_geometry_csv.py` | Repo script for one-series-per-column CSV batch geometry runs |
 | Fingerprint showcase script | `scripts/run_showcase_fingerprint.py` | Canonical v0.3.1 prepared-archetype showcase with strict A1/A2/A3 verification |
+| Routing validation report script | `scripts/run_routing_validation_report.py` | Canonical v0.3.3 report surface; use `--smoke --no-real-panel` for the clean-checkout path |
 
 ## Causal Discovery (v0.3.0+)
 

@@ -248,6 +248,9 @@ Inspect these artifacts after the run:
 > The fingerprint release is intentionally univariate-first and AMI-first. The
 > routing output is heuristic family guidance, not exact-model selection and not
 > a multivariate conditional-MI claim.
+> [!NOTE]
+> On v0.3.3 and later, `bundle.recommendation.confidence_label` can also be
+> `abstain` when the routing policy emits no primary families.
 
 ## 12 Minutes: CSV Batch Geometry Workflow
 
@@ -359,7 +362,6 @@ Expected output shape:
 
 > [!NOTE]
 > Valid covariant method tokens are `cross_ami`, `cross_pami`, `te`, `gcmi`, `pcmci`, and `pcmci_ami`.
-
 > [!IMPORTANT]
 > `pcmci` and `pcmci_ami` are optional causal methods. Install the causal extra when needed:
 >
@@ -420,7 +422,6 @@ MPLBACKEND=Agg uv run scripts/run_showcase_lagged_exogenous.py --smoke
 > `selected_for_tensor=True` is impossible at `lag=0` by default. Use `known_future_drivers` to
 > explicitly opt in for features whose contemporaneous value is legitimately available at
 > prediction time.
-
 > [!NOTE]
 > `lag_role="instant"` rows at `lag=0` are diagnostic. They quantify contemporaneous association
 > (contemporaneous-cross_ami, cross-correlation) but are not selected for forecasting tensors
@@ -429,6 +430,65 @@ MPLBACKEND=Agg uv run scripts/run_showcase_lagged_exogenous.py --smoke
 Walkthrough notebook: [notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb](../notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb)
 
 Theory background: [docs/theory/lagged_exogenous_triage.md](theory/lagged_exogenous_triage.md)
+
+## 14 Minutes: Routing Validation
+
+Use the v0.3.3 routing-validation surface when you need a deterministic audit
+of the routing policy before downstream framework hand-off.
+
+Clean-checkout smoke path:
+
+```bash
+uv run python scripts/run_routing_validation_report.py --smoke --no-real-panel
+```
+
+Inspect the canonical artifacts after the run:
+
+- `outputs/reports/routing_validation/report.md` is the canonical markdown report.
+- `outputs/json/routing_validation/` contains the saved JSON bundle and report manifest.
+
+Use the public facade directly when you need the typed bundle instead of the
+rendered report:
+
+```bash
+uv run python - <<'PY'
+from forecastability import RoutingPolicyAuditConfig, run_routing_validation
+
+bundle = run_routing_validation(
+  n_per_archetype=200,
+  real_panel_path=None,
+  config=RoutingPolicyAuditConfig(),
+)
+
+print(
+  {
+    "total_cases": bundle.audit.total_cases,
+    "passed_cases": bundle.audit.passed_cases,
+    "downgraded_cases": bundle.audit.downgraded_cases,
+    "failed_cases": bundle.audit.failed_cases,
+    "abstained_cases": bundle.audit.abstained_cases,
+  }
+)
+PY
+```
+
+Deterministic-first agent example:
+
+```bash
+uv run python examples/univariate/agents/routing_validation_agent_review.py --smoke
+```
+
+> [!NOTE]
+> This example recomputes a fresh deterministic bundle. Use the saved report
+> artifacts above as the authoritative source for exact smoke-report counts.
+
+> [!IMPORTANT]
+> `RoutingValidationBundle` is additive on the public facade. The widened
+> routing confidence label is also additive: `abstain` is emitted only when no
+> primary families are routed.
+> [!NOTE]
+> The full real-panel path is not the clean-checkout default. Use the smoke
+> report command above for a mechanically runnable path in a fresh clone.
 
 ## 15 Minutes: HTTP API Call
 

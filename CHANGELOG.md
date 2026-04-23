@@ -24,6 +24,24 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - README updated to include "Use this before model search" section framing downstream frameworks as post-triage consumers.
 - `pyproject.toml` keywords expanded with forecastability-triage, diagnostics, covariate, and hand-off discovery terms.
 
+## [0.3.3] - 2026-04-23
+
+### Added
+
+- `RoutingValidationCase`, `RoutingPolicyAudit`, `RoutingValidationBundle`, `RoutingValidationOutcome`, `RoutingValidationSourceKind`, and `RoutingPolicyAuditConfig` as additive typed routing-validation surfaces on `forecastability`.
+- `run_routing_validation()` as the additive public routing-validation use case.
+- `scripts/run_routing_validation_report.py` as the routing-validation markdown/JSON report generator, with `--smoke` and `--no-real-panel` flags.
+- `docs/theory/routing_validation.md` covering the four audit outcomes, threshold-distance margin, rule-stability grid, calibrated confidence labels, and versioned scalars.
+
+### Changed
+
+- Routing confidence labels are widened additively so `abstain` is available alongside the existing `high`, `medium`, and `low` values. The new label is emitted only when the routing policy returns zero primary families.
+- README, quickstart, and public API docs now document the routing-validation surface, the clean-checkout smoke report path, and the deterministic-first agent review example.
+
+### Notes
+
+- No v0.3.1 routing-rule semantics change is documented in this release. Any future change to `services/routing_policy_service.py` must be accompanied by a fixture refresh under `docs/fixtures/routing_validation_regression/expected/`.
+
 ## [0.3.2] - 2026-05-01
 
 ### Added
