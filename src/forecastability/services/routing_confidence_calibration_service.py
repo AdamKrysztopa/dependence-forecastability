@@ -15,6 +15,8 @@ from __future__ import annotations
 
 from forecastability.utils.types import RoutingConfidenceLabel, RoutingPolicyAuditConfig
 
+_DEFAULT_ROUTING_POLICY_AUDIT_CONFIG = RoutingPolicyAuditConfig()
+
 
 def calibrate_confidence_label(
     *,
@@ -22,7 +24,7 @@ def calibrate_confidence_label(
     threshold_margin: float,
     rule_stability: float,
     primary_families: list[str],
-    config: RoutingPolicyAuditConfig = RoutingPolicyAuditConfig(),
+    config: RoutingPolicyAuditConfig = _DEFAULT_ROUTING_POLICY_AUDIT_CONFIG,
 ) -> RoutingConfidenceLabel:
     """Return the calibrated confidence label per plan v0.3.3 §2.5.
 

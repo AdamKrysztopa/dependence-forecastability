@@ -39,8 +39,8 @@ from forecastability.services.routing_policy_audit_service import (
 from forecastability.use_cases.run_forecastability_fingerprint import (
     run_forecastability_fingerprint,
 )
+from forecastability.use_cases.run_routing_validation import run_routing_validation
 from forecastability.utils.synthetic import (
-    generate_routing_validation_archetypes,
     generate_weak_seasonal_near_threshold_archetype,
 )
 from forecastability.utils.types import (
@@ -167,8 +167,7 @@ def calibrate_near_threshold_amplitude(
     band_centre = 0.5 * (target_low + target_high)
 
     _logger.info(
-        "Calibration sweep: amplitudes [0.80, 2.00] × %d steps; "
-        "target d_theta band [%.4f, %.4f]",
+        "Calibration sweep: amplitudes [0.80, 2.00] × %d steps; target d_theta band [%.4f, %.4f]",
         len(_SWEEP_AMPLITUDES),
         target_low,
         target_high,
@@ -249,98 +248,25 @@ def _load_calibration(expected_dir: Path) -> float | None:
     return float(amplitude)
 
 
+def load_pinned_weak_seasonal_amplitude(repo_root: Path) -> float | None:
+    """Load the pinned weak-seasonal amplitude from the repository fixture path."""
+    return _load_calibration(repo_root / _EXPECTED_SUBDIR)
+
+
 def _run_validation_bundle(
     *,
     weak_seasonal_amplitude: float | None,
 ) -> RoutingValidationBundle:
-    """Run routing validation with an optional calibrated weak_seasonal amplitude.
-
-    Builds the archetype dict directly when an amplitude override is needed so
-    that ``run_routing_validation`` can consume the pre-built archetypes.
-    """
+    """Run routing validation via the public use case with an optional calibration."""
     if weak_seasonal_amplitude is not None:
-        _logger.info(
-            "Using calibrated weak_seasonal amplitude: %.4f", weak_seasonal_amplitude
-        )
-    # Use the standard orchestration use case; amplitude override is applied by
-    # generating archetypes manually and passing them through synthetic_panel.
-    # Since run_routing_validation re-generates from scratch, we instead build
-    # the bundle by calling the use case with the modified archetype.
-    # The cleanest approach: we generate the archetypes ourselves and call
-    # run_routing_validation's internal helpers. But since those are internal,
-    # we rely on the fact that run_routing_validation(synthetic_panel=None)
-    # uses generate_routing_validation_archetypes() internally.
-    #
-    # To pass the calibrated amplitude, we temporarily patch the keyword arg
-    # via the public generate_routing_validation_archetypes helper which now
-    # accepts weak_seasonal_amplitude.  We do this by constructing a
-    # RoutingValidationBundle via run_routing_validation but only for the
-    # nine non-calibrated archetypes, then manually building the weak_seasonal
-    # case and inserting it.
-    #
-    # Simpler: just call run_routing_validation and let it use the default,
-    # which is 0.18.  If calibration.json is present, we patch the archetype
-    # dict via generate_routing_validation_archetypes(weak_seasonal_amplitude=...).
-    # We then build per-case results via the same internal orchestration logic.
-    # The public interface requires a different approach.
-    #
-    # Cleanest feasible approach without touching the use-case signature:
-    # Generate the full archetype dict here and use it to build the bundle
-    # via the same steps run_routing_validation uses internally.
-
-    from forecastability.services.routing_policy_audit_service import (
-        audit_routing_case,
-        build_routing_threshold_vector,
-    )
-    from forecastability.utils.types import RoutingPolicyAudit
-
-    config = RoutingPolicyAuditConfig()
-    archetypes = generate_routing_validation_archetypes(
-        n=_REBUILD_N,
-        seed=_REBUILD_SEED,
+        _logger.info("Using calibrated weak_seasonal amplitude: %.4f", weak_seasonal_amplitude)
+    return run_routing_validation(
+        real_panel_path=None,
+        n_per_archetype=_REBUILD_N,
+        random_state=_REBUILD_SEED,
         weak_seasonal_amplitude=weak_seasonal_amplitude,
+        config=RoutingPolicyAuditConfig(),
     )
-
-    max_lag = min(24, max(4, _REBUILD_N // 20))
-    cases = []
-
-    for archetype_name, (series, meta) in archetypes.items():
-        fp_bundle = run_forecastability_fingerprint(
-            series,
-            target_name=archetype_name,
-            max_lag=max_lag,
-            n_surrogates=99,
-            random_state=_REBUILD_SEED,
-        )
-        threshold_vector = build_routing_threshold_vector(fp_bundle.fingerprint)
-        case = audit_routing_case(
-            case_name=archetype_name,
-            source_kind="synthetic",
-            expected_primary_families=meta.expected_primary_families,
-            fingerprint=fp_bundle.fingerprint,
-            recommendation=fp_bundle.recommendation,
-            threshold_vector=threshold_vector,
-            config=config,
-            notes=list(meta.notes),
-            metadata={"archetype": archetype_name},
-        )
-        cases.append(case)
-
-    passed = sum(1 for c in cases if c.outcome == "pass")
-    failed = sum(1 for c in cases if c.outcome == "fail")
-    downgraded = sum(1 for c in cases if c.outcome == "downgrade")
-    abstained = sum(1 for c in cases if c.outcome == "abstain")
-
-    audit = RoutingPolicyAudit(
-        total_cases=len(cases),
-        passed_cases=passed,
-        failed_cases=failed,
-        downgraded_cases=downgraded,
-        abstained_cases=abstained,
-    )
-    from forecastability.utils.types import RoutingValidationBundle
-
-    return RoutingValidationBundle(cases=cases, audit=audit, config=config)
 
 
 def rebuild_fixtures(repo_root: Path) -> int:
@@ -358,7 +284,7 @@ def rebuild_fixtures(repo_root: Path) -> int:
     expected_dir = repo_root / _EXPECTED_SUBDIR
     expected_dir.mkdir(parents=True, exist_ok=True)
 
-    weak_seasonal_amplitude = _load_calibration(expected_dir)
+    weak_seasonal_amplitude = load_pinned_weak_seasonal_amplitude(repo_root)
     if weak_seasonal_amplitude is not None:
         _logger.info(
             "Loaded calibrated amplitude from %s: %.4f",
@@ -424,9 +350,7 @@ def _compare_value(
             if key not in actual:
                 errors.append(f"{field_path}: missing key '{key}'")
                 continue
-            errors.extend(
-                _compare_value(actual[key], exp_value, field_path=f"{field_path}/{key}")
-            )
+            errors.extend(_compare_value(actual[key], exp_value, field_path=f"{field_path}/{key}"))
         return errors
 
     if isinstance(expected, list) and isinstance(actual, list):
@@ -478,7 +402,7 @@ def verify_fixtures(repo_root: Path) -> int:
             )
             return 2
 
-    weak_seasonal_amplitude = _load_calibration(expected_dir)
+    weak_seasonal_amplitude = load_pinned_weak_seasonal_amplitude(repo_root)
     bundle = _run_validation_bundle(weak_seasonal_amplitude=weak_seasonal_amplitude)
 
     errors: list[str] = []
@@ -486,18 +410,12 @@ def verify_fixtures(repo_root: Path) -> int:
     # Verify synthetic_panel.json
     expected_panel = json.loads((expected_dir / _SYNTHETIC_PANEL_FILE).read_text(encoding="utf-8"))
     actual_panel = _build_synthetic_panel_payload(bundle)
-    errors.extend(
-        _compare_value(actual_panel, expected_panel, field_path=_SYNTHETIC_PANEL_FILE)
-    )
+    errors.extend(_compare_value(actual_panel, expected_panel, field_path=_SYNTHETIC_PANEL_FILE))
 
     # Verify audit_summary.json
-    expected_audit = json.loads(
-        (expected_dir / _AUDIT_SUMMARY_FILE).read_text(encoding="utf-8")
-    )
+    expected_audit = json.loads((expected_dir / _AUDIT_SUMMARY_FILE).read_text(encoding="utf-8"))
     actual_audit = _build_audit_summary_payload(bundle)
-    errors.extend(
-        _compare_value(actual_audit, expected_audit, field_path=_AUDIT_SUMMARY_FILE)
-    )
+    errors.extend(_compare_value(actual_audit, expected_audit, field_path=_AUDIT_SUMMARY_FILE))
 
     # Verify confidence_labels.json
     expected_labels = json.loads(

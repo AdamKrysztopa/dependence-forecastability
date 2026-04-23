@@ -135,10 +135,10 @@ def _next_step_from_bundle(
             ),
         )
 
-    if (
-        fingerprint.nonlinear_share >= 0.30
-        and recommendation.confidence_label in {"high", "medium"}
-    ):
+    if fingerprint.nonlinear_share >= 0.30 and recommendation.confidence_label in {
+        "high",
+        "medium",
+    }:
         return ForecastingNextStepPlan(
             action="nonlinear_benchmark",
             priority_tier="high",

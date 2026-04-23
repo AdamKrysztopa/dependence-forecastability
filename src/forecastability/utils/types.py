@@ -736,10 +736,7 @@ class RoutingPolicyAudit(BaseModel):
     @model_validator(mode="after")
     def _validate_count_consistency(self) -> RoutingPolicyAudit:
         counted = (
-            self.passed_cases
-            + self.failed_cases
-            + self.downgraded_cases
-            + self.abstained_cases
+            self.passed_cases + self.failed_cases + self.downgraded_cases + self.abstained_cases
         )
         if counted != self.total_cases:
             raise ValueError(

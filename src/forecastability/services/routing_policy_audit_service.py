@@ -13,9 +13,12 @@ The module exposes three public functions:
 from __future__ import annotations
 
 import itertools
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from typing import TYPE_CHECKING
 
+from forecastability.services.routing_confidence_calibration_service import (
+    calibrate_confidence_label,
+)
 from forecastability.services.routing_policy_service import (
     RoutingPolicyConfig,
     route_fingerprint,
@@ -31,6 +34,8 @@ from forecastability.utils.types import (
 
 if TYPE_CHECKING:
     pass
+
+_DEFAULT_ROUTING_POLICY_AUDIT_CONFIG = RoutingPolicyAuditConfig()
 
 # ---------------------------------------------------------------------------
 # Internal coordinate-to-attribute mapping
@@ -294,8 +299,8 @@ def _extract_penalty_count(recommendation: RoutingRecommendation) -> int:
 
 def _determine_outcome(
     *,
-    observed_primary_families: list[str],
-    expected_primary_families: list[str],
+    observed_primary_families: Sequence[str],
+    expected_primary_families: Sequence[str],
     threshold_margin: float,
     rule_stability: float,
     config: RoutingPolicyAuditConfig,
@@ -333,11 +338,11 @@ def audit_routing_case(
     *,
     case_name: str,
     source_kind: RoutingValidationSourceKind,
-    expected_primary_families: list[str],
+    expected_primary_families: Sequence[str],
     fingerprint: ForecastabilityFingerprint,
     recommendation: RoutingRecommendation,
     threshold_vector: dict[str, float],
-    config: RoutingPolicyAuditConfig = RoutingPolicyAuditConfig(),
+    config: RoutingPolicyAuditConfig = _DEFAULT_ROUTING_POLICY_AUDIT_CONFIG,
     routing_config: RoutingPolicyConfig | None = None,
     notes: list[str] | None = None,
     metadata: dict[str, str | int | float] | None = None,
@@ -374,11 +379,10 @@ def audit_routing_case(
         ValueError: If ``expected_primary_families`` is empty.
     """
     if not expected_primary_families:
-        raise ValueError(
-            "expected_primary_families must be non-empty for case '{case_name}'"
-        )
+        raise ValueError("expected_primary_families must be non-empty for case '{case_name}'")
 
-    observed = [str(f) for f in recommendation.primary_families]
+    expected = list(expected_primary_families)
+    observed: list[str] = [str(f) for f in recommendation.primary_families]
 
     # Threshold margin (§2.3)
     threshold_margin = _compute_threshold_margin(
@@ -399,21 +403,28 @@ def audit_routing_case(
     # Four-outcome label (§2.2)
     outcome = _determine_outcome(
         observed_primary_families=observed,
-        expected_primary_families=expected_primary_families,
+        expected_primary_families=expected,
         threshold_margin=threshold_margin,
         rule_stability=rule_stability,
         config=config,
     )
 
     penalty_count = _extract_penalty_count(recommendation)
+    calibrated_confidence_label = calibrate_confidence_label(
+        fingerprint_penalty_count=penalty_count,
+        threshold_margin=threshold_margin,
+        rule_stability=rule_stability,
+        primary_families=observed,
+        config=config,
+    )
 
     return RoutingValidationCase(
         case_name=case_name,
         source_kind=source_kind,
-        expected_primary_families=expected_primary_families,
+        expected_primary_families=expected,
         observed_primary_families=observed,
         outcome=outcome,
-        confidence_label=recommendation.confidence_label,
+        confidence_label=calibrated_confidence_label,
         threshold_margin=threshold_margin,
         rule_stability=rule_stability,
         fingerprint_penalty_count=penalty_count,

@@ -15,6 +15,8 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
+import numpy as np
+
 from forecastability.services.routing_policy_audit_service import (
     audit_routing_case,
     build_routing_threshold_vector,
@@ -46,11 +48,22 @@ _logger = logging.getLogger(__name__)
 _MIN_MAX_LAG = 4
 _MAX_MAX_LAG = 24
 _N_SURROGATES = 99
+_DEFAULT_ROUTING_POLICY_AUDIT_CONFIG = RoutingPolicyAuditConfig()
 
 
 def _derive_max_lag(n: int) -> int:
     """Derive a safe max_lag from the series length."""
     return min(_MAX_MAX_LAG, max(_MIN_MAX_LAG, n // 20))
+
+
+def _derive_real_case_max_lag(*, default_max_lag: int, series_length: int) -> int:
+    """Clamp real-panel lag depth to the local series length contract."""
+    return min(default_max_lag, _derive_max_lag(series_length))
+
+
+def _is_too_short_error(error: ValueError) -> bool:
+    """Return whether a fingerprint failure is the validated too-short guard."""
+    return str(error) == "Time series is too short."
 
 
 def _build_audit(cases: list[RoutingValidationCase]) -> RoutingPolicyAudit:
@@ -77,7 +90,7 @@ def _build_audit(cases: list[RoutingValidationCase]) -> RoutingPolicyAudit:
 
 def _run_synthetic_cases(
     *,
-    archetypes: dict[str, tuple[np.ndarray, ExpectedFamilyMetadata]],  # type: ignore[type-arg]
+    archetypes: dict[str, tuple[np.ndarray, ExpectedFamilyMetadata]],
     max_lag: int,
     random_state: int,
     config: RoutingPolicyAuditConfig,
@@ -93,8 +106,6 @@ def _run_synthetic_cases(
     Returns:
         List of frozen ``RoutingValidationCase`` instances in stable iteration order.
     """
-    import numpy as np
-
     cases: list[RoutingValidationCase] = []
     for archetype_name, (series, meta) in archetypes.items():
         series_arr: np.ndarray = series
@@ -133,7 +144,9 @@ def _run_real_cases(
     """Fingerprint and audit each real-series panel entry.
 
     Entries whose CSV is absent (source='download' and not yet fetched) are
-    skipped with a warning rather than raising.
+    skipped with a warning rather than raising. Loaded real-series entries that
+    are shorter than the fingerprint minimum are also skipped with a warning so
+    the default report path can complete on the bundled clean-checkout panel.
 
     Args:
         entries: Parsed real panel entries.
@@ -150,23 +163,44 @@ def _run_real_cases(
         try:
             series = load_series_from_entry(entry, repo_root=repo_root)
         except FileNotFoundError:
+            if entry.source != "download":
+                raise
             _logger.warning(
-                "Real panel CSV absent for case '%s' (source=%s). "
-                "Skipping. Run '%s' first.",
+                "Real panel CSV absent for case '%s' (source=%s). Skipping. Run '%s' first.",
                 entry.name,
                 entry.source,
                 entry.download_command or "<no download command>",
             )
             continue
 
-        _logger.debug("Fingerprinting real series '%s' …", entry.name)
-        bundle = run_forecastability_fingerprint(
-            series,
-            target_name=entry.name,
-            max_lag=max_lag,
-            n_surrogates=_N_SURROGATES,
-            random_state=random_state,
+        series_max_lag = _derive_real_case_max_lag(
+            default_max_lag=max_lag,
+            series_length=series.size,
         )
+        _logger.debug(
+            "Fingerprinting real series '%s' with max_lag=%d …",
+            entry.name,
+            series_max_lag,
+        )
+        try:
+            bundle = run_forecastability_fingerprint(
+                series,
+                target_name=entry.name,
+                max_lag=series_max_lag,
+                n_surrogates=_N_SURROGATES,
+                random_state=random_state,
+            )
+        except ValueError as error:
+            if not _is_too_short_error(error):
+                raise
+            _logger.warning(
+                "Real panel series '%s' is too short for fingerprinting "
+                "(length=%d, max_lag=%d). Skipping.",
+                entry.name,
+                series.size,
+                series_max_lag,
+            )
+            continue
         threshold_vector = build_routing_threshold_vector(bundle.fingerprint)
         case = audit_routing_case(
             case_name=entry.name,
@@ -213,7 +247,8 @@ def run_routing_validation(
     real_panel_path: Path | None = None,
     n_per_archetype: int = 600,
     random_state: int = 42,
-    config: RoutingPolicyAuditConfig = RoutingPolicyAuditConfig(),
+    weak_seasonal_amplitude: float | None = None,
+    config: RoutingPolicyAuditConfig = _DEFAULT_ROUTING_POLICY_AUDIT_CONFIG,
 ) -> RoutingValidationBundle:
     """Run routing validation orchestration over the configured panels.
 
@@ -244,6 +279,9 @@ def run_routing_validation(
         random_state: Global reproducibility seed (int, not Generator).  Passed
             to ``run_forecastability_fingerprint`` for surrogate generation and
             to the synthetic archetype generators.
+        weak_seasonal_amplitude: Optional override for the
+            ``weak_seasonal_near_threshold`` synthetic archetype amplitude.
+            When ``None``, the generator uses its own default.
         config: Frozen :class:`RoutingPolicyAuditConfig` holding the versioned
             scalars from plan §2.6.  Defaults to the conservative v0.3.3 values.
 
@@ -263,14 +301,13 @@ def run_routing_validation(
     all_archetypes = generate_routing_validation_archetypes(
         n=n_per_archetype,
         seed=random_state,
+        weak_seasonal_amplitude=weak_seasonal_amplitude,
     )
 
     if synthetic_panel is not None:
         requested_names = {meta.archetype_name for meta in synthetic_panel}
         active_archetypes = {
-            name: pair
-            for name, pair in all_archetypes.items()
-            if name in requested_names
+            name: pair for name, pair in all_archetypes.items() if name in requested_names
         }
         skipped = requested_names - set(active_archetypes)
         if skipped:
@@ -313,9 +350,7 @@ def run_routing_validation(
             config=config,
         )
         cases.extend(synthetic_cases)
-        _logger.info(
-            "Synthetic panel: %d archetype(s) evaluated.", len(synthetic_cases)
-        )
+        _logger.info("Synthetic panel: %d archetype(s) evaluated.", len(synthetic_cases))
 
     if real_entries:
         repo_root = _resolve_repo_root(real_panel_path)  # type: ignore[arg-type]

@@ -67,7 +67,7 @@ class TestMediumLabel:
         label = calibrate_confidence_label(
             fingerprint_penalty_count=1,
             threshold_margin=_CFG.tau_margin_medium,  # exactly at medium margin floor
-            rule_stability=_CFG.tau_stable_medium,    # exactly at medium stability floor
+            rule_stability=_CFG.tau_stable_medium,  # exactly at medium stability floor
             primary_families=["arima"],
         )
         assert label == "medium"
@@ -144,7 +144,7 @@ class TestDecisionTableOrder:
         # Below strict high thresholds → not high
         label = calibrate_confidence_label(
             fingerprint_penalty_count=0,
-            threshold_margin=0.09,   # below tau_margin (0.10)
+            threshold_margin=0.09,  # below tau_margin (0.10)
             rule_stability=0.98,
             primary_families=["arima"],
             config=strict_cfg,

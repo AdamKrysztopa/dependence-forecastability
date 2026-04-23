@@ -26,9 +26,11 @@ from forecastability.diagnostics.routing_validation_regression import (
     _RTOL,
     _SYNTHETIC_PANEL_FILE,
     calibrate_near_threshold_amplitude,
+    load_pinned_weak_seasonal_amplitude,
     rebuild_fixtures,
     verify_fixtures,
 )
+from forecastability.use_cases.run_routing_validation import run_routing_validation
 from forecastability.utils.types import RoutingPolicyAuditConfig
 
 # ---------------------------------------------------------------------------
@@ -43,8 +45,7 @@ def _load_expected(filename: str) -> Any:
     path = _EXPECTED_DIR / filename
     if not path.exists():
         pytest.skip(
-            f"Frozen fixture not found: {path} "
-            "— run rebuild_routing_validation_fixtures.py first"
+            f"Frozen fixture not found: {path} — run rebuild_routing_validation_fixtures.py first"
         )
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -69,6 +70,12 @@ class TestFrozenFixturesExist:
         data = _load_expected(_CONFIDENCE_LABELS_FILE)
         assert isinstance(data, dict)
         assert len(data) > 0
+
+    def test_calibrated_amplitude_loads_from_fixture(self) -> None:
+        calibration = _load_expected(_CALIBRATION_FILE)
+        amplitude = load_pinned_weak_seasonal_amplitude(_REPO_ROOT)
+
+        assert amplitude == calibration["calibrated_amplitude"]
 
 
 # ---------------------------------------------------------------------------
@@ -146,8 +153,11 @@ class TestAuditSummaryStructure:
         data = _load_expected(_AUDIT_SUMMARY_FILE)
         assert isinstance(data, dict)
         outcome_keys = (
-            "total_cases", "passed_cases", "failed_cases",
-            "downgraded_cases", "abstained_cases",
+            "total_cases",
+            "passed_cases",
+            "failed_cases",
+            "downgraded_cases",
+            "abstained_cases",
         )
         for key in outcome_keys:
             assert isinstance(data[key], int)
@@ -200,6 +210,39 @@ class TestCoverageRequirements:
         assert isinstance(data, dict)
         labels = list(data.values())
         assert "low" in labels, "No low-confidence case (§6.3 requires low_directness_high_penalty)"
+
+
+class TestPinnedCalibrationPath:
+    def test_run_routing_validation_matches_pinned_weak_seasonal_fixture(self) -> None:
+        amplitude = load_pinned_weak_seasonal_amplitude(_REPO_ROOT)
+        if amplitude is None:
+            pytest.skip("Pinned calibration fixture is not present")
+
+        bundle = run_routing_validation(
+            real_panel_path=None,
+            n_per_archetype=600,
+            random_state=42,
+            weak_seasonal_amplitude=amplitude,
+        )
+        expected_panel = _load_expected(_SYNTHETIC_PANEL_FILE)
+        expected_case = next(
+            row for row in expected_panel if row["case_name"] == "weak_seasonal_near_threshold"
+        )
+        actual_case = next(
+            case for case in bundle.cases if case.case_name == "weak_seasonal_near_threshold"
+        )
+
+        assert actual_case.outcome == expected_case["outcome"]
+        assert actual_case.confidence_label == expected_case["confidence_label"]
+        assert sorted(actual_case.observed_primary_families) == expected_case[
+            "observed_primary_families"
+        ]
+        assert math.isclose(
+            actual_case.threshold_margin,
+            expected_case["threshold_margin"],
+            rel_tol=_RTOL,
+            abs_tol=_ATOL,
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -304,9 +347,7 @@ class TestVerifyFixtures:
         panel = json.loads(panel_path.read_text(encoding="utf-8"))
         assert isinstance(panel, list) and len(panel) > 0
         original_outcome = panel[0]["outcome"]
-        tampered_outcome = (
-            "fail" if original_outcome != "fail" else "pass"
-        )
+        tampered_outcome = "fail" if original_outcome != "fail" else "pass"
         panel[0]["outcome"] = tampered_outcome
         panel_path.write_text(json.dumps(panel, indent=2) + "\n", encoding="utf-8")
 

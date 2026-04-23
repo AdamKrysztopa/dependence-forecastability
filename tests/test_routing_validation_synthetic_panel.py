@@ -60,9 +60,7 @@ def test_routing_validation_archetype_panel_is_deterministic_by_seed() -> None:
 def test_routing_validation_archetype_first32_fingerprints() -> None:
     """Freeze first-32-sample fingerprints for regression stability."""
     panel = generate_routing_validation_archetypes(n=128, seed=42)
-    observed = {
-        key: _digest_first32(series_metadata[0]) for key, series_metadata in panel.items()
-    }
+    observed = {key: _digest_first32(series_metadata[0]) for key, series_metadata in panel.items()}
 
     expected = {
         "white_noise": "0bd0cf25abf854961fd834d249d71b1e896c4f13b44bc106526b19c3f15719b4",

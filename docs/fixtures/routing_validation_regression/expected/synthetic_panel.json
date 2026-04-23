@@ -3,7 +3,7 @@
     "case_name": "white_noise",
     "source_kind": "synthetic",
     "outcome": "downgrade",
-    "confidence_label": "high",
+    "confidence_label": "medium",
     "expected_primary_families": [
       "naive",
       "seasonal_naive"
@@ -21,7 +21,7 @@
     "case_name": "ar1",
     "source_kind": "synthetic",
     "outcome": "downgrade",
-    "confidence_label": "medium",
+    "confidence_label": "low",
     "expected_primary_families": [
       "downscope",
       "naive",
@@ -59,7 +59,7 @@
     "case_name": "weak_seasonal_near_threshold",
     "source_kind": "synthetic",
     "outcome": "downgrade",
-    "confidence_label": "high",
+    "confidence_label": "low",
     "expected_primary_families": [
       "harmonic_regression",
       "seasonal_naive",
@@ -78,7 +78,7 @@
     "case_name": "nonlinear_mixed",
     "source_kind": "synthetic",
     "outcome": "fail",
-    "confidence_label": "medium",
+    "confidence_label": "low",
     "expected_primary_families": [
       "neural",
       "nonlinear_regression"
@@ -96,7 +96,7 @@
     "case_name": "structural_break",
     "source_kind": "synthetic",
     "outcome": "downgrade",
-    "confidence_label": "high",
+    "confidence_label": "medium",
     "expected_primary_families": [
       "arima",
       "ets",
@@ -115,7 +115,7 @@
     "case_name": "long_memory",
     "source_kind": "synthetic",
     "outcome": "downgrade",
-    "confidence_label": "high",
+    "confidence_label": "medium",
     "expected_primary_families": [
       "naive",
       "seasonal_naive"
@@ -171,7 +171,7 @@
     "case_name": "low_directness_high_penalty",
     "source_kind": "synthetic",
     "outcome": "downgrade",
-    "confidence_label": "medium",
+    "confidence_label": "low",
     "expected_primary_families": [
       "arima",
       "ets",

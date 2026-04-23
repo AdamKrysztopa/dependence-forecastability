@@ -109,8 +109,7 @@ def load_series_from_entry(
     csv_path = repo_root / entry.path
     if not csv_path.exists():
         raise FileNotFoundError(
-            f"Real panel CSV not found: {csv_path} "
-            f"(entry='{entry.name}', source='{entry.source}')"
+            f"Real panel CSV not found: {csv_path} (entry='{entry.name}', source='{entry.source}')"
         )
     df = pd.read_csv(csv_path)
     if entry.column not in df.columns:

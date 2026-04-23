@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import pytest
 
+from forecastability.services.routing_confidence_calibration_service import (
+    calibrate_confidence_label,
+)
 from forecastability.services.routing_policy_audit_service import (
     audit_routing_case,
     build_routing_threshold_vector,
@@ -12,6 +15,10 @@ from forecastability.services.routing_policy_service import (
     RoutingPolicyConfig,
     route_fingerprint,
 )
+from forecastability.use_cases.run_forecastability_fingerprint import (
+    run_forecastability_fingerprint,
+)
+from forecastability.utils.synthetic import generate_routing_validation_archetypes
 from forecastability.utils.types import (
     ForecastabilityFingerprint,
     RoutingPolicyAuditConfig,
@@ -102,8 +109,8 @@ class TestPassOutcome:
         """A clearly monotonic fingerprint far from all thresholds should pass."""
         fp = _fp(
             structure="monotonic",
-            mass=0.35,          # far above high_mass_min (0.10)
-            nl_share=0.05,      # far below high_nonlinear_share_min (0.30)
+            mass=0.35,  # far above high_mass_min (0.10)
+            nl_share=0.05,  # far below high_nonlinear_share_min (0.30)
             signal_to_noise=0.80,
             informative_horizons=[1, 2, 3, 4, 5, 6, 7],
         )
@@ -243,9 +250,38 @@ class TestDowngradeOutcome:
             threshold_vector=build_routing_threshold_vector(fp),
         )
         assert case.outcome in ("pass", "downgrade")
-        assert bool(
-            set(case.expected_primary_families) & set(case.observed_primary_families)
+        assert bool(set(case.expected_primary_families) & set(case.observed_primary_families))
+
+
+class TestConfidenceCalibration:
+    def test_audit_case_recalibrates_confidence_for_near_threshold_bundle(self) -> None:
+        panel = generate_routing_validation_archetypes(n=200, seed=42)
+        series, metadata = panel["weak_seasonal_near_threshold"]
+        bundle = run_forecastability_fingerprint(
+            series,
+            target_name="weak_seasonal_near_threshold",
+            max_lag=10,
+            n_surrogates=99,
+            random_state=42,
         )
+
+        case = audit_routing_case(
+            case_name="weak_seasonal_near_threshold",
+            source_kind="synthetic",
+            expected_primary_families=metadata.expected_primary_families,
+            fingerprint=bundle.fingerprint,
+            recommendation=bundle.recommendation,
+            threshold_vector=build_routing_threshold_vector(bundle.fingerprint),
+        )
+        expected_label = calibrate_confidence_label(
+            fingerprint_penalty_count=case.fingerprint_penalty_count,
+            threshold_margin=case.threshold_margin,
+            rule_stability=case.rule_stability,
+            primary_families=case.observed_primary_families,
+        )
+
+        assert expected_label != bundle.recommendation.confidence_label
+        assert case.confidence_label == expected_label
 
 
 # ---------------------------------------------------------------------------
