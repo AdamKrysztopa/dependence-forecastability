@@ -1,0 +1,24 @@
+panel_version: 0.3.3
+cases:
+  - name: air_passengers
+    source: bundled
+    path: data/raw/air_passengers.csv
+    column: passengers
+    expected_primary_families: [ets, arima]
+    expected_caution_flags: []
+    license: public_domain
+  - name: sunspots_monthly
+    source: download
+    download_command: "uv run python scripts/download_data.py sunspots_monthly"
+    path: data/processed/sunspots_monthly.csv
+    column: ssn
+    expected_primary_families: [arima, regression, nonlinear_regression]
+    expected_caution_flags: [long_memory]
+    license: cc_by_nc_4_0
+  - name: etth1_oht_subset
+    source: bundled
+    path: data/raw/etth1_oht_subset.csv
+    column: oht
+    expected_primary_families: [regression, nonlinear_regression]
+    expected_caution_flags: [nonlinear_share_high]
+    license: apache_2_0

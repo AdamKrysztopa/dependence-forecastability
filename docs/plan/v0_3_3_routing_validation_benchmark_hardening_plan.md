@@ -6,7 +6,7 @@
 **Target release:** `0.3.3` — **ships first** in the 0.3.3 → 0.3.4 → 0.3.5 chain
 **Current released version:** `0.3.2`
 **Branch:** `feat/v0.3.3-routing-validation-hardening`
-**Status:** Draft / Proposed (revised 2026-04-23 after statistician + architect review)
+**Status:** In progress (Phase 0 done; revised 2026-04-23 after statistician + architect review)
 **Last reviewed:** 2026-04-23
 
 > [!NOTE]
@@ -348,10 +348,10 @@ Any change requires a fixture rebuild and a changelog entry.
 
 | ID | Feature | Phase | Overlap with existing | Genuine new work | Status |
 | --- | --- | ---: | --- | --- | --- |
-| V3_4-F00 | Validation result models | 0 | Extends `utils/types.py` patterns | `RoutingValidationCase`, `RoutingPolicyAudit`, `RoutingValidationBundle`, `RoutingValidationOutcome`, additive `abstain` confidence label, `RoutingPolicyAuditConfig` (with `@model_validator(mode="after")` cross-field checks per §5.1) | Proposed |
-| V3_4-F00a | `confidence_label` widening safety patch | 0 | Patches existing call sites | replace open `confidence_label != "low"` checks at `use_cases/run_batch_forecastability_workbench.py` lines 97 and 138 with explicit `in {"high", "medium"}`; tighten `adapters/llm/fingerprint_agent.py` payload field type from `str` to `RoutingConfidenceLabel`; add AST guard test that fails on any future open inequality against the widened alias | Proposed |
-| V3_4-F01 | Expanded synthetic archetype panel | 1 | Extends `utils/synthetic.py` | ten generators (§6.1) with deterministic seed contracts and expected-family metadata (one extra `low_directness_high_penalty` generator added to guarantee `confidence_label = "low"` coverage) | Proposed |
-| V3_4-F02 | Real-series validation panel | 1 | New small curated dataset layer | three license-clear real series with metadata (§6.2) | Proposed |
+| V3_4-F00 | Validation result models | 0 | Extends `utils/types.py` patterns | `RoutingValidationCase`, `RoutingPolicyAudit`, `RoutingValidationBundle`, `RoutingValidationOutcome`, additive `abstain` confidence label, `RoutingPolicyAuditConfig` (with `@model_validator(mode="after")` cross-field checks per §5.1) | Done |
+| V3_4-F00a | `confidence_label` widening safety patch | 0 | Patches existing call sites | replace open `confidence_label != "low"` checks at `use_cases/run_batch_forecastability_workbench.py` lines 97 and 138 with explicit `in {"high", "medium"}`; tighten `adapters/llm/fingerprint_agent.py` payload field type from `str` to `RoutingConfidenceLabel`; add AST guard test that fails on any future open inequality against the widened alias | Done |
+| V3_4-F01 | Expanded synthetic archetype panel | 1 | Extends `utils/synthetic.py` | ten generators (§6.1) with deterministic seed contracts and expected-family metadata (one extra `low_directness_high_penalty` generator added to guarantee `confidence_label = "low"` coverage) | Done |
+| V3_4-F02 | Real-series validation panel | 1 | New small curated dataset layer | three license-clear real series with metadata (§6.2) | Done |
 | V3_4-F03 | Policy audit service | 1 | Builds on `routing_policy_service.py` | `services/routing_policy_audit_service.py` implementing the four-outcome predicate from §2.2 and the normalised threshold-distance metric from §2.3 | Proposed |
 | V3_4-F03a | Rule-stability subroutine | 1 | New helper inside policy audit | `compute_rule_stability(fingerprint, recommendation, *, delta) -> float` per §2.4 (corner-plus-center grid, $2^K + 1$ samples) | Proposed |
 | V3_4-F04 | Confidence calibration service | 1 | Extends routing semantics | `services/routing_confidence_calibration_service.py` implementing §2.5 with the additive `abstain` label and the explicit first-matching-row precedence | Proposed |
@@ -1461,13 +1461,13 @@ class RoutingValidationAgentPayload(BaseModel):
 
 ## 9. Exit criteria
 
-- [ ] V3_4-F00 is **Done** — typed validation models exist and are additive
-- [ ] V3_4-F00a is **Done** — every open-inequality `confidence_label` call
+- [x] V3_4-F00 is **Done** — typed validation models exist and are additive
+- [x] V3_4-F00a is **Done** — every open-inequality `confidence_label` call
       site has been replaced with closed-set membership and the AST guard
       test passes
-- [ ] V3_4-F01 is **Done** — ten synthetic generators with deterministic
+- [x] V3_4-F01 is **Done** — ten synthetic generators with deterministic
       seeds and `ExpectedFamilyMetadata`
-- [ ] V3_4-F02 is **Done** — real-series manifest, license-checked, with
+- [x] V3_4-F02 is **Done** — real-series manifest, license-checked, with
       every entry resolvable
 - [ ] V3_4-F03 is **Done** — policy audit service implementing §2.2 and the
       normalised §2.3

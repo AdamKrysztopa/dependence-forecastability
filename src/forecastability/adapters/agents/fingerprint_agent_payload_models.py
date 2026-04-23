@@ -17,6 +17,8 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, ConfigDict
 
+from forecastability.utils.types import RoutingConfidenceLabel
+
 if TYPE_CHECKING:
     from forecastability.utils.types import FingerprintBundle
 
@@ -79,7 +81,7 @@ class FingerprintAgentPayload(BaseModel):
     # Routing fields
     primary_families: list[str]
     secondary_families: list[str]
-    confidence_label: str
+    confidence_label: RoutingConfidenceLabel
     caution_flags: list[str]
     rationale: list[str]
     # Profile context
@@ -126,7 +128,7 @@ def fingerprint_agent_payload(
         informative_horizons=list(fp.informative_horizons),
         primary_families=[str(f) for f in rec.primary_families],
         secondary_families=[str(f) for f in rec.secondary_families],
-        confidence_label=str(rec.confidence_label),
+        confidence_label=rec.confidence_label,
         caution_flags=[str(flag) for flag in rec.caution_flags],
         rationale=list(rec.rationale),
         profile_summary=dict(bundle.profile_summary),

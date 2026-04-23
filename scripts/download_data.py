@@ -7,6 +7,7 @@ Part D: Exogenous cross-dependence datasets (UCI Bike Sharing, financial pairs, 
 
 Usage:
     uv run python scripts/download_data.py
+    uv run python scripts/download_data.py sunspots_monthly
 """
 
 from __future__ import annotations
@@ -40,6 +41,7 @@ _logger = logging.getLogger(__name__)
 _CANONICAL_DIR = Path("data/raw/canonical")
 _M4_DIR = Path("data/raw/m4")
 _EXOG_DIR = Path("data/raw/exog")
+_PROCESSED_DIR = Path("data/processed")
 
 # ---------------------------------------------------------------------------
 # M4 GitHub raw URLs for training data — ALL six frequencies
@@ -193,6 +195,30 @@ _EXOG_FINANCIAL_SPECS: dict[str, tuple[str, str, str, bool]] = {
     "eth_returns": ("ETH-USD", "2017-11-01", "2024-12-31", True),
 }
 
+_SUNSPOTS_MONTHLY_URL = "https://www.sidc.be/SILSO/DATA/SN_m_tot_V2.0.csv"
+
+
+def _download_sunspots_monthly() -> None:
+    """Download SIDC monthly sunspot data and persist a compact processed CSV."""
+    _PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
+    out_path = _PROCESSED_DIR / "sunspots_monthly.csv"
+    if out_path.exists():
+        _logger.info("  %s already exists, skipping.", out_path)
+        return
+
+    _logger.info("  Downloading SIDC monthly sunspot data ...")
+    raw = pd.read_csv(
+        _SUNSPOTS_MONTHLY_URL,
+        sep=";",
+        header=None,
+        names=["year", "month", "decimal_date", "ssn", "std", "n_obs", "provisional"],
+    )
+    filtered = raw[["year", "month", "ssn"]].copy()
+    filtered = filtered.dropna(subset=["ssn"])
+    filtered["ssn"] = filtered["ssn"].astype(float)
+    filtered.to_csv(out_path, index=False)
+    _logger.info("  Saved %s (%d rows)", out_path, len(filtered))
+
 
 def _download_bike_sharing() -> None:
     """Download UCI Bike Sharing Dataset and save hourly subset to CSV.
@@ -299,6 +325,13 @@ def _parse_args() -> argparse.Namespace:
     """Parse command-line options."""
     parser = argparse.ArgumentParser(description="Download and persist all project datasets.")
     parser.add_argument(
+        "dataset",
+        nargs="?",
+        choices=["all", "sunspots_monthly"],
+        default="all",
+        help="Optional single dataset selector (default: all).",
+    )
+    parser.add_argument(
         "--log-level",
         choices=["DEBUG", "INFO", "WARNING", "ERROR"],
         default="INFO",
@@ -311,6 +344,11 @@ def main() -> None:
     """Download and persist all datasets."""
     args = _parse_args()
     logging.basicConfig(level=getattr(logging, args.log_level), format="%(message)s")
+
+    if args.dataset == "sunspots_monthly":
+        _download_sunspots_monthly()
+        _logger.info("Done. sunspots_monthly is in data/processed/")
+        return
 
     _logger.info("=== Part A: Canonical illustrative examples ===")
     _save_canonical()

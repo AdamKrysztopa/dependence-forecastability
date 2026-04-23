@@ -39,7 +39,7 @@ from forecastability.adapters.settings import InfraSettings
 from forecastability.use_cases.run_forecastability_fingerprint import (
     run_forecastability_fingerprint,
 )
-from forecastability.utils.types import FingerprintBundle
+from forecastability.utils.types import FingerprintBundle, RoutingConfidenceLabel
 
 try:
     from pydantic_ai import Agent, RunContext
@@ -125,7 +125,7 @@ class FingerprintExplanation(BaseModel):
     information_structure: str
     nonlinear_share: float
     primary_families: list[str]
-    confidence_label: str
+    confidence_label: RoutingConfidenceLabel
     narrative: str
     caveats: list[str]
 
@@ -351,7 +351,7 @@ def _strict_explanation(bundle: FingerprintBundle) -> FingerprintExplanation:
         information_structure=str(fp.information_structure),
         nonlinear_share=fp.nonlinear_share,
         primary_families=[str(f) for f in rec.primary_families],
-        confidence_label=str(rec.confidence_label),
+        confidence_label=rec.confidence_label,
         narrative=narrative,
         caveats=caveats,
     )
