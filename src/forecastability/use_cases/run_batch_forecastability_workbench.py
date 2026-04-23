@@ -73,10 +73,11 @@ def _next_step_from_bundle(
     families = _stringify_families(recommendation.primary_families)
 
     if fingerprint.information_structure == "none" or "naive" in recommendation.primary_families:
+        baseline_families = families if families else ["naive", "seasonal_naive"]
         return ForecastingNextStepPlan(
             action="baseline_monitoring",
             priority_tier="low",
-            recommended_model_families=families,
+            recommended_model_families=baseline_families,
             why_this_action=(
                 "The signal does not stay meaningfully above the surrogate-noise floor, "
                 "so a simple baseline is the responsible starting point."

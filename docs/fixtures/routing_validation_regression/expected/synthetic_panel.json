@@ -2,17 +2,13 @@
   {
     "case_name": "white_noise",
     "source_kind": "synthetic",
-    "outcome": "downgrade",
-    "confidence_label": "medium",
+    "outcome": "abstain",
+    "confidence_label": "abstain",
     "expected_primary_families": [
       "naive",
       "seasonal_naive"
     ],
-    "observed_primary_families": [
-      "downscope",
-      "naive",
-      "seasonal_naive"
-    ],
+    "observed_primary_families": [],
     "threshold_margin": 0.03,
     "rule_stability": 1.0,
     "fingerprint_penalty_count": 0
@@ -114,17 +110,13 @@
   {
     "case_name": "long_memory",
     "source_kind": "synthetic",
-    "outcome": "downgrade",
-    "confidence_label": "medium",
+    "outcome": "abstain",
+    "confidence_label": "abstain",
     "expected_primary_families": [
       "naive",
       "seasonal_naive"
     ],
-    "observed_primary_families": [
-      "downscope",
-      "naive",
-      "seasonal_naive"
-    ],
+    "observed_primary_families": [],
     "threshold_margin": 0.03,
     "rule_stability": 1.0,
     "fingerprint_penalty_count": 0

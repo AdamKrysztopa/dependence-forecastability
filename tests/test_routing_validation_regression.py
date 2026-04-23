@@ -189,17 +189,6 @@ class TestCoverageRequirements:
         assert isinstance(data, dict)
         assert data["downgraded_cases"] >= 1, "No downgrade cases (§6.3 requires weak_seasonal)"
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason=(
-            "v0.3.1 router always returns at least one fallback family "
-            "(naive / seasonal_naive / downscope), so observed_primary_families "
-            "is never empty and the abstain predicate never fires. "
-            "The abstain path is exercised in test_routing_policy_audit_service.py "
-            "via a synthetic empty-family stub. Revisit if a future router version "
-            "supports explicit no-recommendation emission."
-        ),
-    )
     def test_at_least_one_abstain(self) -> None:
         data = _load_expected(_AUDIT_SUMMARY_FILE)
         assert isinstance(data, dict)

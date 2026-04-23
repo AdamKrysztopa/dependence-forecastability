@@ -91,14 +91,18 @@ def _select_route(
     config: RoutingPolicyConfig,
 ) -> tuple[list[ModelFamilyLabel], list[ModelFamilyLabel], list[str]]:
     """Select primary families, secondary families, and rationale."""
-    if (
-        fingerprint.information_structure == "none"
-        or fingerprint.information_mass <= config.low_mass_max
-    ):
+    if fingerprint.information_structure == "none":
+        return (
+            [],
+            [],
+            ["No informative structure detected; abstain from family-level routing."],
+        )
+
+    if fingerprint.information_mass <= config.low_mass_max:
         return (
             ["naive", "seasonal_naive", "downscope"],
             [],
-            ["Low information mass or no informative structure detected."],
+            ["Low information mass detected despite some structure; use baseline families."],
         )
 
     if (
@@ -299,7 +303,9 @@ def route_fingerprint(
         + signal_conflict_penalty
         + low_signal_quality_penalty
     )
-    confidence_label = _confidence_from_penalties(penalty_sum)
+    confidence_label = (
+        "abstain" if not primary_families else _confidence_from_penalties(penalty_sum)
+    )
     caution_flags = _build_caution_flags(
         fingerprint,
         config=resolved_config,

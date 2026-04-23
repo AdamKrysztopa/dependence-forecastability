@@ -362,7 +362,7 @@ Any change requires a fixture rebuild and a changelog entry.
 | V3_4-F09 | Agentic example — "hear human-feedback narration" | 4 | Extends `adapters/agents/` + `examples/.../agents/` patterns | `adapters/agents/routing_validation_agent_payload_models.py` (deterministic A3 payload), `examples/univariate/agents/routing_validation_agent_review.py` (deterministic-first demo with optional live-LLM path gated on the existing `agent` extra), reusing the [docs/agent_layer.md](../agent_layer.md) hard contract | Done |
 | V3_4-CI-01 | Validation smoke test | 5 | Extends `.github/workflows/smoke.yml` | run report script in `--smoke` mode | Proposed |
 | V3_4-CI-02 | Release checklist hardening | 5 | Extends `.github/ISSUE_TEMPLATE/release_checklist.md` | fixture diff sign-off required for any change to `services/routing_policy_service.py` | Proposed |
-| V3_4-CI-03 | Notebook contract extension | 5 | Extends `scripts/check_notebook_contract.py` | track new walkthrough notebook | Proposed |
+| V3_4-CI-03 | Notebook contract extension | 5 | Extends `scripts/check_notebook_contract.py` | track new walkthrough notebook | Done |
 | V3_4-CI-04 | `diagnostics/` boundary test | 5 | Extends `tests/test_architecture_boundaries.py` | new `test_diagnostics_have_no_infra_imports` mirroring the existing services rule (forbids `matplotlib`, `pydantic_ai`, `fastapi`, `mcp`, `httpx`, `click`, `typer`) so the new `diagnostics/routing_validation_regression.py` cannot regress | Proposed |
 | V3_4-D01 | Validation theory doc | 6 | New docs page | `docs/theory/routing_validation.md` covering §2 in plain language | Proposed |
 | V3_4-D02 | README + quickstart + public API update | 6 | Extends user-facing docs | document `confidence_label` widening, the validation use case, the report script, and the agentic example | Proposed |
@@ -1478,21 +1478,21 @@ class RoutingValidationAgentPayload(BaseModel):
 - [x] V3_4-F05 is **Done** — `run_routing_validation()` returns
       `RoutingValidationBundle`, manifest loader sits next to it under
       `use_cases/`
-- [ ] V3_4-F06 is **Done** — fixtures and rebuild script exist; the
+- [x] V3_4-F06 is **Done** — fixtures and rebuild script exist; the
       `--calibrate-near-threshold` sub-step has been run and its output
       pinned in `calibration.json`
-- [ ] V3_4-F07 is **Done** — report script generates markdown + JSON +
+- [x] V3_4-F07 is **Done** — report script generates markdown + JSON +
       summary plots
-- [ ] V3_4-F08 is **Done** — walkthrough notebook is registered with the
+- [x] V3_4-F08 is **Done** — walkthrough notebook is registered with the
       notebook contract
-- [ ] V3_4-F09 is **Done** — agentic example runs deterministically without
+- [x] V3_4-F09 is **Done** — agentic example runs deterministically without
       the `agent` extra; live-LLM path passes the strict-mode caveat-
       verbatim test when extras are present
 - [ ] V3_4-CI-01 is **Done** — validation smoke job runs on every push
 - [ ] V3_4-CI-02 is **Done** — release checklist requires fixture verify
       and references `services/routing_policy_service.py` (the actual file
       name, not the legacy `routing_service.py` typo)
-- [ ] V3_4-CI-03 is **Done** — notebook contract tracks the new walkthrough
+- [x] V3_4-CI-03 is **Done** — notebook contract tracks the new walkthrough
 - [ ] V3_4-CI-04 is **Done** — `diagnostics/` is now under boundary
       enforcement
 - [ ] V3_4-D01 is **Done** — theory doc landed and passes the docs-contract
@@ -1500,9 +1500,9 @@ class RoutingValidationAgentPayload(BaseModel):
 - [ ] V3_4-D02 is **Done** — README / quickstart / public API updated, with
       the agentic example referenced
 - [ ] V3_4-D03 is **Done** — changelog entry published
-- [ ] At least one synthetic case proves each of `pass`, `fail`,
+- [x] At least one synthetic case proves each of `pass`, `fail`,
       `downgrade`, `abstain` outcomes
-- [ ] At least one synthetic case proves `confidence_label = "low"`
+- [x] At least one synthetic case proves `confidence_label = "low"`
 - [ ] No public docs claim routing is universally correct or equivalent to
       full benchmarking
 

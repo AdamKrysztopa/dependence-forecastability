@@ -75,14 +75,12 @@ def test_profile_summary_contains_geometry_fields(ar1_bundle: FingerprintBundle)
     assert ar1_bundle.metadata["input_window_contract"] == "train_window_only_for_rolling_origin"
 
 
-def test_white_noise_routes_to_naive_families(white_noise_bundle: FingerprintBundle) -> None:
-    """The white-noise archetype should downscope to naive-style families."""
+def test_white_noise_abstains_from_family_routing(white_noise_bundle: FingerprintBundle) -> None:
+    """The white-noise archetype should emit no primary families."""
     assert white_noise_bundle.geometry.information_horizon == 0
     assert white_noise_bundle.geometry.information_structure == "none"
-    assert any(
-        family in white_noise_bundle.recommendation.primary_families
-        for family in ("naive", "seasonal_naive", "downscope")
-    )
+    assert white_noise_bundle.recommendation.primary_families == []
+    assert white_noise_bundle.recommendation.confidence_label == "abstain"
 
 
 def test_ar1_bundle_keeps_geometry_and_fingerprint_aligned(ar1_bundle: FingerprintBundle) -> None:
