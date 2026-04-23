@@ -1,0 +1,189 @@
+[
+  {
+    "case_name": "white_noise",
+    "source_kind": "synthetic",
+    "outcome": "downgrade",
+    "confidence_label": "high",
+    "expected_primary_families": [
+      "naive",
+      "seasonal_naive"
+    ],
+    "observed_primary_families": [
+      "downscope",
+      "naive",
+      "seasonal_naive"
+    ],
+    "threshold_margin": 0.03,
+    "rule_stability": 1.0,
+    "fingerprint_penalty_count": 0
+  },
+  {
+    "case_name": "ar1",
+    "source_kind": "synthetic",
+    "outcome": "downgrade",
+    "confidence_label": "medium",
+    "expected_primary_families": [
+      "downscope",
+      "naive",
+      "seasonal_naive"
+    ],
+    "observed_primary_families": [
+      "downscope",
+      "naive",
+      "seasonal_naive"
+    ],
+    "threshold_margin": 0.015425960830558255,
+    "rule_stability": 0.6,
+    "fingerprint_penalty_count": 1
+  },
+  {
+    "case_name": "seasonal",
+    "source_kind": "synthetic",
+    "outcome": "pass",
+    "confidence_label": "high",
+    "expected_primary_families": [
+      "harmonic_regression",
+      "seasonal_naive",
+      "tbats"
+    ],
+    "observed_primary_families": [
+      "harmonic_regression",
+      "seasonal_naive",
+      "tbats"
+    ],
+    "threshold_margin": 0.15263018290925104,
+    "rule_stability": 1.0,
+    "fingerprint_penalty_count": 0
+  },
+  {
+    "case_name": "weak_seasonal_near_threshold",
+    "source_kind": "synthetic",
+    "outcome": "downgrade",
+    "confidence_label": "high",
+    "expected_primary_families": [
+      "harmonic_regression",
+      "seasonal_naive",
+      "tbats"
+    ],
+    "observed_primary_families": [
+      "harmonic_regression",
+      "seasonal_naive",
+      "tbats"
+    ],
+    "threshold_margin": 0.01744446263295199,
+    "rule_stability": 1.0,
+    "fingerprint_penalty_count": 0
+  },
+  {
+    "case_name": "nonlinear_mixed",
+    "source_kind": "synthetic",
+    "outcome": "fail",
+    "confidence_label": "medium",
+    "expected_primary_families": [
+      "neural",
+      "nonlinear_regression"
+    ],
+    "observed_primary_families": [
+      "arima",
+      "ets",
+      "linear_state_space"
+    ],
+    "threshold_margin": 0.004884737118468499,
+    "rule_stability": 0.6,
+    "fingerprint_penalty_count": 1
+  },
+  {
+    "case_name": "structural_break",
+    "source_kind": "synthetic",
+    "outcome": "downgrade",
+    "confidence_label": "high",
+    "expected_primary_families": [
+      "arima",
+      "ets",
+      "linear_state_space"
+    ],
+    "observed_primary_families": [
+      "arima",
+      "ets",
+      "linear_state_space"
+    ],
+    "threshold_margin": 0.04771272192486531,
+    "rule_stability": 1.0,
+    "fingerprint_penalty_count": 0
+  },
+  {
+    "case_name": "long_memory",
+    "source_kind": "synthetic",
+    "outcome": "downgrade",
+    "confidence_label": "high",
+    "expected_primary_families": [
+      "naive",
+      "seasonal_naive"
+    ],
+    "observed_primary_families": [
+      "downscope",
+      "naive",
+      "seasonal_naive"
+    ],
+    "threshold_margin": 0.03,
+    "rule_stability": 1.0,
+    "fingerprint_penalty_count": 0
+  },
+  {
+    "case_name": "mediated_low_directness",
+    "source_kind": "synthetic",
+    "outcome": "downgrade",
+    "confidence_label": "low",
+    "expected_primary_families": [
+      "arima",
+      "ets",
+      "linear_state_space"
+    ],
+    "observed_primary_families": [
+      "arima",
+      "ets",
+      "linear_state_space"
+    ],
+    "threshold_margin": 0.007075336811499203,
+    "rule_stability": 0.6,
+    "fingerprint_penalty_count": 2
+  },
+  {
+    "case_name": "exogenous_driven",
+    "source_kind": "synthetic",
+    "outcome": "downgrade",
+    "confidence_label": "low",
+    "expected_primary_families": [
+      "arima",
+      "ets",
+      "linear_state_space"
+    ],
+    "observed_primary_families": [
+      "arima",
+      "ets",
+      "linear_state_space"
+    ],
+    "threshold_margin": 0.00042947315400956865,
+    "rule_stability": 0.6,
+    "fingerprint_penalty_count": 2
+  },
+  {
+    "case_name": "low_directness_high_penalty",
+    "source_kind": "synthetic",
+    "outcome": "downgrade",
+    "confidence_label": "medium",
+    "expected_primary_families": [
+      "arima",
+      "ets",
+      "linear_state_space"
+    ],
+    "observed_primary_families": [
+      "arima",
+      "ets",
+      "linear_state_space"
+    ],
+    "threshold_margin": 0.013869797661194373,
+    "rule_stability": 0.6,
+    "fingerprint_penalty_count": 1
+  }
+]

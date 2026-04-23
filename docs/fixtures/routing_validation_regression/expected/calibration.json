@@ -1,0 +1,10 @@
+{
+  "calibrated_amplitude": 1.98,
+  "threshold_margin_at_calibration": 0.01744446263295199,
+  "target_range_low": 0.01,
+  "target_range_high": 0.025,
+  "tau_margin": 0.05,
+  "tau_margin_medium": 0.02,
+  "sweep_seed": 42,
+  "sweep_n": 600
+}
