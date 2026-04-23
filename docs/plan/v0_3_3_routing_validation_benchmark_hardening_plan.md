@@ -352,9 +352,9 @@ Any change requires a fixture rebuild and a changelog entry.
 | V3_4-F00a | `confidence_label` widening safety patch | 0 | Patches existing call sites | replace open `confidence_label != "low"` checks at `use_cases/run_batch_forecastability_workbench.py` lines 97 and 138 with explicit `in {"high", "medium"}`; tighten `adapters/llm/fingerprint_agent.py` payload field type from `str` to `RoutingConfidenceLabel`; add AST guard test that fails on any future open inequality against the widened alias | Done |
 | V3_4-F01 | Expanded synthetic archetype panel | 1 | Extends `utils/synthetic.py` | ten generators (§6.1) with deterministic seed contracts and expected-family metadata (one extra `low_directness_high_penalty` generator added to guarantee `confidence_label = "low"` coverage) | Done |
 | V3_4-F02 | Real-series validation panel | 1 | New small curated dataset layer | three license-clear real series with metadata (§6.2) | Done |
-| V3_4-F03 | Policy audit service | 1 | Builds on `routing_policy_service.py` | `services/routing_policy_audit_service.py` implementing the four-outcome predicate from §2.2 and the normalised threshold-distance metric from §2.3 | Proposed |
-| V3_4-F03a | Rule-stability subroutine | 1 | New helper inside policy audit | `compute_rule_stability(fingerprint, recommendation, *, delta) -> float` per §2.4 (corner-plus-center grid, $2^K + 1$ samples) | Proposed |
-| V3_4-F04 | Confidence calibration service | 1 | Extends routing semantics | `services/routing_confidence_calibration_service.py` implementing §2.5 with the additive `abstain` label and the explicit first-matching-row precedence | Proposed |
+| V3_4-F03 | Policy audit service | 1 | Builds on `routing_policy_service.py` | `services/routing_policy_audit_service.py` implementing the four-outcome predicate from §2.2 and the normalised threshold-distance metric from §2.3 | Done |
+| V3_4-F03a | Rule-stability subroutine | 1 | New helper inside policy audit | `compute_rule_stability(fingerprint, recommendation, *, delta) -> float` per §2.4 (corner-plus-center grid, $2^K + 1$ samples) | Done |
+| V3_4-F04 | Confidence calibration service | 1 | Extends routing semantics | `services/routing_confidence_calibration_service.py` implementing §2.5 with the additive `abstain` label and the explicit first-matching-row precedence | Done |
 | V3_4-F05 | Validation orchestration use case | 2 | Follows `use_cases/` pattern | `use_cases/run_routing_validation.py` returning `RoutingValidationBundle`; manifest loader lives next to it as `use_cases/routing_validation_panel.py` (not `diagnostics/`) | Proposed |
 | V3_4-F06 | Regression fixtures | 3 | Extends current fixture discipline | `docs/fixtures/routing_validation_regression/expected/` + `scripts/rebuild_routing_validation_fixtures.py` (with `--calibrate-near-threshold` sub-step that pins the `weak_seasonal` amplitude to land inside the downgrade band) | Proposed |
 | V3_4-F07 | Validation report generation | 4 | Extends showcase/reporting pattern | `scripts/run_routing_validation_report.py` emitting markdown + JSON + summary plots | Proposed |
@@ -1469,11 +1469,11 @@ class RoutingValidationAgentPayload(BaseModel):
       seeds and `ExpectedFamilyMetadata`
 - [x] V3_4-F02 is **Done** — real-series manifest, license-checked, with
       every entry resolvable
-- [ ] V3_4-F03 is **Done** — policy audit service implementing §2.2 and the
+- [x] V3_4-F03 is **Done** — policy audit service implementing §2.2 and the
       normalised §2.3
-- [ ] V3_4-F03a is **Done** — rule-stability subroutine implementing §2.4
+- [x] V3_4-F03a is **Done** — rule-stability subroutine implementing §2.4
       with the corner-plus-center grid
-- [ ] V3_4-F04 is **Done** — confidence calibration service implementing
+- [x] V3_4-F04 is **Done** — confidence calibration service implementing
       §2.5 with explicit first-matching-row precedence
 - [ ] V3_4-F05 is **Done** — `run_routing_validation()` returns
       `RoutingValidationBundle`, manifest loader sits next to it under
