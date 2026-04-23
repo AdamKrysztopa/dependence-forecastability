@@ -41,7 +41,7 @@ def test_run_routing_validation_report_smoke(tmp_path: Path) -> None:
 
     bundle_path = json_dir / "routing_validation_bundle.json"
     manifest_path = json_dir / "routing_validation_report_manifest.json"
-    report_path = reports_dir / "routing_validation_report.md"
+    report_path = reports_dir / "report.md"
     outcome_path = figures_dir / "routing_validation_outcomes.png"
     confidence_path = figures_dir / "routing_validation_confidence.png"
     margin_hist_path = figures_dir / "routing_validation_threshold_margin_histogram.png"
