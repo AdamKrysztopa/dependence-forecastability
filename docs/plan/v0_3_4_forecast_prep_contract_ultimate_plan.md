@@ -376,8 +376,8 @@ The Forecast Prep Contract preserves three v0.3.2 contracts exactly:
 | FPC-F08.1 | Showcase script | 3 | Mirrors existing showcase scripts | `scripts/run_showcase_forecast_prep.py` with `--smoke` flag (no `--with-runners`) | Done |
 | FPC-F10 | Contract tests | 4 | Extends current test discipline | builder, exporter, three-axis, calendar, blocked-state cases | Done |
 | FPC-F11 | Regression fixtures | 4 | Follows current fixture discipline | `docs/fixtures/forecast_prep_regression/expected/` + rebuild script | Done |
-| FPC-CI-01 | Forecast prep smoke job | 5 | Extends `.github/workflows/smoke.yml` | run showcase script in `--smoke` mode (no extras) | Proposed |
-| FPC-CI-04 | Release checklist hardening | 5 | Extends `.github/ISSUE_TEMPLATE/release_checklist.md` | fixture verify, recipes-page presence, no-framework-imports check | Proposed |
+| FPC-CI-01 | Forecast prep smoke job | 5 | Extends `.github/workflows/smoke.yml` | run showcase script in `--smoke` mode (no extras) | Done |
+| FPC-CI-04 | Release checklist hardening | 5 | Extends `.github/ISSUE_TEMPLATE/release_checklist.md` | fixture verify, recipes-page presence, no-framework-imports check | Done |
 | FPC-D01 | Theory / contract doc | 6 | New docs page | `docs/forecast_prep_contract.md` covering §2 in plain language | Proposed |
 | FPC-D02 | README / quickstart / public API update | 6 | Extends user-facing docs | document contract, `[calendar]` extra, calendar features, framework-agnostic exporters | Proposed |
 | FPC-D03 | Changelog and release notes | 6 | Release docs | additive contract surface; explicit "framework-agnostic" framing | Proposed |
@@ -1552,9 +1552,9 @@ knows where to take the contract next.
 - [x] FPC-F10 is **Done** — contract tests cover all three axes, the export
       helpers, and the no-framework-imports rule
 - [x] FPC-F11 is **Done** — regression fixtures and rebuild script land
-- [ ] FPC-CI-01 is **Done** — forecast prep smoke job runs on every push
+- [x] FPC-CI-01 is **Done** — forecast prep smoke job runs on every push
       with no framework extras installed
-- [ ] FPC-CI-04 is **Done** — release checklist requires fixture verify,
+- [x] FPC-CI-04 is **Done** — release checklist requires fixture verify,
       Invariant E pass, and the recipes-page presence
 - [ ] FPC-D01 is **Done** — `docs/forecast_prep_contract.md` published with
       the recipes-page forward link
