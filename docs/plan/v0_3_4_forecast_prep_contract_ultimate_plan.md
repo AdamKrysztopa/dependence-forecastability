@@ -366,11 +366,11 @@ The Forecast Prep Contract preserves three v0.3.2 contracts exactly:
 | --- | --- | ---: | --- | --- | --- |
 | FPC-F00 | Typed contract result models | 0 | Extends `utils/types.py` patterns | `ForecastPrepContract`, `LagRecommendation`, `CovariateRecommendation`, `FamilyRecommendation`, `ForecastPrepBundle` | Done |
 | FPC-F00.1 | `contract_version` field and schema-evolution policy | 0 | New | additive `contract_version: str` with documented evolution rules | Done |
-| FPC-F01 | Univariate contract builder | 1 | Builds on `TriageResult` | `use_cases/build_forecast_prep_contract.py`, `services/forecast_prep_mapper.py` | Proposed |
-| FPC-F02 | Covariate-aware builder extension | 1 | Builds on `LaggedExogBundle`, `CovariantAnalysisBundle` | covariate role inference + sparse-lag mapping | Proposed |
-| FPC-F03 | Seasonality extraction rules | 1 | Builds on fingerprint | seasonal-period candidate vs recommended split | Proposed |
-| FPC-F03a | Calendar feature auto-generation | 1 | New | `services/calendar_feature_service.py` with deterministic naming | Proposed |
-| FPC-F03b | Holiday calendar opt-in | 1 | New | `holidays` soft dependency behind `calendar_locale`, gated by the new `[calendar]` extra | Proposed |
+| FPC-F01 | Univariate contract builder | 1 | Builds on `TriageResult` | `use_cases/build_forecast_prep_contract.py`, `services/forecast_prep_mapper.py` | Done |
+| FPC-F02 | Covariate-aware builder extension | 1 | Builds on `LaggedExogBundle`, `CovariantAnalysisBundle` | covariate role inference + sparse-lag mapping | Done |
+| FPC-F03 | Seasonality extraction rules | 1 | Builds on fingerprint | seasonal-period candidate vs recommended split | Done |
+| FPC-F03a | Calendar feature auto-generation | 1 | New | `services/calendar_feature_service.py` with deterministic naming | Done |
+| FPC-F03b | Holiday calendar opt-in | 1 | New | `holidays` soft dependency behind `calendar_locale`, gated by the new `[calendar]` extra | Done |
 | FPC-F04R | Framework-agnostic exporters | 2 | New | `services/forecast_prep_export.py::forecast_prep_contract_to_markdown()`, `forecast_prep_contract_to_lag_table()`; documented use of Pydantic `model_dump()` / `model_dump_json()` | Proposed |
 | FPC-F08 | Public examples | 3 | Follows existing examples taxonomy | `examples/forecast_prep/{minimal_contract,calendar_features,known_future,export_payloads}.py` | Proposed |
 | FPC-F08.1 | Showcase script | 3 | Mirrors existing showcase scripts | `scripts/run_showcase_forecast_prep.py` with `--smoke` flag (no `--with-runners`) | Proposed |
@@ -1532,15 +1532,15 @@ knows where to take the contract next.
       validators
 - [ ] FPC-F00.1 is **Done** — `contract_version` field present and
       schema-evolution policy documented
-- [ ] FPC-F01 is **Done** — `build_forecast_prep_contract()` returns a
+- [x] FPC-F01 is **Done** — `build_forecast_prep_contract()` returns a
       `ForecastPrepContract` for univariate inputs
-- [ ] FPC-F02 is **Done** — covariate-aware extension consumes
+- [x] FPC-F02 is **Done** — covariate-aware extension consumes
       `LaggedExogBundle` and respects v0.3.2 invariants
-- [ ] FPC-F03 is **Done** — seasonality extraction populates
+- [x] FPC-F03 is **Done** — seasonality extraction populates
       `candidate_seasonal_periods` and `recommended_seasonal_lags` correctly
-- [ ] FPC-F03a is **Done** — calendar feature service emits the
+- [x] FPC-F03a is **Done** — calendar feature service emits the
       deterministic columns from §2.6
-- [ ] FPC-F03b is **Done** — `holidays` is wired as the `[calendar]` extra
+- [x] FPC-F03b is **Done** — `holidays` is wired as the `[calendar]` extra
       with the documented caution flag
 - [ ] FPC-F04R is **Done** — `forecast_prep_contract_to_markdown()` and
       `forecast_prep_contract_to_lag_table()` are re-exported and
