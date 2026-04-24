@@ -1,0 +1,43 @@
+{
+  "contract": {
+    "baseline_families": [
+      "naive",
+      "seasonal_naive"
+    ],
+    "blocked": true,
+    "calendar_features": [],
+    "calendar_locale": null,
+    "candidate_seasonal_periods": [],
+    "caution_flags": [
+      "blocked_readiness_status"
+    ],
+    "confidence_label": "abstain",
+    "contract_version": "0.3.4",
+    "covariate_notes": [],
+    "downstream_notes": [
+      "deterministic routing for regression fixture"
+    ],
+    "excluded_target_lags": [],
+    "forecastability_class": null,
+    "future_covariates": [],
+    "horizon": null,
+    "lag_rationale": [],
+    "metadata": {
+      "covariate_rows": 0,
+      "family_rows": 3,
+      "lag_rows": 0
+    },
+    "past_covariates": [],
+    "readiness_status": "blocked",
+    "recommended_families": [],
+    "recommended_seasonal_lags": [],
+    "recommended_target_lags": [],
+    "rejected_covariates": [],
+    "source_goal": "univariate",
+    "static_features": [],
+    "target_frequency": null,
+    "transformation_hints": []
+  },
+  "lag_table": [],
+  "markdown_length": 815
+}

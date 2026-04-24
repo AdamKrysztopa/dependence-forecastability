@@ -144,3 +144,25 @@ def test_calendar_locale_without_holidays_adds_caution_and_skips_holiday_column(
     assert expected.issubset(set(contract.calendar_features))
     assert "_calendar__is_holiday" not in contract.calendar_features
     assert "calendar_locale_set_but_holidays_unavailable" in contract.caution_flags
+
+
+def test_weak_signal_keeps_baseline_bias() -> None:
+    """Low confidence or abstain routing should still emit non-empty baseline_families."""
+    for label in ("low", "abstain"):
+        contract = build_forecast_prep_contract(
+            _make_triage_result(blocked=False, primary_lags=[1]),
+            routing_recommendation=_routing_recommendation(confidence_label=label),
+            add_calendar_features=False,
+        )
+
+        assert contract.baseline_families, (
+            f"baseline_families should be non-empty for confidence_label={label!r}"
+        )
+        if label == "abstain":
+            assert contract.recommended_families == [], (
+                "abstain must yield empty recommended_families"
+            )
+        if label == "low":
+            assert len(contract.recommended_families) <= 1, (
+                "low confidence limits recommended_families to at most 1"
+            )

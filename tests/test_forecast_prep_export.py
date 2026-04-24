@@ -185,6 +185,35 @@ def test_no_framework_imports_in_forecast_prep_export() -> None:
         )
 
 
+def test_no_framework_imports_in_forecast_prep_modules() -> None:
+    """All forecast_prep source modules must be free of framework and pandas imports."""
+    _src_root = pathlib.Path(__file__).parent.parent / "src" / "forecastability"
+    modules_to_check = [
+        _src_root / "services" / "forecast_prep_export.py",
+        _src_root / "services" / "forecast_prep_mapper.py",
+        _src_root / "services" / "calendar_feature_service.py",
+        _src_root / "use_cases" / "build_forecast_prep_contract.py",
+    ]
+    framework_patterns = [
+        "import darts",
+        "from darts",
+        "import mlforecast",
+        "from mlforecast",
+        "import statsforecast",
+        "from statsforecast",
+        "import nixtla",
+        "from nixtla",
+    ]
+    for module_path in modules_to_check:
+        assert module_path.exists(), f"Expected source module not found: {module_path}"
+        source = module_path.read_text(encoding="utf-8")
+        for pattern in framework_patterns:
+            assert pattern not in source, (
+                f"Forbidden import '{pattern}' found in {module_path.name}"
+            )
+
+
+
 def test_model_dump_json_round_trip() -> None:
     contract = _rich_contract()
     restored = ForecastPrepContract.model_validate_json(contract.model_dump_json())

@@ -374,8 +374,8 @@ The Forecast Prep Contract preserves three v0.3.2 contracts exactly:
 | FPC-F04R | Framework-agnostic exporters | 2 | New | `services/forecast_prep_export.py::forecast_prep_contract_to_markdown()`, `forecast_prep_contract_to_lag_table()`; documented use of Pydantic `model_dump()` / `model_dump_json()` | Done |
 | FPC-F08 | Public examples | 3 | Follows existing examples taxonomy | `examples/forecast_prep/{minimal_contract,calendar_features,known_future,export_payloads}.py` | Done |
 | FPC-F08.1 | Showcase script | 3 | Mirrors existing showcase scripts | `scripts/run_showcase_forecast_prep.py` with `--smoke` flag (no `--with-runners`) | Done |
-| FPC-F10 | Contract tests | 4 | Extends current test discipline | builder, exporter, three-axis, calendar, blocked-state cases | Proposed |
-| FPC-F11 | Regression fixtures | 4 | Follows current fixture discipline | `docs/fixtures/forecast_prep_regression/expected/` + rebuild script | Proposed |
+| FPC-F10 | Contract tests | 4 | Extends current test discipline | builder, exporter, three-axis, calendar, blocked-state cases | Done |
+| FPC-F11 | Regression fixtures | 4 | Follows current fixture discipline | `docs/fixtures/forecast_prep_regression/expected/` + rebuild script | Done |
 | FPC-CI-01 | Forecast prep smoke job | 5 | Extends `.github/workflows/smoke.yml` | run showcase script in `--smoke` mode (no extras) | Proposed |
 | FPC-CI-04 | Release checklist hardening | 5 | Extends `.github/ISSUE_TEMPLATE/release_checklist.md` | fixture verify, recipes-page presence, no-framework-imports check | Proposed |
 | FPC-D01 | Theory / contract doc | 6 | New docs page | `docs/forecast_prep_contract.md` covering §2 in plain language | Proposed |
@@ -1549,9 +1549,9 @@ knows where to take the contract next.
       `examples/forecast_prep/` and run on a clean install
 - [ ] FPC-F08.1 is **Done** — showcase script with `--smoke` flag, no
       framework imports
-- [ ] FPC-F10 is **Done** — contract tests cover all three axes, the export
+- [x] FPC-F10 is **Done** — contract tests cover all three axes, the export
       helpers, and the no-framework-imports rule
-- [ ] FPC-F11 is **Done** — regression fixtures and rebuild script land
+- [x] FPC-F11 is **Done** — regression fixtures and rebuild script land
 - [ ] FPC-CI-01 is **Done** — forecast prep smoke job runs on every push
       with no framework extras installed
 - [ ] FPC-CI-04 is **Done** — release checklist requires fixture verify,

@@ -140,3 +140,30 @@ def test_builder_maps_primary_lags_and_seasonality_into_contract_fields() -> Non
     assert 1 in contract.recommended_target_lags
     assert 7 in contract.recommended_seasonal_lags
     assert contract.candidate_seasonal_periods == [7]
+
+
+def test_seasonality_can_be_empty() -> None:
+    """Non-periodic structure or absent fingerprint should yield empty seasonal output."""
+    triage_result = _triage_result(primary_lags=[1, 2])
+    monotonic_bundle = _fingerprint_bundle(
+        structure="monotonic",
+        informative_horizons=[1, 2],
+    )
+
+    contract_monotonic = build_forecast_prep_contract(
+        triage_result,
+        fingerprint_bundle=monotonic_bundle,
+        routing_recommendation=monotonic_bundle.recommendation,
+        add_calendar_features=False,
+    )
+    assert contract_monotonic.recommended_seasonal_lags == []
+    assert contract_monotonic.candidate_seasonal_periods == []
+
+    contract_no_fingerprint = build_forecast_prep_contract(
+        triage_result,
+        fingerprint_bundle=None,
+        routing_recommendation=monotonic_bundle.recommendation,
+        add_calendar_features=False,
+    )
+    assert contract_no_fingerprint.recommended_seasonal_lags == []
+    assert contract_no_fingerprint.candidate_seasonal_periods == []

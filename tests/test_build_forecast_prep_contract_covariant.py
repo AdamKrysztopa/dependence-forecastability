@@ -194,3 +194,47 @@ def test_future_lag_zero_requires_known_future_or_calendar_role() -> None:
             covariate_rows=[invalid_future_row],
             allowed_zero_future_names=set(),
         )
+
+
+def test_covariate_role_requires_explicit_future_known_support() -> None:
+    """future_known_required must be True only for role='future'; past rows must have False."""
+    selected_rows = [
+        LaggedExogSelectionRow(
+            target="target",
+            driver="past_driver",
+            lag=1,
+            selected_for_tensor=True,
+            selector_name="xami_sparse",
+            tensor_role="predictive",
+        ),
+    ]
+    bundle = _bundle(
+        selected_rows=selected_rows,
+        known_future_drivers=["future_declared"],
+    )
+
+    contract = build_forecast_prep_contract(
+        _make_triage_result(),
+        lagged_exog_bundle=bundle,
+        routing_recommendation=_routing(),
+        known_future_drivers={"future_declared": True},
+        add_calendar_features=False,
+    )
+
+    assert "past_driver" in contract.past_covariates
+    assert "future_declared" in contract.future_covariates
+
+    covariate_rows, _ = map_covariate_recommendations(
+        lagged_exog_bundle=bundle,
+        known_future_driver_names={"future_declared"},
+        contract_confidence="high",
+    )
+    for row in covariate_rows:
+        if row.role == "past":
+            assert row.future_known_required is False, (
+                f"Past covariate {row.name!r} must have future_known_required=False"
+            )
+        if row.role == "future":
+            assert row.future_known_required is True, (
+                f"Future covariate {row.name!r} must have future_known_required=True"
+            )
