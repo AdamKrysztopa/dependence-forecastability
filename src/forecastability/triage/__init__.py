@@ -57,6 +57,18 @@ from forecastability.use_cases.run_batch_triage import (
     run_batch_triage_with_details,
 )
 from forecastability.use_cases.run_triage import run_triage
+from forecastability.utils.types import (
+    CovariateRecommendation,
+    FamilyRecommendation,
+    ForecastPrepBundle,
+    ForecastPrepConfidence,
+    ForecastPrepContract,
+    ForecastPrepContractConfidence,
+    ForecastPrepCovariateRole,
+    ForecastPrepFamilyTier,
+    ForecastPrepLagRole,
+    LagRecommendation,
+)
 
 __all__ = [
     "AnalysisGoal",
@@ -87,6 +99,16 @@ __all__ = [
     "TriageStageCompleted",
     "TriageError",
     "TriageEvent",
+    "ForecastPrepBundle",
+    "ForecastPrepConfidence",
+    "ForecastPrepContract",
+    "ForecastPrepContractConfidence",
+    "ForecastPrepCovariateRole",
+    "ForecastPrepFamilyTier",
+    "ForecastPrepLagRole",
+    "LagRecommendation",
+    "CovariateRecommendation",
+    "FamilyRecommendation",
     "ForecastabilityProfile",
     "ComplexityBandResult",
     "LargestLyapunovExponentResult",
