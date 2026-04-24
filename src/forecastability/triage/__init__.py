@@ -51,6 +51,7 @@ from forecastability.triage.result_bundle import (
 )
 from forecastability.triage.router import plan_method
 from forecastability.triage.spectral_predictability import SpectralPredictabilityResult
+from forecastability.use_cases.build_forecast_prep_contract import build_forecast_prep_contract
 from forecastability.use_cases.run_batch_triage import (
     rank_batch_items,
     run_batch_triage,
@@ -116,6 +117,7 @@ __all__ = [
     "SpectralPredictabilityResult",
     "assess_readiness",
     "plan_method",
+    "build_forecast_prep_contract",
     "rank_batch_items",
     "run_batch_triage",
     "run_batch_triage_with_details",

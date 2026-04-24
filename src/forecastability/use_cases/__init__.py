@@ -1,6 +1,7 @@
 """Use-case modules for pipeline orchestration."""
 
 from forecastability.services.routing_policy_service import RoutingPolicyConfig
+from forecastability.use_cases.build_forecast_prep_contract import build_forecast_prep_contract
 from forecastability.use_cases.run_batch_forecastability_workbench import (
     run_batch_forecastability_workbench,
 )
@@ -20,6 +21,7 @@ from forecastability.use_cases.run_routing_validation import run_routing_validat
 from forecastability.use_cases.run_triage import run_triage
 
 __all__ = [
+    "build_forecast_prep_contract",
     "run_triage",
     "run_batch_triage",
     "run_batch_triage_with_details",
