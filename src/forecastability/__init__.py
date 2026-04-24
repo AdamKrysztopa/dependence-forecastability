@@ -30,6 +30,10 @@ from forecastability.reporting.forecastability_workbench_reporting import (
     build_batch_forecastability_executive_markdown,
     build_batch_forecastability_markdown,
 )
+from forecastability.services.forecast_prep_export import (
+    forecast_prep_contract_to_lag_table,
+    forecast_prep_contract_to_markdown,
+)
 from forecastability.triage.forecastability_profile import ForecastabilityProfile
 from forecastability.triage.models import (
     TriageRequest,
@@ -250,6 +254,8 @@ __all__ = [
     "run_forecastability_fingerprint",
     "run_routing_validation",
     "run_ami_geometry_csv_batch",
+    "forecast_prep_contract_to_lag_table",
+    "forecast_prep_contract_to_markdown",
     "run_triage",
     "render_fingerprint_summary_dict",
     "SampleSizeStressResult",

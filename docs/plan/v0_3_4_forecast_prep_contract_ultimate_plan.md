@@ -371,7 +371,7 @@ The Forecast Prep Contract preserves three v0.3.2 contracts exactly:
 | FPC-F03 | Seasonality extraction rules | 1 | Builds on fingerprint | seasonal-period candidate vs recommended split | Done |
 | FPC-F03a | Calendar feature auto-generation | 1 | New | `services/calendar_feature_service.py` with deterministic naming | Done |
 | FPC-F03b | Holiday calendar opt-in | 1 | New | `holidays` soft dependency behind `calendar_locale`, gated by the new `[calendar]` extra | Done |
-| FPC-F04R | Framework-agnostic exporters | 2 | New | `services/forecast_prep_export.py::forecast_prep_contract_to_markdown()`, `forecast_prep_contract_to_lag_table()`; documented use of Pydantic `model_dump()` / `model_dump_json()` | Proposed |
+| FPC-F04R | Framework-agnostic exporters | 2 | New | `services/forecast_prep_export.py::forecast_prep_contract_to_markdown()`, `forecast_prep_contract_to_lag_table()`; documented use of Pydantic `model_dump()` / `model_dump_json()` | Done |
 | FPC-F08 | Public examples | 3 | Follows existing examples taxonomy | `examples/forecast_prep/{minimal_contract,calendar_features,known_future,export_payloads}.py` | Proposed |
 | FPC-F08.1 | Showcase script | 3 | Mirrors existing showcase scripts | `scripts/run_showcase_forecast_prep.py` with `--smoke` flag (no `--with-runners`) | Proposed |
 | FPC-F10 | Contract tests | 4 | Extends current test discipline | builder, exporter, three-axis, calendar, blocked-state cases | Proposed |

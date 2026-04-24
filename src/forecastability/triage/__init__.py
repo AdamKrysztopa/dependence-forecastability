@@ -7,6 +7,10 @@ from forecastability.adapters.result_bundle_io import (
     save_result_bundle,
     save_triage_result_bundle,
 )
+from forecastability.services.forecast_prep_export import (
+    forecast_prep_contract_to_lag_table,
+    forecast_prep_contract_to_markdown,
+)
 from forecastability.triage.batch_models import (
     FAILURE_TABLE_COLUMNS,
     SUMMARY_TABLE_COLUMNS,
@@ -118,6 +122,8 @@ __all__ = [
     "assess_readiness",
     "plan_method",
     "build_forecast_prep_contract",
+    "forecast_prep_contract_to_lag_table",
+    "forecast_prep_contract_to_markdown",
     "rank_batch_items",
     "run_batch_triage",
     "run_batch_triage_with_details",
