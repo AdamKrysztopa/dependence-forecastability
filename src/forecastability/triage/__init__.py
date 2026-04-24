@@ -7,6 +7,10 @@ from forecastability.adapters.result_bundle_io import (
     save_result_bundle,
     save_triage_result_bundle,
 )
+from forecastability.services.forecast_prep_export import (
+    forecast_prep_contract_to_lag_table,
+    forecast_prep_contract_to_markdown,
+)
 from forecastability.triage.batch_models import (
     FAILURE_TABLE_COLUMNS,
     SUMMARY_TABLE_COLUMNS,
@@ -51,12 +55,25 @@ from forecastability.triage.result_bundle import (
 )
 from forecastability.triage.router import plan_method
 from forecastability.triage.spectral_predictability import SpectralPredictabilityResult
+from forecastability.use_cases.build_forecast_prep_contract import build_forecast_prep_contract
 from forecastability.use_cases.run_batch_triage import (
     rank_batch_items,
     run_batch_triage,
     run_batch_triage_with_details,
 )
 from forecastability.use_cases.run_triage import run_triage
+from forecastability.utils.types import (
+    CovariateRecommendation,
+    FamilyRecommendation,
+    ForecastPrepBundle,
+    ForecastPrepConfidence,
+    ForecastPrepContract,
+    ForecastPrepContractConfidence,
+    ForecastPrepCovariateRole,
+    ForecastPrepFamilyTier,
+    ForecastPrepLagRole,
+    LagRecommendation,
+)
 
 __all__ = [
     "AnalysisGoal",
@@ -87,6 +104,16 @@ __all__ = [
     "TriageStageCompleted",
     "TriageError",
     "TriageEvent",
+    "ForecastPrepBundle",
+    "ForecastPrepConfidence",
+    "ForecastPrepContract",
+    "ForecastPrepContractConfidence",
+    "ForecastPrepCovariateRole",
+    "ForecastPrepFamilyTier",
+    "ForecastPrepLagRole",
+    "LagRecommendation",
+    "CovariateRecommendation",
+    "FamilyRecommendation",
     "ForecastabilityProfile",
     "ComplexityBandResult",
     "LargestLyapunovExponentResult",
@@ -94,6 +121,9 @@ __all__ = [
     "SpectralPredictabilityResult",
     "assess_readiness",
     "plan_method",
+    "build_forecast_prep_contract",
+    "forecast_prep_contract_to_lag_table",
+    "forecast_prep_contract_to_markdown",
     "rank_batch_items",
     "run_batch_triage",
     "run_batch_triage_with_details",

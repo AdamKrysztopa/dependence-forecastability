@@ -30,6 +30,10 @@ from forecastability.reporting.forecastability_workbench_reporting import (
     build_batch_forecastability_executive_markdown,
     build_batch_forecastability_markdown,
 )
+from forecastability.services.forecast_prep_export import (
+    forecast_prep_contract_to_lag_table,
+    forecast_prep_contract_to_markdown,
+)
 from forecastability.triage.forecastability_profile import ForecastabilityProfile
 from forecastability.triage.models import (
     TriageRequest,
@@ -38,6 +42,7 @@ from forecastability.triage.models import (
 from forecastability.triage.predictive_info_learning_curve import PredictiveInfoLearningCurve
 from forecastability.triage.spectral_predictability import SpectralPredictabilityResult
 from forecastability.use_cases import (
+    build_forecast_prep_contract,
     run_batch_forecastability_workbench,
     run_batch_triage,
     run_covariant_analysis,
@@ -104,16 +109,25 @@ from forecastability.utils.types import (
     CausalGraphResult,
     CovariantAnalysisBundle,
     CovariantSummaryRow,
+    CovariateRecommendation,
     Diagnostics,
     ExogenousBenchmarkResult,
+    FamilyRecommendation,
     FingerprintBundle,
     ForecastabilityFingerprint,
+    ForecastPrepConfidence,
+    ForecastPrepContract,
+    ForecastPrepContractConfidence,
+    ForecastPrepCovariateRole,
+    ForecastPrepFamilyTier,
+    ForecastPrepLagRole,
     ForecastResult,
     GcmiResult,
     InterpretationResult,
     LaggedExogBundle,
     LaggedExogProfileRow,
     LaggedExogSelectionRow,
+    LagRecommendation,
     LagRoleLabel,
     LagSelectorLabel,
     LagSignificanceSource,
@@ -135,7 +149,7 @@ from forecastability.utils.types import (
 )
 from forecastability.utils.validation import validate_time_series
 
-__version__ = "0.3.1"
+__version__ = "0.3.4"
 
 __all__ = [
     "AmiGeometryCurvePoint",
@@ -150,11 +164,13 @@ __all__ = [
     "CanonicalSummary",
     "CausalGraphResult",
     "CMIConfig",
+    "CovariateRecommendation",
     "CovariantAnalysisBundle",
     "CovariantSummaryRow",
     "Diagnostics",
     "build_batch_forecastability_executive_markdown",
     "build_batch_forecastability_markdown",
+    "build_forecast_prep_contract",
     "build_fingerprint_markdown",
     "build_fingerprint_panel_markdown",
     "build_fingerprint_summary_dict",
@@ -165,7 +181,14 @@ __all__ = [
     "ExpectedFamilyMetadata",
     "ExogenousBenchmarkConfig",
     "ExogenousBenchmarkResult",
+    "FamilyRecommendation",
     "FingerprintBundle",
+    "ForecastPrepConfidence",
+    "ForecastPrepContract",
+    "ForecastPrepContractConfidence",
+    "ForecastPrepCovariateRole",
+    "ForecastPrepFamilyTier",
+    "ForecastPrepLagRole",
     "ForecastabilityAnalyzer",
     "ForecastabilityAnalyzerExog",
     "ForecastabilityFingerprint",
@@ -200,6 +223,7 @@ __all__ = [
     "generate_white_noise_archetype",
     "BenchmarkDataConfig",
     "InterpretationResult",
+    "LagRecommendation",
     "LaggedExogBundle",
     "LaggedExogProfileRow",
     "LaggedExogSelectionRow",
@@ -230,6 +254,8 @@ __all__ = [
     "run_forecastability_fingerprint",
     "run_routing_validation",
     "run_ami_geometry_csv_batch",
+    "forecast_prep_contract_to_lag_table",
+    "forecast_prep_contract_to_markdown",
     "run_triage",
     "render_fingerprint_summary_dict",
     "SampleSizeStressResult",

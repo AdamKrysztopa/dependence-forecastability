@@ -60,6 +60,9 @@ jobs:
       - name: Smoke CSV geometry adapter CLI wiring
         run: uv run scripts/run_ami_information_geometry_csv.py --help
 
+      - name: Run forecast prep contract showcase (smoke)
+        run: uv run scripts/run_showcase_forecast_prep.py --smoke --quiet
+
       - name: Upload showcase artifacts
         uses: actions/upload-artifact@v7
         with:

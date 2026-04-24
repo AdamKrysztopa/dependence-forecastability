@@ -41,6 +41,11 @@ pip install "dependence-forecastability[transport]"
 pip install "dependence-forecastability[agent]"
 ```
 
+```bash
+# With holiday calendar features
+pip install dependence-forecastability[calendar]
+```
+
 ## Quickstart
 
 Run one deterministic univariate triage call through the top-level facade:
@@ -240,6 +245,29 @@ Transport and runtime entry points:
 | Dashboard | `forecastability-dashboard` | Beta |
 | MCP server | adapter surface | Experimental |
 | Agent narration | adapter surface | Experimental |
+
+## Hand-off after triage
+
+After triage, the contract converts triage outputs into structured, machine-readable
+downstream guidance — lag recommendations, covariate roles, model families, and
+calendar features — without importing any forecasting framework.
+
+```python
+from forecastability import build_forecast_prep_contract, forecast_prep_contract_to_markdown
+import pandas as pd
+
+# contract = build_forecast_prep_contract(
+#     triage_result,
+#     horizon=12,
+#     target_frequency="M",
+#     add_calendar_features=True,
+#     datetime_index=pd.date_range("1949-01", periods=144, freq="ME"),
+# )
+print(contract.model_dump_json(indent=2))
+print(forecast_prep_contract_to_markdown(contract))
+```
+
+For framework-specific wiring, see [docs/recipes/forecast_prep_to_external_frameworks.md](docs/recipes/forecast_prep_to_external_frameworks.md).
 
 ## Repository Workflow
 

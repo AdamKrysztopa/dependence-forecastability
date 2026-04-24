@@ -1,0 +1,110 @@
+{
+  "contract": {
+    "baseline_families": [
+      "naive",
+      "seasonal_naive"
+    ],
+    "blocked": false,
+    "calendar_features": [
+      "_calendar__dayofweek",
+      "_calendar__is_business_day",
+      "_calendar__is_weekend",
+      "_calendar__month",
+      "_calendar__quarter"
+    ],
+    "calendar_locale": null,
+    "candidate_seasonal_periods": [],
+    "caution_flags": [],
+    "confidence_label": "medium",
+    "contract_version": "0.3.4",
+    "covariate_notes": [],
+    "downstream_notes": [
+      "deterministic routing for regression fixture"
+    ],
+    "excluded_target_lags": [],
+    "forecastability_class": "high",
+    "future_covariates": [
+      "_calendar__dayofweek",
+      "_calendar__is_business_day",
+      "_calendar__is_weekend",
+      "_calendar__month",
+      "_calendar__quarter"
+    ],
+    "horizon": null,
+    "lag_rationale": [
+      "lag 1 is the strongest non-seasonal lag",
+      "lag 7 is secondary under current confidence"
+    ],
+    "metadata": {
+      "covariate_rows": 5,
+      "family_rows": 5,
+      "lag_rows": 2
+    },
+    "past_covariates": [],
+    "readiness_status": "clear",
+    "recommended_families": [
+      "arima",
+      "ets"
+    ],
+    "recommended_seasonal_lags": [],
+    "recommended_target_lags": [
+      1
+    ],
+    "rejected_covariates": [],
+    "source_goal": "univariate",
+    "static_features": [],
+    "target_frequency": null,
+    "transformation_hints": []
+  },
+  "lag_table": [
+    {
+      "axis": "target",
+      "driver": "target",
+      "lag": 1,
+      "rationale": "lag 1 is the strongest non-seasonal lag",
+      "role": "direct",
+      "selected_for_handoff": true
+    },
+    {
+      "axis": "future",
+      "driver": "_calendar__dayofweek",
+      "lag": 0,
+      "rationale": "",
+      "role": "future",
+      "selected_for_handoff": true
+    },
+    {
+      "axis": "future",
+      "driver": "_calendar__is_business_day",
+      "lag": 0,
+      "rationale": "",
+      "role": "future",
+      "selected_for_handoff": true
+    },
+    {
+      "axis": "future",
+      "driver": "_calendar__is_weekend",
+      "lag": 0,
+      "rationale": "",
+      "role": "future",
+      "selected_for_handoff": true
+    },
+    {
+      "axis": "future",
+      "driver": "_calendar__month",
+      "lag": 0,
+      "rationale": "",
+      "role": "future",
+      "selected_for_handoff": true
+    },
+    {
+      "axis": "future",
+      "driver": "_calendar__quarter",
+      "lag": 0,
+      "rationale": "",
+      "role": "future",
+      "selected_for_handoff": true
+    }
+  ],
+  "markdown_length": 1096
+}

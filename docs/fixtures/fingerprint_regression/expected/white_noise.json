@@ -102,12 +102,8 @@
   },
   "recommendation": {
     "caution_flags": [],
-    "confidence_label": "high",
-    "primary_families": [
-      "naive",
-      "seasonal_naive",
-      "downscope"
-    ],
+    "confidence_label": "abstain",
+    "primary_families": [],
     "secondary_families": []
   },
   "target_name": "white_noise"

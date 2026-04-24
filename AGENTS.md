@@ -34,8 +34,17 @@ Treat downstream forecasting frameworks as hand-off targets after triage, not as
 
 - Public result surfaces: keep stable Pydantic fields additive.
 - Docs and examples: do not imply that this package performs model training.
-- Notebooks: keep them illustrative; reusable logic belongs in package code.
+- Notebooks: keep them illustrative; reusable logic belongs in package code. Do not add new notebooks (transitional surface; removed in v0.4.0 per [v0.4.0 plan](docs/plan/v0_4_0_examples_repo_split_ultimate_plan.md)).
 - Example scripts: keep them small and runnable.
+
+## Repository Scope (binding)
+
+See [docs/plan/aux_documents/developer_instruction_repo_scope.md](docs/plan/aux_documents/developer_instruction_repo_scope.md) for the full directive.
+
+- The core package is **framework-agnostic**. Do not introduce `darts`, `mlforecast`, `statsforecast`, or `nixtla` as runtime, optional-extra, dev, or CI dependencies of the core repository.
+- The forecast-prep contract (`ForecastPrepContract`) is a **hand-off boundary**. No `to_<framework>_spec()` / `fit_<framework>()` helpers ship as supported public API; framework mappings live as illustrative recipes only.
+- Framework usage examples belong in `docs/recipes/**` (text only) and (from v0.4.0) in the sibling `forecastability-examples` repository, not in the core package or its `examples/` / `scripts/` / `tests/`.
+- Prefer scripts and docs recipes over notebooks for any new content.
 
 ## Validation Commands
 

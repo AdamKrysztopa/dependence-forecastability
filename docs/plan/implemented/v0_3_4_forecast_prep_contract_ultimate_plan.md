@@ -1,19 +1,33 @@
+<!-- type: reference -->
 # v0.3.4 — Forecast Prep Contract: Ultimate Release Plan
 
-**Plan type:** Actionable release plan — neutral hand-off contract from triage to downstream forecasting frameworks
+**Plan type:** Actionable release plan — neutral, framework-agnostic hand-off contract from triage to downstream forecasting frameworks
 **Audience:** Maintainer, reviewer, statistician reviewer, downstream-framework user, Jr. developer
-**Target release:** `0.3.4` — **headline release**, ships second in the 0.3.3 → 0.3.4 → 0.3.5 chain
+**Target release:** `0.3.4` — **headline release**, ships second in the 0.3.3 → 0.3.4 → 0.3.5 → 0.4.0 chain
 **Current released version:** `0.3.3`
 **Branch:** `feat/v0.3.4-forecast-prep-contract`
-**Status:** Draft / Proposed
-**Last reviewed:** 2026-04-22
+**Status:** Implemented
+**Last reviewed:** 2026-04-24
+
+> [!IMPORTANT]
+> **Scope (binding).** This release ships the `ForecastPrepContract` and
+> framework-agnostic exporters only. It does **not** ship `to_darts_spec`,
+> `to_mlforecast_spec`, `fit_darts`, `fit_mlforecast`, `[darts]` /
+> `[mlforecast]` optional extras, or any new walkthrough notebook. Framework
+> mappings live as illustrative recipes in `docs/recipes/**` and (from
+> v0.4.0) in the sibling `forecastability-examples` repository. Driver
+> document: [aux_documents/developer_instruction_repo_scope.md](aux_documents/developer_instruction_repo_scope.md).
+> The original draft (with framework runners and optional extras) is
+> preserved for traceability at
+> [aux_documents/v0_3_4_forecast_prep_contract_ultimate_plan.md](aux_documents/v0_3_4_forecast_prep_contract_ultimate_plan.md).
 
 > [!NOTE]
 > **Cross-release ordering.** Depends on the calibrated `confidence_label`
 > and `RoutingValidationBundle` shipped in v0.3.3. The v0.3.5 documentation
 > hardening pass ships **after** this release so it can cover the new
-> `ForecastPrepContract`, `to_darts_spec`, `to_mlforecast_spec`, optional
-> extras, and the new walkthrough notebook in a single sweep.
+> `ForecastPrepContract`, the framework-agnostic exporters, the recipes
+> page, and Invariant E (no framework runtime imports) in a single sweep.
+> The v0.4.0 release performs the notebook-out / library-first split.
 
 **Companion refs:**
 
@@ -21,7 +35,9 @@
 - [v0.3.1 Forecastability Fingerprint & Model Routing: Ultimate Release Plan](implemented/v0_3_1_forecastability_fingerprint_model_routing_plan.md)
 - [v0.3.2 Lagged-Exogenous Triage: Ultimate Release Plan](implemented/v0_3_2_lagged_exogenous_triage_ultimate_plan.md)
 - [v0.3.3 Routing Validation & Benchmark Hardening: Ultimate Release Plan](v0_3_3_routing_validation_benchmark_hardening_plan.md) — ships first
-- [v0.3.5 Documentation Quality Improvement: Ultimate Release Plan](v0_3_5_documentation_quality_improvement_ultimate_plan.md) — ships last
+- [v0.3.5 Documentation Quality Improvement: Ultimate Release Plan](v0_3_5_documentation_quality_improvement_ultimate_plan.md) — ships after
+- [v0.4.0 Examples Repository Split: Ultimate Release Plan](v0_4_0_examples_repo_split_ultimate_plan.md) — ships last
+- [aux_documents/developer_instruction_repo_scope.md](aux_documents/developer_instruction_repo_scope.md) — driver document
 
 **Builds on:**
 
@@ -33,14 +49,13 @@
 - implemented `0.3.2` `LaggedExogBundle`, `LaggedExogSelectionRow` with
   `selected_for_tensor` flag, `tensor_role ∈ {diagnostic, predictive,
   known_future}`, `xami_sparse` sparse selector, known-future opt-in
-- v0.3.5 docs-contract checker, canonical terminology table
 - v0.3.3 widened `RoutingConfidenceLabel = Literal["high", "medium", "low",
   "abstain"]`, `RoutingValidationBundle` for release-time policy validation
 - existing `TriageRequest`, `run_triage`, `TriageResult` univariate facade
   and `run_covariant_analysis` covariant facade
 - existing `pyproject.toml` `[project.optional-dependencies]` block (already
-  hosts `agent`, `causal`, `transport` extras) — pattern reused for
-  `darts` and `mlforecast` extras
+  hosts `agent`, `causal`, `transport` extras) — pattern reused for the
+  new `calendar` extra only
 
 ---
 
@@ -50,24 +65,31 @@ After triage, a covariant analysis, a fingerprint, and a sparse lag map, the
 package answers every diagnostic question a user asks. It does **not** answer
 the next question they always ask:
 
-> "Fine. What do I actually pass into Darts or MLForecast?"
+> "Fine. What do I actually pass into Darts, MLForecast, or any other
+> downstream framework?"
 
-`0.3.4` is the headline release that closes that gap. It introduces a single
+`0.3.4` is the headline release that closes that gap **without coupling the
+core package to any forecasting framework**. It introduces a single
 **neutral, deterministic, additive hand-off contract** — `ForecastPrepContract`
-— that converts triage outputs into structured downstream forecasting guidance
-**without turning the package itself into a model-training framework**.
+— that converts triage outputs into structured, machine-readable downstream
+forecasting guidance. The contract is consumed externally:
 
-The release also ships **two optional adapter extras** (`darts`, `mlforecast`)
-that let users go from contract straight to a fitted model with a single
-function call. The adapters are strictly optional; the core package gains zero
-new hard dependencies.
+- through standard Pydantic exports (`model_dump()`, `model_dump_json()`);
+- through framework-agnostic helpers shipped in this release
+  (`forecast_prep_contract_to_markdown()`,
+  `forecast_prep_contract_to_lag_table()`);
+- through illustrative external recipes in `docs/recipes/**` that show how a
+  user could translate the contract into Darts, MLForecast, or
+  Nixtla / StatsForecast configuration in their own code.
 
 > [!IMPORTANT]
-> The Forecast Prep Contract is a **hand-off layer**, not a model trainer.
-> It does not select hyperparameters, score models, or claim optimal
-> architectures. Every `recommended_*` field in the contract is paired with
-> a `confidence_label` and `caution_flags` so that downstream consumers can
-> make informed model-family decisions, not blind model-fitting calls.
+> The Forecast Prep Contract is a **hand-off boundary**, not a model trainer
+> and not a framework adapter. The repository scope directive
+> ([aux_documents/developer_instruction_repo_scope.md](aux_documents/developer_instruction_repo_scope.md))
+> forbids first-class framework integrations in the core package. Every
+> `recommended_*` field in the contract is paired with a `confidence_label`
+> and `caution_flags` so that downstream consumers can make informed
+> model-family decisions, not blind model-fitting calls.
 
 This release also closes a long-standing user-experience gap: deterministic
 **calendar feature generation**. When the user enables `add_calendar_features`
@@ -75,22 +97,24 @@ This release also closes a long-standing user-experience gap: deterministic
 of calendar covariates (`dayofweek`, `month`, `quarter`, `is_weekend`,
 `is_business_day`, optional `is_holiday`) into `future_covariates`. This is
 the single most common manual step every user re-implements; centralising it
-inside the contract removes a major source of inconsistency.
+inside the contract removes a major source of inconsistency. The optional
+`holidays` package ships behind a `[calendar]` extra — the only new optional
+extra in this release.
 
 ### Planning principles
 
 | Principle | Implication |
 | --- | --- |
-| Neutral core, framework-specific adapters second | Core contract first; Darts and MLForecast specs second; runner functions third |
-| Optional extras only | `darts` and `mlforecast` ship as `[project.optional-dependencies]`; core install is unchanged |
-| Lazy imports inside adapters | Adapter modules are importable without their extras; runners raise actionable `ImportError` when extras are missing |
-| Three input axes are first-class | univariate target lags, lagged exogenous covariates, known-future covariates each get explicit treatment |
-| Calendar features are deterministic | Stable naming scheme `_calendar__<feature>`; holiday calendars require explicit locale opt-in |
-| Distinguish evidence from recommendation | `recommended_*` fields are conservative; richer diagnostic fields stay separate |
-| Hexagonal + SOLID | Mapper service in `services/`; contract builder in `use_cases/`; framework adapters in `integrations/`; runner functions are thin shells around lazy-imported framework calls |
-| Additive only | Existing public symbols and Pydantic field shapes are preserved |
-| Honest semantics | Blocked / weak / abstaining triage results yield conservative empty contracts, not aspirational ones |
-| Respect v0.3.2 contracts exactly | Past-covariate lags come from `selected_for_tensor=True` rows only; future-covariate lags may include `lag=0` only for `known_future` rows |
+| Framework-agnostic core | The core package never imports `darts`, `mlforecast`, `statsforecast`, or `nixtla` in any tier (runtime, optional extras, dev, CI). |
+| Stop at the contract boundary | The contract and its exports are the public hand-off surface. Framework-specific code lives in `docs/recipes/**` (illustrative) and (from v0.4.0) in the sibling `forecastability-examples` repository. |
+| Three input axes are first-class | Univariate target lags, lagged exogenous covariates, known-future covariates each get explicit treatment. |
+| Calendar features are deterministic | Stable naming scheme `_calendar__<feature>`; holiday calendars require explicit locale opt-in **and** the `[calendar]` optional extra. |
+| Distinguish evidence from recommendation | `recommended_*` fields are conservative; richer diagnostic fields stay separate. |
+| Hexagonal + SOLID | Mapper service in `services/`; contract builder in `use_cases/`; framework-agnostic export helpers in `services/forecast_prep_export.py`. No `integrations/` directory is introduced. |
+| Additive only | Existing public symbols and Pydantic field shapes are preserved. |
+| Honest semantics | Blocked / weak / abstaining triage results yield conservative empty contracts, not aspirational ones. |
+| Respect v0.3.2 contracts exactly | Past-covariate lags come from `selected_for_tensor=True` rows only; future-covariate lags may include `lag=0` only for `known_future` rows. |
+| No new notebook in core | The originally-planned `05_forecast_prep_to_models.ipynb` is **not** committed in this release; it is created in the sibling examples repo in v0.4.0. |
 
 ### Reviewer acceptance block
 
@@ -98,14 +122,15 @@ inside the contract removes a major source of inconsistency.
 
 1. **Neutral core contract**
    - `ForecastPrepContract`, `LagRecommendation`, `CovariateRecommendation`,
-     `FamilyRecommendation` exist as frozen Pydantic models with stable field
-     names and explicit `Field(...)` descriptions
+     `FamilyRecommendation`, `ForecastPrepBundle` exist as frozen Pydantic
+     models with stable field names and explicit `Field(...)` descriptions
    - `contract_version` field is set to `"0.3.4"` and is part of the schema
 2. **Builder**
    - `build_forecast_prep_contract(triage_result, *, horizon, target_frequency, ...)`
      returns a `ForecastPrepContract`
    - blocked or abstaining inputs yield conservative empty
      `recommended_target_lags` and an explicit `caution_flags` entry
+   - the function never imports any forecasting framework
 3. **Three input axes**
    - **Univariate target lags** are mapped from `primary_lags` and the
      fingerprint
@@ -117,40 +142,54 @@ inside the contract removes a major source of inconsistency.
    - `add_calendar_features: bool = True` injects deterministically named
      features (`_calendar__dayofweek`, etc.)
    - `calendar_locale: str | None = None` enables holiday features only when
-     set and only when the optional `holidays` package is installed
-5. **Framework specs**
-   - `to_mlforecast_spec(contract)` returns a serializable dict
-   - `to_darts_spec(contract)` returns a serializable dict, with
-     `lags_past_covariates` derived **only** from
-     `selected_for_tensor=True` rows
-6. **Runner functions (optional extras)**
-   - `fit_mlforecast(contract, df, ...)` lives under
-     `forecastability.integrations.mlforecast_runner` and lazy-imports
-     `mlforecast`
-   - `fit_darts(contract, series, ...)` lives under
-     `forecastability.integrations.darts_runner` and lazy-imports `darts`
-   - both raise actionable `ImportError` when the extra is missing
-7. **Optional extras**
-   - `pyproject.toml` `[project.optional-dependencies]` adds `darts` and
-     `mlforecast` entries
-   - `pip install dependence-forecastability[darts]` and
-     `pip install dependence-forecastability[mlforecast]` succeed
-8. **Final walkthrough notebook**
-   - `notebooks/walkthroughs/05_forecast_prep_to_models.ipynb` exists and
-     exercises the full path: triage → contract → MLForecast → Darts → side-by-side
-9. **Release engineering**
-   - version is bumped to `0.3.4` across `pyproject.toml`,
-     `src/forecastability/__init__.py`, `CHANGELOG.md`, `README.md`
-   - the showcase notebook is committed with executed outputs
-   - all fixture rebuild scripts have been re-run and committed
-   - the git tag `v0.3.4` is created and pushed
-10. **Documentation**
-    - `docs/forecast_prep_contract.md` documents the contract and its three
-      input axes
-    - `README.md` install section documents `[darts]` and `[mlforecast]`
-      extras
-    - `CHANGELOG.md` `0.3.4` entry explicitly notes that `darts` and
-      `mlforecast` are optional extras, not core dependencies
+     set and only when the optional `[calendar]` extra is installed
+5. **Framework-agnostic exporters**
+   - `ForecastPrepContract.model_dump()` and
+     `ForecastPrepContract.model_dump_json(indent=2)` are documented as the
+     canonical Python-dict and JSON export surfaces
+   - `forecast_prep_contract_to_markdown(contract)` returns a stable,
+     deterministic, human- and LLM-readable summary
+   - `forecast_prep_contract_to_lag_table(contract)` returns a deterministic
+     list of `(driver, role, lag, selected_for_handoff, rationale)` rows
+   - none of the exporters import any forecasting framework
+   - **no** `to_darts_spec`, `to_mlforecast_spec`, `fit_darts`,
+     `fit_mlforecast`, or `forecastability.integrations.*` symbol exists in
+     the source tree
+6. **External recipes documentation**
+   - `docs/recipes/forecast_prep_to_external_frameworks.md` exists with three
+     illustrative mappings (Darts, MLForecast, Nixtla / StatsForecast) and a
+     "Why these are recipes, not adapters" section linking to the scope
+     directive
+   - every framework-specific snippet is fenced and prefixed with the
+     illustrative-recipe disclaimer; **no** code on the page is executed by
+     core CI
+7. **Showcase script**
+   - `scripts/run_showcase_forecast_prep.py` runs end-to-end on a clean
+     install in `--smoke` mode without any framework dependency
+   - the script writes JSON, markdown, and lag-table artifacts to
+     `outputs/reports/forecast_prep/`
+8. **Optional extras**
+   - `pyproject.toml` `[project.optional-dependencies]` adds **only** a
+     `calendar` extra (`holidays>=0.50`)
+   - **no** `[darts]`, `[mlforecast]`, `[statsforecast]`, or `[nixtla]`
+     extras are added
+9. **Documentation**
+   - `docs/forecast_prep_contract.md` documents the contract and its three
+     input axes, the schema-evolution policy, and the export helpers
+   - the recipes page from item 6 is linked from
+     `docs/forecast_prep_contract.md` and from the README "Hand-off after
+     triage" subsection
+   - `README.md` install section documents the new `[calendar]` extra and
+     does **not** mention any framework extra
+   - `CHANGELOG.md` `0.3.4` entry explicitly notes that the package remains
+     framework-agnostic and that framework recipes ship as documentation only
+10. **Release engineering**
+    - version is bumped to `0.3.4` across `pyproject.toml`,
+      `src/forecastability/__init__.py`, `CHANGELOG.md`, `README.md`
+    - all fixture rebuild scripts have been re-run and committed
+    - the git tag `v0.3.4` is created and pushed
+    - the published wheel contains zero imports of `darts`, `mlforecast`,
+      `statsforecast`, or `nixtla`
 
 ---
 
@@ -160,7 +199,8 @@ inside the contract removes a major source of inconsistency.
 > Every junior developer MUST read this section before writing any code.
 > The contract is small in math but high in semantic risk: a wrong lag-role
 > mapping or a wrong known-future predicate will silently leak future
-> information into past-covariate slots in downstream forecasting models.
+> information into past-covariate slots when the user later wires the
+> contract into their downstream framework.
 
 ### 2.1. The three input axes
 
@@ -172,21 +212,21 @@ $$\mathcal{X} = \mathcal{X}_{\text{target-lag}} \sqcup \mathcal{X}_{\text{past-c
 where:
 
 - $\mathcal{X}_{\text{target-lag}}$ — past values $Y_{t-k}$ of the target itself
-  for $k \in \{1, 2, \ldots\}$, derived from `primary_lags` and the fingerprint
+  for $k \in \{1, 2, \ldots\}$, derived from `primary_lags` and the fingerprint;
 - $\mathcal{X}_{\text{past-cov}}$ — past values $X_{j, t-k}$ of exogenous
   drivers for $k \ge 1$, derived from
-  `LaggedExogSelectionRow.selected_for_tensor=True` rows
+  `LaggedExogSelectionRow.selected_for_tensor=True` rows;
 - $\mathcal{X}_{\text{future-cov}}$ — values $Z_{m, t+h}$ of covariates that
   are known at prediction time for the entire horizon $h \in \{0, 1, \ldots,
   H-1\}$, derived from explicit user-declared known-future drivers plus
-  auto-generated calendar features
+  auto-generated calendar features.
 
 > [!IMPORTANT]
 > $\mathcal{X}_{\text{past-cov}}$ and $\mathcal{X}_{\text{future-cov}}$ are
 > **disjoint by construction**. A driver column may appear in at most one of
 > them. This is enforced by the builder: a column declared in
 > `known_future_drivers` is removed from past-covariate selection before the
-> Darts/MLForecast spec is emitted.
+> contract is emitted.
 
 ### 2.2. The known-future eligibility predicate
 
@@ -199,13 +239,13 @@ where:
 
 - $K$ — the set of column names supplied by the user via
   `known_future_drivers: dict[str, bool]` (only entries with value `True`
-  are considered known-future)
+  are considered known-future);
 - $C_{\text{cal}}$ — the deterministically generated calendar feature set
   $\{\texttt{\_calendar\_\_dayofweek}, \texttt{\_calendar\_\_month},
   \texttt{\_calendar\_\_quarter}, \texttt{\_calendar\_\_is\_weekend},
   \texttt{\_calendar\_\_is\_business\_day}, \texttt{\_calendar\_\_is\_holiday}\}$
   (the last is included only when `calendar_locale` is set and the optional
-  `holidays` package is importable)
+  `holidays` package is importable).
 
 > [!NOTE]
 > A column appearing in `LaggedExogSelectionRow.selected_for_tensor=True` rows
@@ -239,9 +279,10 @@ $$L_{\text{future}}(c) = \begin{cases} \{0\} & \text{if } c \in C_{\text{cal}} \
 
 > [!IMPORTANT]
 > Future-covariate `lag = 0` is **only** allowed for columns in $C_{\text{cal}}$
-> or $K$. Any other column that arrives at the spec emitter with
-> `lags_future_covariates` containing `0` is a contract bug and the builder
-> must raise `ValueError`. This enforces the invariant from v0.3.2 §2.1.
+> or $K$. Any other column that appears with `selected_lags` containing `0`
+> on a `role = "future"` row is a contract bug; the builder must raise
+> `ValueError` before returning. The recipes page (FPC-D04R) repeats this
+> invariant for users translating the contract into framework configuration.
 
 ### 2.5. Confidence propagation from routing to contract
 
@@ -276,13 +317,13 @@ feature generator emits the following columns when
 | `_calendar__is_holiday` | `bool` | `holidays` package, locale `calendar_locale`, only when both set |
 
 The naming scheme `_calendar__<feature>` is **stable**. Users may rename the
-columns afterward; the contract emitter never strips the prefix.
+columns afterward; the export helpers never strip the prefix.
 
 > [!NOTE]
 > When `calendar_locale` is set but the `holidays` package is not installed,
 > the builder skips `_calendar__is_holiday` silently and emits a single entry
 > in `caution_flags`: `"calendar_locale_set_but_holidays_unavailable"`.
-> This avoids surprising the user with a missing column at the spec emitter.
+> This avoids surprising the user with a missing column at the recipe page.
 
 ### 2.7. Cross-reference to v0.3.2 invariants
 
@@ -312,9 +353,9 @@ The Forecast Prep Contract preserves three v0.3.2 contracts exactly:
 | **Adapters** | `src/forecastability/adapters/cli.py`, `adapters/dashboard.py` | CLI + dashboard surfaces | Stable |
 | **Reporting** | `src/forecastability/reporting/` (if present) | report emitters | Stable |
 | **Examples** | `examples/forecast_prep/` | empty so far; will host new public examples | New |
-| **Walkthroughs** | `notebooks/walkthroughs/{00..04}_*.ipynb` | shipped walkthroughs | Stable |
+| **Walkthroughs** | `notebooks/walkthroughs/{00..04}_*.ipynb` | shipped walkthroughs | Stable; carry the v0.3.5 transition banner; removed in v0.4.0 |
 | **CI** | `.github/workflows/{ci,smoke,publish-pypi,release}.yml`, `.github/ISSUE_TEMPLATE/release_checklist.md`, `scripts/check_notebook_contract.py`, `scripts/check_docs_contract.py` (v0.3.5) | release hygiene baseline | Stable |
-| **Optional extras precedent** | `pyproject.toml` `[project.optional-dependencies]` already hosts `agent`, `causal`, `transport` | demonstrates the additive extra pattern | Stable |
+| **Optional extras precedent** | `pyproject.toml` `[project.optional-dependencies]` already hosts `agent`, `causal`, `transport` | demonstrates the additive extra pattern; reused only for the new `calendar` extra in this release | Stable |
 | **Docs** | `docs/quickstart.md`, `docs/public_api.md`, `docs/surface_guide.md`, `docs/wording_policy.md` (v0.3.5 single source of truth) | user-facing surface | Stable |
 
 ---
@@ -323,35 +364,39 @@ The Forecast Prep Contract preserves three v0.3.2 contracts exactly:
 
 | ID | Feature | Phase | Overlap with existing | Genuine new work | Status |
 | --- | --- | ---: | --- | --- | --- |
-| FPC-F00 | Typed contract result models | 0 | Extends `utils/types.py` patterns | `ForecastPrepContract`, `LagRecommendation`, `CovariateRecommendation`, `FamilyRecommendation`, `ForecastPrepBundle` | Proposed |
-| FPC-F00.1 | `contract_version` field and schema-evolution policy | 0 | New | additive `contract_version: str` with documented evolution rules | Proposed |
-| FPC-F01 | Univariate contract builder | 1 | Builds on `TriageResult` | `use_cases/build_forecast_prep_contract.py`, `services/forecast_prep_mapper.py` | Proposed |
-| FPC-F02 | Covariate-aware builder extension | 1 | Builds on `LaggedExogBundle`, `CovariantAnalysisBundle` | covariate role inference + sparse-lag mapping | Proposed |
-| FPC-F03 | Seasonality extraction rules | 1 | Builds on fingerprint | seasonal-period candidate vs recommended split | Proposed |
-| FPC-F03a | Calendar feature auto-generation | 1 | New | `services/calendar_feature_service.py` with deterministic naming | Proposed |
-| FPC-F03b | Holiday calendar opt-in | 1 | New | `holidays` soft dependency behind `calendar_locale` | Proposed |
-| FPC-F04 | MLForecast spec exporter | 2 | New | `integrations/mlforecast_spec.py::to_mlforecast_spec()` | Proposed |
-| FPC-F05 | Darts spec exporter | 2 | New | `integrations/darts_spec.py::to_darts_spec()` with v0.3.2 invariants | Proposed |
-| FPC-F05.1 | Exporter warnings policy | 2 | Builds on contract caution flags | deterministic note generation in both spec emitters | Proposed |
-| FPC-F06 | MLForecast runner (optional extra) | 3 | New | `integrations/mlforecast_runner.py::fit_mlforecast()` with lazy import | Proposed |
-| FPC-F07 | Darts runner (optional extra) | 3 | New | `integrations/darts_runner.py::fit_darts()` with lazy import | Proposed |
-| FPC-F07.1 | Optional extras configuration | 3 | Extends `pyproject.toml` | additive `[darts]` and `[mlforecast]` entries; CI matrix update | Proposed |
-| FPC-F08 | Public examples | 4 | Follows existing examples taxonomy | `examples/forecast_prep/{minimal_contract,to_mlforecast,to_darts,calendar_features,known_future,with_runners}.py` | Proposed |
-| FPC-F08.1 | Showcase script | 4 | Mirrors existing showcase scripts | `scripts/run_showcase_forecast_prep.py` with `--smoke` and `--with-runners` | Proposed |
-| FPC-F09 | Walkthrough notebook | 4 | Follows existing walkthrough pattern | `notebooks/walkthroughs/05_forecast_prep_to_models.ipynb` (HEADLINE) | Proposed |
-| FPC-F10 | Contract tests | 5 | Extends current test discipline | builder, exporter, three-axis, calendar, blocked-state cases | Proposed |
-| FPC-F10.1 | Runner tests (skipped without extras) | 5 | New | `tests/test_mlforecast_runner.py`, `tests/test_darts_runner.py` with `pytest.importorskip` | Proposed |
-| FPC-F11 | Regression fixtures | 5 | Follows current fixture discipline | `docs/fixtures/forecast_prep_regression/expected/` + rebuild script | Proposed |
-| FPC-CI-01 | Forecast prep smoke job | 6 | Extends `.github/workflows/smoke.yml` | run showcase script in `--smoke` mode (no extras) | Proposed |
-| FPC-CI-02 | Optional-extras CI matrix | 6 | Extends `.github/workflows/ci.yml` | extras matrix runs runner tests with `[darts]` and `[mlforecast]` | Proposed |
-| FPC-CI-03 | Notebook contract extension | 6 | Extends `scripts/check_notebook_contract.py` | track new walkthrough notebook | Proposed |
-| FPC-CI-04 | Release checklist hardening | 6 | Extends `.github/ISSUE_TEMPLATE/release_checklist.md` | extras tag, fixture verify, walkthrough commit | Proposed |
-| FPC-D01 | Theory / contract doc | 7 | New docs page | `docs/forecast_prep_contract.md` covering §2 in plain language | Proposed |
-| FPC-D02 | README / quickstart / public API update | 7 | Extends user-facing docs | document contract, extras, calendar features | Proposed |
-| FPC-D03 | Changelog and release notes | 7 | Release docs | additive contract surface, optional extras explicitly tagged | Proposed |
-| FPC-R01 | Version bump and tag | 7 | Release engineering | bump to `0.3.4`, tag `v0.3.4`, push | Proposed |
-| FPC-R02 | Walkthrough notebook executed-and-committed | 7 | Release engineering | the headline notebook ships with executed outputs | Proposed |
-| FPC-R03 | Fixture rebuild verification | 7 | Release engineering | every `rebuild_*` script runs clean | Proposed |
+| FPC-F00 | Typed contract result models | 0 | Extends `utils/types.py` patterns | `ForecastPrepContract`, `LagRecommendation`, `CovariateRecommendation`, `FamilyRecommendation`, `ForecastPrepBundle` | Done |
+| FPC-F00.1 | `contract_version` field and schema-evolution policy | 0 | New | additive `contract_version: str` with documented evolution rules | Done |
+| FPC-F01 | Univariate contract builder | 1 | Builds on `TriageResult` | `use_cases/build_forecast_prep_contract.py`, `services/forecast_prep_mapper.py` | Done |
+| FPC-F02 | Covariate-aware builder extension | 1 | Builds on `LaggedExogBundle`, `CovariantAnalysisBundle` | covariate role inference + sparse-lag mapping | Done |
+| FPC-F03 | Seasonality extraction rules | 1 | Builds on fingerprint | seasonal-period candidate vs recommended split | Done |
+| FPC-F03a | Calendar feature auto-generation | 1 | New | `services/calendar_feature_service.py` with deterministic naming | Done |
+| FPC-F03b | Holiday calendar opt-in | 1 | New | `holidays` soft dependency behind `calendar_locale`, gated by the new `[calendar]` extra | Done |
+| FPC-F04R | Framework-agnostic exporters | 2 | New | `services/forecast_prep_export.py::forecast_prep_contract_to_markdown()`, `forecast_prep_contract_to_lag_table()`; documented use of Pydantic `model_dump()` / `model_dump_json()` | Done |
+| FPC-F08 | Public examples | 3 | Follows existing examples taxonomy | `examples/forecast_prep/{minimal_contract,calendar_features,known_future,export_payloads}.py` | Done |
+| FPC-F08.1 | Showcase script | 3 | Mirrors existing showcase scripts | `scripts/run_showcase_forecast_prep.py` with `--smoke` flag (no `--with-runners`) | Done |
+| FPC-F10 | Contract tests | 4 | Extends current test discipline | builder, exporter, three-axis, calendar, blocked-state cases | Done |
+| FPC-F11 | Regression fixtures | 4 | Follows current fixture discipline | `docs/fixtures/forecast_prep_regression/expected/` + rebuild script | Done |
+| FPC-CI-01 | Forecast prep smoke job | 5 | Extends `.github/workflows/smoke.yml` | run showcase script in `--smoke` mode (no extras) | Done |
+| FPC-CI-04 | Release checklist hardening | 5 | Extends `.github/ISSUE_TEMPLATE/release_checklist.md` | fixture verify, recipes-page presence, no-framework-imports check | Done |
+| FPC-D01 | Theory / contract doc | 6 | New docs page | `docs/forecast_prep_contract.md` covering §2 in plain language | Done |
+| FPC-D02 | README / quickstart / public API update | 6 | Extends user-facing docs | document contract, `[calendar]` extra, calendar features, framework-agnostic exporters | Done |
+| FPC-D03 | Changelog and release notes | 6 | Release docs | additive contract surface; explicit "framework-agnostic" framing | Done |
+| FPC-D04R | External recipes documentation page | 6 | New docs page (replaces dropped framework specs/runners) | `docs/recipes/forecast_prep_to_external_frameworks.md` with Darts / MLForecast / Nixtla illustrative mappings | Done |
+| FPC-R01 | Version bump and tag | 6 | Release engineering | bump to `0.3.4`, tag `v0.3.4`, push | Done |
+| FPC-R03 | Fixture rebuild verification | 6 | Release engineering | every `rebuild_*` script runs clean | Done |
+
+> [!NOTE]
+> **Items dropped from the original draft.** `FPC-F04` (`to_mlforecast_spec`),
+> `FPC-F05` (`to_darts_spec`), `FPC-F05.1` (exporter warnings on framework
+> wording), `FPC-F06` (`fit_mlforecast`), `FPC-F07` (`fit_darts`),
+> `FPC-F07.1` (`[darts]` / `[mlforecast]` extras + CI matrix), `FPC-F09`
+> (walkthrough notebook), `FPC-F10.1` (runner tests), `FPC-CI-02` (extras
+> matrix), and `FPC-CI-03` (notebook contract extension for the new
+> walkthrough), `FPC-R02` (walkthrough commit) are **not in scope** for this
+> release. Their replacement surfaces are: `FPC-F04R` (framework-agnostic
+> exporters) and `FPC-D04R` (recipes page). Framework-coupled walkthroughs
+> are introduced in the sibling examples repository in
+> [v0.4.0](v0_4_0_examples_repo_split_ultimate_plan.md), not here.
 
 ---
 
@@ -425,7 +470,10 @@ class ForecastPrepContract(BaseModel):
     """Neutral, deterministic, additive hand-off contract for downstream forecasting.
 
     See plan v0.3.4 §2 for the formal semantics of the three input axes.
-    Field names are stable and additive-only.
+    Field names are stable and additive-only. The contract is consumed
+    externally via Pydantic ``model_dump()`` / ``model_dump_json()`` and via
+    the framework-agnostic exporters in
+    ``forecastability.services.forecast_prep_export``.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -504,22 +552,28 @@ class ForecastPrepBundle(BaseModel):
   re-exported from `forecastability` and `forecastability.triage`.
 - The `ForecastPrepBundle` is the **rich** advanced surface. It is re-exported
   from `forecastability.triage` only (not from the top-level facade).
-- `to_mlforecast_spec()` and `to_darts_spec()` operate on `ForecastPrepContract`
-  only. Bundle consumers may call them on `bundle.contract`.
-- `fit_mlforecast()` and `fit_darts()` operate on `ForecastPrepContract` only
-  and lazy-import their respective frameworks inside the function body.
+- The framework-agnostic exporters
+  (`forecast_prep_contract_to_markdown`, `forecast_prep_contract_to_lag_table`)
+  operate on `ForecastPrepContract` only. Bundle consumers may call them on
+  `bundle.contract`.
 - The mapper service (`services/forecast_prep_mapper.py`) is pure: it takes
-  triage outputs and returns typed rows. It does not call any framework
-  adapter.
+  triage outputs and returns typed rows. It does not import any forecasting
+  framework.
 - The builder use case (`use_cases/build_forecast_prep_contract.py`) composes
   the mapper + the calendar service + the rationale writer. It never imports
-  `darts` or `mlforecast`.
+  `darts`, `mlforecast`, `statsforecast`, or `nixtla`.
+- **No `forecastability.integrations` package is created in this release.**
+  The reviewer scope directive
+  ([aux_documents/developer_instruction_repo_scope.md](aux_documents/developer_instruction_repo_scope.md))
+  forbids the `integrations/` namespace as a vehicle for first-class
+  framework adapters; framework code lives in `docs/recipes/**` and (from
+  v0.4.0) in the sibling examples repository.
 
 ### 5.3. Acceptance criteria
 
 - typed models importable from
-  - `forecastability` (compact contract + builder)
-  - `forecastability.triage` (compact contract + builder + bundle)
+  - `forecastability` (compact contract + builder + framework-agnostic exporters)
+  - `forecastability.triage` (compact contract + builder + bundle + framework-agnostic exporters)
 - categorical fields use closed `Literal` labels
 - `recommended_target_lags` strictly positive; field validator enforces this
 - calendar feature names start with `_calendar__`; field validator enforces
@@ -527,6 +581,8 @@ class ForecastPrepBundle(BaseModel):
 - JSON serialisation of `ForecastPrepContract` is stable across reruns
 - `contract_version` is `"0.3.4"` for this release; future additive changes
   do not bump it; only field renames or removals would
+- `grep -rn "import darts\|from darts\|import mlforecast\|from mlforecast\|import statsforecast\|from statsforecast\|import nixtla\|from nixtla" src/`
+  returns zero hits
 
 ---
 
@@ -633,8 +689,7 @@ fingerprint information that exposes structural lag candidates.
      `selected_lags = [0]` by default
    - if $c \in C_{\text{cal}}$, append the column name to
      `ForecastPrepContract.calendar_features` and set
-     `confidence = "high"` (calendar features are deterministically
-     correct)
+     `confidence = "high"` (calendar features are deterministically correct)
    - if $c \in K$ but $c \notin C_{\text{cal}}$,
      `confidence` mirrors the upstream routing label
 
@@ -679,7 +734,8 @@ fingerprint information that exposes structural lag candidates.
 - `src/forecastability/__init__.py` (additive re-export of
   `ForecastPrepContract`, `LagRecommendation`, `CovariateRecommendation`,
   `FamilyRecommendation`, `build_forecast_prep_contract`,
-  `to_mlforecast_spec`, `to_darts_spec`)
+  `forecast_prep_contract_to_markdown`,
+  `forecast_prep_contract_to_lag_table`)
 - `src/forecastability/triage/__init__.py` (additive re-export of the same
   symbols plus `ForecastPrepBundle`)
 
@@ -691,6 +747,8 @@ fingerprint information that exposes structural lag candidates.
 - imports resolve via both `from forecastability import ForecastPrepContract`
   and `from forecastability.triage import ForecastPrepBundle`
 - v0.3.5 docs-contract `--imports` check passes
+- v0.3.5 docs-contract `--no-framework-imports` check passes (no
+  framework runtime import is introduced anywhere under `src/`)
 
 #### FPC-F00.1 — `contract_version` field and schema-evolution policy
 
@@ -698,7 +756,7 @@ fingerprint information that exposes structural lag candidates.
 
 **File targets:**
 
-- `docs/forecast_prep_contract.md` (Phase 7)
+- `docs/forecast_prep_contract.md` (Phase 6)
 - inline docstring on `ForecastPrepContract.contract_version`
 
 **Schema evolution rules:**
@@ -756,9 +814,12 @@ def build_forecast_prep_contract(
     """Build a ForecastPrepContract from deterministic triage outputs.
 
     Implements the three-axis mapping defined in plan v0.3.4 §6 and the
-    confidence propagation rule in §2.5. When add_calendar_features is True
-    and datetime_index is supplied, the builder injects the calendar columns
-    defined in §2.6 into future_covariates.
+    confidence propagation rule in §2.5. When ``add_calendar_features`` is
+    True and ``datetime_index`` is supplied, the builder injects the
+    calendar columns defined in §2.6 into ``future_covariates``.
+
+    The function is framework-agnostic: it never imports darts, mlforecast,
+    statsforecast, or nixtla.
 
     Args:
         triage_result: Output of run_triage(). Determines blocked state and
@@ -776,7 +837,8 @@ def build_forecast_prep_contract(
         add_calendar_features: When True (default), inject deterministic
             calendar columns into future_covariates per §6.3.
         calendar_locale: Locale string (e.g. 'US', 'PL') to enable holiday
-            features. Requires the optional 'holidays' package.
+            features. Requires the optional 'holidays' package shipped via
+            the new `[calendar]` extra.
         datetime_index: Pandas DatetimeIndex aligned with the target series.
             Required for calendar feature generation; ignored otherwise.
 
@@ -794,7 +856,8 @@ def build_forecast_prep_contract(
 - when `routing_recommendation.confidence_label == "abstain"`,
   `contract.confidence_label == "abstain"` and
   `contract.recommended_families == []`
-- the function never imports `darts` or `mlforecast`
+- the function never imports `darts`, `mlforecast`, `statsforecast`, or
+  `nixtla`
 - `datetime_index` is required for calendar feature generation; if missing
   while `add_calendar_features=True`, raises `ValueError` with an actionable
   message
@@ -861,7 +924,7 @@ def generate_calendar_features(
         _calendar__is_business_day (bool)
 
     When locale is not None and the optional 'holidays' package is
-    installed, additionally emits:
+    installed (via the `[calendar]` extra), additionally emits:
         _calendar__is_holiday (bool)
 
     Args:
@@ -889,306 +952,6 @@ def generate_calendar_features(
 - `src/forecastability/services/calendar_feature_service.py`
 - `pyproject.toml` (additive optional extra `calendar = ["holidays>=0.50"]`)
 
-**Acceptance criteria:**
-
-- `holidays` is **not** added to `[project].dependencies`
-- a new optional extra `calendar` is added to
-  `[project.optional-dependencies]`:
-  ```toml
-  calendar = [
-    "holidays>=0.50",
-  ]
-  ```
-- `pip install dependence-forecastability[calendar]` installs the package
-- the builder emits the `"calendar_locale_set_but_holidays_unavailable"`
-  caution flag when relevant
-
-### Phase 2 — Spec exporters
-
-#### FPC-F04 — MLForecast spec exporter
-
-**File targets:**
-
-- `src/forecastability/integrations/__init__.py`
-- `src/forecastability/integrations/mlforecast_spec.py`
-- `tests/test_to_mlforecast_spec.py`
-
-**Implementation contract:**
-
-```python
-def to_mlforecast_spec(contract: ForecastPrepContract) -> dict[str, object]:
-    """Export the contract as a dictionary suitable for MLForecast configuration.
-
-    Output shape:
-        {
-            "lags": list[int],                  # contract.recommended_target_lags
-            "lag_transforms": dict[int, list[str]],  # conservative defaults
-            "date_features": list[str],          # subset of calendar_features
-            "target_transforms": list[str],      # contract.transformation_hints
-            "static_features": list[str],        # contract.static_features
-            "exogenous_features": list[str],     # past_covariates + future_covariates
-            "notes": list[str],                  # built from caution_flags
-        }
-
-    The function never imports mlforecast.
-    """
-```
-
-**Acceptance criteria:**
-
-- returns a serializable dict (JSON round-trip preserves shape)
-- does not require `mlforecast` to be installed
-- output is stable enough for docs/examples/tests
-- `notes` includes deterministic warnings for blocked or abstain contracts
-- no unsupported MLForecast fields are fabricated
-
-#### FPC-F05 — Darts spec exporter
-
-**File targets:**
-
-- `src/forecastability/integrations/darts_spec.py`
-- `tests/test_to_darts_spec.py`
-
-**Implementation contract:**
-
-```python
-def to_darts_spec(contract: ForecastPrepContract) -> dict[str, object]:
-    """Export the contract as a dictionary suitable for Darts configuration.
-
-    Output shape:
-        {
-            "lags": list[int],                       # contract.recommended_target_lags
-            "lags_past_covariates": list[int],       # union of selected_lags from past covariate rows
-            "lags_future_covariates": list[int],     # union of selected_lags from future covariate rows
-            "past_covariates": list[str],            # contract.past_covariates
-            "future_covariates": list[str],          # contract.future_covariates
-            "static_covariates": list[str],          # contract.static_features
-            "recommended_model_families": list[str], # contract.recommended_families
-            "baseline_families": list[str],          # contract.baseline_families
-            "notes": list[str],                      # built from caution_flags
-        }
-
-    The function enforces the v0.3.2 invariants:
-        - lags_past_covariates contains only k >= 1
-        - lags_future_covariates may contain k = 0 only for known_future
-          or calendar columns
-        - violations raise ValueError before returning
-    """
-```
-
-**Acceptance criteria:**
-
-- returns a serializable dict
-- enforces both v0.3.2 invariants per §2.3 and §2.4 with explicit
-  `ValueError` on violation
-- `lags_past_covariates` is the sorted union of `selected_lags` across all
-  past-covariate rows, with the `lag >= 1` invariant double-checked
-- `lags_future_covariates` may include `0` only for entries listed in
-  `contract.future_covariates` whose origin is `known_future` or `calendar`
-
-#### FPC-F05.1 — Exporter warnings policy
-
-**File targets:**
-
-- `src/forecastability/integrations/_warnings.py` (shared helper, internal)
-- `tests/test_exporter_warnings.py`
-
-**Acceptance criteria:**
-
-- both exporters always include explicit notes for blocked and abstain
-  contracts
-- warning wording is deterministic and regression-testable (frozen in
-  fixtures)
-- helper is internal; it is not re-exported from `forecastability`
-
-### Phase 3 — Optional adapter runners
-
-#### FPC-F06 — MLForecast runner (optional extra)
-
-**File targets:**
-
-- `src/forecastability/integrations/mlforecast_runner.py`
-- `tests/test_mlforecast_runner.py`
-
-**Implementation contract:**
-
-```python
-class MLForecastResult(BaseModel):
-    """Compact result returned by fit_mlforecast()."""
-
-    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
-
-    forecast: pd.DataFrame
-    fitted_model: object
-    spec_used: dict[str, object]
-    metadata: dict[str, str | int | float] = Field(default_factory=dict)
-
-
-def fit_mlforecast(
-    contract: ForecastPrepContract,
-    df: pd.DataFrame,
-    *,
-    target_column: str = "y",
-    id_column: str = "unique_id",
-    time_column: str = "ds",
-    horizon: int | None = None,
-    model: object | None = None,
-) -> MLForecastResult:
-    """Fit an MLForecast model from a ForecastPrepContract and a long DataFrame.
-
-    Lazy-imports mlforecast inside the function body. Raises an actionable
-    ImportError if the 'mlforecast' extra is missing.
-
-    Args:
-        contract: A ForecastPrepContract built via build_forecast_prep_contract().
-        df: Long-format DataFrame with columns id_column, time_column,
-            target_column and any covariate columns referenced by the
-            contract.
-        target_column: Column name of the target series. Default 'y'.
-        id_column: Column name of the series id. Default 'unique_id'.
-        time_column: Column name of the timestamp. Default 'ds'.
-        horizon: Forecast horizon. Defaults to contract.horizon.
-        model: Optional MLForecast estimator instance. When None, a
-            default LightGBM-style regressor is constructed; if LightGBM
-            is unavailable, falls back to scikit-learn's HistGradientBoostingRegressor.
-
-    Returns:
-        MLForecastResult with forecast DataFrame and fitted model.
-
-    Raises:
-        ImportError: If the 'mlforecast' extra is missing. The message
-            instructs the user to run:
-                pip install dependence-forecastability[mlforecast]
-        ValueError: If the contract is blocked or has empty
-            recommended_target_lags.
-    """
-    try:
-        from mlforecast import MLForecast
-    except ImportError as exc:
-        raise ImportError(
-            "fit_mlforecast() requires the 'mlforecast' extra. Install with:\n"
-            "    pip install dependence-forecastability[mlforecast]"
-        ) from exc
-    if contract.blocked:
-        raise ValueError(
-            "Cannot fit a model on a blocked ForecastPrepContract. "
-            "Resolve the readiness issues reported in caution_flags first."
-        )
-    if not contract.recommended_target_lags:
-        raise ValueError(
-            "ForecastPrepContract has no recommended_target_lags; "
-            "MLForecast cannot be configured without lag inputs."
-        )
-    spec = to_mlforecast_spec(contract)
-    # Build MLForecast(...) using spec; fit; predict; package result.
-    # Implementation details are deferred to the implementing developer.
-    raise NotImplementedError("Body to be implemented in FPC-F06.")
-```
-
-**Acceptance criteria:**
-
-- module is importable on a clean install (no `mlforecast` extra)
-- calling `fit_mlforecast()` without the extra raises `ImportError` with
-  the canonical install command exactly as shown above
-- with the extra installed, the function returns an `MLForecastResult` whose
-  `forecast` DataFrame has length `contract.horizon` per series id
-- `tests/test_mlforecast_runner.py` uses `pytest.importorskip("mlforecast")`
-  to skip the body of integration tests when the extra is missing
-
-#### FPC-F07 — Darts runner (optional extra)
-
-**File targets:**
-
-- `src/forecastability/integrations/darts_runner.py`
-- `tests/test_darts_runner.py`
-
-**Implementation contract:**
-
-```python
-class DartsResult(BaseModel):
-    """Compact result returned by fit_darts()."""
-
-    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
-
-    forecast: object  # darts.TimeSeries; typed as object to avoid hard import
-    fitted_model: object
-    spec_used: dict[str, object]
-    metadata: dict[str, str | int | float] = Field(default_factory=dict)
-
-
-def fit_darts(
-    contract: ForecastPrepContract,
-    series: object,
-    *,
-    past_covariates: object | None = None,
-    future_covariates: object | None = None,
-    horizon: int | None = None,
-    model: object | None = None,
-) -> DartsResult:
-    """Fit a Darts model from a ForecastPrepContract and a TimeSeries.
-
-    Lazy-imports darts inside the function body. Raises an actionable
-    ImportError if the 'darts' extra is missing.
-
-    Args:
-        contract: A ForecastPrepContract built via build_forecast_prep_contract().
-        series: A darts.TimeSeries instance (typed as object to avoid hard
-            import at module load).
-        past_covariates: Optional darts.TimeSeries of past covariates aligned
-            to series.
-        future_covariates: Optional darts.TimeSeries of future covariates
-            aligned to series + horizon.
-        horizon: Forecast horizon. Defaults to contract.horizon.
-        model: Optional Darts model instance. When None, a default
-            RegressionModel is constructed using contract.recommended_target_lags
-            and the lag sets implied by the contract's covariate axes.
-
-    Returns:
-        DartsResult with forecast TimeSeries and fitted model.
-
-    Raises:
-        ImportError: If the 'darts' extra is missing. The message instructs
-            the user to run:
-                pip install dependence-forecastability[darts]
-        ValueError: If the contract is blocked or violates the v0.3.2
-            invariant that past-covariate lags are strictly positive.
-    """
-    try:
-        from darts.models import RegressionModel
-    except ImportError as exc:
-        raise ImportError(
-            "fit_darts() requires the 'darts' extra. Install with:\n"
-            "    pip install dependence-forecastability[darts]"
-        ) from exc
-    if contract.blocked:
-        raise ValueError(
-            "Cannot fit a model on a blocked ForecastPrepContract. "
-            "Resolve the readiness issues reported in caution_flags first."
-        )
-    spec = to_darts_spec(contract)
-    # Build RegressionModel(lags=spec["lags"], ...); fit; predict; package.
-    # Implementation details are deferred to the implementing developer.
-    raise NotImplementedError("Body to be implemented in FPC-F07.")
-```
-
-**Acceptance criteria:**
-
-- module is importable on a clean install (no `darts` extra)
-- calling `fit_darts()` without the extra raises `ImportError` with the
-  canonical install command exactly as shown above
-- with the extra installed, the function returns a `DartsResult` whose
-  `forecast` is a `darts.TimeSeries` of length `contract.horizon`
-- the runner refuses to fit when `to_darts_spec(contract)` would produce
-  `lags_past_covariates` containing `0` (per §2.3)
-
-#### FPC-F07.1 — Optional extras configuration
-
-**File targets:**
-
-- `pyproject.toml`
-- `.github/workflows/ci.yml` (extras matrix update)
-- `README.md` install section
-
 **Implementation notes — exact `pyproject.toml` snippet:**
 
 ```toml
@@ -1207,77 +970,148 @@ transport = [
 calendar = [
   "holidays>=0.50",
 ]
-darts = [
-  "darts>=0.32",
-]
-mlforecast = [
-  "mlforecast>=0.13",
-]
 ```
 
-**CI matrix snippet:**
+> [!IMPORTANT]
+> No `darts`, `mlforecast`, `statsforecast`, or `nixtla` extras are added in
+> this release. The reviewer scope directive forbids them in any tier.
 
-```yaml
-jobs:
-  extras:
-    name: extras-${{ matrix.extra }}
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        extra: [darts, mlforecast]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
-      - name: Set up Python
-        run: uv python install 3.12
-      - name: Sync core + extra
-        run: uv sync --extra ${{ matrix.extra }}
-      - name: Run extra-specific tests
-        run: uv run pytest tests/test_${{ matrix.extra }}_runner.py -q
+**Acceptance criteria:**
+
+- `holidays` is **not** added to `[project].dependencies`
+- the new optional extra `calendar` is added to
+  `[project.optional-dependencies]`
+- `pip install dependence-forecastability[calendar]` installs the package
+- the builder emits the `"calendar_locale_set_but_holidays_unavailable"`
+  caution flag when relevant
+
+### Phase 2 — Framework-agnostic exporters
+
+#### FPC-F04R — Framework-agnostic exporters
+
+**Goal.** Make the contract trivially consumable from any forecasting
+framework **without** importing one.
+
+**File targets:**
+
+- `src/forecastability/services/forecast_prep_export.py`
+- `src/forecastability/__init__.py` (additive re-exports)
+- `src/forecastability/triage/__init__.py` (additive re-exports)
+- `tests/test_forecast_prep_export.py`
+
+**Public surface (additive, re-exported from `forecastability` and
+`forecastability.triage`):**
+
+- `ForecastPrepContract.model_dump()` — already free via Pydantic; documented
+  as the canonical Python-dict export.
+- `ForecastPrepContract.model_dump_json(indent=2)` — already free via
+  Pydantic; documented as the canonical JSON payload.
+- `forecast_prep_contract_to_markdown(contract: ForecastPrepContract) -> str`
+  — short human- and LLM-readable summary; pure standard library.
+- `forecast_prep_contract_to_lag_table(contract: ForecastPrepContract) -> list[dict[str, object]]`
+  — tabular `(driver, role, lag, selected_for_handoff, rationale)` rows
+  suitable for serialisation to CSV / DataFrame by the user. Returns plain
+  Python; the function does not import `pandas`.
+
+**Implementation contract:**
+
+```python
+"""Framework-agnostic exporters for ForecastPrepContract.
+
+These helpers exist so that downstream users can consume the contract
+without depending on any forecasting framework. Framework-specific
+mappings live in docs/recipes/forecast_prep_to_external_frameworks.md as
+illustrative recipes.
+"""
+
+from __future__ import annotations
+
+from forecastability.utils.types import ForecastPrepContract
+
+
+def forecast_prep_contract_to_markdown(contract: ForecastPrepContract) -> str:
+    """Render a stable, deterministic markdown summary of a contract.
+
+    The summary covers, in this order:
+        - source_goal, blocked, readiness_status, confidence_label
+        - target_frequency, horizon
+        - recommended_target_lags, recommended_seasonal_lags,
+          excluded_target_lags
+        - recommended_families, baseline_families
+        - past_covariates (with sparse lag sets), future_covariates,
+          calendar_features, calendar_locale
+        - caution_flags, downstream_notes
+
+    The function is pure and uses only the standard library.
+
+    Args:
+        contract: Frozen ForecastPrepContract.
+
+    Returns:
+        A markdown string. Stable across reruns; safe for snapshot tests.
+    """
+
+
+def forecast_prep_contract_to_lag_table(
+    contract: ForecastPrepContract,
+) -> list[dict[str, object]]:
+    """Render the contract's lag information as a deterministic list of rows.
+
+    Each row is a plain dict with keys:
+        - driver: str (target name for target lags; covariate name otherwise)
+        - axis: Literal["target", "past", "future"]
+        - role: ForecastPrepLagRole | ForecastPrepCovariateRole
+        - lag: int
+        - selected_for_handoff: bool
+        - rationale: str
+
+    Rows are ordered by (axis, driver, lag) deterministically. Suitable for
+    serialisation to CSV via the standard library or to a pandas DataFrame
+    by the user.
+    """
 ```
 
 **Acceptance criteria:**
 
-- `pip install dependence-forecastability` (no extras) succeeds
-- `pip install dependence-forecastability[darts]` succeeds
-- `pip install dependence-forecastability[mlforecast]` succeeds
-- `pip install dependence-forecastability[calendar]` succeeds
-- `pip install dependence-forecastability[darts,mlforecast,calendar]`
-  succeeds
-- the `extras-darts` and `extras-mlforecast` CI jobs both pass on the
-  release branch
-- `darts` and `mlforecast` are **not** present in `[project].dependencies`
+- `model_dump_json()` round-trips deterministically across Python versions
+  (snapshot test).
+- `forecast_prep_contract_to_markdown()` produces a stable string for a
+  frozen fixture (snapshot test).
+- `forecast_prep_contract_to_lag_table()` returns rows ordered by
+  `(axis, driver, lag)` deterministically (snapshot test).
+- None of the exporters import `darts`, `mlforecast`, `statsforecast`,
+  `nixtla`, `pandas`, or any other heavy dependency.
+- `grep -rn "import darts\|from darts\|import mlforecast\|from mlforecast\|import statsforecast\|from statsforecast\|import nixtla\|from nixtla" src/forecastability/services/forecast_prep_export.py`
+  returns zero hits.
 
-### Phase 4 — Examples, showcase, walkthrough
+### Phase 3 — Examples and showcase
 
 #### FPC-F08 — Public examples
 
 **File targets:**
 
 - `examples/forecast_prep/minimal_contract.py` — univariate triage → contract
-- `examples/forecast_prep/to_mlforecast.py` — contract → MLForecast spec
-  (no extras required)
-- `examples/forecast_prep/to_darts.py` — contract → Darts spec
-  (no extras required)
 - `examples/forecast_prep/calendar_features.py` — calendar feature
   generation walkthrough
 - `examples/forecast_prep/known_future.py` — known-future opt-in walkthrough
-- `examples/forecast_prep/with_runners.py` — full path including
-  `fit_mlforecast()` and `fit_darts()` (clearly marked as requiring extras)
+- `examples/forecast_prep/export_payloads.py` — `model_dump_json`,
+  `forecast_prep_contract_to_markdown`, and
+  `forecast_prep_contract_to_lag_table` end-to-end
 
 **Acceptance criteria:**
 
 - every example uses `from forecastability import …` only (Invariant A
   from v0.3.5)
-- the no-extras examples (`minimal_contract.py`, `to_mlforecast.py`,
-  `to_darts.py`, `calendar_features.py`, `known_future.py`) run on a clean
-  install
-- `with_runners.py` includes a clear top-of-file comment listing the extras
-  install command and falls back to a printed message if the extras are
-  missing
+- every example runs on a clean install with no extras installed
+- no example imports `darts`, `mlforecast`, `statsforecast`, or `nixtla`
+- `examples/forecast_prep/export_payloads.py` writes its outputs under
+  `outputs/examples/forecast_prep/` so a user can inspect them
+
+> [!NOTE]
+> The original draft included `to_mlforecast.py`, `to_darts.py`, and
+> `with_runners.py` examples. These are **not** shipped in core. Their
+> equivalents move to the recipes page (FPC-D04R, text only) and to the
+> sibling `forecastability-examples` repository in v0.4.0.
 
 #### FPC-F08.1 — Showcase script
 
@@ -1292,14 +1126,18 @@ jobs:
 
 Outputs:
 - outputs/reports/forecast_prep/contract.json
-- outputs/reports/forecast_prep/mlforecast_spec.json
-- outputs/reports/forecast_prep/darts_spec.json
-- outputs/reports/forecast_prep/report.md
+- outputs/reports/forecast_prep/contract.md
+- outputs/reports/forecast_prep/lag_table.csv
+- outputs/reports/forecast_prep/report.md (human summary, links to recipes)
 
 Usage:
     uv run python scripts/run_showcase_forecast_prep.py
     uv run python scripts/run_showcase_forecast_prep.py --smoke
-    uv run python scripts/run_showcase_forecast_prep.py --with-runners
+
+The script imports only from `forecastability` and `forecastability.triage`.
+It does not import any forecasting framework. The end of the script prints a
+pointer to docs/recipes/forecast_prep_to_external_frameworks.md so the user
+knows where to take the contract next.
 """
 ```
 
@@ -1307,73 +1145,18 @@ Usage:
 
 - runs end-to-end on a clean checkout in under 60 seconds without extras
 - `--smoke` mode runs in under 15 seconds
-- `--with-runners` mode runs the optional runners and writes additional
-  forecast artifacts to `outputs/reports/forecast_prep/forecasts/`
-- without extras, the script gracefully prints a "skipped (extras missing)"
-  message when `--with-runners` is requested
-- script mirrors the `--smoke` pattern of
+- writes a JSON contract that round-trips through
+  `ForecastPrepContract.model_validate_json`
+- writes a markdown summary identical to
+  `forecast_prep_contract_to_markdown(contract)`
+- writes a CSV lag table identical to
+  `forecast_prep_contract_to_lag_table(contract)` rendered via the
+  standard-library `csv` module
+- has no framework imports (Invariant E from v0.3.5 stays green)
+- mirrors the `--smoke` pattern of
   `scripts/run_showcase_lagged_exogenous.py`
 
-#### FPC-F09 — Walkthrough notebook (HEADLINE)
-
-**File target:** `notebooks/walkthroughs/05_forecast_prep_to_models.ipynb`
-
-> [!IMPORTANT]
-> This is the headline notebook of the `0.3.4` release. It must run
-> end-to-end on a clean checkout with the `darts` and `mlforecast` extras
-> installed. It must follow `.github/instructions/notebooks.instructions.md`:
-> illustrative only, no reusable logic embedded in the notebook itself.
-
-**Required cell outline (in order):**
-
-1. **Markdown** — Title, motivation, link to plan §1
-2. **Markdown** — Setup notes: extras required, install command
-3. **Code** — imports (`from forecastability import …`)
-4. **Markdown** — "Step 1 — Univariate triage on AirPassengers"
-5. **Code** — `result = run_triage(TriageRequest(series=…))`
-6. **Code** — `print(result.summary)`
-7. **Markdown** — "Step 2 — Build the Forecast Prep Contract"
-8. **Code** — `contract = build_forecast_prep_contract(result, horizon=24,
-   target_frequency='M', datetime_index=index)`
-9. **Code** — `print(contract.model_dump_json(indent=2))`
-10. **Markdown** — "Step 3 — Inspect contract structure (three input axes)"
-11. **Code** — print `recommended_target_lags`,
-    `recommended_seasonal_lags`, `past_covariates`, `future_covariates`,
-    `calendar_features`
-12. **Markdown** — "Step 4 — Export to MLForecast spec"
-13. **Code** — `mlforecast_spec = to_mlforecast_spec(contract)`
-14. **Code** — `pprint(mlforecast_spec)`
-15. **Markdown** — "Step 5 — Fit MLForecast (requires `[mlforecast]` extra)"
-16. **Code** — `result_mlf = fit_mlforecast(contract, df_long, horizon=24)`
-17. **Code** — display `result_mlf.forecast.head()`
-18. **Markdown** — "Step 6 — Export to Darts spec"
-19. **Code** — `darts_spec = to_darts_spec(contract)`
-20. **Code** — `pprint(darts_spec)`
-21. **Markdown** — "Step 7 — Fit Darts (requires `[darts]` extra)"
-22. **Code** — `result_darts = fit_darts(contract, series_darts, horizon=24)`
-23. **Code** — display side-by-side forecast table merging
-    `result_mlf.forecast` and `result_darts.forecast.pd_series()`
-24. **Markdown** — "Step 8 — Covariant section: one past covariate + one
-    auto-generated calendar covariate"
-25. **Code** — generate a small example with one past covariate via
-    `run_lagged_exogenous_triage()` and reuse `build_forecast_prep_contract()`
-    with `lagged_exog_bundle=` and `add_calendar_features=True`
-26. **Code** — print the resulting contract's
-    `past_covariates`, `future_covariates`, `calendar_features`
-27. **Markdown** — "Step 9 — What this notebook intentionally does not do"
-28. **Markdown** — explicit list: no hyperparameter tuning, no model
-    selection, no benchmarking, no claim of optimality
-
-**Acceptance criteria:**
-
-- exactly the cell outline above (markdown vs code), in order
-- the notebook executes end-to-end with both extras installed
-- the notebook contains zero reusable logic that does not live in package
-  code (per `.github/instructions/notebooks.instructions.md`)
-- the notebook is registered in `scripts/check_notebook_contract.py`
-- the notebook is committed with executed outputs (per FPC-R02)
-
-### Phase 5 — Tests and regression
+### Phase 4 — Tests and regression
 
 #### FPC-F10 — Contract tests
 
@@ -1385,10 +1168,11 @@ Usage:
 - `tests/test_forecast_prep_seasonality.py`
 - `tests/test_forecast_prep_calendar.py`
 - `tests/test_forecast_prep_known_future.py`
+- `tests/test_forecast_prep_export.py`
 
 **Required test cases (deterministic, seed `42` throughout):**
 
-- `test_contract_version_is_0_3_5`
+- `test_contract_version_is_0_3_4`
 - `test_blocked_result_yields_conservative_contract`
 - `test_abstain_routing_yields_empty_recommended_families`
 - `test_primary_lags_map_into_recommended_target_lags`
@@ -1403,6 +1187,10 @@ Usage:
 - `test_past_covariate_lags_strictly_positive`
 - `test_future_covariate_lag_zero_only_for_known_future_or_calendar`
 - `test_covariate_role_requires_explicit_future_known_support`
+- `test_model_dump_json_round_trip_is_deterministic`
+- `test_forecast_prep_contract_to_markdown_snapshot`
+- `test_forecast_prep_contract_to_lag_table_is_deterministic_and_ordered`
+- `test_no_framework_imports_in_forecast_prep_modules`
 
 **Acceptance criteria:**
 
@@ -1410,35 +1198,9 @@ Usage:
 - contract JSON snapshots are stable
 - empty-field behavior is intentional and documented in test docstrings
 - the v0.3.2 invariants from §2.3 and §2.4 are exercised explicitly
-
-#### FPC-F10.1 — Runner tests (skipped without extras)
-
-**File targets:**
-
-- `tests/test_mlforecast_runner.py`
-- `tests/test_darts_runner.py`
-
-**Required test cases:**
-
-- `test_fit_mlforecast_raises_actionable_import_error_without_extra` (always
-  runs)
-- `test_fit_darts_raises_actionable_import_error_without_extra` (always
-  runs)
-- `test_fit_mlforecast_returns_forecast_when_extra_installed`
-  (`pytest.importorskip("mlforecast")`)
-- `test_fit_darts_returns_forecast_when_extra_installed`
-  (`pytest.importorskip("darts")`)
-- `test_fit_mlforecast_rejects_blocked_contract`
-- `test_fit_darts_rejects_blocked_contract`
-- `test_fit_darts_rejects_lag_zero_in_past_covariates`
-
-**Acceptance criteria:**
-
-- the always-running tests pass on a clean install (no extras)
-- the importorskip-gated tests pass when the extras are installed (CI matrix
-  from FPC-F07.1)
-- the canonical install command appears verbatim in the asserted error
-  message of the without-extra tests
+- `test_no_framework_imports_in_forecast_prep_modules` greps the new modules
+  for `import darts|from darts|import mlforecast|from mlforecast|import statsforecast|from statsforecast|import nixtla|from nixtla`
+  and asserts zero hits
 
 #### FPC-F11 — Regression fixtures
 
@@ -1449,13 +1211,13 @@ Usage:
 - `src/forecastability/diagnostics/forecast_prep_regression.py`
 - `tests/test_forecast_prep_regression.py`
 
-**Frozen JSON files:**
+**Frozen JSON / text files:**
 
 - `expected/contract_air_passengers.json`
-- `expected/mlforecast_spec_air_passengers.json`
-- `expected/darts_spec_air_passengers.json`
+- `expected/contract_air_passengers.md`
+- `expected/contract_air_passengers_lag_table.json`
 - `expected/contract_covariant_with_calendar.json`
-- `expected/exporter_warnings.json`
+- `expected/contract_blocked.json`
 
 **Acceptance criteria:**
 
@@ -1464,7 +1226,7 @@ Usage:
 - discrete fields compare exactly
 - referenced from the release checklist (FPC-CI-04)
 
-### Phase 6 — CI / release hygiene
+### Phase 5 — CI / release hygiene
 
 #### FPC-CI-01 — Forecast prep smoke job
 
@@ -1481,40 +1243,8 @@ Usage:
 **Acceptance criteria:**
 
 - the smoke job runs on every push to `main`
-- the job does not install `darts` or `mlforecast`
-
-#### FPC-CI-02 — Optional-extras CI matrix
-
-**File targets:**
-
-- `.github/workflows/ci.yml`
-
-**Responsibilities:**
-
-- add the `extras` job from FPC-F07.1
-- the matrix runs on every PR that modifies
-  `src/forecastability/integrations/**` or `pyproject.toml`
-
-**Acceptance criteria:**
-
-- the matrix is gated by the canonical `paths` filter
-- both matrix entries pass on the release branch
-
-#### FPC-CI-03 — Notebook contract extension
-
-**File targets:**
-
-- `scripts/check_notebook_contract.py`
-
-**Responsibilities:**
-
-- add `notebooks/walkthroughs/05_forecast_prep_to_models.ipynb` to the
-  tracked notebook list
-- representative public-surface call exercised by the contract checker
-
-**Acceptance criteria:**
-
-- notebook contract check passes on the new notebook
+- the job does not install `darts`, `mlforecast`, `statsforecast`, or
+  `nixtla`
 
 #### FPC-CI-04 — Release checklist hardening
 
@@ -1526,19 +1256,21 @@ Usage:
 
 - add checkboxes for:
   - "`uv run python scripts/rebuild_forecast_prep_regression_fixtures.py --verify` passes"
-  - "`uv run python scripts/run_showcase_forecast_prep.py` completes
-    without errors"
-  - "Walkthrough notebook
-    `notebooks/walkthroughs/05_forecast_prep_to_models.ipynb` is committed
-    with executed outputs"
-  - "Release notes explicitly tag `darts` and `mlforecast` as **optional
-    extras**, not core dependencies"
+  - "`uv run python scripts/run_showcase_forecast_prep.py` completes without errors"
+  - "`uv run python scripts/check_docs_contract.py --no-framework-imports` passes (Invariant E)"
+  - "`docs/recipes/forecast_prep_to_external_frameworks.md` exists and is linked from `docs/forecast_prep_contract.md`"
+  - "Release notes explicitly mark the package as **framework-agnostic**; no `[darts]` / `[mlforecast]` extras are claimed"
 
 **Acceptance criteria:**
 
 - checklist text references the canonical script paths exactly
 
-### Phase 7 — Documentation and release engineering
+> [!NOTE]
+> No notebook contract extension item ships in v0.3.4. The original FPC-CI-03
+> (extending `scripts/check_notebook_contract.py` with the headline notebook)
+> is dropped because no new notebook is committed in this release.
+
+### Phase 6 — Documentation and release engineering
 
 #### FPC-D01 — Theory / contract doc
 
@@ -1554,10 +1286,13 @@ Usage:
 - the future-covariate lag predicate from §2.4
 - the confidence propagation table from §2.5
 - the schema-evolution policy from FPC-F00.1
-- a JSON example of a non-empty contract
-- an MLForecast spec example
-- a Darts spec example
+- a JSON example of a non-empty contract (from a frozen fixture)
+- a markdown example produced by `forecast_prep_contract_to_markdown`
+- a lag-table example produced by `forecast_prep_contract_to_lag_table`
 - a "What this is not" section listing the non-goals from §8
+- a forward link to `docs/recipes/forecast_prep_to_external_frameworks.md`
+  (FPC-D04R) for users who want to wire the contract into Darts, MLForecast,
+  or Nixtla / StatsForecast
 
 **Acceptance criteria:**
 
@@ -1565,6 +1300,7 @@ Usage:
 - uses KaTeX for math notation
 - passes `scripts/check_docs_contract.py --all`
 - carries the Diátaxis label `<!-- type: reference -->` at the top
+- the recipes page link is explicit
 
 #### FPC-D02 — README / quickstart / public API update
 
@@ -1582,27 +1318,29 @@ Usage:
   # Core install (no extras)
   pip install dependence-forecastability
 
-  # With Darts integration
-  pip install dependence-forecastability[darts]
-
-  # With MLForecast integration
-  pip install dependence-forecastability[mlforecast]
-
   # With holiday calendar features
   pip install dependence-forecastability[calendar]
-
-  # All hand-off integrations
-  pip install dependence-forecastability[darts,mlforecast,calendar]
   ```
+- README "Hand-off after triage" subsection: short snippet building a
+  contract, calling `model_dump_json()`, calling
+  `forecast_prep_contract_to_markdown()`, and forwarding the user to
+  `docs/recipes/forecast_prep_to_external_frameworks.md` for translating the
+  contract into specific framework configuration.
 - Quickstart adds a "Hand-off after triage" subsection with a five-line
-  contract-build snippet
-- `docs/public_api.md` lists the new symbols with their stable import paths
+  contract-build snippet ending in `print(contract.model_dump_json(indent=2))`.
+- `docs/public_api.md` lists the new symbols with their stable import paths.
+- `docs/surface_guide.md` shows how `ForecastPrepContract` slots in after the
+  triage / fingerprint / lagged-exog surfaces.
+
+> [!IMPORTANT]
+> README and quickstart **must not** mention `[darts]`, `[mlforecast]`,
+> `[statsforecast]`, or `[nixtla]` extras. None exist in this release.
 
 **Acceptance criteria:**
 
 - every code block obeys Invariant A from v0.3.5
 - the README install section is unambiguous about which extras are required
-  for which feature
+  for which feature (only `[calendar]` is new)
 - the quickstart snippet runs on a clean install (no extras required for the
   contract build itself)
 
@@ -1621,30 +1359,35 @@ Usage:
   (additive on `forecastability.utils.types`).
 - `build_forecast_prep_contract(triage_result, *, horizon, target_frequency, ...)`
   use case (re-exported from `forecastability` and `forecastability.triage`).
-- `to_mlforecast_spec(contract)` and `to_darts_spec(contract)` neutral
-  exporters under `forecastability.integrations` (no extras required).
-- `fit_mlforecast(contract, df, ...)` and `fit_darts(contract, series, ...)`
-  optional runners that lazy-import their respective frameworks.
+- Framework-agnostic exporters
+  `forecast_prep_contract_to_markdown(contract)` and
+  `forecast_prep_contract_to_lag_table(contract)` (re-exported from
+  `forecastability` and `forecastability.triage`). Pydantic
+  `model_dump()` / `model_dump_json()` are documented as the canonical
+  Python-dict and JSON export surfaces.
 - Deterministic calendar feature service:
   `add_calendar_features=True` injects `_calendar__dayofweek`,
   `_calendar__month`, `_calendar__quarter`, `_calendar__is_weekend`,
   `_calendar__is_business_day`, and (when `calendar_locale` is set with the
   optional `[calendar]` extra installed) `_calendar__is_holiday`.
-- Optional dependency extras: `[darts]`, `[mlforecast]`, `[calendar]`.
-- Walkthrough notebook
-  `notebooks/walkthroughs/05_forecast_prep_to_models.ipynb` (headline).
-- Showcase script `scripts/run_showcase_forecast_prep.py` with `--smoke`
-  and `--with-runners` flags.
+- Optional dependency extra: `[calendar]` (`holidays>=0.50`).
+- Showcase script `scripts/run_showcase_forecast_prep.py` with a `--smoke`
+  flag.
 - Theory doc `docs/forecast_prep_contract.md`.
+- External-recipes doc `docs/recipes/forecast_prep_to_external_frameworks.md`
+  with illustrative Darts / MLForecast / Nixtla mappings.
 
 ### Changed
-- README install section documents the new `[darts]`, `[mlforecast]`, and
-  `[calendar]` extras alongside the existing `[agent]`, `[causal]`, and
-  `[transport]` extras.
+- README install section documents the new `[calendar]` extra alongside the
+  existing `[agent]`, `[causal]`, and `[transport]` extras.
 
 ### Notes
-- `darts` and `mlforecast` are **optional extras**, not core dependencies.
-  The core `pip install dependence-forecastability` install does not change.
+- The package remains **framework-agnostic**. No `darts`, `mlforecast`,
+  `statsforecast`, or `nixtla` runtime, optional, dev, or CI dependency is
+  introduced. Framework usage examples ship as illustrative recipes in
+  `docs/recipes/**` and (from v0.4.0) in the sibling
+  `forecastability-examples` repository. Rationale:
+  [docs/plan/aux_documents/developer_instruction_repo_scope.md](docs/plan/aux_documents/developer_instruction_repo_scope.md).
 - Existing public Pydantic field shapes are preserved. The Forecast Prep
   Contract is an additive surface.
 ```
@@ -1652,7 +1395,57 @@ Usage:
 **Acceptance criteria:**
 
 - entry is the topmost `## [X.Y.Z]` block in `CHANGELOG.md`
-- the optional-extras note appears explicitly in the entry
+- the framework-agnostic note appears explicitly in the entry
+
+#### FPC-D04R — External recipes documentation page
+
+**File target:** `docs/recipes/forecast_prep_to_external_frameworks.md`
+
+**Required content:**
+
+- Top-of-page disclaimer: **"Illustrative recipes — not part of the
+  supported package API."** Plus a link to
+  `docs/plan/aux_documents/developer_instruction_repo_scope.md`.
+- Section *"Map a contract to MLForecast"*: a fenced Python code block
+  showing how a user could translate
+  `ForecastPrepContract.recommended_target_lags`,
+  `past_covariates` (with `selected_lags`),
+  `future_covariates` (including calendar columns), and
+  `transformation_hints` into `MLForecast(lags=…, lag_transforms=…,
+  target_transforms=…)` arguments. The code block imports `mlforecast`
+  (the page is documentation, never executed by core CI).
+- Section *"Map a contract to Darts"*: a fenced Python code block
+  covering `lags`, `lags_past_covariates` (driven by
+  `selected_for_tensor=True` only), `lags_future_covariates` (with the
+  `lag = 0`-only-for-known-future invariant repeated), `past_covariates`,
+  `future_covariates`, `static_covariates`, and the calendar-column
+  treatment.
+- Section *"Map a contract to Nixtla / StatsForecast"*: a fenced Python
+  code block showing a single illustrative mapping into
+  `StatsForecast(models=[…], freq=contract.target_frequency)` plus how
+  exogenous columns flow in.
+- Section *"Why these are recipes, not adapters"*: 3–5 bullets restating
+  the scope decision, pointing at
+  `docs/plan/aux_documents/developer_instruction_repo_scope.md`, and
+  forward-linking to the sibling repository introduced in
+  [v0.4.0](v0_4_0_examples_repo_split_ultimate_plan.md) for executable
+  end-to-end demos.
+
+**Acceptance criteria:**
+
+- The page exists and is linked from `docs/forecast_prep_contract.md` and
+  from the README "Hand-off after triage" subsection.
+- Every framework-specific snippet is fenced and prefixed with the
+  illustrative-recipe disclaimer.
+- No `import` of the forecastability package on the page resolves to
+  anything other than `forecastability` or `forecastability.triage`
+  (Invariant A from v0.3.5).
+- The terminology grep panel (v0.3.5 Invariant C) and the
+  `--no-framework-imports` sub-check (v0.3.5 Invariant E) explicitly
+  whitelist `docs/recipes/**` for framework names; the recipe page is the
+  *only* place `import darts`, `import mlforecast`, `import statsforecast`,
+  or `import nixtla` may appear in this repository.
+- Carries the Diátaxis label `<!-- type: how-to -->` at the top.
 
 #### FPC-R01 — Version bump and tag
 
@@ -1668,6 +1461,8 @@ Usage:
 - bump every version source to `0.3.4` simultaneously
 - run `uv run python scripts/check_docs_contract.py --version` to verify
   Invariant B from v0.3.5
+- run `uv run python scripts/check_docs_contract.py --no-framework-imports`
+  to verify Invariant E from v0.3.5
 - create the git tag `v0.3.4` and push it
 
 **Acceptance criteria:**
@@ -1675,24 +1470,8 @@ Usage:
 - version coherence holds at the tagged commit
 - the GitHub release workflow (`.github/workflows/release.yml`) succeeds on
   the new tag
-- the published wheel contains no `darts` or `mlforecast` runtime imports
-  outside the lazy-import bodies
-
-#### FPC-R02 — Walkthrough notebook executed-and-committed
-
-**Responsibilities:**
-
-- execute `notebooks/walkthroughs/05_forecast_prep_to_models.ipynb`
-  end-to-end with the `[darts,mlforecast,calendar]` extras installed
-- commit the notebook with executed outputs
-- verify the notebook contract check still passes after committing outputs
-
-**Acceptance criteria:**
-
-- the committed notebook has non-empty `outputs` arrays for every code cell
-- `scripts/check_notebook_contract.py` exits zero
-- no large binary outputs (>1 MB) are committed; if a forecast plot is
-  needed, it is rendered inline via Matplotlib SVG, not as a base64 PNG
+- the published wheel contains zero imports of `darts`, `mlforecast`,
+  `statsforecast`, or `nixtla` (verified by grepping the wheel contents)
 
 #### FPC-R03 — Fixture rebuild verification
 
@@ -1720,7 +1499,13 @@ Usage:
 - training models, scoring models, claiming optimal hyperparameters
 - automatic hyperparameter generation
 - claiming one exact "best model"
-- requiring `darts`, `mlforecast`, or `holidays` as hard dependencies
+- shipping `to_darts_spec()`, `to_mlforecast_spec()`,
+  `fit_darts()`, or `fit_mlforecast()` as supported public API
+- introducing a `forecastability.integrations` namespace
+- adding `darts`, `mlforecast`, `statsforecast`, `nixtla`, or any other
+  forecasting framework as runtime, optional-extra, dev, or CI dependency
+- requiring `holidays` as a hard dependency (it ships as the new `[calendar]`
+  optional extra only)
 - automatic covariate role inference from column names alone
 - deep feature engineering synthesis beyond the deterministic calendar
   features defined in §2.6
@@ -1732,6 +1517,12 @@ Usage:
   `known_future` opt-in
 - emitting `lags_future_covariates = [0]` for any column that is neither
   user-declared known-future nor an auto-generated calendar feature
+- adding any new walkthrough notebook to the core repository (the
+  originally-planned `05_forecast_prep_to_models.ipynb` lives in the sibling
+  examples repository introduced in
+  [v0.4.0](v0_4_0_examples_repo_split_ultimate_plan.md))
+- removing or migrating the existing `notebooks/` directory in this release
+  (that is the v0.4.0 plan)
 
 ---
 
@@ -1741,53 +1532,41 @@ Usage:
       validators
 - [ ] FPC-F00.1 is **Done** — `contract_version` field present and
       schema-evolution policy documented
-- [ ] FPC-F01 is **Done** — `build_forecast_prep_contract()` returns a
+- [x] FPC-F01 is **Done** — `build_forecast_prep_contract()` returns a
       `ForecastPrepContract` for univariate inputs
-- [ ] FPC-F02 is **Done** — covariate-aware extension consumes
+- [x] FPC-F02 is **Done** — covariate-aware extension consumes
       `LaggedExogBundle` and respects v0.3.2 invariants
-- [ ] FPC-F03 is **Done** — seasonality extraction populates
+- [x] FPC-F03 is **Done** — seasonality extraction populates
       `candidate_seasonal_periods` and `recommended_seasonal_lags` correctly
-- [ ] FPC-F03a is **Done** — calendar feature service emits the
+- [x] FPC-F03a is **Done** — calendar feature service emits the
       deterministic columns from §2.6
-- [ ] FPC-F03b is **Done** — `holidays` is wired as the `[calendar]` extra
+- [x] FPC-F03b is **Done** — `holidays` is wired as the `[calendar]` extra
       with the documented caution flag
-- [ ] FPC-F04 is **Done** — `to_mlforecast_spec()` returns a serializable
-      dict
-- [ ] FPC-F05 is **Done** — `to_darts_spec()` returns a serializable dict
-      and enforces the v0.3.2 invariants
-- [ ] FPC-F05.1 is **Done** — exporter warnings are deterministic and
-      regression-frozen
-- [ ] FPC-F06 is **Done** — `fit_mlforecast()` lazy-imports `mlforecast`
-      and raises actionable `ImportError` without the extra
-- [ ] FPC-F07 is **Done** — `fit_darts()` lazy-imports `darts` and raises
-      actionable `ImportError` without the extra
-- [ ] FPC-F07.1 is **Done** — `[darts]`, `[mlforecast]`, `[calendar]`
-      extras are wired in `pyproject.toml` and the CI matrix
-- [ ] FPC-F08 is **Done** — six public examples landed under
-      `examples/forecast_prep/`
-- [ ] FPC-F08.1 is **Done** — showcase script with `--smoke` and
-      `--with-runners` flags
-- [ ] FPC-F09 is **Done** — headline walkthrough notebook executes
-      end-to-end with executed outputs
-- [ ] FPC-F10 is **Done** — contract tests cover all three axes and the
-      blocked / abstain paths
-- [ ] FPC-F10.1 is **Done** — runner tests cover both the without-extra and
-      with-extra paths
-- [ ] FPC-F11 is **Done** — regression fixtures and rebuild script land
-- [ ] FPC-CI-01 is **Done** — forecast prep smoke job runs on every push
-- [ ] FPC-CI-02 is **Done** — optional-extras matrix passes
-- [ ] FPC-CI-03 is **Done** — notebook contract tracks the new walkthrough
-- [ ] FPC-CI-04 is **Done** — release checklist requires fixture verify,
-      walkthrough commit, and the optional-extras tag
-- [ ] FPC-D01 is **Done** — `docs/forecast_prep_contract.md` published
+- [ ] FPC-F04R is **Done** — `forecast_prep_contract_to_markdown()` and
+      `forecast_prep_contract_to_lag_table()` are re-exported and
+      regression-tested; `model_dump_json()` round-trip snapshot is frozen
+- [ ] FPC-F08 is **Done** — four public examples landed under
+      `examples/forecast_prep/` and run on a clean install
+- [ ] FPC-F08.1 is **Done** — showcase script with `--smoke` flag, no
+      framework imports
+- [x] FPC-F10 is **Done** — contract tests cover all three axes, the export
+      helpers, and the no-framework-imports rule
+- [x] FPC-F11 is **Done** — regression fixtures and rebuild script land
+- [x] FPC-CI-01 is **Done** — forecast prep smoke job runs on every push
+      with no framework extras installed
+- [x] FPC-CI-04 is **Done** — release checklist requires fixture verify,
+      Invariant E pass, and the recipes-page presence
+- [ ] FPC-D01 is **Done** — `docs/forecast_prep_contract.md` published with
+      the recipes-page forward link
 - [ ] FPC-D02 is **Done** — README install section, quickstart, public API
-      updated
+      updated; no framework-extras prose
 - [ ] FPC-D03 is **Done** — `0.3.4` changelog entry published with the
-      optional-extras note
+      framework-agnostic note
+- [ ] FPC-D04R is **Done** — `docs/recipes/forecast_prep_to_external_frameworks.md`
+      published with three illustrative mappings
 - [ ] FPC-R01 is **Done** — version bumped to `0.3.4` across all four
-      sources, git tag `v0.3.4` created and pushed
-- [ ] FPC-R02 is **Done** — walkthrough notebook committed with executed
-      outputs
+      sources; `--version` and `--no-framework-imports` checks pass; git
+      tag `v0.3.4` created and pushed
 - [ ] FPC-R03 is **Done** — every fixture rebuild script exits zero in
       `--verify` mode at the tagged commit
 
@@ -1801,16 +1580,14 @@ Usage:
 3. FPC-F01 — univariate contract builder
 4. FPC-F03 — seasonality extraction rules
 5. FPC-F02 — covariate-aware builder extension (consumes LaggedExogBundle)
-6. FPC-F04 — to_mlforecast_spec()
-7. FPC-F05 + FPC-F05.1 — to_darts_spec() with v0.3.2 invariant guards
-8. FPC-F06 + FPC-F07 + FPC-F07.1 — runners + optional extras + CI matrix
-9. FPC-F08 + FPC-F08.1 — public examples + showcase script
-10. FPC-F10 + FPC-F10.1 + FPC-F11 — tests + regression fixtures
-11. FPC-CI-01 + FPC-CI-02 + FPC-CI-03 + FPC-CI-04 — CI + checklist
-12. FPC-D01 + FPC-D02 + FPC-D03 — docs + changelog
-13. FPC-F09 — headline walkthrough notebook (run end-to-end with extras)
-14. FPC-R01 + FPC-R02 + FPC-R03 — release engineering: version bump,
-    notebook commit, fixture verify, tag v0.3.4, push
+6. FPC-F04R — framework-agnostic exporters (markdown + lag table)
+7. FPC-F08 + FPC-F08.1 — public examples + showcase script
+8. FPC-F10 + FPC-F11 — tests + regression fixtures
+9. FPC-CI-01 + FPC-CI-04 — smoke job + checklist
+10. FPC-D04R — external recipes documentation page
+11. FPC-D01 + FPC-D02 + FPC-D03 — theory doc + README/quickstart + changelog
+12. FPC-R01 + FPC-R03 — release engineering: version bump, fixture verify,
+    tag v0.3.4, push
 ```
 
 ---
@@ -1835,7 +1612,7 @@ flowchart TD
     end
     subgraph Build[Forecast prep build - new in v0.3.4]
       M["forecast_prep_mapper.py"]
-      CAL["calendar_feature_service.py"]
+      CAL["calendar_feature_service.py\n(holidays via [calendar] extra)"]
       B["build_forecast_prep_contract()"]
       T2 --> M
       F1 --> M
@@ -1847,40 +1624,34 @@ flowchart TD
       M --> B
       CAL --> B
     end
-    subgraph Spec[Spec exporters - new in v0.3.4]
-      MS["to_mlforecast_spec()"]
-      DS["to_darts_spec()"]
-      B --> MS
-      B --> DS
+    subgraph Export[Framework-agnostic exporters - new in v0.3.4]
+      MD["forecast_prep_contract_to_markdown()"]
+      LT["forecast_prep_contract_to_lag_table()"]
+      DJ["model_dump() / model_dump_json()\n(Pydantic, free)"]
+      B --> MD
+      B --> LT
+      B --> DJ
     end
-    subgraph Run[Optional runners - new in v0.3.4]
-      MR["fit_mlforecast()\n[mlforecast extra]"]
-      DR["fit_darts()\n[darts extra]"]
-      B --> MR
-      B --> DR
-      DF["pd.DataFrame (user)"] --> MR
-      TS["darts.TimeSeries (user)"] --> DR
+    subgraph External[External — out of repo]
+      REC["docs/recipes/\nforecast_prep_to_external_frameworks.md\n(illustrative; never executed by core CI)"]
+      EX["forecastability-examples\n(sibling repo, from v0.4.0)"]
+      MD -.-> REC
+      DJ -.-> REC
+      REC -.-> EX
     end
-    MR --> RES1["MLForecastResult"]
-    DR --> RES2["DartsResult"]
 ```
 
 ### 11.2. File map — concrete target placement
 
 | Layer | New / updated file | Purpose |
 | --- | --- | --- |
-| Types | `src/forecastability/utils/types.py` | `ForecastPrepContract`, `LagRecommendation`, `CovariateRecommendation`, `FamilyRecommendation`, `ForecastPrepBundle`, `MLForecastResult`, `DartsResult` |
-| Facade | `src/forecastability/__init__.py` | additive re-exports of contract + builder + exporters + runners |
+| Types | `src/forecastability/utils/types.py` | `ForecastPrepContract`, `LagRecommendation`, `CovariateRecommendation`, `FamilyRecommendation`, `ForecastPrepBundle` |
+| Facade | `src/forecastability/__init__.py` | additive re-exports of contract + builder + framework-agnostic exporters |
 | Triage facade | `src/forecastability/triage/__init__.py` | additive re-exports including `ForecastPrepBundle` |
 | Use cases | `src/forecastability/use_cases/build_forecast_prep_contract.py` | builder use case |
 | Services | `src/forecastability/services/forecast_prep_mapper.py` | pure mapping logic |
 | Services | `src/forecastability/services/calendar_feature_service.py` | calendar feature generation |
-| Integrations | `src/forecastability/integrations/__init__.py` | package marker |
-| Integrations | `src/forecastability/integrations/mlforecast_spec.py` | `to_mlforecast_spec()` |
-| Integrations | `src/forecastability/integrations/darts_spec.py` | `to_darts_spec()` |
-| Integrations | `src/forecastability/integrations/mlforecast_runner.py` | `fit_mlforecast()` (lazy import) |
-| Integrations | `src/forecastability/integrations/darts_runner.py` | `fit_darts()` (lazy import) |
-| Integrations | `src/forecastability/integrations/_warnings.py` | shared internal warnings helper |
+| Services | `src/forecastability/services/forecast_prep_export.py` | `forecast_prep_contract_to_markdown()`, `forecast_prep_contract_to_lag_table()` |
 | Diagnostics | `src/forecastability/diagnostics/forecast_prep_regression.py` | rebuild + verify helpers |
 | Tests | `tests/test_forecast_prep_contract_schema.py` | typed contract schema |
 | Tests | `tests/test_build_forecast_prep_contract.py` | univariate builder |
@@ -1888,37 +1659,36 @@ flowchart TD
 | Tests | `tests/test_forecast_prep_seasonality.py` | seasonality rules |
 | Tests | `tests/test_forecast_prep_calendar.py` | calendar feature service |
 | Tests | `tests/test_forecast_prep_known_future.py` | known-future axis |
-| Tests | `tests/test_to_mlforecast_spec.py` | MLForecast spec exporter |
-| Tests | `tests/test_to_darts_spec.py` | Darts spec exporter |
-| Tests | `tests/test_exporter_warnings.py` | exporter warnings policy |
-| Tests | `tests/test_mlforecast_runner.py` | runner with `pytest.importorskip` |
-| Tests | `tests/test_darts_runner.py` | runner with `pytest.importorskip` |
+| Tests | `tests/test_forecast_prep_export.py` | exporters + no-framework-import guard |
 | Tests | `tests/test_forecast_prep_regression.py` | fixture drift guard |
 | Fixtures | `docs/fixtures/forecast_prep_regression/expected/contract_air_passengers.json` | per-case freeze |
-| Fixtures | `docs/fixtures/forecast_prep_regression/expected/mlforecast_spec_air_passengers.json` | spec freeze |
-| Fixtures | `docs/fixtures/forecast_prep_regression/expected/darts_spec_air_passengers.json` | spec freeze |
+| Fixtures | `docs/fixtures/forecast_prep_regression/expected/contract_air_passengers.md` | markdown summary freeze |
+| Fixtures | `docs/fixtures/forecast_prep_regression/expected/contract_air_passengers_lag_table.json` | lag-table freeze |
 | Fixtures | `docs/fixtures/forecast_prep_regression/expected/contract_covariant_with_calendar.json` | covariant + calendar freeze |
-| Fixtures | `docs/fixtures/forecast_prep_regression/expected/exporter_warnings.json` | warnings text freeze |
+| Fixtures | `docs/fixtures/forecast_prep_regression/expected/contract_blocked.json` | blocked-state freeze |
 | Examples | `examples/forecast_prep/minimal_contract.py` | minimal Python example |
-| Examples | `examples/forecast_prep/to_mlforecast.py` | MLForecast spec example |
-| Examples | `examples/forecast_prep/to_darts.py` | Darts spec example |
 | Examples | `examples/forecast_prep/calendar_features.py` | calendar features example |
 | Examples | `examples/forecast_prep/known_future.py` | known-future example |
-| Examples | `examples/forecast_prep/with_runners.py` | full runner walkthrough |
-| Scripts | `scripts/run_showcase_forecast_prep.py` | canonical showcase |
+| Examples | `examples/forecast_prep/export_payloads.py` | dump_json + markdown + lag table |
+| Scripts | `scripts/run_showcase_forecast_prep.py` | canonical showcase, no framework imports |
 | Scripts | `scripts/rebuild_forecast_prep_regression_fixtures.py` | regression rebuilder |
-| Notebook | `notebooks/walkthroughs/05_forecast_prep_to_models.ipynb` | headline walkthrough |
-| Docs | `docs/forecast_prep_contract.md` | theory + reference |
-| Docs | `README.md`, `docs/quickstart.md`, `docs/public_api.md`, `docs/surface_guide.md` | additive surface |
+| Docs | `docs/forecast_prep_contract.md` | theory + reference; links forward to recipes page |
+| Docs | `docs/recipes/forecast_prep_to_external_frameworks.md` | illustrative Darts / MLForecast / Nixtla mappings |
+| Docs | `README.md`, `docs/quickstart.md`, `docs/public_api.md`, `docs/surface_guide.md` | additive surface (no framework extras prose) |
 | Docs | `CHANGELOG.md` | release notes |
-| Build | `pyproject.toml` | additive `[darts]`, `[mlforecast]`, `[calendar]` extras |
-| CI | `.github/workflows/{ci,smoke}.yml`, `.github/ISSUE_TEMPLATE/release_checklist.md`, `scripts/check_notebook_contract.py` | smoke + extras matrix + checklist + notebook contract |
+| Build | `pyproject.toml` | additive `[calendar]` extra only |
+| CI | `.github/workflows/smoke.yml`, `.github/ISSUE_TEMPLATE/release_checklist.md` | smoke + checklist; **no** extras matrix |
+
+> [!NOTE]
+> The following modules from the original draft are **intentionally not
+> created**: `src/forecastability/integrations/{__init__,_warnings,mlforecast_spec,darts_spec,mlforecast_runner,darts_runner}.py`
+> and `tests/test_{to_mlforecast_spec,to_darts_spec,exporter_warnings,mlforecast_runner,darts_runner}.py`.
 
 ### 11.3. Worked invariants
 
 | Invariant | How to assert in tests |
 | --- | --- |
-| `contract_version == "0.3.4"` for every contract built in this release | `test_contract_version_is_0_3_5` |
+| `contract_version == "0.3.4"` for every contract built in this release | `test_contract_version_is_0_3_4` |
 | `recommended_target_lags` strictly positive | field validator + `test_past_covariate_lags_strictly_positive` |
 | Calendar feature names start with `_calendar__` | field validator + `test_calendar_features_use_underscore_calendar_prefix` |
 | Past-covariate lags ≥ 1 | `test_past_covariate_lags_strictly_positive` |
@@ -1926,10 +1696,10 @@ flowchart TD
 | Known-future driver takes precedence over past-covariate role | `test_known_future_driver_takes_precedence_over_past_covariate` |
 | Blocked triage ⇒ empty `recommended_target_lags` and `caution_flags` non-empty | `test_blocked_result_yields_conservative_contract` |
 | Abstain routing ⇒ empty `recommended_families` | `test_abstain_routing_yields_empty_recommended_families` |
-| `fit_mlforecast()` raises actionable `ImportError` without the extra | `test_fit_mlforecast_raises_actionable_import_error_without_extra` |
-| `fit_darts()` raises actionable `ImportError` without the extra | `test_fit_darts_raises_actionable_import_error_without_extra` |
-| `to_darts_spec()` rejects `lag = 0` in `lags_past_covariates` | `test_to_darts_spec_rejects_zero_in_past_covariate_lags` |
-| Exporter warnings are deterministic | `test_exporter_warnings_are_frozen` |
+| `model_dump_json()` is deterministic across reruns | `test_model_dump_json_round_trip_is_deterministic` |
+| `forecast_prep_contract_to_markdown()` is deterministic | `test_forecast_prep_contract_to_markdown_snapshot` |
+| `forecast_prep_contract_to_lag_table()` is deterministic and ordered | `test_forecast_prep_contract_to_lag_table_is_deterministic_and_ordered` |
+| No framework imports anywhere under `src/forecastability/` | `test_no_framework_imports_in_forecast_prep_modules` (also enforced by `scripts/check_docs_contract.py --no-framework-imports` in CI per v0.3.5 Invariant E) |
 | Public symbols resolve from `forecastability` and `forecastability.triage` | docs-contract `--imports` check (v0.3.5) |
 | Version coherence at the tag commit | docs-contract `--version` check (v0.3.5) |
 
@@ -1938,18 +1708,15 @@ flowchart TD
 - `build_forecast_prep_contract()` is pure and synchronous. For a 600-sample
   univariate input with a `LaggedExogBundle` of 7 drivers, it completes in
   under 50 ms on a modern laptop.
-- `to_mlforecast_spec()` and `to_darts_spec()` are pure dictionary
-  constructions: no I/O, no randomness, no third-party imports.
-- `fit_mlforecast()` and `fit_darts()` are deterministic given a fixed model
-  seed. The runners pass `random_state` through to the underlying
-  framework's estimator constructor where supported.
+- `forecast_prep_contract_to_markdown()` and
+  `forecast_prep_contract_to_lag_table()` are pure functions with no I/O,
+  no randomness, and no third-party imports.
 - The calendar feature service uses `np.int8` and `bool` dtypes to keep
   memory overhead under 10 bytes per row even at millions of timestamps.
-- The headline walkthrough notebook is intentionally kept short; the full
-  end-to-end execution (with both extras installed and `n = 144` AirPassengers
-  samples) completes in under 30 seconds on a standard CI runner.
+- The showcase script's `--smoke` mode completes in under 15 seconds on a
+  standard CI runner with no extras installed.
 
-### 11.5. Release engineering checklist (FPC-R01 + FPC-R02 + FPC-R03)
+### 11.5. Release engineering checklist (FPC-R01 + FPC-R03)
 
 ```text
 1. Cut release branch from main: feat/v0.3.4-forecast-prep-contract
@@ -1960,27 +1727,31 @@ flowchart TD
    - README.md version badge / sentence
 3. Run full test suite:
    - uv run pytest -q -ra
-4. Run extras-specific tests with extras installed:
-   - uv sync --extra darts && uv run pytest tests/test_darts_runner.py -q
-   - uv sync --extra mlforecast && uv run pytest tests/test_mlforecast_runner.py -q
-5. Run docs-contract check:
-   - uv run python scripts/check_docs_contract.py --all
-6. Run every fixture rebuild in --verify mode (FPC-R03 list).
-7. Run showcase script end-to-end:
+4. Run docs-contract checks (v0.3.5 invariants):
+   - uv run python scripts/check_docs_contract.py --imports
+   - uv run python scripts/check_docs_contract.py --version
+   - uv run python scripts/check_docs_contract.py --terminology
+   - uv run python scripts/check_docs_contract.py --plan-lifecycle
+   - uv run python scripts/check_docs_contract.py --no-framework-imports
+5. Run every fixture rebuild in --verify mode (FPC-R03 list).
+6. Run showcase script end-to-end:
    - uv run python scripts/run_showcase_forecast_prep.py
-8. Execute the headline walkthrough notebook with all extras:
-   - uv sync --extra darts --extra mlforecast --extra calendar
-   - jupyter nbconvert --to notebook --execute notebooks/walkthroughs/05_forecast_prep_to_models.ipynb --inplace
-9. Commit the executed notebook (FPC-R02).
-10. Open the release PR.
-11. Merge after review.
-12. Tag and push:
+7. Verify the recipes page is present and linked from the theory doc:
+   - test -f docs/recipes/forecast_prep_to_external_frameworks.md
+   - grep -q "forecast_prep_to_external_frameworks" docs/forecast_prep_contract.md
+8. Open the release PR.
+9. Merge after review.
+10. Tag and push:
     - git tag v0.3.4
     - git push origin v0.3.4
-13. Verify the GitHub release workflow succeeds.
-14. Verify the published wheel on PyPI:
+11. Verify the GitHub release workflow succeeds.
+12. Verify the published wheel on PyPI:
     - pip install dependence-forecastability==0.3.4
-    - python -c "from forecastability import ForecastPrepContract, build_forecast_prep_contract; print(ForecastPrepContract.model_fields.keys())"
-15. Announce the release with explicit mention that darts and mlforecast are
-    optional extras (not core dependencies).
+    - python -c "from forecastability import ForecastPrepContract, build_forecast_prep_contract, forecast_prep_contract_to_markdown, forecast_prep_contract_to_lag_table; print(ForecastPrepContract.model_fields.keys())"
+    - python -c "import importlib.metadata as m; assert all(dep not in {p.name for p in m.distributions()} for dep in ('darts','mlforecast','statsforecast','nixtla')) or print('framework deps present in environment but not required by package')"
+13. Announce the release with explicit framing as a **framework-agnostic**
+    forecast-prep release; point users at
+    docs/recipes/forecast_prep_to_external_frameworks.md for downstream
+    framework usage and at the v0.4.0 plan for the upcoming sibling
+    examples repository.
 ```

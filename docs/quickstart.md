@@ -490,6 +490,30 @@ uv run python examples/univariate/agents/routing_validation_agent_review.py --sm
 > The full real-panel path is not the clean-checkout default. Use the smoke
 > report command above for a mechanically runnable path in a fresh clone.
 
+## Hand-off after triage
+
+After triage, convert triage outputs into a structured, machine-readable forecast
+prep contract.
+
+```python
+from forecastability import build_forecast_prep_contract
+import pandas as pd
+
+contract = build_forecast_prep_contract(
+    triage_result,          # output of run_triage()
+    horizon=12,
+    target_frequency="M",
+    add_calendar_features=True,
+    datetime_index=pd.date_range("1949-01", periods=144, freq="ME"),
+)
+print(contract.model_dump_json(indent=2))
+```
+
+> [!NOTE]
+> The contract emits lag recommendations, covariate roles, model families, and calendar
+> features. It never imports any forecasting framework. For framework-specific wiring, see
+> [docs/recipes/forecast_prep_to_external_frameworks.md](recipes/forecast_prep_to_external_frameworks.md).
+
 ## 15 Minutes: HTTP API Call
 
 Terminal A: start the API server.

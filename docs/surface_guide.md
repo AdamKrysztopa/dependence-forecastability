@@ -26,8 +26,18 @@ The supported import surface is the package facade, not the internal tree.
 | --- | --- | --- |
 | Python package facade | `forecastability` | Stable |
 | Advanced triage namespace | `forecastability.triage` | Stable |
+| Forecast prep contract | `build_forecast_prep_contract` (via `forecastability`) | Stable |
 
 Use these facades when you need deterministic triage, analyzers, typed results, config models, scorer registry access, or batch triage types. See [public_api.md](public_api.md) for the exact export set.
+
+### Forecast Prep Contract surface
+
+After triage, fingerprint, and lagged-exog analysis, call `build_forecast_prep_contract()` to
+convert triage outputs into a `ForecastPrepContract` — a structured, machine-readable hand-off
+contract for downstream forecasting frameworks. The contract is the final deterministic surface
+before external frameworks take over. It never imports any forecasting framework. For
+framework-specific wiring, see
+[docs/recipes/forecast_prep_to_external_frameworks.md](recipes/forecast_prep_to_external_frameworks.md).
 
 ## 2. Maintained Repository Workflows
 
