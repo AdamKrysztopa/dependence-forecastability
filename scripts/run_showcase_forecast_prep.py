@@ -104,7 +104,7 @@ def _say(quiet: bool, message: str) -> None:
         print(message, flush=True)
 
 
-def _write_lag_table_csv(path: Path, contract: object) -> None:  # type: ignore[type-arg]
+def _write_lag_table_csv(path: Path, contract: object) -> None:
     from forecastability import ForecastPrepContract
 
     assert isinstance(contract, ForecastPrepContract)
