@@ -40,10 +40,11 @@ def _fp(
     )
 
 
-def test_routing_none_structure_to_naive_family() -> None:
-    """A none-structure fingerprint must downscope to naive families."""
+def test_routing_none_structure_abstains_from_family_routing() -> None:
+    """A none-structure fingerprint must abstain from family-level routing."""
     rec = route_fingerprint(_fp(structure="none", mass=0.0, nl_share=0.0, signal_to_noise=0.0))
-    assert any(f in rec.primary_families for f in ("naive", "seasonal_naive", "downscope"))
+    assert rec.primary_families == []
+    assert rec.confidence_label == "abstain"
 
 
 def test_routing_periodic_to_seasonal_family() -> None:

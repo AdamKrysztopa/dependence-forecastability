@@ -167,6 +167,10 @@ _SERVICES_FORBIDDEN_INFRA = frozenset(
     ["pydantic_ai", "fastapi", "mcp", "httpx", "click", "typer", "matplotlib"]
 )
 
+_DIAGNOSTICS_FORBIDDEN_INFRA = frozenset(
+    ["pydantic_ai", "fastapi", "mcp", "httpx", "click", "typer", "matplotlib"]
+)
+
 
 def test_services_do_not_import_adapters() -> None:
     services_dir = ROOT / "src/forecastability/services"
@@ -201,6 +205,43 @@ def test_services_have_no_infra_imports() -> None:
 
     assert not violations, (
         "services/ modules must not import infrastructure or presentation packages.\n"
+        + "\n".join(violations)
+    )
+
+
+def test_diagnostics_do_not_import_adapters() -> None:
+    diagnostics_dir = ROOT / "src/forecastability/diagnostics"
+    py_files = sorted(p for p in diagnostics_dir.glob("*.py") if p.name != "__init__.py")
+    assert py_files, "No .py files found under src/forecastability/diagnostics/"
+
+    violations: list[str] = []
+    for py_file in py_files:
+        full_imports = _get_full_imports(py_file)
+        for dotted in full_imports:
+            if dotted.startswith("forecastability.adapters"):
+                relative = str(py_file.relative_to(ROOT))
+                violations.append(f"{relative}: imports '{dotted}'")
+
+    assert not violations, "diagnostics/ modules must not import from adapters/.\n" + "\n".join(
+        violations
+    )
+
+
+def test_diagnostics_have_no_infra_imports() -> None:
+    diagnostics_dir = ROOT / "src/forecastability/diagnostics"
+    py_files = sorted(p for p in diagnostics_dir.glob("*.py") if p.name != "__init__.py")
+    assert py_files, "No .py files found under src/forecastability/diagnostics/"
+
+    violations: list[str] = []
+    for py_file in py_files:
+        imported = _get_imports(py_file)
+        bad = [pkg for pkg in imported if pkg in _DIAGNOSTICS_FORBIDDEN_INFRA]
+        if bad:
+            relative = str(py_file.relative_to(ROOT))
+            violations.append(f"{relative}: {sorted(set(bad))}")
+
+    assert not violations, (
+        "diagnostics/ modules must not import infrastructure or presentation packages.\n"
         + "\n".join(violations)
     )
 

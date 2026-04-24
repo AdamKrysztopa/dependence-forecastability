@@ -82,6 +82,7 @@ Equivalent minimal files:
 - Notebook user: open the canonical notebook [notebooks/walkthroughs/00_air_passengers_showcase.ipynb](notebooks/walkthroughs/00_air_passengers_showcase.ipynb).
 - Fingerprint user: run [scripts/run_showcase_fingerprint.py](scripts/run_showcase_fingerprint.py), then open [notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb](notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb).
 - Lagged-exogenous user: run [scripts/run_showcase_lagged_exogenous.py](scripts/run_showcase_lagged_exogenous.py), then open [notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb](notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb).
+- Routing-validation user: run `uv run python scripts/run_routing_validation_report.py --smoke --no-real-panel`, then open [outputs/reports/routing_validation/report.md](outputs/reports/routing_validation/report.md).
 - Maintainer/contributor: use [docs/maintenance/developer_guide.md](docs/maintenance/developer_guide.md).
 
 ## Canonical walkthrough
@@ -184,8 +185,6 @@ Primary lagged-exogenous triage surfaces:
 > value is legitimately available at prediction time (calendar flags, planned
 > promotions, regulator-set prices).
 
-
-
 - Notebook: [notebooks/walkthroughs/00_air_passengers_showcase.ipynb](notebooks/walkthroughs/00_air_passengers_showcase.ipynb)
 - Notebook (covariant informative): [notebooks/walkthroughs/01_covariant_informative_showcase.ipynb](notebooks/walkthroughs/01_covariant_informative_showcase.ipynb)
 - Notebook (fingerprint showcase): [notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb](notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb)
@@ -193,6 +192,34 @@ Primary lagged-exogenous triage surfaces:
 - Quickstart: [docs/quickstart.md](docs/quickstart.md)
 - PyPI: [dependence-forecastability](https://pypi.org/project/dependence-forecastability/)
 - Issues: [GitHub Issues](https://github.com/AdamKrysztopa/dependence-forecastability/issues)
+
+## V0.3.3 Routing Validation
+
+The v0.3.3 routing-validation surface audits deterministic routing against
+synthetic archetypes and, when assets are present, a small real-series sanity
+panel. It adds the public `run_routing_validation()` use case and
+`RoutingValidationBundle` result surface, and it widens routing confidence
+labels additively so `abstain` is available when the routing policy emits no
+primary families.
+
+Run the clean-checkout smoke path:
+
+```bash
+uv run python scripts/run_routing_validation_report.py --smoke --no-real-panel
+```
+
+Primary routing-validation surfaces:
+
+- Public use case: `run_routing_validation()` returning `RoutingValidationBundle`
+- Report artifact: [outputs/reports/routing_validation/report.md](outputs/reports/routing_validation/report.md)
+- Theory: [docs/theory/routing_validation.md](docs/theory/routing_validation.md)
+- Notebook: [notebooks/walkthroughs/04_routing_validation_showcase.ipynb](notebooks/walkthroughs/04_routing_validation_showcase.ipynb)
+- Deterministic-first agent example: [examples/univariate/agents/routing_validation_agent_review.py](examples/univariate/agents/routing_validation_agent_review.py)
+
+> [!IMPORTANT]
+> Routing validation does not benchmark or train models. It checks whether the
+> existing routing policy emits defensible family-level guidance before any
+> downstream framework-specific hand-off.
 
 > [!NOTE]
 > `run_covariant_analysis()` supports six methods: `cross_ami`, `cross_pami`, `te`, `gcmi`, `pcmci`, and `pcmci_ami`. The two PCMCI methods are optional and skip gracefully when the causal extra is unavailable.

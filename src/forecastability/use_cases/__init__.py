@@ -16,6 +16,7 @@ from forecastability.use_cases.run_forecastability_fingerprint import (
 from forecastability.use_cases.run_lagged_exogenous_triage import (
     run_lagged_exogenous_triage,
 )
+from forecastability.use_cases.run_routing_validation import run_routing_validation
 from forecastability.use_cases.run_triage import run_triage
 
 __all__ = [
@@ -27,5 +28,6 @@ __all__ = [
     "run_covariant_analysis",
     "run_lagged_exogenous_triage",
     "run_forecastability_fingerprint",
+    "run_routing_validation",
     "RoutingPolicyConfig",
 ]

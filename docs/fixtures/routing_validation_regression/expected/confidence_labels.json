@@ -1,0 +1,12 @@
+{
+  "ar1": "low",
+  "exogenous_driven": "low",
+  "long_memory": "abstain",
+  "low_directness_high_penalty": "low",
+  "mediated_low_directness": "low",
+  "nonlinear_mixed": "low",
+  "seasonal": "high",
+  "structural_break": "medium",
+  "weak_seasonal_near_threshold": "low",
+  "white_noise": "abstain"
+}

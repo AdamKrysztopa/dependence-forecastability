@@ -23,6 +23,7 @@ EXPECTED_NOTEBOOKS = [
     "walkthroughs/01_covariant_informative_showcase.ipynb",
     "walkthroughs/02_forecastability_fingerprint_showcase.ipynb",
     "walkthroughs/03_lagged_exogenous_triage_showcase.ipynb",
+    "walkthroughs/04_routing_validation_showcase.ipynb",
     "walkthroughs/01_canonical_forecastability.ipynb",
     "walkthroughs/02_exogenous_analysis.ipynb",
     "walkthroughs/03_triage_end_to_end.ipynb",
@@ -71,6 +72,9 @@ def check_imports() -> bool:
         ("forecastability.reporting.covariant_walkthrough", "save_metric_heatmap"),
         ("forecastability", "generate_fingerprint_archetypes"),
         ("forecastability", "run_forecastability_fingerprint"),
+        ("forecastability", "RoutingPolicyAuditConfig"),
+        ("forecastability", "RoutingValidationCase"),
+        ("forecastability", "run_routing_validation"),
         ("forecastability.reporting.fingerprint_showcase", "showcase_summary_frame"),
     ]
 
@@ -211,6 +215,40 @@ def check_representative_call() -> bool:
         _check(
             "run_lagged_exogenous_triage requires explicit known-future opt-in for lag=0 selection",
             lagged_exog_opt_in_ok,
+        )
+    )
+
+    try:
+        from forecastability import (
+            ExpectedFamilyMetadata,
+            RoutingPolicyAuditConfig,
+            run_routing_validation,
+        )
+
+        routing_bundle = run_routing_validation(
+            synthetic_panel=[
+                ExpectedFamilyMetadata(
+                    archetype_name="seasonal",
+                    expected_primary_families=["seasonal_naive"],
+                )
+            ],
+            real_panel_path=None,
+            n_per_archetype=200,
+            random_state=42,
+            config=RoutingPolicyAuditConfig(),
+        )
+        routing_validation_ok = (
+            routing_bundle.audit.total_cases == 1
+            and len(routing_bundle.cases) == 1
+            and routing_bundle.cases[0].case_name == "seasonal"
+        )
+    except Exception as exc:
+        print(f"    Error: {exc}")
+        routing_validation_ok = False
+    checks.append(
+        _check(
+            "run_routing_validation returns a one-case synthetic bundle via the stable facade",
+            routing_validation_ok,
         )
     )
 

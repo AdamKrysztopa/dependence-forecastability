@@ -9,6 +9,9 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+from pydantic import BaseModel, ConfigDict, Field
+
+from forecastability.utils.types import RoutingValidationOutcome
 
 
 def generate_covariant_benchmark(
@@ -499,5 +502,314 @@ def generate_fingerprint_archetypes(
             phi=0.6,
             nl_strength=0.8,
             seed=seed + 3,
+        ),
+    }
+
+
+class ExpectedFamilyMetadata(BaseModel):
+    """Expected routing metadata for one synthetic validation archetype."""
+
+    model_config = ConfigDict(frozen=True)
+
+    archetype_name: str
+    expected_primary_families: list[str]
+    expected_caution_flags: list[str] = Field(default_factory=list)
+    expected_outcome_hint: RoutingValidationOutcome | None = None
+    notes: list[str] = Field(default_factory=list)
+
+
+def generate_white_noise_archetype(
+    n: int = 600,
+    *,
+    seed: int = 42,
+) -> tuple[np.ndarray, ExpectedFamilyMetadata]:
+    """Generate white-noise archetype with no structural forecastability."""
+    return (
+        generate_white_noise(n=n, seed=seed),
+        ExpectedFamilyMetadata(
+            archetype_name="white_noise",
+            expected_primary_families=["naive", "seasonal_naive"],
+            expected_outcome_hint="abstain",
+            notes=["No persistent lag structure."],
+        ),
+    )
+
+
+def generate_ar1_archetype(
+    n: int = 600,
+    *,
+    seed: int = 42,
+    phi: float = 0.7,
+) -> tuple[np.ndarray, ExpectedFamilyMetadata]:
+    """Generate AR(1) archetype with monotonic, mostly linear dependence."""
+    return (
+        generate_ar1_monotonic(n=n, phi=phi, seed=seed),
+        ExpectedFamilyMetadata(
+            archetype_name="ar1",
+            expected_primary_families=["naive", "seasonal_naive", "downscope"],
+            notes=[
+                "Lag-1 autocorrelation should dominate, but the v0.3.1 fingerprint",
+                "requires amplitude well above 1-sigma noise for detection;",
+                "at phi=0.7 the AR1 signal is below the detection threshold so the",
+                "router correctly falls back to low-confidence naive families.",
+            ],
+        ),
+    )
+
+
+def generate_seasonal_archetype(
+    n: int = 600,
+    *,
+    seed: int = 42,
+    period: int = 12,
+    amplitude: float = 1.0,
+) -> tuple[np.ndarray, ExpectedFamilyMetadata]:
+    """Generate additive seasonal archetype for seasonality-aware routing."""
+    rng = np.random.default_rng(seed)
+    t = np.arange(n)
+    series = amplitude * np.sin(2.0 * np.pi * t / period) + 0.35 * rng.standard_normal(n)
+    return (
+        series,
+        ExpectedFamilyMetadata(
+            archetype_name="seasonal",
+            expected_primary_families=["harmonic_regression", "seasonal_naive", "tbats"],
+            notes=[
+                "Seasonal lag is strongly visible at amplitude=1.0.",
+                "v0.3.1 router maps a periodic high-mass fingerprint to",
+                "harmonic_regression / seasonal_naive / tbats.",
+            ],
+        ),
+    )
+
+
+def generate_weak_seasonal_near_threshold_archetype(
+    n: int = 600,
+    seed: int = 42,
+    *,
+    period: int = 12,
+    amplitude: float = 0.18,
+) -> tuple[np.ndarray, ExpectedFamilyMetadata]:
+    """Generate weak-seasonal archetype intended to sit near routing thresholds."""
+    if n < 5 * period:
+        raise ValueError(f"n must be >= 5 * period, got {n}")
+    rng = np.random.default_rng(seed)
+    t = np.arange(n)
+    series = amplitude * np.sin(2.0 * np.pi * t / period) + rng.standard_normal(n)
+    return (
+        series,
+        ExpectedFamilyMetadata(
+            archetype_name="weak_seasonal_near_threshold",
+            expected_primary_families=["harmonic_regression", "seasonal_naive", "tbats"],
+            expected_caution_flags=["near_seasonality_threshold"],
+            expected_outcome_hint="downgrade",
+            notes=[
+                "Designed for downgrade-band calibration sweeps.",
+                "v0.3.1 router maps a near-threshold periodic fingerprint to the",
+                "same seasonal arm as the full-strength seasonal archetype;",
+                "downgrade fires because threshold_margin < tau_margin.",
+            ],
+        ),
+    )
+
+
+def generate_nonlinear_mixed_archetype(
+    n: int = 600,
+    *,
+    seed: int = 42,
+) -> tuple[np.ndarray, ExpectedFamilyMetadata]:
+    """Generate nonlinear-mixed archetype for nonlinear routing arms."""
+    return (
+        generate_nonlinear_mixed(n=n, seed=seed),
+        ExpectedFamilyMetadata(
+            archetype_name="nonlinear_mixed",
+            expected_primary_families=["nonlinear_regression", "neural"],
+            notes=["AMI should exceed linear baseline materially."],
+        ),
+    )
+
+
+def generate_structural_break_archetype(
+    n: int = 600,
+    *,
+    seed: int = 42,
+    break_at: int | None = None,
+) -> tuple[np.ndarray, ExpectedFamilyMetadata]:
+    """Generate mean-shift archetype to exercise structural-break cautions."""
+    if break_at is None:
+        break_at = n // 2
+    if break_at <= 0 or break_at >= n:
+        raise ValueError(f"break_at must be in (0, n), got {break_at}")
+    rng = np.random.default_rng(seed)
+    series = rng.standard_normal(n)
+    series[break_at:] += 1.8
+    return (
+        series,
+        ExpectedFamilyMetadata(
+            archetype_name="structural_break",
+            expected_primary_families=["arima", "ets", "linear_state_space"],
+            expected_caution_flags=["structural_break"],
+            notes=[
+                "Mean-shift series; the v0.3.1 router places the monotonic",
+                "mid-mass fingerprint in the arima/ets/linear_state_space arm.",
+            ],
+        ),
+    )
+
+
+def generate_long_memory_archetype(
+    n: int = 600,
+    *,
+    seed: int = 42,
+    hurst: float = 0.75,
+) -> tuple[np.ndarray, ExpectedFamilyMetadata]:
+    """Generate long-memory-like archetype via fractional-noise approximation."""
+    if not (0.5 < hurst < 1.0):
+        raise ValueError(f"hurst must be in (0.5, 1.0), got {hurst}")
+    rng = np.random.default_rng(seed)
+    d = hurst - 0.5
+    eps = rng.standard_normal(n)
+    weights = np.empty(n, dtype=float)
+    weights[0] = 1.0
+    for k in range(1, n):
+        weights[k] = weights[k - 1] * ((k - 1 + d) / k)
+    series = np.convolve(eps, weights, mode="full")[:n]
+    series = (series - np.mean(series)) / (np.std(series) + 1e-12)
+    return (
+        series,
+        ExpectedFamilyMetadata(
+            archetype_name="long_memory",
+            expected_primary_families=["naive", "seasonal_naive"],
+            expected_caution_flags=["long_memory"],
+            notes=[
+                "Fractional-noise approximation; the v0.3.1 fingerprint detects",
+                "information_mass at the low_mass_max boundary so the router",
+                "falls back to naive / seasonal_naive.",
+            ],
+        ),
+    )
+
+
+def generate_mediated_low_directness_archetype(
+    n: int = 600,
+    *,
+    seed: int = 42,
+) -> tuple[np.ndarray, ExpectedFamilyMetadata]:
+    """Generate mediated target series with weaker direct lag evidence."""
+    _, target = generate_mediated_directness_drop(n=n, seed=seed)
+    return (
+        target,
+        ExpectedFamilyMetadata(
+            archetype_name="mediated_low_directness",
+            expected_primary_families=["arima", "ets", "linear_state_space"],
+            expected_outcome_hint="downgrade",
+            expected_caution_flags=["low_directness"],
+            notes=[
+                "v0.3.1 router maps the mid-mass monotonic fingerprint to",
+                "arima/ets/linear_state_space; low confidence_label fires because",
+                "of the low directness_ratio penalty.",
+            ],
+        ),
+    )
+
+
+def generate_exogenous_driven_archetype(
+    n: int = 600,
+    *,
+    seed: int = 42,
+) -> tuple[np.ndarray, ExpectedFamilyMetadata]:
+    """Generate exogenous-driven archetype from the lagged-exog benchmark panel."""
+    panel_n = max(n, 200)
+    panel = generate_lagged_exog_panel(n=panel_n, seed=seed)
+    target = panel["target"].to_numpy(dtype=float)[:n]
+    return (
+        target,
+        ExpectedFamilyMetadata(
+            archetype_name="exogenous_driven",
+            expected_primary_families=["arima", "ets", "linear_state_space"],
+            notes=[
+                "Derived from panel with predictive exogenous drivers.",
+                "v0.3.1 router routes to arima/ets/linear_state_space;",
+                "low confidence_label fires due to low directness_ratio.",
+            ],
+        ),
+    )
+
+
+def generate_low_directness_high_penalty_archetype(
+    n: int = 600,
+    *,
+    seed: int = 42,
+) -> tuple[np.ndarray, ExpectedFamilyMetadata]:
+    """Generate low-directness/high-penalty archetype for low-confidence coverage."""
+    _, target = generate_mediated_directness_drop(n=n, seed=seed)
+    rng = np.random.default_rng(seed + 17)
+    series = target.copy()
+    series[n // 3 : n // 3 + max(8, n // 10)] += 1.6
+    series += 0.20 * rng.standard_normal(n)
+    return (
+        series,
+        ExpectedFamilyMetadata(
+            archetype_name="low_directness_high_penalty",
+            expected_primary_families=["arima", "ets", "linear_state_space"],
+            expected_caution_flags=["low_directness", "structural_break"],
+            notes=[
+                "Designed to ensure low-confidence path coverage.",
+                "v0.3.1 router routes to arima/ets/linear_state_space;",
+                "combined low-directness + structural-break caution flags",
+                "accumulate penalties that drive confidence_label to medium/low.",
+            ],
+        ),
+    )
+
+
+def generate_routing_validation_archetypes(
+    n: int = 600,
+    *,
+    seed: int = 42,
+    weak_seasonal_amplitude: float | None = None,
+) -> dict[str, tuple[np.ndarray, ExpectedFamilyMetadata]]:
+    """Return deterministic routing-validation archetype panel used by phase 0.
+
+    Args:
+        n: Number of observations per synthetic series.
+        seed: Base integer seed used to derive per-archetype seeds.
+        weak_seasonal_amplitude: Optional override for the amplitude used in
+            ``generate_weak_seasonal_near_threshold_archetype``.  When ``None``
+            (the default), the generator's own default (0.18) is used.  Pass
+            the calibrated value from
+            ``docs/fixtures/routing_validation_regression/expected/calibration.json``
+            during fixture rebuilds.
+
+    Returns:
+        Ordered dict mapping archetype name to ``(series, ExpectedFamilyMetadata)``.
+    """
+    weak_seasonal_kwargs: dict[str, float] = {}
+    if weak_seasonal_amplitude is not None:
+        weak_seasonal_kwargs["amplitude"] = weak_seasonal_amplitude
+
+    return {
+        "white_noise": generate_white_noise_archetype(n=n, seed=seed),
+        "ar1": generate_ar1_archetype(n=n, seed=seed + 1),
+        "seasonal": generate_seasonal_archetype(n=n, seed=seed + 2),
+        "weak_seasonal_near_threshold": (
+            generate_weak_seasonal_near_threshold_archetype(
+                n=n,
+                seed=seed + 3,
+                amplitude=weak_seasonal_amplitude,
+            )
+            if weak_seasonal_amplitude is not None
+            else generate_weak_seasonal_near_threshold_archetype(n=n, seed=seed + 3)
+        ),
+        "nonlinear_mixed": generate_nonlinear_mixed_archetype(n=n, seed=seed + 4),
+        "structural_break": generate_structural_break_archetype(n=n, seed=seed + 5),
+        "long_memory": generate_long_memory_archetype(n=n, seed=seed + 6),
+        "mediated_low_directness": generate_mediated_low_directness_archetype(
+            n=n,
+            seed=seed + 7,
+        ),
+        "exogenous_driven": generate_exogenous_driven_archetype(n=n, seed=seed + 8),
+        "low_directness_high_penalty": generate_low_directness_high_penalty_archetype(
+            n=n,
+            seed=seed + 9,
         ),
     }

@@ -73,10 +73,11 @@ def _next_step_from_bundle(
     families = _stringify_families(recommendation.primary_families)
 
     if fingerprint.information_structure == "none" or "naive" in recommendation.primary_families:
+        baseline_families = families if families else ["naive", "seasonal_naive"]
         return ForecastingNextStepPlan(
             action="baseline_monitoring",
             priority_tier="low",
-            recommended_model_families=families,
+            recommended_model_families=baseline_families,
             why_this_action=(
                 "The signal does not stay meaningfully above the surrogate-noise floor, "
                 "so a simple baseline is the responsible starting point."
@@ -94,7 +95,7 @@ def _next_step_from_bundle(
     if (
         fingerprint.information_structure == "periodic"
         and fingerprint.nonlinear_share < 0.30
-        and recommendation.confidence_label != "low"
+        and recommendation.confidence_label in {"high", "medium"}
     ):
         return ForecastingNextStepPlan(
             action="seasonal_benchmark",
@@ -116,7 +117,7 @@ def _next_step_from_bundle(
     if (
         fingerprint.information_structure == "monotonic"
         and fingerprint.nonlinear_share < 0.30
-        and recommendation.confidence_label == "high"
+        and recommendation.confidence_label in {"high"}
     ):
         return ForecastingNextStepPlan(
             action="linear_benchmark",
@@ -135,7 +136,10 @@ def _next_step_from_bundle(
             ),
         )
 
-    if fingerprint.nonlinear_share >= 0.30 and recommendation.confidence_label != "low":
+    if fingerprint.nonlinear_share >= 0.30 and recommendation.confidence_label in {
+        "high",
+        "medium",
+    }:
         return ForecastingNextStepPlan(
             action="nonlinear_benchmark",
             priority_tier="high",

@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Literal
 
 import numpy as np
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class MetricCurve(BaseModel):
@@ -512,7 +512,7 @@ class CovariantInterpretationResult(BaseModel):
 
 GeometryMethodLabel = Literal["ksg2_shuffle_surrogate"]
 FingerprintStructure = Literal["none", "monotonic", "periodic", "mixed"]
-RoutingConfidenceLabel = Literal["low", "medium", "high"]
+RoutingConfidenceLabel = Literal["low", "medium", "high", "abstain"]
 ModelFamilyLabel = Literal[
     "naive",
     "seasonal_naive",
@@ -653,4 +653,105 @@ class FingerprintBundle(BaseModel):
     fingerprint: ForecastabilityFingerprint
     recommendation: RoutingRecommendation
     profile_summary: dict[str, str | int | float]
+    metadata: dict[str, str | int | float] = Field(default_factory=dict)
+
+
+# ---------------------------------------------------------------------------
+# v0.3.3 Routing validation result containers (Phase 0)
+# ---------------------------------------------------------------------------
+
+
+RoutingValidationOutcome = Literal["pass", "fail", "abstain", "downgrade"]
+RoutingValidationSourceKind = Literal["synthetic", "real"]
+
+
+class RoutingPolicyAuditConfig(BaseModel):
+    """Versioned scalars for routing validation and confidence calibration."""
+
+    model_config = ConfigDict(frozen=True)
+
+    tau_margin: float = Field(default=0.05, ge=0.0)
+    tau_margin_medium: float = Field(default=0.02, ge=0.0)
+    tau_stable: float = Field(default=0.80, ge=0.0, le=1.0)
+    tau_stable_high: float = Field(default=0.95, ge=0.0, le=1.0)
+    tau_stable_medium: float = Field(default=0.75, ge=0.0, le=1.0)
+    perturbation_radius: float = Field(default=0.05, gt=0.0)
+    coordinate_scales: dict[str, float] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def _validate_cross_field_ordering(self) -> RoutingPolicyAuditConfig:
+        if self.tau_margin_medium > self.tau_margin:
+            raise ValueError(
+                "tau_margin_medium must be <= tau_margin "
+                f"(got {self.tau_margin_medium} > {self.tau_margin})"
+            )
+        if not (self.tau_stable_medium <= self.tau_stable <= self.tau_stable_high):
+            raise ValueError(
+                "Expected tau_stable_medium <= tau_stable <= tau_stable_high "
+                f"(got {self.tau_stable_medium}, {self.tau_stable}, {self.tau_stable_high})"
+            )
+        for key, value in self.coordinate_scales.items():
+            if value <= 0.0:
+                raise ValueError(f"coordinate_scales['{key}'] must be > 0 (got {value})")
+        return self
+
+
+class RoutingValidationCase(BaseModel):
+    """One validation case pairing expected and observed routing behavior."""
+
+    model_config = ConfigDict(frozen=True)
+
+    case_name: str
+    source_kind: RoutingValidationSourceKind
+    expected_primary_families: list[str]
+    observed_primary_families: list[str]
+    outcome: RoutingValidationOutcome
+    confidence_label: RoutingConfidenceLabel
+    threshold_margin: float
+    rule_stability: float = Field(ge=0.0, le=1.0)
+    fingerprint_penalty_count: int = Field(ge=0)
+    notes: list[str] = Field(default_factory=list)
+    metadata: dict[str, str | int | float] = Field(default_factory=dict)
+
+    @field_validator("expected_primary_families")
+    @classmethod
+    def _validate_expected_primary_families(cls, value: list[str]) -> list[str]:
+        if not value:
+            raise ValueError("expected_primary_families must be non-empty")
+        return value
+
+
+class RoutingPolicyAudit(BaseModel):
+    """Aggregate routing validation counts across a panel."""
+
+    model_config = ConfigDict(frozen=True)
+
+    total_cases: int = Field(ge=0)
+    passed_cases: int = Field(ge=0)
+    failed_cases: int = Field(ge=0)
+    downgraded_cases: int = Field(ge=0)
+    abstained_cases: int = Field(ge=0)
+    metadata: dict[str, str | int | float] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def _validate_count_consistency(self) -> RoutingPolicyAudit:
+        counted = (
+            self.passed_cases + self.failed_cases + self.downgraded_cases + self.abstained_cases
+        )
+        if counted != self.total_cases:
+            raise ValueError(
+                "RoutingPolicyAudit counts must sum to total_cases "
+                f"(got {counted} != {self.total_cases})"
+            )
+        return self
+
+
+class RoutingValidationBundle(BaseModel):
+    """Composite typed output for routing-validation orchestration."""
+
+    model_config = ConfigDict(frozen=True)
+
+    cases: list[RoutingValidationCase]
+    audit: RoutingPolicyAudit
+    config: RoutingPolicyAuditConfig
     metadata: dict[str, str | int | float] = Field(default_factory=dict)

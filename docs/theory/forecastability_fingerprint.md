@@ -176,7 +176,7 @@ Panel rules:
 - Do not smooth away disagreement: a mismatch is a release-note input, not a
     post-hoc relabel.
 - Treat this as a v0.3.1 guardrail. Calibration depth and empirical hardening
-    remain deferred to v0.3.4.
+    remain deferred to v0.3.3.
 
 ## Regression Guardrails (v0.3.1 Phase 3)
 

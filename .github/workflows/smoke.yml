@@ -54,6 +54,9 @@ jobs:
       - name: Run lagged-exogenous triage showcase
         run: uv run scripts/run_showcase_lagged_exogenous.py --smoke --quiet
 
+      - name: Run routing validation report smoke
+        run: uv run python scripts/run_routing_validation_report.py --smoke --no-real-panel
+
       - name: Smoke CSV geometry adapter CLI wiring
         run: uv run scripts/run_ami_information_geometry_csv.py --help
 
