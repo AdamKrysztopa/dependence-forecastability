@@ -13,6 +13,12 @@ Baseline framing, invariants, and mathematical definitions still live in the mai
 | [acceptance_criteria.md](acceptance_criteria.md) | Done criteria shared by all roadmap items | Complete |
 | **[cleaning_plan.md](cleaning_plan.md)** | **Hexagonal realignment, type-check cleanup, packaging** | **Active** |
 | **[pypi_release_plan.md](pypi_release_plan.md)** | **PyPI publication: naming, metadata, artifact validation, Trusted Publishing** | **Active** |
+| [v0_3_4_forecast_prep_contract_ultimate_plan.md](v0_3_4_forecast_prep_contract_ultimate_plan.md) | v0.3.4 — forecast-prep contract (original plan) | Draft / Proposed |
+| **[v0_3_4_forecast_prep_contract_revision_2026_04_24.md](v0_3_4_forecast_prep_contract_revision_2026_04_24.md)** | **v0.3.4 scope revision: framework-agnostic; drops `[darts]` / `[mlforecast]` extras and runners** | **Active overlay — supersedes** |
+| [v0_3_5_documentation_quality_improvement_ultimate_plan.md](v0_3_5_documentation_quality_improvement_ultimate_plan.md) | v0.3.5 — documentation hardening (original plan) | Draft / Proposed |
+| **[v0_3_5_documentation_quality_improvement_revision_2026_04_24.md](v0_3_5_documentation_quality_improvement_revision_2026_04_24.md)** | **v0.3.5 scope revision: adds Invariant E (no framework imports) + notebook transition banner** | **Active overlay — supersedes** |
+| **[v0_4_0_examples_repo_split_ultimate_plan.md](v0_4_0_examples_repo_split_ultimate_plan.md)** | **v0.4.0 — library-first slim release: notebook migration to sibling examples repo** | **Active** |
+| [aux_documents/developer_instruction_repo_scope.md](aux_documents/developer_instruction_repo_scope.md) | Reviewer scope directive (driver document for v0.3.4 revision, v0.3.5 revision, v0.4.0) | Reference |
 
 ## Completed — triage extension epic
 

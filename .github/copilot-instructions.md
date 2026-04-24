@@ -23,3 +23,13 @@ CLI, API, notebooks, MCP, and agents are optional access or narration layers aro
 - Treat `docs/public_api.md` as the supported import contract.
 - Keep additive compatibility for stable Pydantic result fields.
 - Do not describe the package as a model zoo or a replacement for downstream forecasting libraries.
+
+## Repository Scope (binding)
+
+See [docs/plan/aux_documents/developer_instruction_repo_scope.md](../docs/plan/aux_documents/developer_instruction_repo_scope.md) for the full directive.
+
+- The core package is **framework-agnostic**. Do not add `darts`, `mlforecast`, `statsforecast`, or `nixtla` as runtime, optional-extra, dev, or CI dependencies of the core repository.
+- The forecast-prep contract (`ForecastPrepContract`) is a **hand-off boundary**. Stop at the contract; do not add `to_<framework>_spec()` or `fit_<framework>()` helpers as supported public API.
+- Framework usage examples belong in `docs/recipes/**` as illustrative snippets, never executed by core CI, and (from v0.4.0) in the sibling `forecastability-examples` repository.
+- Notebooks are a **transitional** surface. Do not add new notebooks to this repo. Prefer scripts in `scripts/`, examples in `examples/`, and pages in `docs/recipes/`. The `notebooks/` directory is removed in v0.4.0.
+- Reusable analysis logic belongs in package code (`src/forecastability/`), not in notebooks or scripts.
