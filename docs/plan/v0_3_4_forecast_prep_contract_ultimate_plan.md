@@ -6,7 +6,7 @@
 **Target release:** `0.3.4` — **headline release**, ships second in the 0.3.3 → 0.3.4 → 0.3.5 → 0.4.0 chain
 **Current released version:** `0.3.3`
 **Branch:** `feat/v0.3.4-forecast-prep-contract`
-**Status:** Draft / Proposed
+**Status:** Implemented
 **Last reviewed:** 2026-04-24
 
 > [!IMPORTANT]
@@ -378,12 +378,12 @@ The Forecast Prep Contract preserves three v0.3.2 contracts exactly:
 | FPC-F11 | Regression fixtures | 4 | Follows current fixture discipline | `docs/fixtures/forecast_prep_regression/expected/` + rebuild script | Done |
 | FPC-CI-01 | Forecast prep smoke job | 5 | Extends `.github/workflows/smoke.yml` | run showcase script in `--smoke` mode (no extras) | Done |
 | FPC-CI-04 | Release checklist hardening | 5 | Extends `.github/ISSUE_TEMPLATE/release_checklist.md` | fixture verify, recipes-page presence, no-framework-imports check | Done |
-| FPC-D01 | Theory / contract doc | 6 | New docs page | `docs/forecast_prep_contract.md` covering §2 in plain language | Proposed |
-| FPC-D02 | README / quickstart / public API update | 6 | Extends user-facing docs | document contract, `[calendar]` extra, calendar features, framework-agnostic exporters | Proposed |
-| FPC-D03 | Changelog and release notes | 6 | Release docs | additive contract surface; explicit "framework-agnostic" framing | Proposed |
-| FPC-D04R | External recipes documentation page | 6 | New docs page (replaces dropped framework specs/runners) | `docs/recipes/forecast_prep_to_external_frameworks.md` with Darts / MLForecast / Nixtla illustrative mappings | Proposed |
-| FPC-R01 | Version bump and tag | 6 | Release engineering | bump to `0.3.4`, tag `v0.3.4`, push | Proposed |
-| FPC-R03 | Fixture rebuild verification | 6 | Release engineering | every `rebuild_*` script runs clean | Proposed |
+| FPC-D01 | Theory / contract doc | 6 | New docs page | `docs/forecast_prep_contract.md` covering §2 in plain language | Done |
+| FPC-D02 | README / quickstart / public API update | 6 | Extends user-facing docs | document contract, `[calendar]` extra, calendar features, framework-agnostic exporters | Done |
+| FPC-D03 | Changelog and release notes | 6 | Release docs | additive contract surface; explicit "framework-agnostic" framing | Done |
+| FPC-D04R | External recipes documentation page | 6 | New docs page (replaces dropped framework specs/runners) | `docs/recipes/forecast_prep_to_external_frameworks.md` with Darts / MLForecast / Nixtla illustrative mappings | Done |
+| FPC-R01 | Version bump and tag | 6 | Release engineering | bump to `0.3.4`, tag `v0.3.4`, push | Done |
+| FPC-R03 | Fixture rebuild verification | 6 | Release engineering | every `rebuild_*` script runs clean | Done |
 
 > [!NOTE]
 > **Items dropped from the original draft.** `FPC-F04` (`to_mlforecast_spec`),

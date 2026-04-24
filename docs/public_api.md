@@ -302,6 +302,38 @@ from forecastability.triage import (
 > [!NOTE]
 > `LargestLyapunovExponentResult` is part of the exported namespace but remains experimental and is excluded from automated triage decisions.
 
+## Forecast Prep Contract (v0.3.4+)
+
+After triage, use `build_forecast_prep_contract` to convert triage outputs into a typed,
+machine-readable hand-off contract for downstream forecasting frameworks.
+
+```python
+from forecastability import ForecastPrepContract
+from forecastability import LagRecommendation
+from forecastability import CovariateRecommendation
+from forecastability import FamilyRecommendation
+from forecastability import build_forecast_prep_contract
+from forecastability import forecast_prep_contract_to_markdown
+from forecastability import forecast_prep_contract_to_lag_table
+from forecastability.triage import ForecastPrepBundle
+```
+
+| Symbol | Description |
+| --- | --- |
+| `ForecastPrepContract` | Top-level typed result container for a completed forecast prep triage hand-off. Stable Pydantic model; use `.model_dump()` / `.model_dump_json()` as the canonical Python-dict and JSON export surfaces. |
+| `LagRecommendation` | Typed lag recommendation row: driver name, lag offset, tensor role, and significance source. |
+| `CovariateRecommendation` | Typed covariate recommendation: driver name, recommended role, and supporting evidence. |
+| `FamilyRecommendation` | Typed model-family recommendation: family name, confidence label, and caution flags. |
+| `build_forecast_prep_contract` | Use case that accepts a `TriageResult` plus horizon, frequency, and calendar options and returns a `ForecastPrepContract`. Re-exported from `forecastability` and `forecastability.triage`. |
+| `forecast_prep_contract_to_markdown` | Framework-agnostic Markdown exporter for a `ForecastPrepContract`. Re-exported from `forecastability` and `forecastability.triage`. |
+| `forecast_prep_contract_to_lag_table` | Framework-agnostic lag-table exporter for a `ForecastPrepContract`. Re-exported from `forecastability` and `forecastability.triage`. |
+| `ForecastPrepBundle` | Composite bundle wrapping a `TriageResult` and the derived `ForecastPrepContract`. Available from `forecastability.triage`. |
+
+> [!IMPORTANT]
+> The contract is a **hand-off boundary**. It never imports any forecasting framework.
+> Framework-specific wiring belongs in `docs/recipes/**` and (from v0.4.0) in the sibling
+> `forecastability-examples` repository.
+
 ## Runtime Entry Points
 
 These are the live repo entry points for non-import surfaces.

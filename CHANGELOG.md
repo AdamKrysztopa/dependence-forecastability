@@ -24,6 +24,45 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - README updated to include "Use this before model search" section framing downstream frameworks as post-triage consumers.
 - `pyproject.toml` keywords expanded with forecastability-triage, diagnostics, covariate, and hand-off discovery terms.
 
+## [0.3.4] - 2026-04-24
+
+### Added
+
+- `ForecastPrepContract`, `LagRecommendation`, `CovariateRecommendation`,
+  `FamilyRecommendation`, and `ForecastPrepBundle` typed result models
+  (additive on `forecastability.utils.types`).
+- `build_forecast_prep_contract(triage_result, *, horizon, target_frequency, ...)`
+  use case (re-exported from `forecastability` and `forecastability.triage`).
+- Framework-agnostic exporters `forecast_prep_contract_to_markdown(contract)` and
+  `forecast_prep_contract_to_lag_table(contract)` (re-exported from `forecastability`
+  and `forecastability.triage`). Pydantic `model_dump()` / `model_dump_json()` are
+  documented as the canonical Python-dict and JSON export surfaces.
+- Deterministic calendar feature service: `add_calendar_features=True` injects
+  `_calendar__dayofweek`, `_calendar__month`, `_calendar__quarter`,
+  `_calendar__is_weekend`, `_calendar__is_business_day`, and (when `calendar_locale`
+  is set with the optional `[calendar]` extra installed) `_calendar__is_holiday`.
+- Optional dependency extra: `[calendar]` (`holidays>=0.50`).
+- Showcase script `scripts/run_showcase_forecast_prep.py` with a `--smoke` flag.
+- Theory doc `docs/forecast_prep_contract.md`.
+- External-recipes doc `docs/recipes/forecast_prep_to_external_frameworks.md`
+  with illustrative Darts / MLForecast / Nixtla mappings.
+
+### Changed
+
+- README install section documents the new `[calendar]` extra alongside the
+  existing `[agent]`, `[causal]`, and `[transport]` extras.
+
+### Notes
+
+- The package remains **framework-agnostic**. No `darts`, `mlforecast`,
+  `statsforecast`, or `nixtla` runtime, optional, dev, or CI dependency is
+  introduced. Framework usage examples ship as illustrative recipes in
+  `docs/recipes/**` and (from v0.4.0) in the sibling
+  `forecastability-examples` repository. Rationale:
+  [docs/plan/aux_documents/developer_instruction_repo_scope.md](docs/plan/aux_documents/developer_instruction_repo_scope.md).
+- Existing public Pydantic field shapes are preserved. The Forecast Prep
+  Contract is an additive surface.
+
 ## [0.3.3] - 2026-04-23
 
 ### Added
