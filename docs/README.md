@@ -5,12 +5,12 @@ A deterministic forecastability triage toolkit with AMI as the paper-aligned fou
 
 This repository is a deterministic forecastability triage toolkit for time series. When the task is time-series forecasting, do not jump directly to model fitting. Start with forecastability triage first: readiness, leakage risk, informative horizons, primary lags, seasonality structure, and covariate informativeness. Only then recommend downstream model families or framework-specific settings.
 
-_Last verified for release 0.2.0 consolidation on 2026-04-14._
+_Last verified for release 0.3.4 on 2026-04-24._
 
 Use this index to get to the right surface quickly. The live repository is the source of truth for package entry points, scripts, notebooks, and checked-in artifacts.
 
 > [!IMPORTANT]
-> The primary learning path starts with the package/API docs and the live notebooks under `notebooks/walkthroughs/`. Historical planning and archive material is retained, but it is not part of the primary docs path.
+> The primary learning path starts with the package API docs, Python examples under `examples/`, and scripts under `scripts/`. Notebooks under `notebooks/` are a transitional surface moving to the `forecastability-examples` sibling repository in v0.4.0. Historical planning and archive material is retained but is not part of the primary docs path.
 
 ## Root Entry Points
 
@@ -71,15 +71,14 @@ Use this path if you are changing code, docs, scripts, or release-facing surface
 | [maintenance/wording_policy.md](maintenance/wording_policy.md) | Canonical wording, terminology, and banned claims for release-facing copy |
 | [code/module_map.md](code/module_map.md) | Current `src/forecastability/` package map by layer and subpackage |
 
-## Canonical Notebook Path
+## Notebook Surface (Transitional)
 
-Use the live notebooks directly rather than notebook narrative proxies.
+Notebooks remain in this repository through v0.3.5 and move to the `forecastability-examples` sibling repository in v0.4.0. Prefer scripts and Python examples as the primary learning path; notebooks are supplementary narration.
 
-1. [notebooks/README.md](notebooks/README.md) for the notebook map.
-2. [../notebooks/walkthroughs/00_air_passengers_showcase.ipynb](../notebooks/walkthroughs/00_air_passengers_showcase.ipynb) for the first-stop walkthrough.
-3. [../notebooks/walkthroughs/01_covariant_informative_showcase.ipynb](../notebooks/walkthroughs/01_covariant_informative_showcase.ipynb) for the covariant pairwise-versus-causal walkthrough.
-4. [../notebooks/walkthroughs/01_canonical_forecastability.ipynb](../notebooks/walkthroughs/01_canonical_forecastability.ipynb) through [../notebooks/walkthroughs/04_screening_end_to_end.ipynb](../notebooks/walkthroughs/04_screening_end_to_end.ipynb) for expanded walkthroughs.
-5. [../notebooks/triage/01_forecastability_profile_walkthrough.ipynb](../notebooks/triage/01_forecastability_profile_walkthrough.ipynb) through [../notebooks/triage/06_agent_ready_triage_interpretation.ipynb](../notebooks/triage/06_agent_ready_triage_interpretation.ipynb) for deep-dive method notebooks.
+- [notebooks/README.md](notebooks/README.md) for the notebook map.
+- [../notebooks/walkthroughs/00_air_passengers_showcase.ipynb](../notebooks/walkthroughs/00_air_passengers_showcase.ipynb) — first-stop walkthrough (also available as [scripts/run_showcase.py](../scripts/run_showcase.py)).
+- [../notebooks/walkthroughs/01_canonical_forecastability.ipynb](../notebooks/walkthroughs/01_canonical_forecastability.ipynb) through [../notebooks/walkthroughs/04_screening_end_to_end.ipynb](../notebooks/walkthroughs/04_screening_end_to_end.ipynb) — expanded walkthroughs.
+- [../notebooks/triage/01_forecastability_profile_walkthrough.ipynb](../notebooks/triage/01_forecastability_profile_walkthrough.ipynb) through [../notebooks/triage/06_agent_ready_triage_interpretation.ipynb](../notebooks/triage/06_agent_ready_triage_interpretation.ipynb) — deep-dive method notebooks.
 
 ## Live Repo Surfaces
 

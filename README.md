@@ -84,15 +84,15 @@ Equivalent minimal files:
 
 - Python user: start with [examples/minimal_python.py](examples/minimal_python.py), then [docs/public_api.md](docs/public_api.md).
 - CLI user: run [examples/minimal_cli.sh](examples/minimal_cli.sh), then [docs/quickstart.md](docs/quickstart.md).
-- Notebook user: open the canonical notebook [notebooks/walkthroughs/00_air_passengers_showcase.ipynb](notebooks/walkthroughs/00_air_passengers_showcase.ipynb).
-- Fingerprint user: run [scripts/run_showcase_fingerprint.py](scripts/run_showcase_fingerprint.py), then open [notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb](notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb).
-- Lagged-exogenous user: run [scripts/run_showcase_lagged_exogenous.py](scripts/run_showcase_lagged_exogenous.py), then open [notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb](notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb).
+- Notebook user: run [scripts/run_showcase.py](scripts/run_showcase.py) first; the matching notebook [notebooks/walkthroughs/00_air_passengers_showcase.ipynb](notebooks/walkthroughs/00_air_passengers_showcase.ipynb) is a supplementary narration layer.
+- Fingerprint user: run [scripts/run_showcase_fingerprint.py](scripts/run_showcase_fingerprint.py), then optionally explore [notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb](notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb).
+- Lagged-exogenous user: run [scripts/run_showcase_lagged_exogenous.py](scripts/run_showcase_lagged_exogenous.py), then optionally explore [notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb](notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb).
 - Routing-validation user: run `uv run python scripts/run_routing_validation_report.py --smoke --no-real-panel`, then open [outputs/reports/routing_validation/report.md](outputs/reports/routing_validation/report.md).
 - Maintainer/contributor: use [docs/maintenance/developer_guide.md](docs/maintenance/developer_guide.md).
 
 ## Canonical walkthrough
 
-The canonical notebook is [notebooks/walkthroughs/00_air_passengers_showcase.ipynb](notebooks/walkthroughs/00_air_passengers_showcase.ipynb).
+The canonical entry point is [scripts/run_showcase.py](scripts/run_showcase.py). The companion notebook [notebooks/walkthroughs/00_air_passengers_showcase.ipynb](notebooks/walkthroughs/00_air_passengers_showcase.ipynb) provides supplementary narration and moves to the `forecastability-examples` sibling repository in v0.4.0.
 
 ## V0.3.1 fingerprint showcase
 

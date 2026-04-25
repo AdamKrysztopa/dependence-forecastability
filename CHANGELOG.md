@@ -81,7 +81,7 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 - No v0.3.1 routing-rule semantics change is documented in this release. Any future change to `services/routing_policy_service.py` must be accompanied by a fixture refresh under `docs/fixtures/routing_validation_regression/expected/`.
 
-## [0.3.2] - 2026-05-01
+## [0.3.2] - 2026-04-21
 
 ### Added
 
