@@ -87,20 +87,23 @@ The release should let a downstream consumer answer two crisp questions:
 
 ### Feature inventory
 
-| ID | Feature | Phase | Priority | Status |
-| --- | --- | --- | --- | --- |
-| RTI-F00 | Repository contract (`repo_contract.yaml`) and typed loader | 0 | P0 | Done (2026-04-25) |
-| RTI-F01 | Release-truth checker (`scripts/check_repo_contract.py`) | 1 | P0 | Done (2026-04-25) |
-| RTI-F02 | Release-truth autofixer (`scripts/sync_repo_contract.py --write`) | 1 | P0 | Done (2026-04-25) |
-| RTI-F03 | Internal markdown-link checker (`scripts/check_markdown_links.py`) | 2 | P0 | Done (2026-04-25) |
-| RTI-F04 | README / landing-surface checker (`scripts/check_readme_surface.py`) | 2 | P0 | Done (2026-04-25) |
-| RTI-F05 | Notebook dependency-group rename (`notebook` → `examples`) | 2 | P1 | Done (2026-04-25) |
-| RTI-F06 | Release workflow hardening (tag/version block, release-mode contract check) | 3 | P0 | Not started |
-| RTI-F07 | Post-release PyPI verification (`scripts/check_published_release.py`) | 3 | P0 | Not started |
-| RTI-F08 | Scheduled/dispatch autofix PR workflow (`.github/workflows/repo-autofix.yml`) | 4 | P1 | Not started |
-| RTI-F09 | Regression fixtures for checker and autofixer | 5 | P0 | Not started |
-| RTI-F10 | Maintainer docs (`docs/maintenance/repository_contract.md`) | 6 | P1 | Not started |
-| RTI-F11 | Release engineering: version bump, CHANGELOG, `docs/releases/v0.3.6.md` | 6 | P0 | Not started |
+| ID | Feature | Phase | Priority | Status | Merge Stage |
+| --- | --- | --- | --- | --- | --- |
+| RTI-F00 | Repository contract (`repo_contract.yaml`) and typed loader | 0 | P0 | Done (2026-04-25) | Pre-main-merge |
+| RTI-F01 | Release-truth checker (`scripts/check_repo_contract.py`) | 1 | P0 | Done (2026-04-25) | Pre-main-merge |
+| RTI-F02 | Release-truth autofixer (`scripts/sync_repo_contract.py --write`) | 1 | P0 | Done (2026-04-25) | Pre-main-merge |
+| RTI-F03 | Internal markdown-link checker (`scripts/check_markdown_links.py`) | 2 | P0 | Done (2026-04-25) | Pre-main-merge |
+| RTI-F04 | README / landing-surface checker (`scripts/check_readme_surface.py`) | 2 | P0 | Done (2026-04-25) | Pre-main-merge |
+| RTI-F05 | Notebook dependency-group rename (`notebook` → `examples`) | 2 | P1 | Done (2026-04-25) | Pre-main-merge |
+| RTI-F06 | Release workflow hardening (tag/version block, release-mode contract check) | 3 | P0 | Done (2026-04-25) | Pre-main-merge |
+| RTI-F09 | Regression fixtures for checker and autofixer | 5 | P0 | Done (2026-04-25) | Pre-main-merge |
+| RTI-F10 | Maintainer docs (`docs/maintenance/repository_contract.md`) | 6 | P1 | Done (2026-04-25) | Pre-main-merge |
+| RTI-F07 | Post-release PyPI verification (`scripts/check_published_release.py`) | 3 | P0 | Not started | Post-main-merge (release workflow, post-publish) |
+| RTI-F08 | Scheduled/dispatch autofix PR workflow (`.github/workflows/repo-autofix.yml`) | 4 | P1 | Not started | Post-main-merge (operational automation) |
+| RTI-F11 | Release engineering: version bump, CHANGELOG, `docs/releases/v0.3.6.md` | 6 | P0 | Not started | Post-main-merge (release cut) |
+
+Pre-main-merge items are required for merging the release-prep PR.
+Post-main-merge items are executed after merge, in tag/release or maintenance workflows.
 
 ---
 

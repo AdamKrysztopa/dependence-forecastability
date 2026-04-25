@@ -97,11 +97,6 @@ class TestFixerRepairsBrokenFixture:
         workdir = tmp_path / "broken"
         shutil.copytree(_BROKEN_DIR, workdir)
 
-        # Create the missing release notes file (fixer does not create new files).
-        release_dir = workdir / "docs" / "releases"
-        release_dir.mkdir(parents=True, exist_ok=True)
-        (release_dir / "v0.3.4.md").write_text("# v0.3.4 Release Notes\n", encoding="utf-8")
-
         sync_repo_contract.main(_fixer_args(workdir, write=True))
 
         # After fixer, checker should pass.
@@ -135,6 +130,27 @@ class TestFixerIdempotent:
             assert content_after_second == content_after_first, (
                 f"Fixer changed {rel_path} on second run (not idempotent)"
             )
+
+
+class TestEndToEndSmoke:
+    """RTI-F09: end-to-end sync and checker smoke test."""
+
+    def test_sync_then_all_checkers_pass(self, tmp_path: Path) -> None:
+        """Copy broken fixture, sync it, then verify all checker scripts pass."""
+        workdir = tmp_path / "repo"
+        shutil.copytree(_BROKEN_DIR, workdir)
+
+        sync_repo_contract.main(_fixer_args(workdir, write=True))
+
+        for checker in (
+            lambda: check_repo_contract.main(_checker_args(workdir)),
+            lambda: check_markdown_links.main(["--repo-root", str(workdir)]),
+            lambda: check_readme_surface.main(["--repo-root", str(workdir)]),
+        ):
+            try:
+                checker()
+            except SystemExit as exc:
+                pytest.fail(f"Checker unexpectedly exited with code {exc.code}")
 
 
 class TestReleaseModeTagMismatch:

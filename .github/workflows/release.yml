@@ -19,6 +19,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Validate tag, package version, and release notes
+        env:
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          V_pkg="$(awk -F'"' '/^version = "/ { print $2; exit }' pyproject.toml)"
+          if [ -z "${V_pkg}" ]; then
+            echo "Could not parse version from pyproject.toml"
+            exit 1
+          fi
+          expected_tag="v${V_pkg}"
+          if [ "${REF_NAME}" != "${expected_tag}" ]; then
+            echo "Tag/version mismatch: ref '${REF_NAME}' != expected '${expected_tag}'"
+            exit 1
+          fi
+          notes_file="docs/releases/${expected_tag}.md"
+          if [ ! -f "${notes_file}" ]; then
+            echo "Missing release notes file: ${notes_file}"
+            exit 1
+          fi
+
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
@@ -36,6 +57,13 @@ jobs:
         run: |
           set -euo pipefail
           uv run python -c "from forecastability.use_cases.run_covariant_analysis import run_covariant_analysis; print('covariant import OK')"
+
+      - name: Release-tag repo contract check
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          uv run python scripts/check_repo_contract.py --release-tag "${RELEASE_TAG}"
 
       - name: Build package artifacts
         run: uv build
