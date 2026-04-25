@@ -9,10 +9,10 @@ Baseline framing, invariants, and mathematical definitions still live in the mai
 
 | File | Purpose | Status |
 |---|---|---|
-| [development_plan.md](implemented/development_plan.md) | Phased development plan for the triage extension epic | **Complete** |
+| [v0_2_x_triage_extension_development_plan.md](implemented/v0_2_x_triage_extension_development_plan.md) | Phased development plan for the triage extension epic | **Complete** |
 | [acceptance_criteria.md](acceptance_criteria.md) | Done criteria shared by all roadmap items | Complete |
-| **[cleaning_plan.md](implemented/cleaning_plan.md)** | **Hexagonal realignment, type-check cleanup, packaging** | **Complete** |
-| **[pypi_release_plan.md](implemented/pypi_release_plan.md)** | **PyPI publication: naming, metadata, artifact validation, Trusted Publishing** | **Complete** |
+| **[v0_2_x_cleaning_hexagonal_realignment_plan.md](implemented/v0_2_x_cleaning_hexagonal_realignment_plan.md)** | **Hexagonal realignment, type-check cleanup, packaging** | **Complete** |
+| **[v0_2_x_pypi_publication_plan.md](implemented/v0_2_x_pypi_publication_plan.md)** | **PyPI publication: naming, metadata, artifact validation, Trusted Publishing** | **Complete** |
 | **[v0_3_4_forecast_prep_contract_ultimate_plan.md](implemented/v0_3_4_forecast_prep_contract_ultimate_plan.md)** | **v0.3.4 — forecast-prep contract: framework-agnostic full plan (consolidated; absorbs the earlier 2026-04-24 scope-revision overlay)** | **Shipped (v0.3.4)** |
 | [aux_documents/v0_3_4_forecast_prep_contract_ultimate_plan.md](aux_documents/v0_3_4_forecast_prep_contract_ultimate_plan.md) | v0.3.4 — original draft with framework runners and `[darts]` / `[mlforecast]` extras | Superseded — audit trail |
 | **[v0_3_5_documentation_quality_improvement_revision_2026_04_24.md](implemented/v0_3_5_documentation_quality_improvement_revision_2026_04_24.md)** | **v0.3.5 — docs hygiene + reorganization: Invariant E, notebook transition banner, `docs/` Diátaxis bucketing, markdownlint + lychee CI** | **Shipped (v0.3.5)** |
@@ -43,8 +43,8 @@ The math-grounded feature backlog that fed the development plan:
 ## Planning policy
 
 - The triage extension epic is **complete**; current focus is packaging, cleanup, and release.
-- The [cleaning plan](implemented/cleaning_plan.md) tracks hexagonal realignment and type-checker compliance (complete).
-- The [PyPI release plan](implemented/pypi_release_plan.md) tracks naming, metadata, artifact validation, and Trusted Publishing (complete).
+- The [cleaning plan](implemented/v0_2_x_cleaning_hexagonal_realignment_plan.md) tracks hexagonal realignment and type-checker compliance (complete).
+- The [PyPI release plan](implemented/v0_2_x_pypi_publication_plan.md) tracks naming, metadata, artifact validation, and Trusted Publishing (complete).
 - All paper functionality from arXiv:2601.10006 is preserved as a non-negotiable baseline.
 - Extensions do not weaken or replace the paper-aligned workflow.
 - High-risk estimators remain behind explicit experimental flags.
