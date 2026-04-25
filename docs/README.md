@@ -12,19 +12,66 @@ Use this index to get to the right surface quickly. The live repository is the s
 > [!IMPORTANT]
 > The primary learning path starts with the package/API docs and the live notebooks under `notebooks/walkthroughs/`. Historical planning and archive material is retained, but it is not part of the primary docs path.
 
-## Users
+## Root Entry Points
 
-Use this path if you want to install the package, run deterministic triage, and inspect the current artifact surfaces.
+Start here for the pinned, high-signal entry surfaces that stay at the `docs/` root.
 
-| Start here | Why |
+| Document | Why |
 | --- | --- |
 | [../README.md](../README.md) | Package-level overview: install, Python quickstart, CLI, API, scripts, notebooks, and artifact surfaces |
-| [golden_path.md](golden_path.md) | Shortest route from install to a trustworthy first result |
 | [quickstart.md](quickstart.md) | Surface-by-surface quickstart for Python, CLI, HTTP API, dashboard, and optional extras |
 | [public_api.md](public_api.md) | Stable imports from `forecastability` and `forecastability.triage` |
-| [api_contract.md](api_contract.md) | HTTP request, response, and SSE contract for `forecastability.adapters.api:app` |
+| [executive_summary.md](executive_summary.md) | One-page overview of the toolkit, evidence shape, and operating posture |
+| [why_use_this.md](why_use_this.md) | Decision-oriented positioning for when deterministic forecastability triage is the right first step |
 
-### Canonical notebook path
+## How-To Guides
+
+Use these pages when you need a task-oriented route to a result.
+
+| Document | Why |
+| --- | --- |
+| [how-to/golden_path.md](how-to/golden_path.md) | Shortest route from install to a trustworthy first result |
+| [how-to/use_cases_industrial.md](how-to/use_cases_industrial.md) | Practical industrial usage patterns and deployment-shaped scenarios |
+
+## Explanations
+
+Use these pages when you need rationale, caveats, or the conceptual shape of the repository.
+
+| Document | Why |
+| --- | --- |
+| [explanation/architecture.md](explanation/architecture.md) | Actual layered architecture and dependency direction |
+| [explanation/surface_guide.md](explanation/surface_guide.md) | Which surfaces are stable, beta, or experimental, and what most users can ignore |
+| [explanation/results_summary.md](explanation/results_summary.md) | Evidence-oriented output summary |
+| [explanation/limitations.md](explanation/limitations.md) | Statistical and operational limitations |
+
+## References
+
+Use these pages when you need exact contracts, status surfaces, or operational reference material.
+
+| Document | Why |
+| --- | --- |
+| [reference/api_contract.md](reference/api_contract.md) | HTTP request, response, and SSE contract for `forecastability.adapters.api:app` |
+| [reference/agent_layer.md](reference/agent_layer.md) | Contract for optional LLM narration over deterministic outputs |
+| [reference/observability.md](reference/observability.md) | Event, checkpoint, and auditability contracts |
+| [reference/production_readiness.md](reference/production_readiness.md) | Operational boundaries and non-goals |
+| [reference/diagnostics_matrix.md](reference/diagnostics_matrix.md) | Cross-diagnostic index |
+| [reference/forecast_prep_contract.md](reference/forecast_prep_contract.md) | Framework-agnostic forecast-prep hand-off contract |
+| [reference/implementation_status.md](reference/implementation_status.md) | Current implementation status by diagnostic and surface |
+| [reference/versioning.md](reference/versioning.md) | Stability levels for package, CLI, API, dashboard, agent, and MCP surfaces |
+
+## Contributor And Maintenance Surfaces
+
+Use this path if you are changing code, docs, scripts, or release-facing surfaces.
+
+| Document | Why |
+| --- | --- |
+| [documentation_creation_manual.md](documentation_creation_manual.md) | Practical rules for writing and placing new docs, link hygiene, redirect stubs, and validation checks |
+| [maintenance/developer_guide.md](maintenance/developer_guide.md) | Maintainer workflow for source layout, scripts, configs, notebooks, and artifacts |
+| [maintenance/doc_coverage_matrix.md](maintenance/doc_coverage_matrix.md) | Which docs own which repo surfaces, and what is archived vs active |
+| [maintenance/wording_policy.md](maintenance/wording_policy.md) | Canonical wording, terminology, and banned claims for release-facing copy |
+| [code/module_map.md](code/module_map.md) | Current `src/forecastability/` package map by layer and subpackage |
+
+## Canonical Notebook Path
 
 Use the live notebooks directly rather than notebook narrative proxies.
 
@@ -33,48 +80,6 @@ Use the live notebooks directly rather than notebook narrative proxies.
 3. [../notebooks/walkthroughs/01_covariant_informative_showcase.ipynb](../notebooks/walkthroughs/01_covariant_informative_showcase.ipynb) for the covariant pairwise-versus-causal walkthrough.
 4. [../notebooks/walkthroughs/01_canonical_forecastability.ipynb](../notebooks/walkthroughs/01_canonical_forecastability.ipynb) through [../notebooks/walkthroughs/04_screening_end_to_end.ipynb](../notebooks/walkthroughs/04_screening_end_to_end.ipynb) for expanded walkthroughs.
 5. [../notebooks/triage/01_forecastability_profile_walkthrough.ipynb](../notebooks/triage/01_forecastability_profile_walkthrough.ipynb) through [../notebooks/triage/06_agent_ready_triage_interpretation.ipynb](../notebooks/triage/06_agent_ready_triage_interpretation.ipynb) for deep-dive method notebooks.
-
-## Contributors
-
-Use this path if you are changing code, docs, scripts, or release-facing surfaces.
-
-| Document | Why |
-| --- | --- |
-| [maintenance/developer_guide.md](maintenance/developer_guide.md) | Maintainer workflow for source layout, scripts, configs, notebooks, and artifacts |
-| [maintenance/doc_coverage_matrix.md](maintenance/doc_coverage_matrix.md) | Which docs own which repo surfaces, and what is archived vs active |
-| [code/module_map.md](code/module_map.md) | Current `src/forecastability/` package map by layer and subpackage |
-| [architecture.md](architecture.md) | Actual layered architecture and dependency direction |
-| [versioning.md](versioning.md) | Stability levels for package, CLI, API, dashboard, agent, and MCP surfaces |
-
-## Operators And Maintainers
-
-Use this path if you operate the CLI/API/dashboard surfaces, regenerate outputs, or maintain release hygiene.
-
-| Document | Why |
-| --- | --- |
-| [surface_guide.md](surface_guide.md) | Which surfaces are stable, beta, or experimental, and what most users can ignore |
-| [observability.md](observability.md) | Event, checkpoint, and auditability contracts |
-| [production_readiness.md](production_readiness.md) | Operational boundaries and non-goals |
-| [agent_layer.md](agent_layer.md) | Contract for optional LLM narration over deterministic outputs |
-| [wording_policy.md](wording_policy.md) | Canonical wording and banned claims for release-facing copy |
-
-## Researchers And Reference Readers
-
-Use this path for method background, caveats, and evidence summaries.
-
-| Document | Why |
-| --- | --- |
-| [theory/foundations.md](theory/foundations.md) | AMI, pAMI, surrogate significance, and rolling-origin boundaries |
-| [theory/forecastability_fingerprint.md](theory/forecastability_fingerprint.md) | Forecastability fingerprint semantics: M, H*, structure, nonlinear share, and H_info masking |
-| [theory/pami_residual_backends.md](theory/pami_residual_backends.md) | Linear-residual pAMI assumptions and backend caveats |
-| [theory/forecastability_profile.md](theory/forecastability_profile.md) | Forecastability profile model and informative-horizon summary logic |
-| [theory/spectral_predictability.md](theory/spectral_predictability.md) | Spectral predictability interpretation and complementarity with AMI |
-| [theory/entropy_based_complexity.md](theory/entropy_based_complexity.md) | Entropy-based complexity interpretation |
-| [triage_methods/predictive_information_learning_curves.md](triage_methods/predictive_information_learning_curves.md) | Predictive-information learning curves |
-| [triage_methods/largest_lyapunov_exponent.md](triage_methods/largest_lyapunov_exponent.md) | Experimental Lyapunov diagnostic caveats |
-| [diagnostics_matrix.md](diagnostics_matrix.md) | Cross-diagnostic index |
-| [results_summary.md](results_summary.md) | Evidence-oriented output summary |
-| [limitations.md](limitations.md) | Statistical and operational limitations |
 
 ## Live Repo Surfaces
 

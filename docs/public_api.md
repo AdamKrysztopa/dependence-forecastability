@@ -386,7 +386,7 @@ Stable result models are Pydantic models, and their JSON field names are part of
 
 - `.model_dump()` and `.model_dump_json()` on stable models are treated as compatibility-sensitive.
 - Adding optional fields with safe defaults is backward-compatible.
-- Removing fields, renaming fields, or changing types is a breaking change and requires migration notes in [versioning.md](versioning.md) and [../CHANGELOG.md](../CHANGELOG.md).
+- Removing fields, renaming fields, or changing types is a breaking change and requires migration notes in [reference/versioning.md](reference/versioning.md) and [../CHANGELOG.md](../CHANGELOG.md).
 
 ## Internal Namespaces
 
@@ -417,7 +417,7 @@ result = run_triage(TriageRequest(series=series, max_lag=20, n_surrogates=99, ra
 from forecastability.triage import BatchTriageRequest, BatchSeriesRequest, run_batch_triage
 ```
 
-For stability levels and migration expectations, see [versioning.md](versioning.md).
+For stability levels and migration expectations, see [reference/versioning.md](reference/versioning.md).
 
 The following are explicitly out of scope for the stability contract:
 
