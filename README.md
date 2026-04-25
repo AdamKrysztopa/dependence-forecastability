@@ -140,7 +140,7 @@ Primary fingerprint surfaces:
 - Notebook: [notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb](notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb)
 - Theory: [docs/theory/forecastability_fingerprint.md](docs/theory/forecastability_fingerprint.md)
 - Code reference: [docs/code/fingerprint_showcase.md](docs/code/fingerprint_showcase.md)
-- Agent contract: [docs/agent_layer.md](docs/agent_layer.md)
+- Agent contract: [docs/reference/agent_layer.md](docs/reference/agent_layer.md)
 
 ## V0.3.2 Lagged-Exogenous Triage
 
@@ -340,7 +340,7 @@ Main checked-in artifact surfaces:
 | Documentation index by role | [docs/README.md](docs/README.md) |
 | Stable imports and runtime entry points | [docs/public_api.md](docs/public_api.md) |
 | Live module layout | [docs/code/module_map.md](docs/code/module_map.md) |
-| HTTP API contract | [docs/api_contract.md](docs/api_contract.md) |
+| HTTP API contract | [docs/reference/api_contract.md](docs/reference/api_contract.md) |
 | Notebook path | [docs/notebooks/README.md](docs/notebooks/README.md) |
 | Contributor workflow | [docs/maintenance/developer_guide.md](docs/maintenance/developer_guide.md) |
 

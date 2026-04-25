@@ -9,7 +9,7 @@
 - [ ] All items from the Repo Consolidation & Release-Readiness Update Plan are completed
 - [ ] `CHANGELOG.md` has a new, clean section for the upcoming version (with highlights, stability changes, and migration notes if any)
 - [ ] Version bumped in `pyproject.toml` (semantic versioning)
-- [ ] `docs/versioning.md` and stability tables (in README + `docs/production_readiness.md`) are up to date
+- [ ] `docs/reference/versioning.md` and stability tables (in README + `docs/reference/production_readiness.md`) are up to date
 - [ ] Package name in `pyproject.toml` is set to `dependence-forecastability`
 - [ ] Install instructions and badges in README are correct
 - [ ] Golden-path example and smoke tests pass locally (`uv run python scripts/run_canonical_triage.py` or equivalent)
@@ -58,8 +58,8 @@ Full command path: `docs/releases/pypi_publication.md` → TestPyPI Dry Run sect
 ## Post-release tasks
 
 - [ ] Add/update PyPI badges in `README.md` top section
-- [ ] Update `docs/golden_path.md`, quickstart, and examples with correct `pip install` command
-- [ ] Update `docs/implementation_status.md` if stability changed
+- [ ] Update `docs/how-to/golden_path.md`, quickstart, and examples with correct `pip install` command
+- [ ] Update `docs/reference/implementation_status.md` if stability changed
 - [ ] Post announcement (LinkedIn + X)
 - [ ] Verify installation: `pip install dependence-forecastability` works cleanly
 

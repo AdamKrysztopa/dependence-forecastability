@@ -145,7 +145,7 @@ causal method in the bundle would therefore be scientifically unsupported.
 > [!IMPORTANT]
 > pAMI is a project extension and approximate direct-dependence diagnostic.
 > It is not exact conditional mutual information and is not a causal proof.
-> See [wording_policy.md](../wording_policy.md).
+> See [wording_policy.md](../maintenance/wording_policy.md).
 
 When no causal method is present (`has_causal=False`), a driver that would
 otherwise satisfy the mediated-driver condition falls through to `inconclusive`.
@@ -167,7 +167,7 @@ driver_nonlin_abs: {"nonlinear_driver", "direct_driver", "noise_or_weak", "incon
 
 This is not a defect in the algorithm.  It is an honest acknowledgement that
 surrogate significance is optional and conditional on feasible sample size, and
-requires at least 99 surrogates.  See [wording_policy.md](../wording_policy.md).
+requires at least 99 surrogates.  See [wording_policy.md](../maintenance/wording_policy.md).
 
 Practitioners encountering a weak driver at `inconclusive` or `noise_or_weak`
 should either increase series length or accept the result as power-limited.

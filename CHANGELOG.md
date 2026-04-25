@@ -43,7 +43,7 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
   is set with the optional `[calendar]` extra installed) `_calendar__is_holiday`.
 - Optional dependency extra: `[calendar]` (`holidays>=0.50`).
 - Showcase script `scripts/run_showcase_forecast_prep.py` with a `--smoke` flag.
-- Theory doc `docs/forecast_prep_contract.md`.
+- Theory doc `docs/reference/forecast_prep_contract.md`.
 - External-recipes doc `docs/recipes/forecast_prep_to_external_frameworks.md`
   with illustrative Darts / MLForecast / Nixtla mappings.
 

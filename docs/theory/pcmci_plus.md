@@ -283,7 +283,7 @@ diagonal it is lagged CrossMI between $\text{source}_{t-h}$ and $\text{target}_t
 This is **not** Catt's past-window CrossAMI — the shipped screener does not aggregate
 a window of past lags into a single predictive-information score. CrossAMI past-window
 triage is a proposal item (see V3-F04 outstanding work in
-[../implementation_status.md](../implementation_status.md)), not part of the shipped
+[../reference/implementation_status.md](../reference/implementation_status.md)), not part of the shipped
 execution path.
 
 > [!IMPORTANT]
