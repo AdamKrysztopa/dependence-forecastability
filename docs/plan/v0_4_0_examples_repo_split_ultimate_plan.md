@@ -4,14 +4,14 @@
 **Plan type:** Actionable release plan — repository slimming, sibling examples repo bootstrap, notebook migration
 **Audience:** Maintainer, reviewer, documentation contributor, examples-repo maintainer, Jr. developer
 **Target release:** `0.4.0` — **library-first slim release**, ships fourth in the 0.3.3 → 0.3.4 → 0.3.5 → 0.4.0 chain
-**Current released version:** `0.3.5` (after the docs hardening pass)
+**Current released version:** `0.3.6` (after the docs hardening pass)
 **Branch:** `feat/v0.4.0-examples-split`
 **Status:** Draft / Proposed
 **Last reviewed:** 2026-04-24
 
 **Driver documents:**
 
-- [aux_documents/developer_instruction_repo_scope.md](aux_documents/developer_instruction_repo_scope.md) — primary scope directive
+- [aux_documents/developer_instruction_repo_scope.md](../plan/aux_documents/developer_instruction_repo_scope.md) — primary scope directive
 - [v0.3.4 Forecast Prep Contract: Ultimate Release Plan](v0_3_4_forecast_prep_contract_ultimate_plan.md) — v0.3.4 shipped; the standalone revision overlay was folded into this ultimate plan and is intentionally absent
 - [v0.3.5 Documentation Quality Improvement: Scope Revision (2026-04-24)](v0_3_5_documentation_quality_improvement_revision_2026_04_24.md) — includes the docs reorganization that v0.4.0 inherits and the redirect-stub deletion item (V3_5-DOC-RE-10 → EX-CR-05 below)
 
@@ -28,7 +28,7 @@
 After v0.3.5 the documentation contract is mechanical, the forecast-prep
 contract is stable, and the public API is framework-agnostic. The remaining
 piece of the
-[reviewer scope directive](aux_documents/developer_instruction_repo_scope.md)
+[reviewer scope directive](../plan/aux_documents/developer_instruction_repo_scope.md)
 is structural:
 
 > The core repository should avoid becoming notebook-centric. […] Move heavy
@@ -222,7 +222,7 @@ v0.4.0 performs that move. It is a **library-first slim release**:
 | **EX-CPL-02** | **Shared planning surface** | 1 | GitHub Project board spanning both repos with a `v0.4.0` milestone; new top-level `RELEASES.md` index in core listing sibling release tags alongside core release tags. Fallback when the EX-CPL-01 automated gate is unavailable. | Proposed |
 | **EX-NB-01** | **Sibling notebook `walkthroughs/05_forecast_prep_to_models.ipynb`** | 2 | Triage → `build_forecast_prep_contract` → hand-off to (a) Darts `LightGBMModel`, (b) MLForecast `LGBMRegressor`, (c) plain sklearn `Ridge` baseline; comparison table on a 12-month tail. Exercises only the public `forecastability` and `forecastability.triage` API on the triage side. Demonstrates the v0.3.4 sprint at v0.4.0 launch. | Proposed |
 | **EX-NB-02** | **Sibling recipe `recipes/contract_roundtrip.ipynb`** | 2 | `ForecastPrepContract.model_dump_json()` → disk → `model_validate_json()` → re-validate against a fresh triage run. Final cell consumes the JSON without importing `forecastability` to demonstrate the framework-agnostic hand-off boundary. | Proposed |
-| **EX-NB-03** | **Sibling notebook `walkthroughs/06_triage_driven_vs_naive_on_m4.ipynb`** | 2 | Comparison study on M4 monthly subset (≤ 200 series): triage-driven `recommended_families` choice vs `SeasonalNaive` baseline. Persists `outputs/m4_routing_comparison.csv`. Comparison studies are explicitly assigned to the sibling repo by [aux_documents/developer_instruction_repo_scope.md §4](aux_documents/developer_instruction_repo_scope.md). | Proposed |
+| **EX-NB-03** | **Sibling notebook `walkthroughs/06_triage_driven_vs_naive_on_m4.ipynb`** | 2 | Comparison study on M4 monthly subset (≤ 200 series): triage-driven `recommended_families` choice vs `SeasonalNaive` baseline. Persists `outputs/m4_routing_comparison.csv`. Comparison studies are explicitly assigned to the sibling repo by [aux_documents/developer_instruction_repo_scope.md §4](../plan/aux_documents/developer_instruction_repo_scope.md). | Proposed |
 | **EX-NB-04** | **Bidirectional recipe cross-link** | 4 | Sibling `recipes/README.md` links forward to executed-notebook release assets and back to the core text recipe at [docs/recipes/forecast_prep_to_external_frameworks.md](../recipes/forecast_prep_to_external_frameworks.md). Core recipe page gains a forward link to EX-NB-01 / EX-NB-02. Mitigates doc-rot risk between the two repos. | Proposed |
 | **EX-NB-DATA-01** | **Per-notebook data-shipping policy** | 2 | Sibling `data/README.md` reproduces the per-notebook origin table (§5.4): small public CSVs (Air Passengers, ETTh1 OHT subset) ship in the sibling repo; M4 and causal-rivers fetch via a port of `scripts/download_data.py` cached under `actions/cache@v4`. | Proposed |
 | **EX-NB-EXEC-01** | **Execute-on-CI, commit cleared outputs** | 2 | Sibling `CONTRIBUTING.md` documents: notebooks are committed with cleared outputs; CI runs `nbconvert --to notebook --execute --inplace` and uploads executed notebooks as build artifacts; the sibling `release` workflow publishes executed notebooks as **release assets**. Avoids reintroducing the diff-noise problem that motivated the split. | Proposed |
@@ -246,7 +246,7 @@ v0.4.0 performs that move. It is a **library-first slim release**:
 - `dependence-forecastability-recipes` — verbose, but mirrors the PyPI name.
 - `forecastability-integrations` — implies first-class adapters; rejected to
   avoid the framework-adapter expectation called out in the
-  [reviewer scope directive](aux_documents/developer_instruction_repo_scope.md).
+  [reviewer scope directive](../plan/aux_documents/developer_instruction_repo_scope.md).
 - `forecastability-notebooks` — too narrow; the repo will host markdown
   recipes and scripts as well.
 
@@ -492,7 +492,7 @@ physical repos stay independent at the code surface; coupling lives at the
 patterns were considered and rejected: submodule complicates contributor
 workflow, subtree creates a duplicate source-of-truth, and a workspace
 monorepo directly violates the slim-release thesis recorded in
-[aux_documents/developer_instruction_repo_scope.md §5](aux_documents/developer_instruction_repo_scope.md).
+[aux_documents/developer_instruction_repo_scope.md §5](../plan/aux_documents/developer_instruction_repo_scope.md).
 
 **EX-CPL-01 — cross-repo CI handshake (workflow trigger).**
 
@@ -553,7 +553,7 @@ Resolves the chicken-and-egg between "sibling needs PyPI artifact" and
   moved to the dedicated [forecastability-examples](https://github.com/example/forecastability-examples)
   sibling repository. The Python API is unchanged; the minor version bump
   signals the surface change. Rationale: see
-  [docs/plan/aux_documents/developer_instruction_repo_scope.md](docs/plan/aux_documents/developer_instruction_repo_scope.md).
+  [docs/plan/aux_documents/developer_instruction_repo_scope.md](../plan/aux_documents/developer_instruction_repo_scope.md).
   The v0.3.4 forecast-prep contract is showcased end-to-end in the sibling
   repo at [walkthroughs/05_forecast_prep_to_models.ipynb](https://github.com/example/forecastability-examples/blob/v0.4.0/walkthroughs/05_forecast_prep_to_models.ipynb).
 
@@ -624,7 +624,7 @@ PyPI publication" in earlier drafts is replaced by that ordered sequence.
 
 ## 8. Cross-references
 
-- [aux_documents/developer_instruction_repo_scope.md](aux_documents/developer_instruction_repo_scope.md) — driver document.
+- [aux_documents/developer_instruction_repo_scope.md](../plan/aux_documents/developer_instruction_repo_scope.md) — driver document.
 - [v0.3.4 Forecast Prep Contract: Ultimate Release Plan](v0_3_4_forecast_prep_contract_ultimate_plan.md) — surface that EX-NB-01..03 demonstrate.
 - [v0.3.5 Documentation Quality Improvement: Scope Revision (2026-04-24)](v0_3_5_documentation_quality_improvement_revision_2026_04_24.md) — supplies V3_5-DOC-RE-10 (consumed by EX-CR-05) and the lychee CI job extended in §6.2.
 - [pypi_release_plan.md](pypi_release_plan.md).

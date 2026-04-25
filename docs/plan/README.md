@@ -17,7 +17,7 @@ Baseline framing, invariants, and mathematical definitions still live in the mai
 | [aux_documents/v0_3_4_forecast_prep_contract_ultimate_plan.md](aux_documents/v0_3_4_forecast_prep_contract_ultimate_plan.md) | v0.3.4 — original draft with framework runners and `[darts]` / `[mlforecast]` extras | Superseded — audit trail |
 | **[v0_3_5_documentation_quality_improvement_revision_2026_04_24.md](implemented/v0_3_5_documentation_quality_improvement_revision_2026_04_24.md)** | **v0.3.5 — docs hygiene + reorganization: Invariant E, notebook transition banner, `docs/` Diátaxis bucketing, markdownlint + lychee CI** | **Shipped (v0.3.5)** |
 | **[v0_4_0_examples_repo_split_ultimate_plan.md](v0_4_0_examples_repo_split_ultimate_plan.md)** | **v0.4.0 — library-first slim release: notebook migration to sibling examples repo, cross-repo CI handshake, sprint-showcase notebooks** | **Active** |
-| [aux_documents/developer_instruction_repo_scope.md](aux_documents/developer_instruction_repo_scope.md) | Reviewer scope directive (driver document for v0.3.4 revision, v0.3.5 revision, v0.4.0) | Reference |
+| [aux_documents/developer_instruction_repo_scope.md](../plan/aux_documents/developer_instruction_repo_scope.md) | Reviewer scope directive (driver document for v0.3.4 revision, v0.3.5 revision, v0.4.0) | Reference |
 
 ## Completed — triage extension epic
 

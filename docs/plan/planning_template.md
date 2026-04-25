@@ -6,7 +6,7 @@
 **Plan type:** Actionable release plan — <!-- TEMPLATE: one-line characterisation of the release, e.g. "typed surface hardening for routing outputs" -->
 **Audience:** Maintainer, reviewer, statistician reviewer, Jr. developer
 **Target release:** `X.Y.Z` — <!-- TEMPLATE: state the chain position, e.g. "ships first in the 0.3.5 → 0.4.0 chain" or "headline release" -->
-**Current released version:** `X.Y.(Z-1)`
+**Current released version:** `0.3.6`
 **Branch:** `feat/vX.Y.Z-<!-- TEMPLATE: kebab-case feature slug -->`
 **Status:** Draft
 **Last reviewed:** <!-- TEMPLATE: ISO date, e.g. 2026-05-01 -->
@@ -14,7 +14,7 @@
 > [!IMPORTANT]
 > **Scope (binding).** This release ships <!-- TEMPLATE: enumerate the exact surfaces shipped -->.
 > It does **not** ship <!-- TEMPLATE: enumerate explicit exclusions -->.
-> Driver document: [aux_documents/developer_instruction_repo_scope.md](aux_documents/developer_instruction_repo_scope.md).
+> Driver document: [aux_documents/developer_instruction_repo_scope.md](../plan/aux_documents/developer_instruction_repo_scope.md).
 > <!-- TEMPLATE: If an earlier draft exists that is superseded, note its archive path here. -->
 
 > [!NOTE]
@@ -25,7 +25,7 @@
 <!-- TEMPLATE: List predecessor plan(s) first, then successor plan(s), then driver/auxiliary documents. Use relative paths. -->
 - [vA.B.C — Predecessor Feature: Ultimate Release Plan](implemented/vA_B_C_predecessor_plan.md) — shipped before
 - [vX.Y.(Z+1) — Successor Feature: Ultimate Release Plan](vX_Y_Zp1_successor_plan.md) — ships after
-- [aux_documents/developer_instruction_repo_scope.md](aux_documents/developer_instruction_repo_scope.md) — driver document
+- [aux_documents/developer_instruction_repo_scope.md](../plan/aux_documents/developer_instruction_repo_scope.md) — driver document
 
 **Builds on:**
 

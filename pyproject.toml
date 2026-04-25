@@ -1,6 +1,6 @@
 [project]
 name = "dependence-forecastability"
-version = "0.3.4"
+version = "0.3.6"
 description = "Forecastability triage for time series using AMI, pAMI, and covariate-aware dependence diagnostics before expensive model search."
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -81,7 +81,7 @@ dev = [
   "twine>=5.0",
   "ty==0.0.22",
 ]
-notebook = [
+examples = [
   "jupyter>=1.1.1",
   "jupyterlab>=4.3.5",
   "ipykernel>=6.29.5",
@@ -124,6 +124,9 @@ indent-style = "space"
 
 [tool.ty.src]
 exclude = ["notebooks/"]
+
+[tool.ty.environment]
+extra-paths = ["scripts"]
 
 [tool.pytest.ini_options]
 addopts = "-q -ra"

@@ -1,0 +1,16 @@
+current_released_version: "0.3.4"
+next_planned_version: "0.3.6"
+canonical_paths:
+  forecast_prep_contract: docs/reference/forecast_prep_contract.md
+  scope_directive: docs/plan/aux_documents/developer_instruction_repo_scope.md
+deprecated_paths:
+  docs/forecast_prep_contract.md: docs/reference/forecast_prep_contract.md
+landing_surface:
+  notebook_policy: supplementary_only
+  forbidden_root_headings:
+    - Notebook Path And Artifact Surfaces
+dependency_group_policy:
+  forbidden_public_names:
+    - notebook
+  rename_map:
+    notebook: examples

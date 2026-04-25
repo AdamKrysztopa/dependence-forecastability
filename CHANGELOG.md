@@ -24,6 +24,28 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - README updated to include "Use this before model search" section framing downstream frameworks as post-triage consumers.
 - `pyproject.toml` keywords expanded with forecastability-triage, diagnostics, covariate, and hand-off discovery terms.
 
+## [0.3.6] - 2026-04-25
+
+### Added
+
+- `repo_contract.yaml` as the single machine-readable release-truth/docs-integrity contract surface.
+- `scripts/check_repo_contract.py` and `scripts/sync_repo_contract.py --write` for deterministic contract validation and rewrites.
+- `scripts/check_markdown_links.py` and `scripts/check_readme_surface.py` for internal docs-integrity and landing-surface policy checks.
+- `scripts/check_published_release.py` for post-publish verification of PyPI version visibility and GitHub release-tag presence.
+- `.github/workflows/repo-autofix.yml` for schedule/dispatch contract sync with PR-only write path.
+
+### Changed
+
+- CI now runs a dedicated `repo-contract` job with release-truth/docs-integrity checks.
+- Release workflow now enforces tag/version parity, release-notes presence, and release-tag contract verification.
+- PyPI publish workflow now executes post-publish verification using `scripts/check_published_release.py`.
+- Regression fixtures/tests were expanded for repository-contract drift detection, idempotent sync behavior, and end-to-end checker smoke coverage.
+- Root README landing surface and dependency-group naming now follow library-first contract policy (`notebook` -> `examples`).
+
+### Notes
+
+- This is a release-integrity automation update; no runtime API-breaking changes are introduced.
+
 ## [0.3.4] - 2026-04-24
 
 ### Added
