@@ -304,16 +304,11 @@ Current config status:
 | `configs/exogenous_screening_workbench.yaml` | Secondary workbench configuration |
 | `configs/robustness_study.yaml` | Secondary robustness-study workflow |
 
-## Notebook Path And Artifact Surfaces
+## Notebooks (supplementary, transitional)
 
-Canonical notebook:
+Notebooks are a supplementary narration layer alongside the canonical scripts. They migrate to the `forecastability-examples` sibling repository in v0.4.0 and should not be treated as the primary entry point.
 
-- [notebooks/walkthroughs/00_air_passengers_showcase.ipynb](notebooks/walkthroughs/00_air_passengers_showcase.ipynb)
-
-Follow-on notebooks:
-
-- `notebooks/walkthroughs/01` through `04`
-- `notebooks/triage/01` through `06` for deep dives
+Canonical walkthrough: [notebooks/walkthroughs/00_air_passengers_showcase.ipynb](notebooks/walkthroughs/00_air_passengers_showcase.ipynb) (supplementary to [scripts/run_showcase.py](scripts/run_showcase.py)).
 
 Main checked-in artifact surfaces:
 

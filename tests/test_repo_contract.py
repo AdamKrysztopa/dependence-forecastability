@@ -13,6 +13,8 @@ _SCRIPTS_DIR = Path(__file__).resolve().parents[1] / "scripts"
 if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
+import check_markdown_links  # noqa: E402
+import check_readme_surface  # noqa: E402
 import check_repo_contract  # noqa: E402
 import sync_repo_contract  # noqa: E402
 
@@ -154,3 +156,74 @@ class TestReleaseModeTagMatch:
             check_repo_contract.main(_checker_args(_FIXED_DIR, extra=["--release-tag", "v0.3.4"]))
         except SystemExit as exc:
             pytest.fail(f"Checker unexpectedly failed with release tag: {exc.code}")
+
+
+class TestMarkdownLinkChecker:
+    """RTI-F03: markdown link checker behavior."""
+
+    def test_checker_passes_on_valid_relative_link(self, tmp_path: Path) -> None:
+        """Checker exits 0 when all repository-relative links resolve."""
+        docs_dir = tmp_path / "docs"
+        docs_dir.mkdir(parents=True)
+        target = docs_dir / "target.md"
+        target.write_text("# Target\n", encoding="utf-8")
+        readme = tmp_path / "README.md"
+        readme.write_text("[see](docs/target.md)\n", encoding="utf-8")
+
+        try:
+            check_markdown_links.main(["--repo-root", str(tmp_path)])
+        except SystemExit as exc:
+            pytest.fail(f"Markdown link checker unexpectedly exited with code {exc.code}")
+
+    def test_checker_fails_on_broken_link(self, tmp_path: Path) -> None:
+        """Checker exits 1 when a repository-relative link is broken."""
+        readme = tmp_path / "README.md"
+        readme.write_text("[see](does_not_exist.md)\n", encoding="utf-8")
+
+        with pytest.raises(SystemExit) as exc_info:
+            check_markdown_links.main(["--repo-root", str(tmp_path)])
+        assert exc_info.value.code == 1
+
+
+class TestReadmeSurfaceChecker:
+    """RTI-F04: README landing surface checker behavior."""
+
+    def test_checker_passes_on_clean_readme(self, tmp_path: Path) -> None:
+        """Checker exits 0 when README has no forbidden heading and labeled notebook refs."""
+        readme = tmp_path / "README.md"
+        readme.write_text(
+            "\n".join(
+                [
+                    "## Install",
+                    "See notebooks/demo.ipynb (supplementary)",
+                ]
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        try:
+            check_readme_surface.main(["--repo-root", str(tmp_path)])
+        except SystemExit as exc:
+            pytest.fail(f"README surface checker unexpectedly exited with code {exc.code}")
+
+    def test_checker_fails_on_forbidden_heading(self, tmp_path: Path) -> None:
+        """Checker exits 1 when forbidden heading appears in README."""
+        readme = tmp_path / "README.md"
+        readme.write_text(
+            "\n".join(["## Install", "## Notebook Path And Artifact Surfaces"]) + "\n",
+            encoding="utf-8",
+        )
+
+        with pytest.raises(SystemExit) as exc_info:
+            check_readme_surface.main(["--repo-root", str(tmp_path)])
+        assert exc_info.value.code == 1
+
+    def test_checker_fails_on_unlabeled_notebook_ref(self, tmp_path: Path) -> None:
+        """Checker exits 1 when notebook refs are unlabeled outside code fences."""
+        readme = tmp_path / "README.md"
+        readme.write_text("See notebooks/foo.ipynb\n", encoding="utf-8")
+
+        with pytest.raises(SystemExit) as exc_info:
+            check_readme_surface.main(["--repo-root", str(tmp_path)])
+        assert exc_info.value.code == 1
