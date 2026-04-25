@@ -4,7 +4,7 @@
 **Plan type:** Actionable release plan — CI/CD automation for release-truth synchronization, internal-link integrity, and library-first landing-surface discipline
 **Audience:** Maintainer, reviewer, documentation contributor, release engineer, Jr. developer
 **Target release:** `0.3.6` — stabilization release that ships **before** `0.4.0` in the 0.3.5 → 0.3.6 → 0.4.0 chain
-**Current released version:** `0.3.4`
+**Current released version:** `0.3.6`
 **Branch:** `feat/v0.3.6-release-truth-docs-integrity`
 **Status:** Draft
 **Last reviewed:** 2026-04-25
@@ -26,7 +26,7 @@
 > - the `notebooks/` directory removal or sibling-repo migration (that lands in v0.4.0)
 > - MkDocs site publication or large README prose redesign beyond enforcing the library-first contract
 >
-> Driver document: [aux_documents/developer_instruction_repo_scope.md](aux_documents/developer_instruction_repo_scope.md).
+> Driver document: [aux_documents/developer_instruction_repo_scope.md](../plan/aux_documents/developer_instruction_repo_scope.md).
 
 > [!NOTE]
 > **Cross-release ordering.** v0.3.6 is a stabilization release. It ships **after** v0.3.5 (documentation quality and Diátaxis bucketing) and **before** v0.4.0 (examples-repo split and notebook removal). v0.4.0 consumes the repository contract and the autofix machinery from this release: the notebook-removal commit must leave the contract green, and the cross-repo CI handshake reuses the link checker.
@@ -35,7 +35,7 @@
 
 - [implemented/v0_3_5_documentation_quality_improvement_revision_2026_04_24.md](implemented/v0_3_5_documentation_quality_improvement_revision_2026_04_24.md) — predecessor (shipped before)
 - [v0_4_0_examples_repo_split_ultimate_plan.md](v0_4_0_examples_repo_split_ultimate_plan.md) — successor (ships after)
-- [aux_documents/developer_instruction_repo_scope.md](aux_documents/developer_instruction_repo_scope.md) — driver document
+- [aux_documents/developer_instruction_repo_scope.md](../plan/aux_documents/developer_instruction_repo_scope.md) — driver document
 
 **Builds on:**
 
@@ -98,9 +98,9 @@ The release should let a downstream consumer answer two crisp questions:
 | RTI-F06 | Release workflow hardening (tag/version block, release-mode contract check) | 3 | P0 | Done (2026-04-25) | Pre-main-merge |
 | RTI-F09 | Regression fixtures for checker and autofixer | 5 | P0 | Done (2026-04-25) | Pre-main-merge |
 | RTI-F10 | Maintainer docs (`docs/maintenance/repository_contract.md`) | 6 | P1 | Done (2026-04-25) | Pre-main-merge |
-| RTI-F07 | Post-release PyPI verification (`scripts/check_published_release.py`) | 3 | P0 | Not started | Post-main-merge (release workflow, post-publish) |
-| RTI-F08 | Scheduled/dispatch autofix PR workflow (`.github/workflows/repo-autofix.yml`) | 4 | P1 | Not started | Post-main-merge (operational automation) |
-| RTI-F11 | Release engineering: version bump, CHANGELOG, `docs/releases/v0.3.6.md` | 6 | P0 | Not started | Post-main-merge (release cut) |
+| RTI-F07 | Post-release PyPI verification (`scripts/check_published_release.py`) | 3 | P0 | Done (2026-04-25) | Post-main-merge (release workflow, post-publish) |
+| RTI-F08 | Scheduled/dispatch autofix PR workflow (`.github/workflows/repo-autofix.yml`) | 4 | P1 | Done (2026-04-25) | Post-main-merge (operational automation) |
+| RTI-F11 | Release engineering: version bump, CHANGELOG, `docs/releases/v0.3.6.md` | 6 | P0 | Done (2026-04-25) | Post-main-merge (release cut) |
 
 Pre-main-merge items are required for merging the release-prep PR.
 Post-main-merge items are executed after merge, in tag/release or maintenance workflows.
@@ -282,7 +282,7 @@ flowchart LR
 - `scripts/sync_repo_contract.py --write` performs only the rewrites configured in the contract:
   - aligns plan-header `Current released version` lines to $V_\text{pkg}$
   - rewrites every reference in tracked markdown matching `deprecated_paths` keys to their canonical targets (in particular `docs/forecast_prep_contract.md` → `docs/reference/forecast_prep_contract.md`)
-  - fixes scope-directive references that omit the on-disk path so they resolve to [docs/plan/aux_documents/developer_instruction_repo_scope.md](aux_documents/developer_instruction_repo_scope.md)
+  - fixes scope-directive references that omit the on-disk path so they resolve to [docs/plan/aux_documents/developer_instruction_repo_scope.md](../plan/aux_documents/developer_instruction_repo_scope.md)
   - removes the forbidden README heading and replaces it with a short supplementary note
   - renames the dependency group `notebook` → `examples` in `pyproject.toml`
 - The fixer is idempotent: a second `--write` run on the clean tree produces no diff.
@@ -380,7 +380,7 @@ flowchart LR
 
 1. Should the autofix workflow run on a weekly `schedule` trigger, or only on `workflow_dispatch`? Weekly catches slow drift but generates noise PRs; manual-only minimizes PR churn but relies on maintainer memory.
 2. What retry window is acceptable for `check_published_release.py` against PyPI's index propagation delay? Proposed default: 5 attempts, exponential backoff, total cap 5 minutes — needs maintainer confirmation before Phase 3 closes.
-3. Should the scope-directive doc remain at [docs/plan/aux_documents/developer_instruction_repo_scope.md](aux_documents/developer_instruction_repo_scope.md), or move to a stable non-`aux_documents` path that survives plan archival? v0.3.6 only repairs the broken links; a path move is deferred unless decided here.
+3. Should the scope-directive doc remain at [docs/plan/aux_documents/developer_instruction_repo_scope.md](../plan/aux_documents/developer_instruction_repo_scope.md), or move to a stable non-`aux_documents` path that survives plan archival? v0.3.6 only repairs the broken links; a path move is deferred unless decided here.
 4. Should `check_markdown_links.py` validate anchor fragments (`#section`) in v0.3.6, or defer that to a later release? Anchor validation is more expensive and requires a markdown parser.
 5. Should the contract checker also assert that `docs/recipes/**` examples remain free of `darts`/`mlforecast`/`statsforecast`/`nixtla` runtime imports, or is the existing architecture-boundary test sufficient?
 

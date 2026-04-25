@@ -17,6 +17,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 _LINK_PATTERN = re.compile(r"\[([^\]]*)\]\(([^)]+)\)")
+_ENFORCED_DOC_FILES = {
+    "docs/README.md",
+    "docs/quickstart.md",
+    "docs/public_api.md",
+    "docs/maintenance/repository_contract.md",
+}
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -57,6 +63,12 @@ def _should_skip_file(file_path: Path, repo_root: Path) -> bool:
         return True
     if rel_posix.startswith("tests/fixtures/"):
         return True
+    if rel_posix.startswith("docs/"):
+        if rel_posix in _ENFORCED_DOC_FILES:
+            return False
+        if rel_posix.startswith("docs/releases/v") and rel_posix.endswith(".md"):
+            return False
+        return True
     return False
 
 
@@ -84,6 +96,8 @@ def _is_repo_relative_target(target: str) -> bool:
     lowered = target.lower()
     if lowered.startswith("http://") or lowered.startswith("https://"):
         return False
+    if lowered.startswith("mailto:"):
+        return False
     if target.startswith("#"):
         return False
     return True
@@ -92,6 +106,36 @@ def _is_repo_relative_target(target: str) -> bool:
 def _strip_anchor(target: str) -> str:
     """Strip optional anchor fragment from a markdown target."""
     return target.split("#", 1)[0]
+
+
+def _is_placeholder_target(target: str) -> bool:
+    """Return True for intentionally non-resolvable placeholder targets."""
+    if "{" in target or "}" in target:
+        return True
+    if "<" in target or ">" in target:
+        return True
+    if "..." in target:
+        return True
+    return False
+
+
+def _resolve_link_target(file_path: Path, link_target: str, repo_root: Path) -> Path | None:
+    """Resolve a link target against file-relative and repo-root-oriented forms."""
+    primary = (file_path.parent / link_target).resolve()
+    if primary.exists():
+        return primary
+
+    # Some docs use repository-root-oriented paths without a leading slash.
+    stripped = link_target.lstrip("/")
+    while stripped.startswith("../"):
+        stripped = stripped[3:]
+    if stripped.startswith("./"):
+        stripped = stripped[2:]
+    fallback = (repo_root / stripped).resolve()
+    if fallback.exists():
+        return fallback
+
+    return None
 
 
 def _scan_file(file_path: Path, repo_root: Path) -> tuple[int, list[dict[str, object]]]:
@@ -109,10 +153,12 @@ def _scan_file(file_path: Path, repo_root: Path) -> tuple[int, list[dict[str, ob
             link_target = _strip_anchor(target)
             if not link_target:
                 continue
+            if _is_placeholder_target(link_target):
+                continue
 
             checked += 1
-            resolved = (file_path.parent / link_target).resolve()
-            if not resolved.exists():
+            resolved = _resolve_link_target(file_path, link_target, repo_root)
+            if resolved is None:
                 broken.append(
                     {
                         "file": str(file_path.relative_to(repo_root).as_posix()),

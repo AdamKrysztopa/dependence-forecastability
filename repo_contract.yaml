@@ -1,5 +1,5 @@
-current_released_version: "0.3.4"
-next_planned_version: "0.3.6"
+current_released_version: "0.3.6"
+next_planned_version: "0.4.0"
 
 canonical_paths:
   forecast_prep_contract: docs/reference/forecast_prep_contract.md

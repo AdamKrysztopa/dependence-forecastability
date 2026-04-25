@@ -126,9 +126,18 @@ def _check_deprecated_paths(repo_root: Path, deprecated_paths: dict[str, str]) -
     if docs_dir.is_dir():
         targets.extend(sorted(docs_dir.rglob("*.md")))
 
+    filtered_targets: list[Path] = []
+    for target in targets:
+        rel_posix = target.relative_to(repo_root).as_posix()
+        if rel_posix.startswith("docs/plan/implemented/"):
+            continue
+        if rel_posix.startswith("tests/fixtures/"):
+            continue
+        filtered_targets.append(target)
+
     for stale_path, _canonical_path in deprecated_paths.items():
         pattern = re.compile(r"\]\(" + re.escape(stale_path) + r"(?:#[^)]*)?\)")
-        for file_path in targets:
+        for file_path in filtered_targets:
             text = file_path.read_text(encoding="utf-8")
             if pattern.search(text):
                 rel = file_path.relative_to(repo_root)

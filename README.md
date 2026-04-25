@@ -85,8 +85,8 @@ Equivalent minimal files:
 - Python user: start with [examples/minimal_python.py](examples/minimal_python.py), then [docs/public_api.md](docs/public_api.md).
 - CLI user: run [examples/minimal_cli.sh](examples/minimal_cli.sh), then [docs/quickstart.md](docs/quickstart.md).
 - Notebook user: run [scripts/run_showcase.py](scripts/run_showcase.py) first; the matching notebook [notebooks/walkthroughs/00_air_passengers_showcase.ipynb](notebooks/walkthroughs/00_air_passengers_showcase.ipynb) is a supplementary narration layer.
-- Fingerprint user: run [scripts/run_showcase_fingerprint.py](scripts/run_showcase_fingerprint.py), then optionally explore [notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb](notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb).
-- Lagged-exogenous user: run [scripts/run_showcase_lagged_exogenous.py](scripts/run_showcase_lagged_exogenous.py), then optionally explore [notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb](notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb).
+- Fingerprint user: run [scripts/run_showcase_fingerprint.py](scripts/run_showcase_fingerprint.py), then optionally explore [notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb](notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb) (supplementary).
+- Lagged-exogenous user: run [scripts/run_showcase_lagged_exogenous.py](scripts/run_showcase_lagged_exogenous.py), then optionally explore [notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb](notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb) (supplementary).
 - Routing-validation user: run `uv run python scripts/run_routing_validation_report.py --smoke --no-real-panel`, then open [outputs/reports/routing_validation/report.md](outputs/reports/routing_validation/report.md).
 - Maintainer/contributor: use [docs/maintenance/developer_guide.md](docs/maintenance/developer_guide.md).
 
@@ -137,7 +137,7 @@ uv run python scripts/run_ami_information_geometry_csv.py \
 Primary fingerprint surfaces:
 
 - Script: [scripts/run_showcase_fingerprint.py](scripts/run_showcase_fingerprint.py)
-- Notebook: [notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb](notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb)
+- Notebook (supplementary): [notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb](notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb)
 - Theory: [docs/theory/forecastability_fingerprint.md](docs/theory/forecastability_fingerprint.md)
 - Code reference: [docs/code/fingerprint_showcase.md](docs/code/fingerprint_showcase.md)
 - Agent contract: [docs/reference/agent_layer.md](docs/reference/agent_layer.md)
@@ -181,7 +181,7 @@ for row in bundle.selected_lags:
 Primary lagged-exogenous triage surfaces:
 
 - Script: [scripts/run_showcase_lagged_exogenous.py](scripts/run_showcase_lagged_exogenous.py)
-- Notebook: [notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb](notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb)
+- Notebook (supplementary): [notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb](notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb)
 - Theory: [docs/theory/lagged_exogenous_triage.md](docs/theory/lagged_exogenous_triage.md)
 
 > [!IMPORTANT]
@@ -190,10 +190,10 @@ Primary lagged-exogenous triage surfaces:
 > value is legitimately available at prediction time (calendar flags, planned
 > promotions, regulator-set prices).
 
-- Notebook: [notebooks/walkthroughs/00_air_passengers_showcase.ipynb](notebooks/walkthroughs/00_air_passengers_showcase.ipynb)
-- Notebook (covariant informative): [notebooks/walkthroughs/01_covariant_informative_showcase.ipynb](notebooks/walkthroughs/01_covariant_informative_showcase.ipynb)
-- Notebook (fingerprint showcase): [notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb](notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb)
-- Notebook (lagged-exogenous triage): [notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb](notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb)
+- Notebook (supplementary): [notebooks/walkthroughs/00_air_passengers_showcase.ipynb](notebooks/walkthroughs/00_air_passengers_showcase.ipynb)
+- Notebook (supplementary covariant informative): [notebooks/walkthroughs/01_covariant_informative_showcase.ipynb](notebooks/walkthroughs/01_covariant_informative_showcase.ipynb)
+- Notebook (supplementary fingerprint showcase): [notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb](notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb)
+- Notebook (supplementary lagged-exogenous triage): [notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb](notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb)
 - Quickstart: [docs/quickstart.md](docs/quickstart.md)
 - PyPI: [dependence-forecastability](https://pypi.org/project/dependence-forecastability/)
 - Issues: [GitHub Issues](https://github.com/AdamKrysztopa/dependence-forecastability/issues)
@@ -218,7 +218,7 @@ Primary routing-validation surfaces:
 - Public use case: `run_routing_validation()` returning `RoutingValidationBundle`
 - Report artifact: [outputs/reports/routing_validation/report.md](outputs/reports/routing_validation/report.md)
 - Theory: [docs/theory/routing_validation.md](docs/theory/routing_validation.md)
-- Notebook: [notebooks/walkthroughs/04_routing_validation_showcase.ipynb](notebooks/walkthroughs/04_routing_validation_showcase.ipynb)
+- Notebook (supplementary): [notebooks/walkthroughs/04_routing_validation_showcase.ipynb](notebooks/walkthroughs/04_routing_validation_showcase.ipynb)
 - Deterministic-first agent example: [examples/univariate/agents/routing_validation_agent_review.py](examples/univariate/agents/routing_validation_agent_review.py)
 
 > [!IMPORTANT]
@@ -336,7 +336,7 @@ Main checked-in artifact surfaces:
 | Stable imports and runtime entry points | [docs/public_api.md](docs/public_api.md) |
 | Live module layout | [docs/code/module_map.md](docs/code/module_map.md) |
 | HTTP API contract | [docs/reference/api_contract.md](docs/reference/api_contract.md) |
-| Notebook path | [docs/notebooks/README.md](docs/notebooks/README.md) |
+| Notebook path (supplementary) | [docs/notebooks/README.md](docs/notebooks/README.md) |
 | Contributor workflow | [docs/maintenance/developer_guide.md](docs/maintenance/developer_guide.md) |
 
 For the repository-wide docs map, see [docs/README.md](docs/README.md).
