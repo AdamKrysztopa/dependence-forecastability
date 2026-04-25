@@ -28,7 +28,7 @@ The supported import surface is the package facade, not the internal tree.
 | Advanced triage namespace | `forecastability.triage` | Stable |
 | Forecast prep contract | `build_forecast_prep_contract` (via `forecastability`) | Stable |
 
-Use these facades when you need deterministic triage, analyzers, typed results, config models, scorer registry access, or batch triage types. See [public_api.md](public_api.md) for the exact export set.
+Use these facades when you need deterministic triage, analyzers, typed results, config models, scorer registry access, or batch triage types. See [../public_api.md](../public_api.md) for the exact export set.
 
 ### Forecast Prep Contract surface
 
@@ -37,7 +37,7 @@ convert triage outputs into a `ForecastPrepContract` — a structured, machine-r
 contract for downstream model families. The contract is the final deterministic surface
 before external frameworks take over. It never imports any downstream library. For
 framework-specific wiring, see
-[docs/recipes/forecast_prep_to_external_frameworks.md](recipes/forecast_prep_to_external_frameworks.md).
+[docs/recipes/forecast_prep_to_external_frameworks.md](../recipes/forecast_prep_to_external_frameworks.md).
 
 ## 2. Maintained Repository Workflows
 
@@ -94,14 +94,14 @@ These files bias coding assistants and LLM consumers toward triage-first behavio
 | `.github/instructions/*.instructions.md` | Path-targeted Copilot instructions | Per-role rules for Python source, notebooks, planning docs |
 
 > [!NOTE]
-> Update these files whenever the public API, import surface, or triage-first routing rules change. See [docs/maintenance/llm_visibility_eval.md](maintenance/llm_visibility_eval.md) for the evaluation harness and pass/fail criteria.
+> Update these files whenever the public API, import surface, or triage-first routing rules change. See [docs/maintenance/llm_visibility_eval.md](../maintenance/llm_visibility_eval.md) for the evaluation harness and pass/fail criteria.
 
 ## 6. What Most Users Should Ignore At First
 
 Most users only need three things in order:
 
-1. The package facade in [public_api.md](public_api.md).
-2. The notebook path in [notebooks/README.md](notebooks/README.md).
-3. The maintainer scripts documented in [maintenance/developer_guide.md](maintenance/developer_guide.md) when they need repo workflows.
+1. The package facade in [../public_api.md](../public_api.md).
+2. The notebook path in [../notebooks/README.md](../notebooks/README.md).
+3. The maintainer scripts documented in [../maintenance/developer_guide.md](../maintenance/developer_guide.md) when they need repo workflows.
 
 The internal packages, the MCP surface, and the agent layer are useful only after the deterministic workflow is already understood.
