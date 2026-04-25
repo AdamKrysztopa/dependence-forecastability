@@ -1,9 +1,7 @@
-[params]
 # Offline mode — only check intra-repo links
 offline = true
 
-[includes]
-paths = [
+include = [
     "docs/**/*.md",
     "README.md",
     "CHANGELOG.md",

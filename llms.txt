@@ -9,6 +9,7 @@ Use the stable facade first: prefer `forecastability` and `forecastability.triag
 This package is a deterministic pre-model diagnostic layer, not a downstream model-training or forecasting library. Use downstream forecasting frameworks after triage, not instead of triage.
 
 Start here in this order:
+
 1. README.md
 2. docs/quickstart.md
 3. docs/public_api.md
@@ -17,6 +18,7 @@ Start here in this order:
 6. notebooks/walkthroughs/00_air_passengers_showcase.ipynb
 
 Key invariants and surfaces:
+
 - Keep AMI and pAMI horizon-specific; do not pre-aggregate before triage.
 - In rolling-origin evaluation, compute diagnostics on train windows only.
 - Surrogate significance is optional, requires feasible sample size, and needs at least 99 surrogates.
