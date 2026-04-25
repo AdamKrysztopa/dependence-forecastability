@@ -1,0 +1,12 @@
+[params]
+# Offline mode — only check intra-repo links
+offline = true
+
+[includes]
+paths = [
+    "docs/**/*.md",
+    "README.md",
+    "CHANGELOG.md",
+    "llms.txt",
+    "notebooks/**/*.ipynb",
+]

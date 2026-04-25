@@ -34,8 +34,8 @@ Use these facades when you need deterministic triage, analyzers, typed results, 
 
 After triage, fingerprint, and lagged-exog analysis, call `build_forecast_prep_contract()` to
 convert triage outputs into a `ForecastPrepContract` — a structured, machine-readable hand-off
-contract for downstream forecasting frameworks. The contract is the final deterministic surface
-before external frameworks take over. It never imports any forecasting framework. For
+contract for downstream model families. The contract is the final deterministic surface
+before external frameworks take over. It never imports any downstream library. For
 framework-specific wiring, see
 [docs/recipes/forecast_prep_to_external_frameworks.md](recipes/forecast_prep_to_external_frameworks.md).
 

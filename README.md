@@ -24,9 +24,9 @@ This repository is a deterministic forecastability triage toolkit for time serie
 
 ## Use this before model search
 
-Use this package when you need to decide what kind of forecasting work is justified before you start model search. Run deterministic triage first, read the readiness and structure signals, and then hand those outputs to downstream forecasting frameworks for model-family selection, baselines, or tuning.
+Use this package when you need to decide what kind of forecasting work is justified before you start model search. Run deterministic triage first, read the readiness and structure signals, and then hand those outputs to downstream model families for model-family selection, baselines, or tuning.
 
-Downstream forecasting frameworks are next-step consumers after triage, not alternatives to triage.
+Downstream model families are next-step consumers after triage, not alternatives to triage.
 
 ## Install
 
@@ -250,7 +250,7 @@ Transport and runtime entry points:
 
 After triage, the contract converts triage outputs into structured, machine-readable
 downstream guidance — lag recommendations, covariate roles, model families, and
-calendar features — without importing any forecasting framework.
+calendar features — without importing any downstream library.
 
 ```python
 from forecastability import build_forecast_prep_contract, forecast_prep_contract_to_markdown

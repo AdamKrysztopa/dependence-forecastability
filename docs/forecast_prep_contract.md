@@ -2,7 +2,7 @@
 # Forecast Prep Contract
 
 `ForecastPrepContract` is the neutral, deterministic, additive hand-off boundary
-between the forecastability triage toolkit and any downstream forecasting framework.
+between the forecastability triage toolkit and any downstream model family adapter.
 After running univariate triage, covariant analysis, lagged-exogenous triage, and
 fingerprint estimation, a user has precise diagnostic answers: which lags carry
 information, which covariates are predictive, what seasonality structure exists, and
@@ -11,8 +11,8 @@ diagnostic outputs into a single machine-readable object — serialisable via st
 Pydantic `model_dump()` / `model_dump_json()` — that a user can translate into
 framework-specific configuration in their own code. The contract is
 **framework-agnostic by design**: it never imports `darts`, `mlforecast`,
-`statsforecast`, or `nixtla`, and the package ships no `to_darts_spec()` or
-`fit_mlforecast()` helpers. See [What this is not](#what-this-is-not) and
+`statsforecast`, or `nixtla`, and the package ships no framework-specific
+export helpers. See [What this is not](#what-this-is-not) and
 [docs/recipes/forecast_prep_to_external_frameworks.md](recipes/forecast_prep_to_external_frameworks.md)
 for illustrative user-side mappings.
 
@@ -399,7 +399,7 @@ dicts. Rows are sorted by `(axis_order, driver, lag)` where
 
 ## Framework-agnostic export
 
-Two export helpers are provided. Neither imports any forecasting framework.
+Two export helpers are provided. Neither imports any downstream library.
 
 ### `forecast_prep_contract_to_markdown`
 
@@ -452,8 +452,8 @@ json_str = contract.model_dump_json(indent=2)
 - **Does not claim optimal hyperparameters.** `recommended_target_lags` and
   `recommended_families` are evidence-based starting points; they are not
   guarantees of forecast accuracy.
-- **Does not include `to_darts_spec()` or `fit_mlforecast()` helpers.** Framework-
-  specific translation is the responsibility of the user. Illustrative recipes are
+- **Does not include framework-specific export helpers.** Framework-specific
+  translation is the responsibility of the user. Illustrative recipes are
   at [docs/recipes/forecast_prep_to_external_frameworks.md](recipes/forecast_prep_to_external_frameworks.md).
 - **Does not import `darts`, `mlforecast`, `statsforecast`, or `nixtla`.** These
   packages are not runtime, optional-extra, dev, or CI dependencies of the core

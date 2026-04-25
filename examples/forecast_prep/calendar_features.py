@@ -11,7 +11,7 @@ ForecastPrepContract when a pandas DatetimeIndex is available:
 
 Calendar features always start with ``_calendar__`` and are classified as
 ``future`` covariates (deterministically known at forecast time).
-No forecasting framework is imported.
+No downstream library is imported.
 """
 
 import pandas as pd

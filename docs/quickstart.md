@@ -511,7 +511,7 @@ print(contract.model_dump_json(indent=2))
 
 > [!NOTE]
 > The contract emits lag recommendations, covariate roles, model families, and calendar
-> features. It never imports any forecasting framework. For framework-specific wiring, see
+> features. It never imports any downstream library. For framework-specific wiring, see
 > [docs/recipes/forecast_prep_to_external_frameworks.md](recipes/forecast_prep_to_external_frameworks.md).
 
 ## 15 Minutes: HTTP API Call

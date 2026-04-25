@@ -305,7 +305,7 @@ from forecastability.triage import (
 ## Forecast Prep Contract (v0.3.4+)
 
 After triage, use `build_forecast_prep_contract` to convert triage outputs into a typed,
-machine-readable hand-off contract for downstream forecasting frameworks.
+machine-readable hand-off contract for downstream model families.
 
 ```python
 from forecastability import ForecastPrepContract
@@ -330,7 +330,7 @@ from forecastability.triage import ForecastPrepBundle
 | `ForecastPrepBundle` | Composite bundle wrapping a `TriageResult` and the derived `ForecastPrepContract`. Available from `forecastability.triage`. |
 
 > [!IMPORTANT]
-> The contract is a **hand-off boundary**. It never imports any forecasting framework.
+> The contract is a **hand-off boundary**. It never imports any downstream library.
 > Framework-specific wiring belongs in `docs/recipes/**` and (from v0.4.0) in the sibling
 > `forecastability-examples` repository.
 

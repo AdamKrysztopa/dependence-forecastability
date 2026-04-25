@@ -10,7 +10,7 @@ time so that it appears in ``future_covariates`` rather than
        as a known-future driver via ``known_future_drivers``.
     4. Verify it lands in ``future_covariates`` and not in ``past_covariates``.
 
-No forecasting framework is imported.
+No downstream library is imported.
 """
 
 from forecastability import (
