@@ -106,6 +106,9 @@ jobs:
       - name: Root-path-pinned check
         run: uv run python scripts/check_docs_contract.py --root-path-pinned
 
+      - name: Version-consistent check
+        run: uv run python scripts/check_docs_contract.py --version-consistent
+
   docs-links:
     name: Link check (lychee offline)
     runs-on: ubuntu-latest

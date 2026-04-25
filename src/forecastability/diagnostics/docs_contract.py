@@ -15,6 +15,7 @@ DocsCheckName = Literal[
     "plan-lifecycle",
     "no-framework-imports",
     "root-path-pinned",
+    "version-consistent",
 ]
 
 __all__ = ["DocsCheckName"]

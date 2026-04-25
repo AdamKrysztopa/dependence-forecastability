@@ -8,6 +8,7 @@ Usage:
     uv run python scripts/check_docs_contract.py --plan-lifecycle
     uv run python scripts/check_docs_contract.py --no-framework-imports
     uv run python scripts/check_docs_contract.py --root-path-pinned
+    uv run python scripts/check_docs_contract.py --version-consistent
 """
 
 from __future__ import annotations
@@ -15,6 +16,7 @@ from __future__ import annotations
 import argparse
 import re
 import sys
+import tomllib
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).parent.parent
@@ -308,6 +310,75 @@ def check_root_path_pinned() -> bool:
 
 
 # ---------------------------------------------------------------------------
+# Check 7 — version-consistent
+# ---------------------------------------------------------------------------
+
+_CITATION_VERSION_RE = re.compile(r'^version:\s*"([^"]+)"', re.MULTILINE)
+_INIT_VERSION_RE = re.compile(r'^__version__\s*=\s*"([^"]+)"', re.MULTILINE)
+
+
+def check_version_consistent() -> bool:
+    """Verify version is identical across pyproject.toml, CITATION.cff, and __init__.py."""
+    print("version-consistent:")
+    all_ok = True
+
+    # --- pyproject.toml (authoritative source) ---
+    pyproject_path = REPO_ROOT / "pyproject.toml"
+    if not pyproject_path.is_file():
+        _report("pyproject.toml exists", ok=False)
+        return False
+    with pyproject_path.open("rb") as fh:
+        pyproject_data = tomllib.load(fh)
+    canonical: str | None = pyproject_data.get("project", {}).get("version")
+    if canonical is None:
+        _report("pyproject.toml [project].version parsed", ok=False)
+        return False
+    _report(f"pyproject.toml version: {canonical!r}", ok=True)
+
+    # --- CITATION.cff ---
+    citation_path = REPO_ROOT / "CITATION.cff"
+    if not citation_path.is_file():
+        _report("CITATION.cff exists", ok=False)
+        all_ok = False
+    else:
+        citation_text = citation_path.read_text(encoding="utf-8", errors="replace")
+        m = _CITATION_VERSION_RE.search(citation_text)
+        if m is None:
+            _report("CITATION.cff version parsed", ok=False)
+            all_ok = False
+        else:
+            citation_version = m.group(1)
+            match = citation_version == canonical
+            _report(
+                f"CITATION.cff version {citation_version!r} matches pyproject {canonical!r}",
+                ok=match,
+            )
+            all_ok = all_ok and match
+
+    # --- src/forecastability/__init__.py ---
+    init_path = REPO_ROOT / "src" / "forecastability" / "__init__.py"
+    if not init_path.is_file():
+        _report("src/forecastability/__init__.py exists", ok=False)
+        all_ok = False
+    else:
+        init_text = init_path.read_text(encoding="utf-8", errors="replace")
+        m2 = _INIT_VERSION_RE.search(init_text)
+        if m2 is None:
+            _report("__init__.__version__ parsed", ok=False)
+            all_ok = False
+        else:
+            init_version = m2.group(1)
+            match2 = init_version == canonical
+            _report(
+                f"__init__.__version__ {init_version!r} matches pyproject {canonical!r}",
+                ok=match2,
+            )
+            all_ok = all_ok and match2
+
+    return all_ok
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
@@ -318,6 +389,7 @@ _CHECKS: dict[str, tuple[str, object]] = {
     "plan-lifecycle": ("plan-lifecycle", check_plan_lifecycle),
     "no-framework-imports": ("no-framework-imports", check_no_framework_imports),
     "root-path-pinned": ("root-path-pinned", check_root_path_pinned),
+    "version-consistent": ("version-consistent", check_version_consistent),
 }
 
 
