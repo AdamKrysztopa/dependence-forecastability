@@ -90,8 +90,8 @@ The release should let a downstream consumer answer two crisp questions:
 | ID | Feature | Phase | Priority | Status |
 | --- | --- | --- | --- | --- |
 | RTI-F00 | Repository contract (`repo_contract.yaml`) and typed loader | 0 | P0 | Done (2026-04-25) |
-| RTI-F01 | Release-truth checker (`scripts/check_repo_contract.py`) | 1 | P0 | Not started |
-| RTI-F02 | Release-truth autofixer (`scripts/sync_repo_contract.py --write`) | 1 | P0 | Not started |
+| RTI-F01 | Release-truth checker (`scripts/check_repo_contract.py`) | 1 | P0 | Done (2026-04-25) |
+| RTI-F02 | Release-truth autofixer (`scripts/sync_repo_contract.py --write`) | 1 | P0 | Done (2026-04-25) |
 | RTI-F03 | Internal markdown-link checker (`scripts/check_markdown_links.py`) | 2 | P0 | Not started |
 | RTI-F04 | README / landing-surface checker (`scripts/check_readme_surface.py`) | 2 | P0 | Not started |
 | RTI-F05 | Notebook dependency-group rename (`notebook` → `examples`) | 2 | P1 | Not started |

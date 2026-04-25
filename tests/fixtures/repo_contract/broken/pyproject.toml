@@ -1,0 +1,6 @@
+[project]
+name = "forecastability"
+version = "0.3.4"
+
+[dependency-groups]
+notebook = ["jupyter>=1.0"]
