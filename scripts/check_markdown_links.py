@@ -119,6 +119,14 @@ def _is_placeholder_target(target: str) -> bool:
     return False
 
 
+def _is_generated_artifact_target(target: str) -> bool:
+    """Return True when a link points to runtime-generated artifact surfaces."""
+    normalized = target.lstrip("./")
+    while normalized.startswith("../"):
+        normalized = normalized[3:]
+    return normalized.startswith("outputs/")
+
+
 def _resolve_link_target(file_path: Path, link_target: str, repo_root: Path) -> Path | None:
     """Resolve a link target against file-relative and repo-root-oriented forms."""
     primary = (file_path.parent / link_target).resolve()
@@ -154,6 +162,8 @@ def _scan_file(file_path: Path, repo_root: Path) -> tuple[int, list[dict[str, ob
             if not link_target:
                 continue
             if _is_placeholder_target(link_target):
+                continue
+            if _is_generated_artifact_target(link_target):
                 continue
 
             checked += 1
