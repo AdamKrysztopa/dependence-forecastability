@@ -46,7 +46,7 @@ uv run python scripts/rebuild_fingerprint_regression_fixtures.py --verify
 | Implemented | ✅ | `src/forecastability/triage/forecastability_profile.py` |
 | Tested | ✅ | `tests/test_forecastability_profile.py` |
 | Regression fixtures | ✅ | `tests/` (diagnostic regression suite) |
-| Theory doc | ✅ | [theory/forecastability_profile.md](theory/forecastability_profile.md), [theory/foundations.md](theory/foundations.md) |
+| Theory doc | ✅ | [../theory/forecastability_profile.md](../theory/forecastability_profile.md), [../theory/foundations.md](../theory/foundations.md) |
 | Notebook | ✅ | `notebooks/triage/01_forecastability_profile_walkthrough.ipynb` |
 | Script | ✅ | `scripts/run_canonical_triage.py` |
 
@@ -65,7 +65,7 @@ uv run python scripts/rebuild_fingerprint_regression_fixtures.py --verify
 | Implemented | ✅ | `src/forecastability/triage/theoretical_limit_diagnostics.py` |
 | Tested | ✅ | `tests/test_metrics.py`, `tests/test_phase1_examples.py` |
 | Regression fixtures | ✅ | `tests/` (diagnostic regression suite) |
-| Theory doc | ✅ | [theory/foundations.md](theory/foundations.md) |
+| Theory doc | ✅ | [../theory/foundations.md](../theory/foundations.md) |
 | Notebook | ✅ | `notebooks/triage/02_information_limits_and_compression.ipynb` |
 | Script | ✅ | `scripts/archive/run_phase1_limit_diagnostics.py` |
 
@@ -82,7 +82,7 @@ uv run python scripts/rebuild_fingerprint_regression_fixtures.py --verify
 | Implemented | ✅ | `src/forecastability/triage/predictive_info_learning_curve.py` |
 | Tested | ✅ | `tests/test_metrics.py` |
 | Regression fixtures | ✅ | `tests/` (diagnostic regression suite) |
-| Theory doc | ✅ | [triage_methods/predictive_information_learning_curves.md](triage_methods/predictive_information_learning_curves.md) |
+| Theory doc | ✅ | [../triage_methods/predictive_information_learning_curves.md](../triage_methods/predictive_information_learning_curves.md) |
 | Notebook | ✅ | `notebooks/triage/03_predictive_information_learning_curves.ipynb` |
 | Script | ✅ | `scripts/archive/run_predictive_info_learning_curves.py` |
 
@@ -99,7 +99,7 @@ uv run python scripts/rebuild_fingerprint_regression_fixtures.py --verify
 | Implemented | ✅ | `src/forecastability/triage/spectral_predictability.py` |
 | Tested | ✅ | `tests/test_metrics.py` |
 | Regression fixtures | ✅ | `tests/` (diagnostic regression suite) |
-| Theory doc | ✅ | [theory/spectral_predictability.md](theory/spectral_predictability.md) |
+| Theory doc | ✅ | [../theory/spectral_predictability.md](../theory/spectral_predictability.md) |
 | Notebook | ✅ | `notebooks/triage/04_spectral_and_entropy_diagnostics.ipynb` |
 | Script | ✅ | `scripts/archive/run_spectral_predictability.py` |
 
@@ -121,7 +121,7 @@ uv run python scripts/rebuild_fingerprint_regression_fixtures.py --verify
 | Implemented | ✅ (experimental) | `src/forecastability/triage/lyapunov.py` |
 | Tested | ✅ | `tests/test_lyapunov.py` |
 | Regression fixtures | ⚠️ partial | Basic sanity checks only; no paper-aligned benchmark fixture |
-| Theory doc | ✅ | [triage_methods/largest_lyapunov_exponent.md](triage_methods/largest_lyapunov_exponent.md) |
+| Theory doc | ✅ | [../triage_methods/largest_lyapunov_exponent.md](../triage_methods/largest_lyapunov_exponent.md) |
 | Notebook | — | Not yet included in triage notebook set |
 | Script | ✅ | `scripts/archive/run_largest_lyapunov_exponent.py` |
 
@@ -141,7 +141,7 @@ uv run python scripts/rebuild_fingerprint_regression_fixtures.py --verify
 | Implemented | ✅ | `src/forecastability/triage/complexity_band.py` |
 | Tested | ✅ | `tests/test_complexity_band.py` |
 | Regression fixtures | ✅ | `tests/` (diagnostic regression suite) |
-| Theory doc | ✅ | [theory/entropy_based_complexity.md](theory/entropy_based_complexity.md) |
+| Theory doc | ✅ | [../theory/entropy_based_complexity.md](../theory/entropy_based_complexity.md) |
 | Notebook | ✅ | `notebooks/triage/04_spectral_and_entropy_diagnostics.ipynb` |
 | Script | ✅ | `scripts/archive/run_entropy_complexity.py` |
 
@@ -194,12 +194,12 @@ each feature.
 
 | Feature | Theory doc | Notebook | Script | Test file |
 |---|---|---|---|---|
-| F1 | [forecastability_profile.md](theory/forecastability_profile.md) | `01_forecastability_profile_walkthrough.ipynb` | `scripts/run_canonical_triage.py` | `test_forecastability_profile.py` |
-| F2 | [foundations.md](theory/foundations.md) | `02_information_limits_and_compression.ipynb` | `scripts/archive/run_phase1_limit_diagnostics.py` | `test_metrics.py` |
-| F3 | [predictive_information_learning_curves.md](triage_methods/predictive_information_learning_curves.md) | `03_predictive_information_learning_curves.ipynb` | `scripts/archive/run_predictive_info_learning_curves.py` | `test_metrics.py` |
-| F4 | [spectral_predictability.md](theory/spectral_predictability.md) | `04_spectral_and_entropy_diagnostics.ipynb` | `scripts/archive/run_spectral_predictability.py` | `test_metrics.py` |
-| F5 ⚠️ | [largest_lyapunov_exponent.md](triage_methods/largest_lyapunov_exponent.md) | — | `scripts/archive/run_largest_lyapunov_exponent.py` | `test_lyapunov.py` |
-| F6 | [entropy_based_complexity.md](theory/entropy_based_complexity.md) | `04_spectral_and_entropy_diagnostics.ipynb` | `scripts/archive/run_entropy_complexity.py` | `test_complexity_band.py` |
+| F1 | [forecastability_profile.md](../theory/forecastability_profile.md) | `01_forecastability_profile_walkthrough.ipynb` | `scripts/run_canonical_triage.py` | `test_forecastability_profile.py` |
+| F2 | [foundations.md](../theory/foundations.md) | `02_information_limits_and_compression.ipynb` | `scripts/archive/run_phase1_limit_diagnostics.py` | `test_metrics.py` |
+| F3 | [predictive_information_learning_curves.md](../triage_methods/predictive_information_learning_curves.md) | `03_predictive_information_learning_curves.ipynb` | `scripts/archive/run_predictive_info_learning_curves.py` | `test_metrics.py` |
+| F4 | [spectral_predictability.md](../theory/spectral_predictability.md) | `04_spectral_and_entropy_diagnostics.ipynb` | `scripts/archive/run_spectral_predictability.py` | `test_metrics.py` |
+| F5 ⚠️ | [largest_lyapunov_exponent.md](../triage_methods/largest_lyapunov_exponent.md) | — | `scripts/archive/run_largest_lyapunov_exponent.py` | `test_lyapunov.py` |
+| F6 | [entropy_based_complexity.md](../theory/entropy_based_complexity.md) | `04_spectral_and_entropy_diagnostics.ipynb` | `scripts/archive/run_entropy_complexity.py` | `test_complexity_band.py` |
 | F7 | — | `05_batch_and_exogenous_workbench.ipynb` | `run_benchmark_panel.py` | `test_batch_triage_f7.py` |
 | F8 | — | `05_batch_and_exogenous_workbench.ipynb` | `run_exog_analysis.py` | `test_extensions.py` |
 
@@ -208,7 +208,7 @@ each feature.
 ## v0.3.0 — Covariant Informative Extensions
 
 These features extend the v0.2.x core with bivariate and causal dependence measures.
-See [plan/v0_3_0_covariant_informative_ultimate_plan.md](plan/v0_3_0_covariant_informative_ultimate_plan.md)
+See [../plan/v0_3_0_covariant_informative_ultimate_plan.md](../plan/v0_3_0_covariant_informative_ultimate_plan.md)
 for the full feature inventory and phasing plan.
 
 ### V3-F01 — Transfer Entropy scorer + service
@@ -218,7 +218,7 @@ for the full feature inventory and phasing plan.
 | Implemented | ✅ | `src/forecastability/diagnostics/transfer_entropy.py`, `src/forecastability/services/transfer_entropy_service.py` |
 | Tested | ✅ | `tests/test_gcmi.py`, `tests/test_covariant_models.py` |
 | Regression fixtures | ✅ | `tests/` (diagnostic regression suite) |
-| Theory doc | ✅ | [theory/foundations.md](theory/foundations.md) — TE section |
+| Theory doc | ✅ | [../theory/foundations.md](../theory/foundations.md) — TE section |
 | Notebook | — | Not yet in triage notebook set |
 | Script | — | No dedicated standalone script; exercised via analyzer tests |
 
@@ -234,7 +234,7 @@ $TE(X \to Y)$ peaked at lag 2 with a strong directional gap vs $TE(Y \to X)$.
 | Implemented | ✅ | `src/forecastability/diagnostics/gcmi.py`, `src/forecastability/services/gcmi_service.py` |
 | Tested | ✅ | `tests/test_gcmi.py` (25 tests) |
 | Regression fixtures | ✅ | `tests/test_gcmi.py` (numeric regression assertions) |
-| Theory doc | ✅ | [theory/gcmi.md](theory/gcmi.md) |
+| Theory doc | ✅ | [../theory/gcmi.md](../theory/gcmi.md) |
 | Notebook | — | Not yet in triage notebook set |
 | Script | ✅ | `examples/covariant_informative/information_measures/gcmi_example.py` |
 

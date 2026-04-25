@@ -67,5 +67,5 @@ For production workflows, use the deterministic path first and keep narration op
 ## Related documents
 
 - [versioning.md](versioning.md)
-- [architecture.md](architecture.md)
-- [theory/foundations.md](theory/foundations.md)
+- [../explanation/architecture.md](../explanation/architecture.md)
+- [../theory/foundations.md](../theory/foundations.md)

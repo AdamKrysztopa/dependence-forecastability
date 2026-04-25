@@ -196,4 +196,4 @@ All GCMI functions live in `src/forecastability/diagnostics/gcmi.py`
 > GCMI is fully deterministic — it has no random state. The `random_state` argument
 > accepted by `DependenceScorer.__call__` is accepted but ignored.
 
-See [theory/gcmi.md](theory/gcmi.md) for the algorithm, properties, and GCMI vs TE comparison.
+See [../theory/gcmi.md](../theory/gcmi.md) for the algorithm, properties, and GCMI vs TE comparison.

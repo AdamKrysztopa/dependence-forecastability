@@ -13,7 +13,7 @@ framework-specific configuration in their own code. The contract is
 **framework-agnostic by design**: it never imports `darts`, `mlforecast`,
 `statsforecast`, or `nixtla`, and the package ships no framework-specific
 export helpers. See [What this is not](#what-this-is-not) and
-[docs/recipes/forecast_prep_to_external_frameworks.md](recipes/forecast_prep_to_external_frameworks.md)
+[docs/recipes/forecast_prep_to_external_frameworks.md](../recipes/forecast_prep_to_external_frameworks.md)
 for illustrative user-side mappings.
 
 > [!IMPORTANT]
@@ -21,7 +21,7 @@ for illustrative user-side mappings.
 > Every `recommended_*` field is paired with a `confidence_label` and
 > `caution_flags` so downstream consumers can make informed, not blind, decisions.
 > The repository scope directive at
-> [docs/plan/aux_documents/developer_instruction_repo_scope.md](plan/aux_documents/developer_instruction_repo_scope.md)
+> [docs/plan/aux_documents/developer_instruction_repo_scope.md](../plan/aux_documents/developer_instruction_repo_scope.md)
 > forbids first-class framework integrations in the core package.
 
 ---
@@ -167,7 +167,7 @@ $$L_{\text{past}}(c) = \{k : \exists\, r \in \texttt{LaggedExogBundle.selected\_
 > (v0.3.2) already enforces `min_lag >= 1`, but the builder defensively
 > re-checks this invariant because future selectors registered under different
 > `selector_name` literals may relax it. Cross-reference:
-> [v0.3.2 plan §2.1](plan/implemented/v0_3_2_lagged_exogenous_triage_ultimate_plan.md).
+> [v0.3.2 plan §2.1](../plan/implemented/v0_3_2_lagged_exogenous_triage_ultimate_plan.md).
 
 ---
 
@@ -454,7 +454,7 @@ json_str = contract.model_dump_json(indent=2)
   guarantees of forecast accuracy.
 - **Does not include framework-specific export helpers.** Framework-specific
   translation is the responsibility of the user. Illustrative recipes are
-  at [docs/recipes/forecast_prep_to_external_frameworks.md](recipes/forecast_prep_to_external_frameworks.md).
+  at [docs/recipes/forecast_prep_to_external_frameworks.md](../recipes/forecast_prep_to_external_frameworks.md).
 - **Does not import `darts`, `mlforecast`, `statsforecast`, or `nixtla`.** These
   packages are not runtime, optional-extra, dev, or CI dependencies of the core
   repository.
@@ -466,8 +466,8 @@ json_str = contract.model_dump_json(indent=2)
 
 ## See also
 
-- [docs/recipes/forecast_prep_to_external_frameworks.md](recipes/forecast_prep_to_external_frameworks.md) — illustrative
+- [docs/recipes/forecast_prep_to_external_frameworks.md](../recipes/forecast_prep_to_external_frameworks.md) — illustrative
   mappings to MLForecast, Darts, and Nixtla / StatsForecast
-- [docs/public_api.md](public_api.md) — supported import contract
-- [docs/quickstart.md](quickstart.md) — end-to-end triage walkthrough
-- [docs/plan/aux_documents/developer_instruction_repo_scope.md](plan/aux_documents/developer_instruction_repo_scope.md) — repository scope directive
+- [docs/public_api.md](../public_api.md) — supported import contract
+- [docs/quickstart.md](../quickstart.md) — end-to-end triage walkthrough
+- [docs/plan/aux_documents/developer_instruction_repo_scope.md](../plan/aux_documents/developer_instruction_repo_scope.md) — repository scope directive

@@ -4,7 +4,7 @@
 A deterministic forecastability triage toolkit with AMI as the paper-aligned foundation and pAMI as a project extension.
 
 This page is the evaluator-facing index for all F1–F8 diagnostics. For the surface
-model (CLI, API, MCP, agents), see the companion [surface_guide.md](surface_guide.md).
+model (CLI, API, MCP, agents), see the companion [../explanation/surface_guide.md](../explanation/surface_guide.md).
 
 ---
 
@@ -54,9 +54,9 @@ flags for the triage decision.
   (too-short series): treat the curve as indicative, not authoritative.
 
 **Learn more.**
-- [theory/forecastability_profile.md](theory/forecastability_profile.md) — profile
+- [../theory/forecastability_profile.md](../theory/forecastability_profile.md) — profile
   construction, informative horizon set, epsilon resolution, DPI diagnostic
-- [theory/foundations.md](theory/foundations.md) — AMI and pAMI definitions,
+- [../theory/foundations.md](../theory/foundations.md) — AMI and pAMI definitions,
   significance logic, rolling-origin invariants
 
 ---
@@ -84,7 +84,7 @@ to quantify how close any model can get to the fundamental limit.
 - When series length is very short: finite-sample bias inflates the estimated limit.
 
 **Learn more.**
-- [theory/foundations.md](theory/foundations.md) — AMI foundations and estimator
+- [../theory/foundations.md](../theory/foundations.md) — AMI foundations and estimator
   properties
 
 ---
@@ -116,7 +116,7 @@ predictive information.
   that grow with $k$ without plateauing.
 
 **Learn more.**
-- [triage_methods/predictive_information_learning_curves.md](triage_methods/predictive_information_learning_curves.md)
+- [../triage_methods/predictive_information_learning_curves.md](../triage_methods/predictive_information_learning_curves.md)
   — EvoRate definition, plateau detection, kNN curse of dimensionality warning
 
 ---
@@ -144,7 +144,7 @@ noise, quantifying linear-structure predictability independently of AMI.
 - For strongly non-stationary series without prior detrending.
 
 **Learn more.**
-- [theory/spectral_predictability.md](theory/spectral_predictability.md) — Ω formula,
+- [../theory/spectral_predictability.md](../theory/spectral_predictability.md) — Ω formula,
   PSD normalisation, interpretation table, limitations
 
 ---
@@ -178,7 +178,7 @@ dynamics, but stochastic noise can also produce positive values.
   deterministic chaos from coloured stochastic noise.
 
 **Learn more.**
-- [triage_methods/largest_lyapunov_exponent.md](triage_methods/largest_lyapunov_exponent.md)
+- [../triage_methods/largest_lyapunov_exponent.md](../triage_methods/largest_lyapunov_exponent.md)
   — Takens embedding, Rosenstein algorithm, Theiler window, sample-size requirements
 
 ---
@@ -205,7 +205,7 @@ the series, combined to classify its disorder level into a complexity band
   estimates; for $m = 5$, at least $n \approx 600$ is recommended.
 
 **Learn more.**
-- [theory/entropy_based_complexity.md](theory/entropy_based_complexity.md) — permutation
+- [../theory/entropy_based_complexity.md](../theory/entropy_based_complexity.md) — permutation
   entropy definition, embedding order selection, spectral entropy, complexity band
   classification
 

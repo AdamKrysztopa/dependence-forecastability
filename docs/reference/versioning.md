@@ -3,7 +3,7 @@
 
 _Last verified for release 0.2.0 consolidation on 2026-04-14._
 
-Use this page with [public_api.md](public_api.md) when deciding whether a change is compatible, beta-surface churn, or intentionally experimental.
+Use this page with [../public_api.md](../public_api.md) when deciding whether a change is compatible, beta-surface churn, or intentionally experimental.
 
 ## Semantic Versioning Policy
 
@@ -43,7 +43,7 @@ Different files answer different questions.
 
 | Surface | Stability | Notes |
 | --- | --- | --- |
-| `forecastability` facade | `stable` | Top-level package imports documented in [public_api.md](public_api.md) |
+| `forecastability` facade | `stable` | Top-level package imports documented in [../public_api.md](../public_api.md) |
 | `forecastability.triage` facade | `stable` | Advanced triage namespace for batch models, events, readiness, and bundles |
 | Analyzer facade (`ForecastabilityAnalyzer`, `ForecastabilityAnalyzerExog`, `AnalyzeResult`) | `stable` | Public analyzer contract used by package consumers and examples |
 | Stable Pydantic config and result models re-exported from `forecastability` | `stable` | Field names are compatibility-sensitive |
@@ -60,7 +60,7 @@ Different files answer different questions.
 
 ## Compatibility Rules
 
-- Public imports documented in [public_api.md](public_api.md) are compatibility-sensitive.
+- Public imports documented in [../public_api.md](../public_api.md) are compatibility-sensitive.
 - Stable Pydantic model field names are part of the contract.
 - Additive optional fields are compatible.
 - Removing fields, renaming fields, changing meanings, or changing runtime entry points is breaking.

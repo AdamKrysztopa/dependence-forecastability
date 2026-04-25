@@ -33,7 +33,7 @@ contract = bundle.contract
 
 All fields referenced in the snippets (`contract.recommended_target_lags`,
 `contract.past_covariates`, etc.) are documented in
-[docs/forecast_prep_contract.md](../forecast_prep_contract.md).
+[docs/forecast_prep_contract.md](../reference/forecast_prep_contract.md).
 
 ---
 
