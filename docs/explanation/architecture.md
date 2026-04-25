@@ -94,4 +94,4 @@ The practical dependency direction is:
 
 This repository is already substantially layered, but it is not pretending that every historical helper has been perfectly normalized into a textbook hexagon. The important point for current documentation is simpler: the live codebase is not a flat module layout anymore, and the supported public surfaces are the package facades plus the declared runtime entry points.
 
-For the current module-level map, see [code/module_map.md](code/module_map.md). For compatibility scope, see [public_api.md](public_api.md).
+For the current module-level map, see [../code/module_map.md](../code/module_map.md). For compatibility scope, see [../public_api.md](../public_api.md).

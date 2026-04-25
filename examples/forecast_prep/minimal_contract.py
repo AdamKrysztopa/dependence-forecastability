@@ -8,7 +8,7 @@ ForecastPrepContract using only the ``forecastability`` public API:
     3. Build a ``ForecastPrepContract`` via ``build_forecast_prep_contract``.
     4. Print key contract fields.
 
-No forecasting framework is imported. The contract is the hand-off artifact
+No downstream library is imported. The contract is the hand-off artifact
 that downstream libraries (darts, mlforecast, etc.) consume per their own
 framework-specific adapters.
 """

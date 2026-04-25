@@ -80,7 +80,7 @@ Interpret those fields in this order.
 
 Use the live notebooks directly.
 
-1. Read [notebooks/README.md](notebooks/README.md).
+1. Read [../notebooks/README.md](../notebooks/README.md).
 2. Run [../notebooks/walkthroughs/00_air_passengers_showcase.ipynb](../notebooks/walkthroughs/00_air_passengers_showcase.ipynb).
 3. Run [../notebooks/walkthroughs/01_covariant_informative_showcase.ipynb](../notebooks/walkthroughs/01_covariant_informative_showcase.ipynb) if you want the covariant benchmark path.
 4. Continue through the remaining walkthrough notebooks.
@@ -117,4 +117,4 @@ Treat those as reference artifacts, not guaranteed-fresh build outputs.
 > [!WARNING]
 > In rolling-origin evaluation, diagnostics are computed on train windows only and scoring on post-origin holdout only.
 
-For the multi-surface walkthrough, see [quickstart.md](quickstart.md). For the exact HTTP contract, see [api_contract.md](api_contract.md).
+For the multi-surface walkthrough, see [../quickstart.md](../quickstart.md). For the exact HTTP contract, see [../reference/api_contract.md](../reference/api_contract.md).

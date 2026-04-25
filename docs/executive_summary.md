@@ -114,6 +114,6 @@ The baseline AMI method follows Catt (2026a). The triage extensions draw on:
 ## Start here
 
 - [quickstart.md](quickstart.md)
-- [results_summary.md](results_summary.md)
-- [production_readiness.md](production_readiness.md)
+- [explanation/results_summary.md](explanation/results_summary.md)
+- [reference/production_readiness.md](reference/production_readiness.md)
 - [why_use_this.md](why_use_this.md)

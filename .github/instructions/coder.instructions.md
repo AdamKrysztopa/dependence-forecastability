@@ -65,6 +65,14 @@ Complete tasks in this order — each builds on the previous:
 | 5 | `rolling_origin.py`, `models.py` + benchmark runner |
 | 6 | `build_report_artifacts.py`, LinkedIn output, finalise tests |
 
+## Pre-PR version invariant
+
+When bumping the package version (in `pyproject.toml`), also update:
+- `CITATION.cff` — `version:` field
+- `src/forecastability/__init__.py` — `__version__`
+
+Validate with `uv run python scripts/check_docs_contract.py --version-consistent` before committing.
+
 ## Engineering rules
 
 - Type hints on every function signature — no `Any` without a comment

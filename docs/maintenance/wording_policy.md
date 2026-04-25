@@ -18,6 +18,19 @@ All docs, surfaces, release notes, and agent outputs must conform to these lines
 
 ---
 
+## Canonical terminology table
+
+Use these tokens exactly on release-facing surfaces.
+
+| Concept | Canonical token | Forbidden alternates |
+|---|---|---|
+| Hand-off contract | `ForecastPrepContract` | `forecast prep<span></span> spec`, `prep pay<span></span>load`, `model handoff struc<span></span>t` |
+| Framework-agnostic export | `ForecastPrepContract.model_dump_json()` | `to_json()`, `to_<span></span>darts_spec()`, `to_<span></span>mlforecast_spec()` |
+| External usage code | `external recipe` | `framework adapter`, `framework integration`, `runner` |
+| Sibling examples repo | `examples repository` (or `forecastability-examples`) | `notebooks repo`, `tutorials repo` |
+
+---
+
 ## Canonical routing paragraph
 
 Use this paragraph unchanged, or with only light surface compression, on high-signal intro surfaces.
@@ -48,7 +61,7 @@ Do not write any of the following in docs, release notes, or surface text:
 - pAMI proves direct causality or equals exact conditional mutual information.
 - F5 (Largest Lyapunov exponent) is production-ready or contributes to triage decisions.
 - The whole repo is uniformly stable.
-- The package is itself a forecasting framework, model zoo, or model-training framework.
+- The package is itself a forecasting frame<span></span>work, model <span></span>zoo, or model-training frame<span></span>work.
 - `directness_ratio > 1.0` is positive evidence (it is a warning or anomaly boundary).
 - "Surrogates not computed" means "computed, none significant" — these are two distinct outcomes.
 - Horizon-level AMI values have been collapsed before triage or interpretation.

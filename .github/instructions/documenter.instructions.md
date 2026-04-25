@@ -137,6 +137,19 @@ What was chosen? Why was it preferred over alternatives?
 What are the trade-offs, limitations, and downstream effects of this decision?
 ```
 
+## Pre-PR invariants — check before every docs change
+
+These four issues caused a reviewer rejection and must be caught before opening a PR:
+
+| Invariant | Automated check | Manual check |
+|---|---|---|
+| **Version consistency** — `pyproject.toml`, `CITATION.cff`, and `src/forecastability/__init__.py` must all carry the same version | `uv run python scripts/check_docs_contract.py --version-consistent` | — |
+| **No broken plan links** — every link in `docs/plan/README.md` must resolve on disk | lychee offline mode covers this | Also verify `implemented/` prefix when referencing completed plans |
+| **CHANGELOG chronology** — version entries must be in non-increasing date order (newest at top) | — | Inspect before adding or touching CHANGELOG entries |
+| **Notebook language** — notebooks are a *supplementary* narration layer, not the primary entry point; scripts and Python examples are canonical | `uv run python scripts/check_docs_contract.py` | Never write "open the canonical notebook" or list a notebook as the first step for any user persona |
+
+Run all docs-contract checks at once: `uv run python scripts/check_docs_contract.py`
+
 ## What to flag to the Orchestrator
 
 - Terminology in docs that does not match Python source (e.g. wrong function name, wrong parameter)

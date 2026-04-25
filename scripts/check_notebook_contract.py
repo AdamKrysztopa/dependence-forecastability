@@ -5,11 +5,14 @@ and a minimal representative computation runs without error.
 
 Usage:
     uv run python scripts/check_notebook_contract.py
+    uv run python scripts/check_notebook_contract.py --transition-banner
 """
 
 from __future__ import annotations
 
+import argparse
 import importlib
+import json
 import sys
 from pathlib import Path
 
@@ -28,6 +31,25 @@ EXPECTED_NOTEBOOKS = [
     "walkthroughs/02_exogenous_analysis.ipynb",
     "walkthroughs/03_triage_end_to_end.ipynb",
     "walkthroughs/04_screening_end_to_end.ipynb",
+]
+
+# Full set of notebooks that must carry the v0.4.0 transition banner.
+TRANSITION_BANNER_NOTEBOOKS = [
+    "walkthroughs/00_air_passengers_showcase.ipynb",
+    "walkthroughs/01_covariant_informative_showcase.ipynb",
+    "walkthroughs/01_canonical_forecastability.ipynb",
+    "walkthroughs/02_exogenous_analysis.ipynb",
+    "walkthroughs/02_forecastability_fingerprint_showcase.ipynb",
+    "walkthroughs/03_lagged_exogenous_triage_showcase.ipynb",
+    "walkthroughs/03_triage_end_to_end.ipynb",
+    "walkthroughs/04_routing_validation_showcase.ipynb",
+    "walkthroughs/04_screening_end_to_end.ipynb",
+    "triage/01_forecastability_profile_walkthrough.ipynb",
+    "triage/02_information_limits_and_compression.ipynb",
+    "triage/03_predictive_information_learning_curves.ipynb",
+    "triage/04_spectral_and_entropy_diagnostics.ipynb",
+    "triage/05_batch_and_exogenous_workbench.ipynb",
+    "triage/06_agent_ready_triage_interpretation.ipynb",
 ]
 
 PASS = "\u2713"
@@ -256,6 +278,27 @@ def check_representative_call() -> bool:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Smoke-contract check for notebook-facing public API.",
+    )
+    parser.add_argument(
+        "--transition-banner",
+        action="store_true",
+        default=False,
+        help="Check that all listed notebooks have the v0.4.0 transition banner.",
+    )
+    args = parser.parse_args()
+
+    if args.transition_banner:
+        ok = check_transition_banner()
+        print()
+        if ok:
+            print(f"{PASS} All transition-banner checks passed.")
+            sys.exit(0)
+        else:
+            print(f"{FAIL} One or more transition-banner checks FAILED.")
+            sys.exit(1)
+
     passed: list[bool] = []
 
     passed.append(check_notebooks_exist())
@@ -269,6 +312,39 @@ def main() -> None:
     else:
         print(f"{FAIL} One or more notebook contract checks FAILED.")
         sys.exit(1)
+
+
+def check_transition_banner() -> bool:
+    """Verify every notebook in TRANSITION_BANNER_NOTEBOOKS has the v0.4.0 banner."""
+    print("Transition banner check:")
+    all_ok = True
+    for name in TRANSITION_BANNER_NOTEBOOKS:
+        path = NOTEBOOKS_DIR / name
+        if not path.is_file():
+            all_ok = _check(f"{name}: notebook missing", False) and all_ok
+            continue
+        try:
+            nb = json.loads(path.read_bytes())
+        except (OSError, json.JSONDecodeError) as exc:
+            all_ok = _check(f"{name}: could not parse notebook: {exc}", False) and all_ok
+            continue
+        cells = nb.get("cells", [])
+        if not cells:
+            all_ok = _check(f"{name}: no cells found", False) and all_ok
+            continue
+        first_source = "".join(cells[0].get("source", []))
+        has_v040 = "v0.4.0" in first_source
+        has_examples_repo = "forecastability-examples" in first_source
+        ok = has_v040 and has_examples_repo
+        all_ok = (
+            _check(
+                f"{name}: banner present"
+                f" (v0.4.0={has_v040}, forecastability-examples={has_examples_repo})",
+                ok,
+            )
+            and all_ok
+        )
+    return all_ok
 
 
 if __name__ == "__main__":

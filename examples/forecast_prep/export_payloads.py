@@ -7,7 +7,7 @@ Demonstrates all three serialisation helpers for a ForecastPrepContract:
     3. CSV lag table via ``forecast_prep_contract_to_lag_table``
 
 All three outputs are written under ``outputs/examples/forecast_prep/``.
-No forecasting framework is imported. Only stdlib, plus ``forecastability``.
+No downstream library is imported. Only stdlib, plus ``forecastability``.
 """
 
 from __future__ import annotations

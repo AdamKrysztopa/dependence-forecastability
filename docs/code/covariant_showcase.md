@@ -130,7 +130,7 @@ With `--agent`, `run_covariant_interpretation_agent` is invoked:
 
 > [!IMPORTANT]
 > The agent is **experimental**.  It narrates the deterministic findings; it does
-> not compute or validate any science.  See [wording_policy.md](../wording_policy.md).
+> not compute or validate any science.  See [wording_policy.md](../maintenance/wording_policy.md).
 
 ### Step 5 — Write artifacts
 

@@ -45,6 +45,9 @@ jobs:
       - name: Lint with ruff
         run: uv run ruff check .
 
+      - name: Lint markdown with markdownlint-cli2
+        run: npx --yes markdownlint-cli2 "docs/**/*.md" README.md CHANGELOG.md llms.txt
+
       - name: Type check with ty
         run: uv run ty check
 
@@ -63,3 +66,61 @@ jobs:
             outputs/json/
             outputs/tables/
           if-no-files-found: ignore
+
+  docs-contract:
+    name: Docs contract checks
+    runs-on: ubuntu-latest
+    needs: []
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Sync development dependencies
+        run: uv sync --dev --all-extras
+
+      - name: Import contract check
+        run: uv run python scripts/check_docs_contract.py --import-contract
+
+      - name: Version coherence check
+        run: uv run python scripts/check_docs_contract.py --version-coherence
+
+      - name: Terminology check
+        run: uv run python scripts/check_docs_contract.py --terminology
+
+      - name: Plan lifecycle check
+        run: uv run python scripts/check_docs_contract.py --plan-lifecycle
+
+      - name: No-framework-imports check
+        run: uv run python scripts/check_docs_contract.py --no-framework-imports
+
+      - name: Root-path-pinned check
+        run: uv run python scripts/check_docs_contract.py --root-path-pinned
+
+      - name: Version-consistent check
+        run: uv run python scripts/check_docs_contract.py --version-consistent
+
+  docs-links:
+    name: Link check (lychee offline)
+    runs-on: ubuntu-latest
+    needs: []
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Link check
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --offline --config lychee.toml "docs/**/*.md" README.md CHANGELOG.md llms.txt
+          fail: true

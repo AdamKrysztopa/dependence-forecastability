@@ -1,0 +1,11 @@
+{
+  "config": ".markdownlint.jsonc",
+  "ignores": [
+    "docs/archive/**",
+    "docs/plan/**",
+    "docs/code/**",
+    "docs/releases/**",
+    "docs/theory/**",
+    "docs/maintenance/llm_visibility_eval.md"
+  ]
+}

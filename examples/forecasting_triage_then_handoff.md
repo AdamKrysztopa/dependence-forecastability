@@ -4,4 +4,4 @@ If the result is blocked or weak, do data and readiness cleanup first and prefer
 
 If the result is structured, use the detected lags, seasonality clues, and covariate signal to configure downstream forecasting tools.
 
-This package is the triage layer before hand-off, not the model-training framework itself.
+This package is the triage layer before hand-off, not a model-fitting library.

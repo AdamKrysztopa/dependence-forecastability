@@ -16,7 +16,7 @@ and minimum audit evidence for deterministic triage runs.
 - Orchestration and checkpoint behavior: [src/forecastability/triage/run_triage.py](../src/forecastability/triage/run_triage.py)
 - Checkpoint adapter persistence: [src/forecastability/adapters/checkpoint.py](../src/forecastability/adapters/checkpoint.py)
 - HTTP + SSE transport contract: [api_contract.md](api_contract.md)
-- Architecture semantics (AGT-023, AGT-024): [architecture.md](architecture.md)
+- Architecture semantics (AGT-023, AGT-024): [../explanation/architecture.md](../explanation/architecture.md)
 
 ## Standard event payload fields
 
@@ -229,7 +229,7 @@ Record in the audit artifact:
 ## Cross-references
 
 - SSE request/response details: [api_contract.md](api_contract.md)
-- Replay semantics rationale: [architecture.md](architecture.md)
+- Replay semantics rationale: [../explanation/architecture.md](../explanation/architecture.md)
 - Stability policy for adapters: [versioning.md](versioning.md)
 - Production boundaries and non-goals: [production_readiness.md](production_readiness.md)
 

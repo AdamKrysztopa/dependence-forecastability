@@ -237,6 +237,6 @@ With diagnostics enabled, the full agent-ready payload extends the base output:
 See also:
 
 - [production_readiness.md](production_readiness.md)
-- [quickstart.md](quickstart.md)
+- [../quickstart.md](../quickstart.md)
 - [observability.md](observability.md)
 - [versioning.md](versioning.md)

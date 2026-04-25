@@ -77,5 +77,5 @@ The package is layered and subpackage-heavy. The stable import facade is small, 
 ## Contributor Guidance
 
 - Use [../public_api.md](../public_api.md) when deciding whether a symbol is part of the supported import contract.
-- Use [../architecture.md](../architecture.md) when deciding where new logic should live.
+- Use [../explanation/architecture.md](../explanation/architecture.md) when deciding where new logic should live.
 - Use [../maintenance/developer_guide.md](../maintenance/developer_guide.md) for the repo workflow around scripts, notebooks, configs, outputs, and docs.

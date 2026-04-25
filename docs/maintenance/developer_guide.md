@@ -94,8 +94,8 @@ Checked-in artifacts are useful reference outputs, but maintainers should avoid 
 - Use the live repository as the source of truth.
 - Add a Diataxis comment at the top of new or substantially rewritten docs.
 - Prefer archiving stale or duplicate docs over leaving them active and misleading.
-- Update [../../README.md](../../README.md), [../public_api.md](../public_api.md), [../code/module_map.md](../code/module_map.md), and [../versioning.md](../versioning.md) together when public surfaces move.
-- Update [../api_contract.md](../api_contract.md) whenever CLI or API entry points, request shapes, or event semantics change.
+- Update [../../README.md](../../README.md), [../public_api.md](../public_api.md), [../code/module_map.md](../code/module_map.md), and [../reference/versioning.md](../reference/versioning.md) together when public surfaces move.
+- Update [../reference/api_contract.md](../reference/api_contract.md) whenever CLI or API entry points, request shapes, or event semantics change.
 - Update [../notebooks/README.md](../notebooks/README.md) whenever the onboarding notebook path changes.
 
 ## 8. Statistical Guardrails For Documentation
@@ -107,7 +107,7 @@ Checked-in artifacts are useful reference outputs, but maintainers should avoid 
 - Restrict train-window-only wording to rolling-origin workflows.
 - Treat `directness_ratio` and Pattern A to E as project interpretation heuristics, not paper-native theory.
 
-Use [../wording_policy.md](../wording_policy.md) when release-facing wording is involved.
+Use [wording_policy.md](wording_policy.md) when release-facing wording is involved.
 
 ## 9. Keeping Machine-Guidance Surfaces Fresh
 
