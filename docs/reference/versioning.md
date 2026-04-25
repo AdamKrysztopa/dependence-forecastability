@@ -24,7 +24,7 @@ Different files answer different questions.
 | --- | --- |
 | [../pyproject.toml](../pyproject.toml) | Package metadata for built artifacts |
 | [../src/forecastability/__init__.py](../src/forecastability/__init__.py) | In-repo package version string and stable re-export surface |
-| [../CHANGELOG.md](../CHANGELOG.md) | Shipped release history and migration notes |
+| [../../CHANGELOG.md](../../CHANGELOG.md) | Shipped release history and migration notes |
 | [releases/](releases/) | Version-specific release notes when present |
 | [plan/](plan/) | In-flight planning only; not a statement about what is already shipped |
 
@@ -68,7 +68,7 @@ Different files answer different questions.
 
 ## Migration Note Requirements
 
-Every release entry in [../CHANGELOG.md](../CHANGELOG.md) must include either migration notes or an explicit statement that no migration is required.
+Every release entry in [../../CHANGELOG.md](../../CHANGELOG.md) must include either migration notes or an explicit statement that no migration is required.
 
 Migration notes should state:
 
