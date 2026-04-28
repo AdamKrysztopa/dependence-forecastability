@@ -6,6 +6,10 @@ from forecastability.adapters.csv import (
     run_ami_geometry_csv_batch,
 )
 from forecastability.diagnostics.gcmi import compute_gcmi
+from forecastability.extensions import (
+    TargetBaselineCurves,
+    compute_target_baseline_by_horizon,
+)
 from forecastability.metrics.scorers import (
     DependenceScorer,
     ScorerInfo,
@@ -198,6 +202,7 @@ __all__ = [
     "GcmiResult",
     "gcmi_scorer",
     "compute_gcmi",
+    "compute_target_baseline_by_horizon",
     "generate_ar1",
     "generate_ar1_archetype",
     "generate_ar1_monotonic",
@@ -265,6 +270,7 @@ __all__ = [
     "SeriesEvaluationResult",
     "SpectralPredictabilityResult",
     "TensorRoleLabel",
+    "TargetBaselineCurves",
     "TransferEntropyResult",
     "TriageRequest",
     "TriageResult",

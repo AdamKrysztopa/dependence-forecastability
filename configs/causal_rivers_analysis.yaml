@@ -1,0 +1,35 @@
+# Deterministic causal-rivers analysis configuration
+
+data:
+  raw_dir: "data/raw/causal_rivers/product"
+  ts_file: "rivers_ts_east_germany.csv"
+  graph_file: "rivers_east_germany.p"
+  meta_file: "rivers_meta_east_germany.csv"
+  resample_freq: "6h"
+
+station_selection:
+  target_id: 978
+  positive_upstream:
+    - 979
+    - 1095
+    - 313
+    - 758
+    - 490
+  negative_control:
+    - 67
+    - 71
+    - 99
+
+rolling_origin:
+  n_origins: 8
+  horizons: [1, 2, 3, 4, 6, 8, 12]
+
+metric:
+  n_neighbors: 8
+  random_state: 42
+  n_surrogates: 99
+  min_pairs_raw: 30
+  min_pairs_partial: 50
+
+analysis_scope: "both"
+project_extension: true

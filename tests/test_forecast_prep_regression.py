@@ -34,9 +34,7 @@ class TestForecastPrepRegressionFixturesPresent:
             if not expected_path.exists():
                 pytest.skip(f"Expected fixture missing: {case_name}")
             payload = json.loads(expected_path.read_text())
-            assert isinstance(payload, dict), (
-                f"Expected JSON root to be a dict for {case_name}"
-            )
+            assert isinstance(payload, dict), f"Expected JSON root to be a dict for {case_name}"
 
 
 class TestForecastPrepRegressionContractInvariants:

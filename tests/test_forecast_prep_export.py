@@ -213,7 +213,6 @@ def test_no_framework_imports_in_forecast_prep_modules() -> None:
             )
 
 
-
 def test_model_dump_json_round_trip() -> None:
     contract = _rich_contract()
     restored = ForecastPrepContract.model_validate_json(contract.model_dump_json())
