@@ -8,6 +8,7 @@
 **Branch:** `feat/v0.4.0-examples-split`
 **Status:** Draft / Proposed
 **Last reviewed:** 2026-04-28
+**Batch 1a landed:** 2026-04-28 — EX-D01 (sibling repo bootstrap at https://github.com/AdamKrysztopa/forecastability-examples), EX-D02 (zero-notebook decision recorded)
 
 **Driver documents:**
 
@@ -254,8 +255,8 @@ inserted in their correct phase and batch position rather than appended.
 | ID | Feature | Phase | Batch | Description | Status |
 | --- | --- | ---: | --- | --- | --- |
 | **EX-CR-CR-01** | **Land causal-rivers core surface to `chore/0-4-0-repos-split`** | 0 | 0a | Cherry-pick / rebase the framework-agnostic portion of `feat/casual-rivers` (`src/forecastability/extensions.py`, `tests/test_extensions.py`, `scripts/run_causal_rivers_analysis.py`, `configs/causal_rivers_analysis.yaml`, additive re-exports of `TargetBaselineCurves` and `compute_target_baseline_by_horizon` from `forecastability.__init__`, and the `data/raw/causal_rivers/` raw subset) into `main` **before** any sibling notebook references the new symbols. The notebooks themselves are excluded from this cherry-pick — they migrate via EX-NB-05. Adds the rebuild script `scripts/rebuild_causal_rivers_fixtures.py` and a deterministic regression fixture under `docs/fixtures/extensions/`. | Implemented |
-| EX-D01 | Sibling repo naming and bootstrap | 1 | 1a | Decide repo name (`forecastability-examples` recommended), create the repo, add license, README, CI scaffolding | Proposed |
-| EX-D02 | Decide minimum notebook count in core | 1 | 1a | Recorded decision: zero notebooks in core at v0.4.0 | Proposed |
+| EX-D01 | Sibling repo naming and bootstrap | 1 | 1a | Decide repo name (`forecastability-examples` recommended), create the repo, add license, README, CI scaffolding | Implemented |
+| EX-D02 | Decide minimum notebook count in core | 1 | 1a | Recorded decision: zero notebooks in core at v0.4.0 | Implemented |
 | **EX-CPL-02** | **Shared planning surface** | 1 | 1b | GitHub Project board spanning both repos with a `v0.4.0` milestone; new top-level `RELEASES.md` index in core listing sibling release tags alongside core release tags. Fallback when the EX-CPL-01 automated gate is unavailable. | Proposed |
 | **EX-LOCAL-01** | **Local two-repo dev workflow** | 1 | 1b | Parent workspace folder layout, `forecastability.code-workspace` multi-root file, `scripts/bootstrap_local_workspace.sh` (clones sibling alongside core and wires the editable install), conditional `[tool.uv.sources]` override in sibling `pyproject.toml` keyed on `FORECASTABILITY_LOCAL_DEV=1`, contributor `docs/development/local_workspace.md` page covering the dual-commit / dual-push loop, and a pre-commit hook in core that warns when changes are staged simultaneously across both repos to prevent accidental cross-repo commits. | Proposed |
 | EX-MIG-01 | Notebook migration with history | 2 | 2a | Use `git filter-repo` or `git subtree split` to migrate `notebooks/` and `outputs/notebook_runs/` to the sibling repo with history preserved | Proposed |
