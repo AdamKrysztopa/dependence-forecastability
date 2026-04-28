@@ -15,6 +15,13 @@ repos:
 
   - repo: local
     hooks:
+      - id: forbid-cross-repo-staging
+        name: forbid cross-repo staging
+        language: python
+        entry: python scripts/_forbid_cross_repo_staging.py
+        pass_filenames: false
+        always_run: true
+
       - id: ty-check
         name: ty type check
         language: system
