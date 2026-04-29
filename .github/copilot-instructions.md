@@ -13,6 +13,7 @@ CLI, API, notebooks, MCP, and agents are optional access or narration layers aro
 - `README.md`
 - `docs/quickstart.md`
 - `docs/public_api.md`
+- `docs/recipes/forecast_prep_to_external_frameworks.md`
 - `examples/minimal_python.py`
 - `examples/minimal_covariant.py`
 - `docs/examples_index.md`

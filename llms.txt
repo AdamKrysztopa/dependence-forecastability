@@ -13,9 +13,10 @@ Start here in this order:
 1. README.md
 2. docs/quickstart.md
 3. docs/public_api.md
-4. examples/minimal_python.py
-5. examples/minimal_covariant.py
-6. docs/examples_index.md
+4. docs/recipes/forecast_prep_to_external_frameworks.md
+5. examples/minimal_python.py
+6. examples/minimal_covariant.py
+7. docs/examples_index.md
 
 Key invariants and surfaces:
 
