@@ -17,7 +17,7 @@ should come before model selection:
 > **Does this time series contain exploitable structure, and what should a
 > forecasting model be allowed to use?**
 
-It is **not another forecasting framework**.  
+It is **not another forecasting library**.  
 It is a deterministic pre-modeling layer that helps you inspect readiness,
 informative horizons, target lags, seasonality structure, covariate usefulness,
 leakage risk, and model-family direction before you spend time on Darts,
@@ -156,7 +156,7 @@ Minimal runnable files:
 
 ## What this is not
 
-This package does **not** replace forecasting frameworks.
+This package does **not** replace downstream forecasting libraries.
 
 It does not try to be:
 
@@ -169,7 +169,7 @@ It does not try to be:
 - statsmodels
 - a full AutoML system
 - a causal-discovery guarantee
-- a model-training framework
+- a model-training library
 
 Instead, it sits one step earlier:
 
@@ -405,7 +405,7 @@ Relevant docs:
 ## Downstream framework hand-off
 
 The core package intentionally does **not** import Darts, MLForecast,
-StatsForecast, Nixtla, or similar forecasting frameworks.
+StatsForecast, Nixtla, or similar downstream libraries.
 
 Instead, the recommended workflow is:
 
