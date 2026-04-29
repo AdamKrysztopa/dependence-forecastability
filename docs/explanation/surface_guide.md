@@ -49,7 +49,7 @@ These are the repo-following workflows that contributors and maintainers should 
 | Benchmark panel workflow | `scripts/run_benchmark_panel.py` | Runs the benchmark panel and writes summary artifacts |
 | Report-building workflow | `scripts/build_report_artifacts.py` | Builds report-facing artifacts from generated outputs |
 | Exogenous workflow | `scripts/run_exog_analysis.py` | Runs exogenous screening and related artifacts |
-| Notebook learning path | `docs/notebooks/README.md`, `notebooks/walkthroughs/00_air_passengers_showcase.ipynb`, and `notebooks/walkthroughs/01_covariant_informative_showcase.ipynb` | First-stop walkthrough plus the covariant benchmark walkthrough before deeper notebooks |
+| Notebook learning path | [`forecastability-examples`](https://github.com/AdamKrysztopa/forecastability-examples) — start with `walkthroughs/00_air_passengers_showcase.ipynb` or `walkthroughs/01_covariant_informative_showcase.ipynb` | First-stop walkthrough plus the covariant benchmark walkthrough before deeper notebooks |
 
 > [!NOTE]
 > Checked-in files under `outputs/json/`, `outputs/tables/`, and `outputs/reports/` are reference artifacts. They are useful examples of the artifact surface, but they are not guaranteed to be freshly regenerated for every commit.
@@ -101,7 +101,14 @@ These files bias coding assistants and LLM consumers toward triage-first behavio
 Most users only need three things in order:
 
 1. The package facade in [../public_api.md](../public_api.md).
-2. The notebook path in [../notebooks/README.md](../notebooks/README.md).
+2. The notebook path in the [forecastability-examples](https://github.com/AdamKrysztopa/forecastability-examples) sibling repository — see [docs/examples_index.md](../examples_index.md) for the full index.
 3. The maintainer scripts documented in [../maintenance/developer_guide.md](../maintenance/developer_guide.md) when they need repo workflows.
 
 The internal packages, the MCP surface, and the agent layer are useful only after the deterministic workflow is already understood.
+
+---
+
+Tutorials, walkthroughs, and integration notebooks live in the
+[forecastability-examples](https://github.com/AdamKrysztopa/forecastability-examples)
+sibling repository. See [docs/examples_index.md](../examples_index.md) for the
+full notebook inventory with per-notebook source links.

@@ -229,3 +229,18 @@ sf = StatsForecast(models=models, freq=freq)
   executed by core CI and are not part of the package test suite. They are
   provided to illustrate the translation pattern, not to guarantee that any
   particular framework version is compatible.
+
+---
+
+## Executable notebooks (sibling repo)
+
+End-to-end executable versions of these recipes ship in the
+[`forecastability-examples`](https://github.com/AdamKrysztopa/forecastability-examples)
+sibling repository from v0.4.0:
+
+| Notebook | What it covers |
+| --- | --- |
+| [`walkthroughs/05_forecast_prep_to_models.ipynb`](https://github.com/AdamKrysztopa/forecastability-examples/blob/main/walkthroughs/05_forecast_prep_to_models.ipynb) | Triage → `build_forecast_prep_contract` → Darts `LightGBMModel`, MLForecast `LGBMRegressor`, and sklearn `Ridge` baseline; comparison table on a 12-month tail |
+| [`recipes/contract_roundtrip.ipynb`](https://github.com/AdamKrysztopa/forecastability-examples/blob/main/recipes/contract_roundtrip.ipynb) | `ForecastPrepContract.model_dump_json()` → disk → `model_validate_json()` → revalidate without re-importing `forecastability` |
+
+See [`docs/examples_index.md`](../examples_index.md) for the full sibling-repo notebook index.
