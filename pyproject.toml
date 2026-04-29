@@ -99,7 +99,6 @@ packages = ["src/forecastability"]
 
 [tool.hatch.build.targets.sdist]
 exclude = [
-  "notebooks/",
   ".codex/",
   ".vscode/",
   "docs/archive/",
@@ -113,7 +112,6 @@ exclude = [
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-exclude = ["notebooks/"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
@@ -123,7 +121,6 @@ quote-style = "double"
 indent-style = "space"
 
 [tool.ty.src]
-exclude = ["notebooks/"]
 
 [tool.ty.environment]
 extra-paths = ["scripts"]

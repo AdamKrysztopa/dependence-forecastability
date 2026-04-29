@@ -13,6 +13,7 @@
 **Batch 2a landed:** 2026-04-28 — EX-MIG-01 (15 notebooks migrated with `git filter-repo`, history preserved), EX-MIG-02 (nbconvert CI in `notebooks.yml` + `release.yml`), EX-MIG-03 (darts, mlforecast, statsforecast, causal/tigramite, agent/pydantic-ai pinned in sibling `pyproject.toml`), EX-NB-LOCK-01 (`uv.lock` committed, CI uses `--frozen`), EX-NB-MATRIX-01 (python × source two-axis matrix in CI), EX-NB-EXEC-01 (cleared outputs committed; executed notebooks uploaded as CI artifacts), EX-NB-DATA-01 (sibling `data/` populated with vendored CSVs and regression fixtures; `data/README.md` origin table)
 **Batch 3a landed:** 2026-04-29 — EX-CR-01 (`notebooks/` removed from core repo), EX-CR-02 (`outputs/notebook_runs/` removed), EX-CR-03 (notebook refs scrubbed from `README.md`, `docs/quickstart.md`, `docs/notebooks/`, `llms.txt`, `AGENTS.md`, `.github/copilot-instructions.md`), EX-CR-04 (`scripts/check_notebook_contract.py` and two notebook contract test files removed; transition-banner sub-check retired)
 **Batch 3b landed:** 2026-04-29 — EX-CR-05 (redirect stubs already absent — deleted in the v0.3.5 squash merge `c1890f1`; no inbound links remain; gate satisfied)
+**Batch 3c landed:** 2026-04-29 — EX-CI-01 (no notebook steps existed in any workflow; docs-contract five sub-checks intact), EX-PKG-01 (`notebooks/` removed from sdist exclude and stale ruff/ty excludes; `uv build` verified — zero `.ipynb` files in sdist and wheel)
 
 **Driver documents:**
 
@@ -280,8 +281,8 @@ inserted in their correct phase and batch position rather than appended.
 | EX-CR-03 | Remove notebook references from docs | 3 | 3a | Drop notebook callouts from `README.md`, `docs/quickstart.md`, `docs/notebooks/`, `llms.txt`, `AGENTS.md`, `.github/copilot-instructions.md` | Implemented |
 | EX-CR-04 | Remove `scripts/check_notebook_contract.py` | 3 | 3a | Delete the script and any tests referencing it | Implemented |
 | **EX-CR-05** | **Delete v0.3.5 redirect stubs** | 3 | 3b | Remove the 14 redirect stubs created by V3_5-DOC-RE-04..07. Gated on "no inbound link from any tracked surface remains" (lychee green after stub deletion). Enumerated stub paths: `docs/golden_path.md`, `docs/use_cases_industrial.md`, `docs/architecture.md`, `docs/surface_guide.md`, `docs/results_summary.md`, `docs/limitations.md`, `docs/api_contract.md`, `docs/agent_layer.md`, `docs/observability.md`, `docs/production_readiness.md`, `docs/diagnostics_matrix.md`, `docs/forecast_prep_contract.md`, `docs/implementation_status.md`, `docs/versioning.md`, `docs/wording_policy.md`. | Implemented |
-| EX-CI-01 | Remove notebook CI plumbing | 3 | 3c | Drop notebook steps/jobs from `.github/workflows/{ci,smoke}.yml`; verify green | Proposed |
-| EX-PKG-01 | Update packaging metadata | 3 | 3c | Update `pyproject.toml` sdist/wheel include lists to drop `notebooks/`; verify with `uv build` | Proposed |
+| EX-CI-01 | Remove notebook CI plumbing | 3 | 3c | Drop notebook steps/jobs from `.github/workflows/{ci,smoke}.yml`; verify green | Implemented |
+| EX-PKG-01 | Update packaging metadata | 3 | 3c | Update `pyproject.toml` sdist/wheel include lists to drop `notebooks/`; verify with `uv build` | Implemented |
 | EX-D03 | Forwarding section in README and `docs/examples_index.md` | 4 | 4a | New section in README; new index page listing every migrated notebook with destination URL | Proposed |
 | EX-D04 | Update llms.txt and start-here anchors | 4 | 4a | Drop notebook anchor; add recipes/examples-index anchor | Proposed |
 | EX-D06 | Update `.github/copilot-instructions.md` and `AGENTS.md` "Start Here" lists | 4 | 4a | Replace `notebooks/walkthroughs/...` anchor with `docs/recipes/` and `docs/examples_index.md` | Proposed |
