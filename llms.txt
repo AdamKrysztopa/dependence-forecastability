@@ -15,11 +15,12 @@ Start here in this order:
 3. docs/public_api.md
 4. examples/minimal_python.py
 5. examples/minimal_covariant.py
-6. notebooks/walkthroughs/00_air_passengers_showcase.ipynb
+6. docs/examples_index.md
 
 Key invariants and surfaces:
 
 - Keep AMI and pAMI horizon-specific; do not pre-aggregate before triage.
 - In rolling-origin evaluation, compute diagnostics on train windows only.
 - Surrogate significance is optional, requires feasible sample size, and needs at least 99 surrogates.
-- CLI, API, notebooks, MCP, and agents are optional access or narration layers around the same deterministic outputs.
+- CLI, API, scripts, MCP, and agents are optional access or narration layers around the same deterministic outputs.
+- Notebooks and walkthroughs live in the `forecastability-examples` sibling repository.

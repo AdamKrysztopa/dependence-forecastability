@@ -15,7 +15,7 @@ CLI, API, notebooks, MCP, and agents are optional access or narration layers aro
 - `docs/public_api.md`
 - `examples/minimal_python.py`
 - `examples/minimal_covariant.py`
-- `notebooks/walkthroughs/00_air_passengers_showcase.ipynb`
+- `docs/examples_index.md`
 
 ## Repository Rules
 
@@ -31,5 +31,5 @@ See [docs/plan/aux_documents/developer_instruction_repo_scope.md](../docs/plan/a
 - The core package is **framework-agnostic**. Do not add `darts`, `mlforecast`, `statsforecast`, or `nixtla` as runtime, optional-extra, dev, or CI dependencies of the core repository.
 - The forecast-prep contract (`ForecastPrepContract`) is a **hand-off boundary**. Stop at the contract; do not add `to_<framework>_spec()` or `fit_<framework>()` helpers as supported public API.
 - Framework usage examples belong in `docs/recipes/**` as illustrative snippets, never executed by core CI, and (from v0.4.0) in the sibling `forecastability-examples` repository.
-- Notebooks are a **transitional** surface. Do not add new notebooks to this repo. Prefer scripts in `scripts/`, examples in `examples/`, and pages in `docs/recipes/`. The `notebooks/` directory is removed in v0.4.0.
+- Notebooks live in the `forecastability-examples` sibling repository. Do not add notebooks to this repo. Prefer scripts in `scripts/`, examples in `examples/`, and pages in `docs/recipes/`.
 - Reusable analysis logic belongs in package code (`src/forecastability/`), not in notebooks or scripts.

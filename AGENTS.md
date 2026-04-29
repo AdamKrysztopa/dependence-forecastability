@@ -15,7 +15,7 @@ Treat downstream forecasting frameworks as hand-off targets after triage, not as
 3. `docs/public_api.md`
 4. `examples/minimal_python.py`
 5. `examples/minimal_covariant.py`
-6. `notebooks/walkthroughs/00_air_passengers_showcase.ipynb`
+6. `docs/examples_index.md`
 
 ## Forecasting-Task Routing Rules
 
@@ -34,7 +34,7 @@ Treat downstream forecasting frameworks as hand-off targets after triage, not as
 
 - Public result surfaces: keep stable Pydantic fields additive.
 - Docs and examples: do not imply that this package performs model training.
-- Notebooks: keep them illustrative; reusable logic belongs in package code. Do not add new notebooks (transitional surface; removed in v0.4.0 per [v0.4.0 plan](docs/plan/v0_4_0_examples_repo_split_ultimate_plan.md)).
+- Notebooks: notebooks have moved to the `forecastability-examples` sibling repository. Do not add notebooks to this repo.
 - Example scripts: keep them small and runnable.
 
 ## Repository Scope (binding)
@@ -44,7 +44,7 @@ See [docs/plan/aux_documents/developer_instruction_repo_scope.md](docs/plan/aux_
 - The core package is **framework-agnostic**. Do not introduce `darts`, `mlforecast`, `statsforecast`, or `nixtla` as runtime, optional-extra, dev, or CI dependencies of the core repository.
 - The forecast-prep contract (`ForecastPrepContract`) is a **hand-off boundary**. No `to_<framework>_spec()` / `fit_<framework>()` helpers ship as supported public API; framework mappings live as illustrative recipes only.
 - Framework usage examples belong in `docs/recipes/**` (text only) and (from v0.4.0) in the sibling `forecastability-examples` repository, not in the core package or its `examples/` / `scripts/` / `tests/`.
-- Prefer scripts and docs recipes over notebooks for any new content.
+- Prefer scripts and docs recipes. New notebooks and walkthroughs belong in the `forecastability-examples` sibling repository.
 
 ## Validation Commands
 
@@ -61,4 +61,4 @@ See [docs/plan/aux_documents/developer_instruction_repo_scope.md](docs/plan/aux_
 - Describing the package as a model zoo or a replacement for downstream forecasting libraries.
 - Breaking additive compatibility for stable Pydantic result fields.
 - Introducing user-facing examples that depend on internal namespaces without an explicit contributor need.
-- Moving reusable analysis logic into notebooks instead of package code.
+- Moving reusable analysis logic into notebooks or scripts instead of package code.

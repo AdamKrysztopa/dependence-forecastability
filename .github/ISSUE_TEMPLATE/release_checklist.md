@@ -28,7 +28,6 @@ assignees: ""
 - [ ] Fingerprint showcase runs clean: `MPLBACKEND=Agg uv run scripts/run_showcase_fingerprint.py --smoke`
 - [ ] Lagged-exogenous triage showcase runs clean: `MPLBACKEND=Agg uv run scripts/run_showcase_lagged_exogenous.py --smoke`
 - [ ] Routing validation report generated and reviewed at `outputs/reports/routing_validation/report.md`
-- [ ] Notebook contract validated: `uv run python scripts/check_notebook_contract.py`
 - [ ] Forecast prep contract showcase runs clean: `MPLBACKEND=Agg uv run scripts/run_showcase_forecast_prep.py --smoke --quiet`
 - [ ] Recipes page is present: check `docs/recipes/forecast_prep_to_external_frameworks.md` exists
 - [ ] No framework runtime imports in core: `grep -r "import darts\|import mlforecast\|import statsforecast\|import nixtla" src/forecastability/ | grep -v ".pyc"` returns empty

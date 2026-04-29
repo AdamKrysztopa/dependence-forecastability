@@ -50,7 +50,6 @@ Use [../code/module_map.md](../code/module_map.md) when you need the detailed ma
 Secondary maintenance utilities:
 
 - `scripts/download_data.py`
-- `scripts/check_notebook_contract.py`
 - `scripts/rebuild_benchmark_fixture_artifacts.py`
 - `scripts/rebuild_diagnostic_regression_fixtures.py`
 
@@ -67,19 +66,7 @@ Secondary maintenance utilities:
 
 Do not document a config as a primary entry point unless it is actually wired into the current maintainer workflow.
 
-## 5. Keep The Notebook Path Clean
-
-The maintained notebook path is:
-
-1. `docs/notebooks/README.md`
-2. `notebooks/walkthroughs/00_air_passengers_showcase.ipynb`
-3. `notebooks/walkthroughs/01_covariant_informative_showcase.ipynb`
-4. Remaining walkthrough notebooks
-5. Deep-dive notebooks `notebooks/triage/01` to `06`
-
-Legacy narrative pages that duplicate live notebooks should be archived, not kept in the primary docs path.
-
-## 6. Treat Artifacts As Reference Surfaces
+## 5. Treat Artifacts As Reference Surfaces
 
 The main artifact surfaces are:
 
@@ -89,16 +76,16 @@ The main artifact surfaces are:
 
 Checked-in artifacts are useful reference outputs, but maintainers should avoid implying that every checked-in file is freshly regenerated.
 
-## 7. Documentation Maintenance Rules
+## 6. Documentation Maintenance Rules
 
 - Use the live repository as the source of truth.
 - Add a Diataxis comment at the top of new or substantially rewritten docs.
 - Prefer archiving stale or duplicate docs over leaving them active and misleading.
 - Update [../../README.md](../../README.md), [../public_api.md](../public_api.md), [../code/module_map.md](../code/module_map.md), and [../reference/versioning.md](../reference/versioning.md) together when public surfaces move.
 - Update [../reference/api_contract.md](../reference/api_contract.md) whenever CLI or API entry points, request shapes, or event semantics change.
-- Update [../notebooks/README.md](../notebooks/README.md) whenever the onboarding notebook path changes.
+- Notebooks and walkthroughs live in the `forecastability-examples` sibling repository. Update `docs/examples_index.md` when new notebooks are added there.
 
-## 8. Statistical Guardrails For Documentation
+## 7. Statistical Guardrails For Documentation
 
 - Describe AMI as per-horizon.
 - Describe pAMI as a linear-residual project extension rather than exact conditional mutual information.
@@ -109,7 +96,7 @@ Checked-in artifacts are useful reference outputs, but maintainers should avoid 
 
 Use [wording_policy.md](wording_policy.md) when release-facing wording is involved.
 
-## 9. Keeping Machine-Guidance Surfaces Fresh
+## 8. Keeping Machine-Guidance Surfaces Fresh
 
 The machine-guidance layer consists of the following instruction surfaces:
 
