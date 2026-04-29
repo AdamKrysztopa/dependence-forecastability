@@ -203,6 +203,7 @@ When a PR in the core repo has a paired PR in the sibling repo:
    ```text
    Core PR: AdamKrysztopa/dependence-forecastability#<N>
    ```
+
 3. Both PRs should reference the same
    [v0.4.0 GitHub Project milestone](https://github.com/orgs/AdamKrysztopa/projects)
    so they are tracked together on the shared planning surface (EX-CPL-02).
