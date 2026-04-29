@@ -9,6 +9,18 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-04-29
+
+> **Library-first slim release.** This release migrates all walkthrough and tutorial notebooks
+> out of the core repository and into the companion
+> [`forecastability-examples`](https://github.com/AdamKrysztopa/forecastability-examples)
+> repository. The Python API is unchanged; no public symbol is removed or renamed.
+> Rationale: [docs/plan/aux_documents/developer_instruction_repo_scope.md](docs/plan/aux_documents/developer_instruction_repo_scope.md).
+>
+> The v0.3.4 `ForecastPrepContract` sprint is demonstrated in the sibling repo's launch
+> notebook
+> [`walkthroughs/05_forecast_prep_to_models.ipynb`](https://github.com/AdamKrysztopa/forecastability-examples/blob/main/walkthroughs/05_forecast_prep_to_models.ipynb).
+
 ### Added
 
 - Root `AGENTS.md` for Codex/agent-style coding tools — navigation order, routing rules, editing rules, and validation commands.
@@ -18,11 +30,34 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - `examples/forecasting_triage_first.py` and `examples/forecasting_triage_then_handoff.md` — agent-facing triage-first examples that branch on `blocked` results.
 - `scripts/run_triage_handoff_demo.py` — runnable triage-first demo with downstream hand-off framing.
 - `docs/maintenance/llm_visibility_eval.md` — LLM-visibility evaluation harness with 5 benchmark prompts and pass/fail criteria.
+- `forecastability-examples` sibling repository bootstrapped at <https://github.com/AdamKrysztopa/forecastability-examples> with its own `pyproject.toml`, locked `uv.lock`, two-axis CI matrix (`python ∈ {3.11, 3.12}` × `source ∈ {pinned, unpinned-main}`), and 15 migrated notebooks (git history preserved via `git filter-repo`).
+- `docs/examples_index.md` — index of all migrated notebooks with destination URLs, issues table, and cross-references.
+- `RELEASES.md` — paired release index listing sibling repo release tags alongside core release tags.
+- `docs/development/local_workspace.md` and `scripts/bootstrap_local_workspace.sh` — documented local two-repo developer workflow.
+- `forecastability.extensions` module: `TargetBaselineCurves`, `compute_target_baseline_by_horizon`, and `compute_k_sensitivity` — framework-agnostic causal-rivers analysis surface re-exported from the top-level `forecastability` namespace.
+- `scripts/run_causal_rivers_analysis.py` and `configs/causal_rivers_analysis.yaml` — deterministic causal-rivers forecastability-triage script.
+- `scripts/rebuild_causal_rivers_fixtures.py` — regression-fixture rebuild for the extensions surface.
 
 ### Changed
 
-- README updated to include "Use this before model search" section framing downstream frameworks as post-triage consumers.
-- `pyproject.toml` keywords expanded with forecastability-triage, diagnostics, covariate, and hand-off discovery terms.
+- README updated to include "Use this before model search" section framing downstream frameworks as post-triage consumers; adds "Tutorials, walkthroughs, and integrations" section pointing at the sibling repo.
+- `pyproject.toml` keywords expanded with forecastability-triage, diagnostics, covariate, and hand-off discovery terms; `notebooks/` removed from sdist exclude list.
+- `llms.txt`, `AGENTS.md`, and `.github/copilot-instructions.md` "Start Here" anchors updated: notebook entry removed, `docs/recipes/` and `docs/examples_index.md` added.
+- `docs/reference/implementation_status.md` and `docs/explanation/surface_guide.md` notebook rows updated to sibling-repo links.
+- `docs/recipes/forecast_prep_to_external_frameworks.md` gains forward-link table to sibling repo notebooks EX-NB-01 / EX-NB-02.
+
+### Removed
+
+- `notebooks/` directory — migrated to `forecastability-examples` with git history preserved.
+- `outputs/notebook_runs/` directory — migrated and removed.
+- `scripts/check_notebook_contract.py` and associated notebook-contract test files.
+- Notebook CI plumbing (transition-banner sub-check and notebook-execution steps).
+
+### Notes
+
+- **Migration:** Notebook walkthroughs previously at `notebooks/walkthroughs/` and `notebooks/triage/` are now at <https://github.com/AdamKrysztopa/forecastability-examples>. Install and run them with `uv sync --frozen && uv run jupyter nbconvert --to notebook --execute walkthroughs/*.ipynb`.
+- No runtime API-breaking changes. All v0.3.x public surfaces remain available under the same import paths.
+- pAMI and all F1–F9 diagnostics remain project extensions, not paper-native guarantees.
 
 ## [0.3.6] - 2026-04-25
 

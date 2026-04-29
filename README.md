@@ -84,15 +84,15 @@ Equivalent minimal files:
 
 - Python user: start with [examples/minimal_python.py](examples/minimal_python.py), then [docs/public_api.md](docs/public_api.md).
 - CLI user: run [examples/minimal_cli.sh](examples/minimal_cli.sh), then [docs/quickstart.md](docs/quickstart.md).
-- Notebook user: run [scripts/run_showcase.py](scripts/run_showcase.py) first; the matching notebook [notebooks/walkthroughs/00_air_passengers_showcase.ipynb](notebooks/walkthroughs/00_air_passengers_showcase.ipynb) is a supplementary narration layer.
-- Fingerprint user: run [scripts/run_showcase_fingerprint.py](scripts/run_showcase_fingerprint.py), then optionally explore [notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb](notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb) (supplementary).
-- Lagged-exogenous user: run [scripts/run_showcase_lagged_exogenous.py](scripts/run_showcase_lagged_exogenous.py), then optionally explore [notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb](notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb) (supplementary).
+- Walkthroughs user: see [docs/examples_index.md](docs/examples_index.md) for notebooks in the sibling [`forecastability-examples`](https://github.com/AdamKrysztopa/forecastability-examples) repository.
+- Fingerprint user: run [scripts/run_showcase_fingerprint.py](scripts/run_showcase_fingerprint.py).
+- Lagged-exogenous user: run [scripts/run_showcase_lagged_exogenous.py](scripts/run_showcase_lagged_exogenous.py).
 - Routing-validation user: run `uv run python scripts/run_routing_validation_report.py --smoke --no-real-panel`, then open [outputs/reports/routing_validation/report.md](outputs/reports/routing_validation/report.md).
 - Maintainer/contributor: use [docs/maintenance/developer_guide.md](docs/maintenance/developer_guide.md).
 
 ## Canonical walkthrough
 
-The canonical entry point is [scripts/run_showcase.py](scripts/run_showcase.py). The companion notebook [notebooks/walkthroughs/00_air_passengers_showcase.ipynb](notebooks/walkthroughs/00_air_passengers_showcase.ipynb) provides supplementary narration and moves to the `forecastability-examples` sibling repository in v0.4.0.
+The canonical entry point is [scripts/run_showcase.py](scripts/run_showcase.py). Walkthrough notebooks live in the sibling [`forecastability-examples`](https://github.com/AdamKrysztopa/forecastability-examples) repository; see [docs/examples_index.md](docs/examples_index.md) for the full index.
 
 ## V0.3.1 fingerprint showcase
 
@@ -137,7 +137,6 @@ uv run python scripts/run_ami_information_geometry_csv.py \
 Primary fingerprint surfaces:
 
 - Script: [scripts/run_showcase_fingerprint.py](scripts/run_showcase_fingerprint.py)
-- Notebook (supplementary): [notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb](notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb)
 - Theory: [docs/theory/forecastability_fingerprint.md](docs/theory/forecastability_fingerprint.md)
 - Code reference: [docs/code/fingerprint_showcase.md](docs/code/fingerprint_showcase.md)
 - Agent contract: [docs/reference/agent_layer.md](docs/reference/agent_layer.md)
@@ -181,7 +180,6 @@ for row in bundle.selected_lags:
 Primary lagged-exogenous triage surfaces:
 
 - Script: [scripts/run_showcase_lagged_exogenous.py](scripts/run_showcase_lagged_exogenous.py)
-- Notebook (supplementary): [notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb](notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb)
 - Theory: [docs/theory/lagged_exogenous_triage.md](docs/theory/lagged_exogenous_triage.md)
 
 > [!IMPORTANT]
@@ -190,11 +188,8 @@ Primary lagged-exogenous triage surfaces:
 > value is legitimately available at prediction time (calendar flags, planned
 > promotions, regulator-set prices).
 
-- Notebook (supplementary): [notebooks/walkthroughs/00_air_passengers_showcase.ipynb](notebooks/walkthroughs/00_air_passengers_showcase.ipynb)
-- Notebook (supplementary covariant informative): [notebooks/walkthroughs/01_covariant_informative_showcase.ipynb](notebooks/walkthroughs/01_covariant_informative_showcase.ipynb)
-- Notebook (supplementary fingerprint showcase): [notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb](notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb)
-- Notebook (supplementary lagged-exogenous triage): [notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb](notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb)
 - Quickstart: [docs/quickstart.md](docs/quickstart.md)
+- Walkthroughs: [docs/examples_index.md](docs/examples_index.md) (sibling `forecastability-examples` repository)
 - PyPI: [dependence-forecastability](https://pypi.org/project/dependence-forecastability/)
 - Issues: [GitHub Issues](https://github.com/AdamKrysztopa/dependence-forecastability/issues)
 
@@ -218,7 +213,6 @@ Primary routing-validation surfaces:
 - Public use case: `run_routing_validation()` returning `RoutingValidationBundle`
 - Report artifact: [outputs/reports/routing_validation/report.md](outputs/reports/routing_validation/report.md)
 - Theory: [docs/theory/routing_validation.md](docs/theory/routing_validation.md)
-- Notebook (supplementary): [notebooks/walkthroughs/04_routing_validation_showcase.ipynb](notebooks/walkthroughs/04_routing_validation_showcase.ipynb)
 - Deterministic-first agent example: [examples/univariate/agents/routing_validation_agent_review.py](examples/univariate/agents/routing_validation_agent_review.py)
 
 > [!IMPORTANT]
@@ -289,7 +283,6 @@ Secondary utilities:
 
 - `scripts/download_data.py`
 - `scripts/run_exog_analysis.py`
-- `scripts/check_notebook_contract.py`
 - `scripts/rebuild_benchmark_fixture_artifacts.py`
 - `scripts/rebuild_diagnostic_regression_fixtures.py`
 
@@ -304,11 +297,17 @@ Current config status:
 | `configs/exogenous_screening_workbench.yaml` | Secondary workbench configuration |
 | `configs/robustness_study.yaml` | Secondary robustness-study workflow |
 
-## Notebooks (supplementary, transitional)
+## Tutorials, Walkthroughs, and Integrations
 
-Notebooks are a supplementary narration layer alongside the canonical scripts. They migrate to the `forecastability-examples` sibling repository in v0.4.0 and should not be treated as the primary entry point.
+Notebooks and interactive walkthroughs live in the
+[`forecastability-examples`](https://github.com/AdamKrysztopa/forecastability-examples)
+sibling repository. See [docs/examples_index.md](docs/examples_index.md) for the full
+index with source and executed-output links.
 
-Canonical walkthrough: [notebooks/walkthroughs/00_air_passengers_showcase.ipynb](notebooks/walkthroughs/00_air_passengers_showcase.ipynb) (supplementary to [scripts/run_showcase.py](scripts/run_showcase.py)).
+For issues with notebooks or walkthroughs, file in the
+[`forecastability-examples` issue tracker](https://github.com/AdamKrysztopa/forecastability-examples/issues).
+For issues with the core library API, file in the
+[core repo issue tracker](https://github.com/AdamKrysztopa/dependence-forecastability/issues).
 
 Main checked-in artifact surfaces:
 
@@ -336,7 +335,7 @@ Main checked-in artifact surfaces:
 | Stable imports and runtime entry points | [docs/public_api.md](docs/public_api.md) |
 | Live module layout | [docs/code/module_map.md](docs/code/module_map.md) |
 | HTTP API contract | [docs/reference/api_contract.md](docs/reference/api_contract.md) |
-| Notebook path (supplementary) | [docs/notebooks/README.md](docs/notebooks/README.md) |
+| Walkthroughs and integrations | [docs/examples_index.md](docs/examples_index.md) |
 | Contributor workflow | [docs/maintenance/developer_guide.md](docs/maintenance/developer_guide.md) |
 
 For the repository-wide docs map, see [docs/README.md](docs/README.md).

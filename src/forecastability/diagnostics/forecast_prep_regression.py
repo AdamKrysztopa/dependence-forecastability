@@ -185,9 +185,7 @@ def _compare_value(actual: Any, expected: Any, *, field_path: str) -> list[str]:
             if key not in actual:
                 errors.append(f"{field_path}: missing key '{key}'")
                 continue
-            errors.extend(
-                _compare_value(actual[key], exp_value, field_path=f"{field_path}/{key}")
-            )
+            errors.extend(_compare_value(actual[key], exp_value, field_path=f"{field_path}/{key}"))
         return errors
 
     if isinstance(expected, list) and isinstance(actual, list):

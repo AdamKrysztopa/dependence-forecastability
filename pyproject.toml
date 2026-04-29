@@ -1,6 +1,6 @@
 [project]
 name = "dependence-forecastability"
-version = "0.3.6"
+version = "0.4.0"
 description = "Forecastability triage for time series using AMI, pAMI, and covariate-aware dependence diagnostics before expensive model search."
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -81,14 +81,6 @@ dev = [
   "twine>=5.0",
   "ty==0.0.22",
 ]
-examples = [
-  "jupyter>=1.1.1",
-  "jupyterlab>=4.3.5",
-  "ipykernel>=6.29.5",
-  "nbformat>=5.10.4",
-  "nbconvert>=7.16.4",
-  "ipywidgets>=8.1.5",
-]
 
 [build-system]
 requires = ["hatchling>=1.27.0"]
@@ -99,7 +91,6 @@ packages = ["src/forecastability"]
 
 [tool.hatch.build.targets.sdist]
 exclude = [
-  "notebooks/",
   ".codex/",
   ".vscode/",
   "docs/archive/",
@@ -113,7 +104,6 @@ exclude = [
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-exclude = ["notebooks/"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
@@ -123,7 +113,6 @@ quote-style = "double"
 indent-style = "space"
 
 [tool.ty.src]
-exclude = ["notebooks/"]
 
 [tool.ty.environment]
 extra-paths = ["scripts"]

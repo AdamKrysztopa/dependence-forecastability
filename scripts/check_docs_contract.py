@@ -210,7 +210,7 @@ def check_terminology() -> bool:
 # Check 4 — plan-lifecycle
 # ---------------------------------------------------------------------------
 
-_ACTIVE_PLAN = "docs/plan/v0_4_0_examples_repo_split_ultimate_plan.md"
+_ACTIVE_PLAN = "docs/plan/implemented/v0_4_0_examples_repo_split_ultimate_plan.md"
 
 
 def check_plan_lifecycle() -> bool:

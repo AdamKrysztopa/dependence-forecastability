@@ -87,70 +87,6 @@ Expected output snippet:
 }
 ```
 
-## 5 Minutes: Notebook Exploration
-
-Launch notebook tooling:
-
-```bash
-uv sync --group notebook
-uv run jupyter lab
-```
-
-Open [../notebooks/walkthroughs/00_air_passengers_showcase.ipynb](../notebooks/walkthroughs/00_air_passengers_showcase.ipynb)
-for the story-first showcase notebook.
-
-If you want the covariant walkthrough introduced in v0.3.0, open
-[../notebooks/walkthroughs/01_covariant_informative_showcase.ipynb](../notebooks/walkthroughs/01_covariant_informative_showcase.ipynb)
-for the benchmark that compares CrossAMI, CrosspAMI, GCMI, TE, PCMCI+, and PCMCI-AMI on one synthetic system.
-
-If you want the v0.3.1 fingerprint walkthrough, open
-[../notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb](../notebooks/walkthroughs/02_forecastability_fingerprint_showcase.ipynb)
-for the prepared synthetic archetype panel that demonstrates geometry,
-fingerprint fields, routing, and the strict deterministic agent summary.
-
-If you want the same AR(1) signal used throughout this ladder, open
-[../notebooks/walkthroughs/03_triage_end_to_end.ipynb](../notebooks/walkthroughs/03_triage_end_to_end.ipynb)
-and run a scratch cell:
-
-```python
-from forecastability import generate_ar1
-from forecastability.triage import TriageRequest, run_triage
-
-series = generate_ar1(n_samples=150, phi=0.85, random_state=42)
-result = run_triage(
-    TriageRequest(
-        series=series,
-        goal="univariate",
-        max_lag=20,
-        n_surrogates=99,
-        random_state=42,
-    )
-)
-
-summary = {
-    "blocked": result.blocked,
-    "readiness_status": result.readiness.status.value,
-    "forecastability_class": result.interpretation.forecastability_class,
-    "modeling_regime": result.interpretation.modeling_regime,
-    "primary_lags": list(result.interpretation.primary_lags),
-    "recommendation": result.recommendation,
-}
-summary
-```
-
-Expected output snippet:
-
-```json
-{
-  "blocked": false,
-  "readiness_status": "warning",
-  "forecastability_class": "high",
-  "modeling_regime": "compact_structured_models",
-  "primary_lags": [1, 7],
-  "recommendation": "HIGH -> Complex structured models (deep AR, nonlinear, LSTM)"
-}
-```
-
 ## 10 Minutes: Python API Usage
 
 ```bash
@@ -427,8 +363,6 @@ MPLBACKEND=Agg uv run scripts/run_showcase_lagged_exogenous.py --smoke
 > (contemporaneous-cross_ami, cross-correlation) but are not selected for forecasting tensors
 > without the opt-in.
 
-Walkthrough notebook: [notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb](../notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb)
-
 Theory background: [docs/theory/lagged_exogenous_triage.md](theory/lagged_exogenous_triage.md)
 
 ## 14 Minutes: Routing Validation
@@ -700,5 +634,6 @@ if result.complexity_band:
 All diagnostic fields are `None` when the series is blocked by readiness gates.
 
 > [!TIP]
-> For interactive walkthroughs of each diagnostic family, see the triage
-> extension notebooks in [`notebooks/triage/`](../notebooks/triage/).
+> For interactive walkthroughs of each diagnostic family, see the sibling
+> [`forecastability-examples`](https://github.com/AdamKrysztopa/forecastability-examples)
+> repository (triage walkthrough notebooks).

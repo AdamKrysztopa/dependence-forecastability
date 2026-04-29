@@ -1,11 +1,20 @@
 """Forecastability package implementing AMI and pAMI analysis."""
 
+from __future__ import annotations
+
+from importlib import import_module
+from typing import Any
+
 from forecastability.adapters.csv import (
     CsvGeometryBatchItem,
     CsvGeometryBatchResult,
     run_ami_geometry_csv_batch,
 )
 from forecastability.diagnostics.gcmi import compute_gcmi
+from forecastability.extensions import (
+    TargetBaselineCurves,
+    compute_target_baseline_by_horizon,
+)
 from forecastability.metrics.scorers import (
     DependenceScorer,
     ScorerInfo,
@@ -149,7 +158,118 @@ from forecastability.utils.types import (
 )
 from forecastability.utils.validation import validate_time_series
 
-__version__ = "0.3.6"
+__version__ = "0.4.0"
+
+_NOTEBOOK_COMPAT_EXPORTS: dict[str, tuple[str, str | None]] = {
+    "build_canonical_markdown": ("forecastability.reporting", None),
+    "build_case_summary": ("forecastability.exog_benchmark", None),
+    "build_complexity_band": ("forecastability.services.complexity_band_service", None),
+    "build_expanding_window_splits": ("forecastability.pipeline.rolling_origin", None),
+    "build_fingerprint_showcase_record": ("forecastability.reporting.fingerprint_showcase", None),
+    "build_plain_language_math_summary": ("forecastability.reporting.fingerprint_showcase", None),
+    "build_report_markdown": ("forecastability.exog_benchmark", None),
+    "build_theoretical_limit_diagnostics": (
+        "forecastability.services.theoretical_limit_diagnostics_service",
+        None,
+    ),
+    "build_largest_lyapunov_exponent": ("forecastability.services.lyapunov_service", None),
+    "build_predictive_info_learning_curve": (
+        "forecastability.services.predictive_info_learning_curve_service",
+        None,
+    ),
+    "build_spectral_predictability": (
+        "forecastability.services.spectral_predictability_service",
+        None,
+    ),
+    "causal_parent_frame": ("forecastability.reporting.covariant_walkthrough", None),
+    "CollectingEventEmitter": ("forecastability.adapters.event_emitter", None),
+    "compute_linear_information_curve": (
+        "forecastability.services.linear_information_service",
+        None,
+    ),
+    "conditioning_scope_frame": ("forecastability.reporting.covariant_walkthrough", None),
+    "create_screening_agent": ("forecastability.adapters.llm.screening_agent", None),
+    "create_triage_agent": ("forecastability.adapters.pydantic_ai_agent", None),
+    "driver_role_frame": ("forecastability.reporting.covariant_walkthrough", None),
+    "exog_benchmark": ("forecastability.exog_benchmark", ""),
+    "F1ProfilePayload": ("forecastability.adapters.agents.triage_agent_payload_models", None),
+    "F5LyapunovPayload": ("forecastability.adapters.agents.triage_agent_payload_models", None),
+    "F7BatchRankPayload": ("forecastability.adapters.agents.triage_agent_payload_models", None),
+    "FeatureScreeningReport": ("forecastability.adapters.llm.screening_agent", None),
+    "f1_profile_payload": ("forecastability.adapters.agents.triage_agent_payload_models", None),
+    "f2_limits_payload": ("forecastability.adapters.agents.triage_agent_payload_models", None),
+    "f6_complexity_payload": ("forecastability.adapters.agents.triage_agent_payload_models", None),
+    "f7_batch_rank_payload": ("forecastability.adapters.agents.triage_agent_payload_models", None),
+    "fingerprint_profile_frame": ("forecastability.reporting.fingerprint_showcase", None),
+    "forecast_linear_autoreg": ("forecastability.models", None),
+    "forecast_naive": ("forecastability.models", None),
+    "generate_henon_map": ("forecastability.utils.datasets", None),
+    "generate_simulated_stock_returns": ("forecastability.utils.datasets", None),
+    "generate_sine_wave": ("forecastability.utils.datasets", None),
+    "InfraSettings": ("forecastability.adapters.settings", None),
+    "interpret_canonical_result": ("forecastability.reporting.interpretation", None),
+    "interpret_covariant_bundle": (
+        "forecastability.services.covariant_interpretation_service",
+        None,
+    ),
+    "interpret_payload": (
+        "forecastability.adapters.agents.triage_agent_interpretation_adapter",
+        None,
+    ),
+    "load_air_passengers": ("forecastability.utils.datasets", None),
+    "load_benchmark_slice": ("forecastability.exog_benchmark", None),
+    "PcmciAmiAdapter": ("forecastability.adapters.pcmci_ami_adapter", None),
+    "plot_exog_benchmark_curves": ("forecastability.utils.plots", None),
+    "present_triage_result": ("forecastability.adapters.triage_presenter", None),
+    "pydantic_ai_available": ("forecastability.adapters.llm.screening_agent", None),
+    "routing_table_frame": ("forecastability.reporting.fingerprint_showcase", None),
+    "run_canonical_example": ("forecastability.pipeline", None),
+    "run_backend_comparison": ("forecastability.utils.robustness", None),
+    "run_exogenous_rolling_origin_evaluation": ("forecastability.pipeline", None),
+    "run_sample_size_stress": ("forecastability.utils.robustness", None),
+    "save_canonical_result_json": ("forecastability.reporting", None),
+    "save_causal_parent_heatmap": ("forecastability.reporting.covariant_walkthrough", None),
+    "save_directionality_plot": ("forecastability.reporting.covariant_walkthrough", None),
+    "save_metric_heatmap": ("forecastability.reporting.covariant_walkthrough", None),
+    "save_metric_overview": ("forecastability.reporting.fingerprint_showcase", None),
+    "save_phase0_overview": ("forecastability.reporting.covariant_walkthrough", None),
+    "save_showcase_profile_grid": ("forecastability.reporting.fingerprint_showcase", None),
+    "ScreeningDeps": ("forecastability.adapters.llm.screening_agent", None),
+    "SerialisedTriageSummary": ("forecastability.adapters.agents.triage_summary_serializer", None),
+    "serialise_batch": ("forecastability.adapters.agents.triage_summary_serializer", None),
+    "serialise_batch_to_json": ("forecastability.adapters.agents.triage_summary_serializer", None),
+    "serialise_payload": ("forecastability.adapters.agents.triage_summary_serializer", None),
+    "serialise_to_json": ("forecastability.adapters.agents.triage_summary_serializer", None),
+    "showcase_summary_frame": ("forecastability.reporting.fingerprint_showcase", None),
+    "smape": ("forecastability.models", None),
+    "summarize_canonical_result": ("forecastability.utils.aggregation", None),
+    "summary_table_frame": ("forecastability.reporting.covariant_walkthrough", None),
+    "synthetic_benchmark_role_frame": ("forecastability.reporting.covariant_walkthrough", None),
+    "TriageAgentInterpretation": (
+        "forecastability.adapters.agents.triage_agent_interpretation_adapter",
+        None,
+    ),
+    "TriageAgentPayload": ("forecastability.adapters.agents.triage_agent_payload_models", None),
+    "triage_agent_payload": ("forecastability.adapters.agents.triage_agent_payload_models", None),
+    "TriageDeps": ("forecastability.adapters.pydantic_ai_agent", None),
+    "verify_showcase_records": ("forecastability.reporting.fingerprint_showcase", None),
+    "write_frame_csv": ("forecastability.reporting.covariant_walkthrough", None),
+}
+
+
+def __getattr__(name: str) -> Any:
+    """Resolve migrated notebook compatibility exports lazily."""
+    target = _NOTEBOOK_COMPAT_EXPORTS.get(name)
+    if target is None:
+        raise AttributeError(f"module 'forecastability' has no attribute {name!r}")
+    module_name, attr_name = target
+    module = import_module(module_name)
+    if attr_name == "":
+        value: Any = module
+    else:
+        value = getattr(module, attr_name or name)
+    globals()[name] = value
+    return value
 
 __all__ = [
     "AmiGeometryCurvePoint",
@@ -198,6 +318,7 @@ __all__ = [
     "GcmiResult",
     "gcmi_scorer",
     "compute_gcmi",
+    "compute_target_baseline_by_horizon",
     "generate_ar1",
     "generate_ar1_archetype",
     "generate_ar1_monotonic",
@@ -265,6 +386,7 @@ __all__ = [
     "SeriesEvaluationResult",
     "SpectralPredictabilityResult",
     "TensorRoleLabel",
+    "TargetBaselineCurves",
     "TransferEntropyResult",
     "TriageRequest",
     "TriageResult",

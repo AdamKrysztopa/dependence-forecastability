@@ -183,9 +183,7 @@ def test_covariate_role_requires_explicit_future_known_support() -> None:
             tensor_role="predictive",
         ),
     ]
-    bundle = _bundle_with_rows(
-        selected_rows, known_future_drivers=["future_declared"]
-    )
+    bundle = _bundle_with_rows(selected_rows, known_future_drivers=["future_declared"])
 
     covariate_rows, _ = map_covariate_recommendations(
         lagged_exog_bundle=bundle,

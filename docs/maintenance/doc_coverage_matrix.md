@@ -17,7 +17,7 @@ _Last verified for release 0.2.0 consolidation on 2026-04-14._
 | HTTP API | `src/forecastability/adapters/api.py` | [../reference/api_contract.md](../reference/api_contract.md) | [../../README.md](../../README.md), [../explanation/surface_guide.md](../explanation/surface_guide.md) | Active |
 | Maintainer scripts | `scripts/` | [developer_guide.md](developer_guide.md) | [../../README.md](../../README.md), [../README.md](../README.md) | Active |
 | Config roles | `configs/` | [developer_guide.md](developer_guide.md) | [../../README.md](../../README.md) | Active |
-| Notebook path | `notebooks/walkthroughs/`, `notebooks/triage/` | [../notebooks/README.md](../notebooks/README.md) | [../../README.md](../../README.md), [../README.md](../README.md) | Active |
+| Walkthroughs and integrations | [`forecastability-examples`](https://github.com/AdamKrysztopa/forecastability-examples) sibling repo | [../examples_index.md](../examples_index.md) | [../../README.md](../../README.md), [../README.md](../README.md) | Active (sibling repo) |
 | Artifact surfaces | `outputs/json/`, `outputs/tables/`, `outputs/reports/` | [developer_guide.md](developer_guide.md) | [../../README.md](../../README.md), [../README.md](../README.md) | Active |
 | Stability policy | `pyproject.toml`, facade docs, runtime entry points | [../reference/versioning.md](../reference/versioning.md) | [../public_api.md](../public_api.md) | Active |
 | Architecture narrative | `src/forecastability/` and architecture tests | [../explanation/architecture.md](../explanation/architecture.md) | [../code/module_map.md](../code/module_map.md) | Active |

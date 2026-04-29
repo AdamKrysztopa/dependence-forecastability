@@ -296,6 +296,11 @@ broken links, or accidental movement of pinned root documents.
   - A small CI sub-check (`scripts/check_notebook_contract.py --transition-banner`) asserts the banner is present.
   - The banner text contains the substring `"v0.4.0"` and the relative link to the v0.4.0 plan.
 
+> **v0.4.0 retirement note (EX-CR-04).** The `--transition-banner` sub-check and
+> `scripts/check_notebook_contract.py` are retired in v0.4.0 (batch 3a). All notebooks
+> have migrated to the `forecastability-examples` sibling repository; the banner has
+> served its purpose and no notebooks remain in the core repo.
+
 #### `V3_5-DOC-RE-01` — Add `--root-path-pinned` invariant to docs-contract
 
 - File targets: [`scripts/check_docs_contract.py`](../../scripts/check_docs_contract.py); extend `DocsCheckName` `Literal` in `src/forecastability/diagnostics/docs_contract.py` with `"root-path-pinned"`.

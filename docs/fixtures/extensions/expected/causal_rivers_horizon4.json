@@ -1,0 +1,23 @@
+{
+  "target_id": 978,
+  "horizon": 4,
+  "random_state": 42,
+  "target_ami": 0.9119982731616237,
+  "target_pami": 0.18401154162641786,
+  "pairs": [
+    {
+      "driver_id": 979,
+      "role": "positive",
+      "raw_cross_mi": 0.6620375323545102,
+      "conditioned_cross_mi": 0.32837952200292764,
+      "directness_ratio": 0.49601345234168054
+    },
+    {
+      "driver_id": 67,
+      "role": "negative",
+      "raw_cross_mi": 0.23938543331536244,
+      "conditioned_cross_mi": 0.07419790044590102,
+      "directness_ratio": 0.3099516099133481
+    }
+  ]
+}

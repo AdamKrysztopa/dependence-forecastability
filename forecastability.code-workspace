@@ -1,0 +1,26 @@
+{
+    "folders": [
+        {
+            "name": "dependence-forecastability (core)",
+            "path": "ami"
+        },
+        {
+            "name": "forecastability-examples (sibling)",
+            "path": "forecastability-examples"
+        }
+    ],
+    "settings": {
+        "python.analysis.extraPaths": [
+            "${workspaceFolder:dependence-forecastability (core)}/src"
+        ],
+        "python.defaultInterpreterPath": "${workspaceFolder:dependence-forecastability (core)}/.venv/bin/python"
+    },
+    "extensions": {
+        "recommendations": [
+            "ms-python.python",
+            "ms-python.pylance",
+            "github.copilot",
+            "github.copilot-chat"
+        ]
+    }
+}

@@ -47,7 +47,7 @@ uv run python scripts/rebuild_fingerprint_regression_fixtures.py --verify
 | Tested | ✅ | `tests/test_forecastability_profile.py` |
 | Regression fixtures | ✅ | `tests/` (diagnostic regression suite) |
 | Theory doc | ✅ | [../theory/forecastability_profile.md](../theory/forecastability_profile.md), [../theory/foundations.md](../theory/foundations.md) |
-| Notebook | ✅ | `notebooks/triage/01_forecastability_profile_walkthrough.ipynb` |
+| Notebook | ✅ | [`triage_walkthroughs/01_forecastability_profile_walkthrough.ipynb`](https://github.com/AdamKrysztopa/forecastability-examples/blob/main/triage_walkthroughs/01_forecastability_profile_walkthrough.ipynb) (sibling repo) |
 | Script | ✅ | `scripts/run_canonical_triage.py` |
 
 **Known-partial / caveats.**
@@ -66,7 +66,7 @@ uv run python scripts/rebuild_fingerprint_regression_fixtures.py --verify
 | Tested | ✅ | `tests/test_metrics.py`, `tests/test_phase1_examples.py` |
 | Regression fixtures | ✅ | `tests/` (diagnostic regression suite) |
 | Theory doc | ✅ | [../theory/foundations.md](../theory/foundations.md) |
-| Notebook | ✅ | `notebooks/triage/02_information_limits_and_compression.ipynb` |
+| Notebook | ✅ | [`triage_walkthroughs/02_information_limits_and_compression.ipynb`](https://github.com/AdamKrysztopa/forecastability-examples/blob/main/triage_walkthroughs/02_information_limits_and_compression.ipynb) (sibling repo) |
 | Script | ✅ | `scripts/archive/run_phase1_limit_diagnostics.py` |
 
 **Known-partial / caveats.**
@@ -83,7 +83,7 @@ uv run python scripts/rebuild_fingerprint_regression_fixtures.py --verify
 | Tested | ✅ | `tests/test_metrics.py` |
 | Regression fixtures | ✅ | `tests/` (diagnostic regression suite) |
 | Theory doc | ✅ | [../triage_methods/predictive_information_learning_curves.md](../triage_methods/predictive_information_learning_curves.md) |
-| Notebook | ✅ | `notebooks/triage/03_predictive_information_learning_curves.ipynb` |
+| Notebook | ✅ | [`triage_walkthroughs/03_predictive_information_learning_curves.ipynb`](https://github.com/AdamKrysztopa/forecastability-examples/blob/main/triage_walkthroughs/03_predictive_information_learning_curves.ipynb) (sibling repo) |
 | Script | ✅ | `scripts/archive/run_predictive_info_learning_curves.py` |
 
 **Known-partial / caveats.**
@@ -100,7 +100,7 @@ uv run python scripts/rebuild_fingerprint_regression_fixtures.py --verify
 | Tested | ✅ | `tests/test_metrics.py` |
 | Regression fixtures | ✅ | `tests/` (diagnostic regression suite) |
 | Theory doc | ✅ | [../theory/spectral_predictability.md](../theory/spectral_predictability.md) |
-| Notebook | ✅ | `notebooks/triage/04_spectral_and_entropy_diagnostics.ipynb` |
+| Notebook | ✅ | [`triage_walkthroughs/04_spectral_and_entropy_diagnostics.ipynb`](https://github.com/AdamKrysztopa/forecastability-examples/blob/main/triage_walkthroughs/04_spectral_and_entropy_diagnostics.ipynb) (sibling repo) |
 | Script | ✅ | `scripts/archive/run_spectral_predictability.py` |
 
 **Known-partial / caveats.**
@@ -142,7 +142,7 @@ uv run python scripts/rebuild_fingerprint_regression_fixtures.py --verify
 | Tested | ✅ | `tests/test_complexity_band.py` |
 | Regression fixtures | ✅ | `tests/` (diagnostic regression suite) |
 | Theory doc | ✅ | [../theory/entropy_based_complexity.md](../theory/entropy_based_complexity.md) |
-| Notebook | ✅ | `notebooks/triage/04_spectral_and_entropy_diagnostics.ipynb` |
+| Notebook | ✅ | [`triage_walkthroughs/04_spectral_and_entropy_diagnostics.ipynb`](https://github.com/AdamKrysztopa/forecastability-examples/blob/main/triage_walkthroughs/04_spectral_and_entropy_diagnostics.ipynb) (sibling repo) |
 | Script | ✅ | `scripts/archive/run_entropy_complexity.py` |
 
 **Known-partial / caveats.**
@@ -159,7 +159,7 @@ uv run python scripts/rebuild_fingerprint_regression_fixtures.py --verify
 | Tested | ✅ | `tests/test_batch_triage_f7.py` |
 | Regression fixtures | ✅ | `tests/` (benchmark panel regression suite) |
 | Theory doc | — | (batch orchestration, no separate theory doc needed) |
-| Notebook | ✅ | `notebooks/triage/05_batch_and_exogenous_workbench.ipynb` |
+| Notebook | ✅ | [`triage_walkthroughs/05_batch_and_exogenous_workbench.ipynb`](https://github.com/AdamKrysztopa/forecastability-examples/blob/main/triage_walkthroughs/05_batch_and_exogenous_workbench.ipynb) (sibling repo) |
 | Script | ✅ | `scripts/run_benchmark_panel.py`, `scripts/archive/run_multi_signal_diagnostic_ranking.py` |
 
 **Known-partial / caveats.**
@@ -177,7 +177,7 @@ uv run python scripts/rebuild_fingerprint_regression_fixtures.py --verify
 | Tested | ✅ | `tests/test_extensions.py`, `tests/test_benchmark_exog_panel.py` |
 | Regression fixtures | ✅ | `tests/` (exogenous benchmark fixture) |
 | Theory doc | — | No dedicated theory page; use the walkthrough notebook and script evidence |
-| Notebook | ✅ | `notebooks/triage/05_batch_and_exogenous_workbench.ipynb` |
+| Notebook | ✅ | [`triage_walkthroughs/05_batch_and_exogenous_workbench.ipynb`](https://github.com/AdamKrysztopa/forecastability-examples/blob/main/triage_walkthroughs/05_batch_and_exogenous_workbench.ipynb) (sibling repo) |
 | Script | ✅ | `scripts/run_exog_analysis.py`, `scripts/archive/run_benchmark_exog_panel.py` |
 
 **Known-partial / caveats.**
@@ -192,16 +192,19 @@ uv run python scripts/rebuild_fingerprint_regression_fixtures.py --verify
 This table gives reviewers a one-screen overview of where evidence lives for
 each feature.
 
-| Feature | Theory doc | Notebook | Script | Test file |
+> [!NOTE]
+> Notebooks listed below are in the [`forecastability-examples`](https://github.com/AdamKrysztopa/forecastability-examples) sibling repository under `triage_walkthroughs/`. Full index: [docs/examples_index.md](../examples_index.md).
+
+| Feature | Theory doc | Notebook (sibling repo) | Script | Test file |
 |---|---|---|---|---|
-| F1 | [forecastability_profile.md](../theory/forecastability_profile.md) | `01_forecastability_profile_walkthrough.ipynb` | `scripts/run_canonical_triage.py` | `test_forecastability_profile.py` |
-| F2 | [foundations.md](../theory/foundations.md) | `02_information_limits_and_compression.ipynb` | `scripts/archive/run_phase1_limit_diagnostics.py` | `test_metrics.py` |
-| F3 | [predictive_information_learning_curves.md](../triage_methods/predictive_information_learning_curves.md) | `03_predictive_information_learning_curves.ipynb` | `scripts/archive/run_predictive_info_learning_curves.py` | `test_metrics.py` |
-| F4 | [spectral_predictability.md](../theory/spectral_predictability.md) | `04_spectral_and_entropy_diagnostics.ipynb` | `scripts/archive/run_spectral_predictability.py` | `test_metrics.py` |
+| F1 | [forecastability_profile.md](../theory/forecastability_profile.md) | [`01_forecastability_profile_walkthrough.ipynb`](https://github.com/AdamKrysztopa/forecastability-examples/blob/main/triage_walkthroughs/01_forecastability_profile_walkthrough.ipynb) | `scripts/run_canonical_triage.py` | `test_forecastability_profile.py` |
+| F2 | [foundations.md](../theory/foundations.md) | [`02_information_limits_and_compression.ipynb`](https://github.com/AdamKrysztopa/forecastability-examples/blob/main/triage_walkthroughs/02_information_limits_and_compression.ipynb) | `scripts/archive/run_phase1_limit_diagnostics.py` | `test_metrics.py` |
+| F3 | [predictive_information_learning_curves.md](../triage_methods/predictive_information_learning_curves.md) | [`03_predictive_information_learning_curves.ipynb`](https://github.com/AdamKrysztopa/forecastability-examples/blob/main/triage_walkthroughs/03_predictive_information_learning_curves.ipynb) | `scripts/archive/run_predictive_info_learning_curves.py` | `test_metrics.py` |
+| F4 | [spectral_predictability.md](../theory/spectral_predictability.md) | [`04_spectral_and_entropy_diagnostics.ipynb`](https://github.com/AdamKrysztopa/forecastability-examples/blob/main/triage_walkthroughs/04_spectral_and_entropy_diagnostics.ipynb) | `scripts/archive/run_spectral_predictability.py` | `test_metrics.py` |
 | F5 ⚠️ | [largest_lyapunov_exponent.md](../triage_methods/largest_lyapunov_exponent.md) | — | `scripts/archive/run_largest_lyapunov_exponent.py` | `test_lyapunov.py` |
-| F6 | [entropy_based_complexity.md](../theory/entropy_based_complexity.md) | `04_spectral_and_entropy_diagnostics.ipynb` | `scripts/archive/run_entropy_complexity.py` | `test_complexity_band.py` |
-| F7 | — | `05_batch_and_exogenous_workbench.ipynb` | `run_benchmark_panel.py` | `test_batch_triage_f7.py` |
-| F8 | — | `05_batch_and_exogenous_workbench.ipynb` | `run_exog_analysis.py` | `test_extensions.py` |
+| F6 | [entropy_based_complexity.md](../theory/entropy_based_complexity.md) | [`04_spectral_and_entropy_diagnostics.ipynb`](https://github.com/AdamKrysztopa/forecastability-examples/blob/main/triage_walkthroughs/04_spectral_and_entropy_diagnostics.ipynb) | `scripts/archive/run_entropy_complexity.py` | `test_complexity_band.py` |
+| F7 | — | [`05_batch_and_exogenous_workbench.ipynb`](https://github.com/AdamKrysztopa/forecastability-examples/blob/main/triage_walkthroughs/05_batch_and_exogenous_workbench.ipynb) | `run_benchmark_panel.py` | `test_batch_triage_f7.py` |
+| F8 | — | [`05_batch_and_exogenous_workbench.ipynb`](https://github.com/AdamKrysztopa/forecastability-examples/blob/main/triage_walkthroughs/05_batch_and_exogenous_workbench.ipynb) | `run_exog_analysis.py` | `test_extensions.py` |
 
 ---
 
@@ -343,3 +346,12 @@ one use-case entry point and one unified row surface.
 - Pairwise or `target_only` rows can still be inflated by autocorrelation or indirect
   paths. Use PCMCI+ or PCMCI-AMI when the question is causal-parent confirmation
   rather than triage.
+
+---
+
+## Tutorials, walkthroughs, and integrations
+
+From v0.4.0, all walkthrough and tutorial notebooks live in the
+[forecastability-examples](https://github.com/AdamKrysztopa/forecastability-examples)
+sibling repository. See [docs/examples_index.md](../examples_index.md) for the
+full notebook inventory with per-notebook source links.

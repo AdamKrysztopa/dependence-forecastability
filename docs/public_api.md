@@ -37,6 +37,7 @@ from forecastability import (
 | Fingerprint entry points | `run_forecastability_fingerprint`, `run_batch_forecastability_workbench`, `run_ami_geometry_csv_batch`, `FingerprintBundle`, `ForecastabilityFingerprint`, `AmiInformationGeometry`, `AmiGeometryCurvePoint`, `BatchForecastabilityWorkbenchResult`, `ForecastingNextStepPlan`, `CsvGeometryBatchItem`, `CsvGeometryBatchResult` |
 | Routing-validation entry points | `run_routing_validation`, `RoutingValidationBundle`, `RoutingValidationCase`, `RoutingPolicyAudit`, `RoutingValidationOutcome`, `RoutingValidationSourceKind`, `RoutingPolicyAuditConfig` |
 | Analyzer facade | `ForecastabilityAnalyzer`, `ForecastabilityAnalyzerExog`, `AnalyzeResult` |
+| Extension helpers | `compute_target_baseline_by_horizon`, `TargetBaselineCurves` |
 | Diagnostic and result models | `ForecastabilityProfile`, `PredictiveInfoLearningCurve`, `SpectralPredictabilityResult`, `InterpretationResult`, `Diagnostics`, `MetricCurve`, `CanonicalExampleResult`, `CanonicalSummary`, `SeriesEvaluationResult`, `ForecastResult`, `BackendComparisonResult`, `ExogenousBenchmarkResult`, `RobustnessStudyResult`, `SampleSizeStressResult` |
 | Config models | `BenchmarkDataConfig`, `CMIConfig`, `ExogenousBenchmarkConfig`, `MetricConfig`, `ModelConfig`, `OutputConfig`, `RobustnessStudyConfig`, `RollingOriginConfig`, `SensitivityConfig`, `UncertaintyConfig` |
 | Dataset helpers | `generate_ar1`, `generate_white_noise`, `ar1_theoretical_ami`, `generate_lagged_exog_panel`, `generate_known_future_calendar_pair`, `generate_contemporaneous_only_pair` |
@@ -270,8 +271,9 @@ MPLBACKEND=Agg uv run scripts/run_showcase_lagged_exogenous.py --smoke
 For method semantics, DTW omission rationale, and the sparse selector algorithm, see
 [docs/theory/lagged_exogenous_triage.md](theory/lagged_exogenous_triage.md).
 
-For the walkthrough notebook, open
-[notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb](../../notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb).
+For the migrated walkthrough notebook, open
+[`walkthroughs/03_lagged_exogenous_triage_showcase.ipynb`](https://github.com/AdamKrysztopa/forecastability-examples/blob/main/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb)
+in the sibling `forecastability-examples` repository.
 
 > [!NOTE]
 > Optional causal methods (`pcmci`, `pcmci_ami`) are skipped when causal dependencies are unavailable; the bundle records skipped methods in `metadata`.
