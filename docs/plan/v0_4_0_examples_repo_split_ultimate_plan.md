@@ -298,14 +298,6 @@ inserted in their correct phase and batch position rather than appended.
 | EX-R03 | Sibling repo first release | 5 | 5b | Cut sibling first release pinning `dependence-forecastability == 0.4.0`; sequenced inside EX-REL-01 | Proposed |
 | **EX-CPL-01** | **Cross-repo CI handshake** | 5 | 5b | Sibling repo's `release` workflow listens on `repository_dispatch` (`event_type = core_release`) emitted by core's release workflow. On firing, sibling re-runs the full notebook matrix against the new PyPI artifact and posts a check status / comment back to the core release page. Manual `workflow_dispatch` fallback for outages. | Proposed |
 
-Batches are meant to be implementation handles for later coding-agent requests:
-for example, ask to "implement phase 1a" for the naming/bootstrap/minimum-core-notebook
-decision batch, "implement phase 1b" for shared planning and the local two-repo
-workflow, or "implement phase 4b" for the repo-split status docs and
-bidirectional recipe cross-link. Do not start a
-later batch until its prerequisite batches are complete, especially when the
-work crosses the core/sibling boundary or depends on a released PyPI artifact.
-
 ---
 
 ## 5. Phased delivery
