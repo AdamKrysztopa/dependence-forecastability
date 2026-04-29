@@ -271,8 +271,9 @@ MPLBACKEND=Agg uv run scripts/run_showcase_lagged_exogenous.py --smoke
 For method semantics, DTW omission rationale, and the sparse selector algorithm, see
 [docs/theory/lagged_exogenous_triage.md](theory/lagged_exogenous_triage.md).
 
-For the walkthrough notebook, open
-[notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb](../../notebooks/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb).
+For the migrated walkthrough notebook, open
+[`walkthroughs/03_lagged_exogenous_triage_showcase.ipynb`](https://github.com/AdamKrysztopa/forecastability-examples/blob/main/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb)
+in the sibling `forecastability-examples` repository.
 
 > [!NOTE]
 > Optional causal methods (`pcmci`, `pcmci_ami`) are skipped when causal dependencies are unavailable; the bundle records skipped methods in `metadata`.

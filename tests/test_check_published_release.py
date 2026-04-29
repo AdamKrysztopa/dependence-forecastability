@@ -129,3 +129,32 @@ def test_main_fails_when_github_release_missing(
             ]
         )
     assert exc_info.value.code == 1
+
+
+def test_main_can_skip_github_release_check(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    pyproject = tmp_path / "pyproject.toml"
+    pyproject.write_text('[project]\nversion = "0.3.6"\n', encoding="utf-8")
+
+    def _fake_urlopen(request: Request, timeout: int = 30) -> _MockResponse:
+        url = request.full_url
+        if "pypi.org" in url:
+            return _MockResponse({"info": {"version": "0.3.6"}})
+        if "api.github.com" in url:
+            raise AssertionError("GitHub release endpoint should not be queried")
+        raise AssertionError(f"Unexpected URL: {url}")
+
+    monkeypatch.setattr(check_published_release.urllib.request, "urlopen", _fake_urlopen)
+
+    check_published_release.main(
+        [
+            "--repo-root",
+            str(tmp_path),
+            "--repository",
+            "owner/repo",
+            "--max-attempts",
+            "1",
+            "--skip-github-release",
+        ]
+    )

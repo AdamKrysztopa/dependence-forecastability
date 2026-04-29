@@ -233,8 +233,8 @@ structure across many signals in one pass.
 
 **Learn more.**
 - `triage/batch_models.py` source for the batch result schema
-- [notebooks/triage/05_batch_and_exogenous_workbench.ipynb](../notebooks/triage/05_batch_and_exogenous_workbench.ipynb)
-  for a runnable walkthrough
+- [`triage_walkthroughs/05_batch_and_exogenous_workbench.ipynb`](https://github.com/AdamKrysztopa/forecastability-examples/blob/main/triage_walkthroughs/05_batch_and_exogenous_workbench.ipynb)
+  in the sibling repo for a runnable walkthrough
 
 ---
 
@@ -264,7 +264,7 @@ statistically detectable predictive signal.
 
 **Learn more.**
 - `extensions.py` source for `CrossAMIResult` and the BH FDR implementation
-- [../notebooks/walkthroughs/02_exogenous_analysis.ipynb](../notebooks/walkthroughs/02_exogenous_analysis.ipynb)
-  for the walkthrough
-- [notebooks/triage/05_batch_and_exogenous_workbench.ipynb](../notebooks/triage/05_batch_and_exogenous_workbench.ipynb)
-  for a combined F7/F8 example
+- [`walkthroughs/02_exogenous_analysis.ipynb`](https://github.com/AdamKrysztopa/forecastability-examples/blob/main/walkthroughs/02_exogenous_analysis.ipynb)
+  in the sibling repo for the walkthrough
+- [`triage_walkthroughs/05_batch_and_exogenous_workbench.ipynb`](https://github.com/AdamKrysztopa/forecastability-examples/blob/main/triage_walkthroughs/05_batch_and_exogenous_workbench.ipynb)
+  in the sibling repo for a combined F7/F8 example

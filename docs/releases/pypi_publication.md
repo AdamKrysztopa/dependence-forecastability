@@ -64,6 +64,9 @@ and confirm README renders, metadata is correct, and entry points are listed.
 3. Push tag `vX.Y.Z` — both `release.yml` and `publish-pypi.yml` trigger in parallel.
 4. `release.yml` builds artifacts and creates the GitHub release with dist assets attached.
 5. `publish-pypi.yml` builds artifacts independently and publishes them to PyPI via trusted publishing.
+6. `publish-pypi.yml` verifies PyPI visibility before notifying the sibling
+   examples repository. GitHub release presence is verified by the release
+   workflow path, because the two tag workflows can complete in either order.
 
 ## Hotfix Process
 

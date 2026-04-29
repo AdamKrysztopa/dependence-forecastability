@@ -18,7 +18,7 @@ v0.4.0+ product history is visible in one place.
 
 | Core tag | Sibling tag | Core highlights | Sibling highlights |
 | --- | --- | --- | --- |
-| *(upcoming)* `v0.4.0` | *(upcoming)* `v0.4.0` | Library-first slim release; `notebooks/` removed; causal-rivers extensions promoted | Notebook migration complete; seven walkthroughs, two triage walkthroughs; EX-NB-01–05 |
+| *(upcoming)* `v0.4.0` | *(upcoming)* `v0.4.0` | Library-first slim release; `notebooks/` removed; causal-rivers extensions promoted | Notebook migration complete; 12 walkthroughs, 6 triage walkthroughs, 1 recipe notebook; EX-NB-01–05 |
 | `v0.3.6` | — | Release-truth and docs-integrity automation | — |
 | `v0.3.5` | — | Documentation quality hardening; redirect-stub cleanup; recipe page for forecast-prep hand-off | — |
 | `v0.3.4` | — | `ForecastPrepContract` public API; `build_forecast_prep_contract`; `docs/recipes/forecast_prep_to_external_frameworks.md` | — |

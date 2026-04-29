@@ -52,6 +52,14 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         metavar="PATH",
         help="Repository root path (default: derived from script location).",
     )
+    parser.add_argument(
+        "--skip-github-release",
+        action="store_true",
+        help=(
+            "Only verify PyPI visibility. Use this when GitHub release creation "
+            "is handled by a separate tag workflow that may still be running."
+        ),
+    )
     return parser.parse_args(argv)
 
 
@@ -187,7 +195,8 @@ def main(argv: list[str] | None = None) -> None:
             args.max_attempts,
             args.initial_backoff_seconds,
         )
-        _check_github_release(repository, tag)
+        if not args.skip_github_release:
+            _check_github_release(repository, tag)
     except RuntimeError as exc:
         print(f"FAIL: {exc}")
         raise SystemExit(1) from exc
@@ -197,7 +206,8 @@ def main(argv: list[str] | None = None) -> None:
         f"project={args.project_name}, "
         f"version={observed_version}, "
         f"repository={repository}, "
-        f"tag={tag}"
+        f"tag={tag}, "
+        f"github_release_checked={not args.skip_github_release}"
     )
 
 
