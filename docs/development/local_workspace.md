@@ -193,11 +193,14 @@ independent CI on each repo.
 When a PR in the core repo has a paired PR in the sibling repo:
 
 1. In the core PR description, add a **"Sibling PR"** link:
-   ```
+
+   ```text
    Sibling PR: AdamKrysztopa/forecastability-examples#<N>
    ```
+
 2. In the sibling PR description, add a **"Core PR"** link:
-   ```
+
+   ```text
    Core PR: AdamKrysztopa/dependence-forecastability#<N>
    ```
 3. Both PRs should reference the same
@@ -228,11 +231,12 @@ paired release tags across both repos.
 **`uv pip install -e` fails with "not a valid package directory"**
 
 Check that you are pointing at the correct core path:
+
 ```bash
 uv pip install -e "$(cd ../ami && pwd)"
 ```
 
-**VS Code does not resolve cross-repo imports**
+### VS Code does not resolve cross-repo imports
 
 Make sure the workspace was opened via `forecastability.code-workspace` (not
 by opening a single folder). Reload the window after opening the workspace:
@@ -243,10 +247,10 @@ by opening a single folder). Reload the window after opening the workspace:
 You probably ran `git add ../<something>` from inside the core repo. Run
 `git status` to confirm; use `git restore --staged <file>` to unstage.
 
-**CI is red on a sibling PR that depends on an unreleased core change**
+### CI is red on a sibling PR that depends on an unreleased core change
 
 This is by design. CI always installs `dependence-forecastability` from PyPI.
 The sibling PR will go green only after the core change is published (the
-[EX-REL-01 release dance](../plan/v0_4_0_examples_repo_split_ultimate_plan.md)).
+[EX-REL-01 release dance](../plan/implemented/v0_4_0_examples_repo_split_ultimate_plan.md)).
 Use the local editable install while iterating, then wait for the core release
 before merging the sibling PR.
