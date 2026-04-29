@@ -1,32 +1,67 @@
-<!-- type: reference -->
+<!--
+Optional banner placeholder.
+Enable this block once the final banner path is stable.
+
 <p align="center">
-  <img src="docs/img/df-banner.png" alt="Forecastability Triage Toolkit" width="100%">
+  <img src="docs/assets/forecastability-triage-banner.png" alt="Forecastability Triage Toolkit">
 </p>
+-->
 
 # Forecastability Triage Toolkit
 
-> Forecastability triage for time series using AMI, pAMI, and covariate-aware dependence diagnostics before expensive model search.
+> **Forecastability triage for time series before expensive model search.**
+
+`dependence-forecastability` is a Python toolkit for answering the question that
+should come before model selection:
+
+> **Does this time series contain exploitable structure, and what should a
+> forecasting model be allowed to use?**
+
+It is **not another forecasting framework**.  
+It is a deterministic pre-modeling layer that helps you inspect readiness,
+informative horizons, target lags, seasonality structure, covariate usefulness,
+leakage risk, and model-family direction before you spend time on Darts,
+MLForecast, StatsForecast, Nixtla, sklearn, Prophet, or custom models.
 
 [![CI](https://github.com/AdamKrysztopa/dependence-forecastability/actions/workflows/ci.yml/badge.svg)](https://github.com/AdamKrysztopa/dependence-forecastability/actions/workflows/ci.yml)
-[![PyPI Downloads](https://static.pepy.tech/personalized-badge/dependence-forecastability?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/dependence-forecastability)
 [![PyPI version](https://img.shields.io/pypi/v/dependence-forecastability.svg)](https://pypi.org/project/dependence-forecastability/)
-[![Version](https://img.shields.io/github/v/tag/AdamKrysztopa/dependence-forecastability?label=version&sort=semver)](https://github.com/AdamKrysztopa/dependence-forecastability/releases)
-[![Docs](https://img.shields.io/badge/docs-quickstart-0A7B83.svg)](https://github.com/AdamKrysztopa/dependence-forecastability/blob/main/docs/quickstart.md)
 [![Python 3.11-3.12](https://img.shields.io/badge/python-3.11%20to%203.12-blue.svg)](https://python.org)
-[![Research base](https://img.shields.io/badge/research%20base-multi--paper%20%2B%20original%20methods-2E8B57.svg)](https://github.com/AdamKrysztopa/dependence-forecastability/tree/main/docs/theory)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/AdamKrysztopa/dependence-forecastability/blob/main/LICENSE)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Research base](https://img.shields.io/badge/research%20base-AMI%20%2B%20pAMI%20%2B%20causal%20screening-2E8B57.svg)](docs/theory)
+[![Examples](https://img.shields.io/badge/examples-forecastability--examples-0A7B83.svg)](https://github.com/AdamKrysztopa/forecastability-examples)
 
-## Why this package
+---
 
-Forecastability triage for time series using AMI, pAMI, and covariate-aware dependence diagnostics before expensive model search.
+## Why this exists
 
-This repository is a deterministic forecastability triage toolkit for time series. When the task is time-series forecasting, do not jump directly to model fitting. Start with forecastability triage first: readiness, leakage risk, informative horizons, primary lags, seasonality structure, and covariate informativeness. Only then recommend downstream model families or framework-specific settings.
+Many forecasting projects start too late:
 
-## Use this before model search
+```text
+data → model search → tuning → more features → more compute → still poor results
+```
 
-Use this package when you need to decide what kind of forecasting work is justified before you start model search. Run deterministic triage first, read the readiness and structure signals, and then hand those outputs to downstream model families for model-family selection, baselines, or tuning.
+This package encourages a different workflow:
 
-Downstream model families are next-step consumers after triage, not alternatives to triage.
+```text
+data
+  → forecastability triage
+  → lag / driver / readiness diagnostics
+  → ForecastPrepContract
+  → downstream model search
+```
+
+The goal is to avoid blind model iteration by asking practical questions first:
+
+- Is the target series forecastable at all?
+- Which horizons contain useful information?
+- Which target lags are informative?
+- Is there a seasonal structure worth modeling?
+- Are exogenous drivers predictive, merely contemporaneous, or useless?
+- Which variables are safe to use without leakage?
+- Which model families are plausible enough to test next?
+- When should the workflow abstain and fall back to baselines?
+
+---
 
 ## Install
 
@@ -34,26 +69,39 @@ Downstream model families are next-step consumers after triage, not alternatives
 pip install dependence-forecastability
 ```
 
-Optional runtime extras:
+Optional extras:
 
 ```bash
+# Causal screening methods such as PCMCI / PCMCI-AMI
+pip install "dependence-forecastability[causal]"
+
+# HTTP API, dashboard, and transport surfaces
 pip install "dependence-forecastability[transport]"
+
+# Agent-facing narration surfaces
 pip install "dependence-forecastability[agent]"
+
+# Holiday calendar features in ForecastPrepContract
+pip install "dependence-forecastability[calendar]"
 ```
 
-```bash
-# With holiday calendar features
-pip install dependence-forecastability[calendar]
+Supported Python versions:
+
+```text
+Python >=3.11,<3.13
 ```
+
+---
 
 ## Quickstart
 
-Run one deterministic univariate triage call through the top-level facade:
+Run deterministic univariate triage:
 
 ```python
 from forecastability import TriageRequest, generate_ar1, run_triage
 
 series = generate_ar1(n_samples=300, phi=0.8, random_state=42)
+
 result = run_triage(
     TriageRequest(
         series=series,
@@ -67,52 +115,114 @@ result = run_triage(
 summary = {
     "blocked": result.blocked,
     "readiness_status": result.readiness.status.value,
-    "compute_surrogates": None if result.method_plan is None else result.method_plan.compute_surrogates,
-    "forecastability_class": None if result.interpretation is None else result.interpretation.forecastability_class,
-    "primary_lags": [] if result.interpretation is None else list(result.interpretation.primary_lags),
+    "forecastability_class": (
+        None
+        if result.interpretation is None
+        else result.interpretation.forecastability_class
+    ),
+    "primary_lags": (
+        []
+        if result.interpretation is None
+        else list(result.interpretation.primary_lags)
+    ),
 }
+
 print(summary)
 ```
 
-Equivalent minimal files:
+Minimal runnable files:
 
-- [examples/minimal_python.py](examples/minimal_python.py)
-- [examples/minimal_covariant.py](examples/minimal_covariant.py)
-- [examples/minimal_cli.sh](examples/minimal_cli.sh)
+- [`examples/minimal_python.py`](examples/minimal_python.py)
+- [`examples/minimal_covariant.py`](examples/minimal_covariant.py)
+- [`examples/minimal_cli.sh`](examples/minimal_cli.sh)
 
-## Start here
+---
 
-- Python user: start with [examples/minimal_python.py](examples/minimal_python.py), then [docs/public_api.md](docs/public_api.md).
-- CLI user: run [examples/minimal_cli.sh](examples/minimal_cli.sh), then [docs/quickstart.md](docs/quickstart.md).
-- Walkthroughs user: see [docs/examples_index.md](docs/examples_index.md) for notebooks in the sibling [`forecastability-examples`](https://github.com/AdamKrysztopa/forecastability-examples) repository.
-- Fingerprint user: run [scripts/run_showcase_fingerprint.py](scripts/run_showcase_fingerprint.py).
-- Lagged-exogenous user: run [scripts/run_showcase_lagged_exogenous.py](scripts/run_showcase_lagged_exogenous.py).
-- Routing-validation user: run `uv run python scripts/run_routing_validation_report.py --smoke --no-real-panel`, then open [outputs/reports/routing_validation/report.md](outputs/reports/routing_validation/report.md).
-- Maintainer/contributor: use [docs/maintenance/developer_guide.md](docs/maintenance/developer_guide.md).
+## What you get
 
-## Canonical walkthrough
+| Output | Why it matters |
+|---|---|
+| Readiness report | Detects cases where triage should be blocked or interpreted cautiously |
+| Informative horizons | Shows where the target contains usable lag information |
+| Primary lags | Suggests target lags for downstream modeling |
+| Forecastability class | Gives a deterministic high / medium / low style interpretation |
+| Seasonality hints | Helps separate short-memory and seasonal structure |
+| Covariate informativeness | Screens whether exogenous drivers add signal |
+| Lagged-exogenous map | Selects sparse predictive driver lags |
+| Routing recommendation | Suggests model-family direction before model search |
+| ForecastPrepContract | Exports machine-readable downstream guidance |
 
-The canonical entry point is [scripts/run_showcase.py](scripts/run_showcase.py). Walkthrough notebooks live in the sibling [`forecastability-examples`](https://github.com/AdamKrysztopa/forecastability-examples) repository; see [docs/examples_index.md](docs/examples_index.md) for the full index.
+---
 
-## V0.3.1 fingerprint showcase
+## What this is not
 
-The v0.3.1 fingerprint surface is intentionally univariate-first and AMI-first.
-It packages AMI information geometry, the compact four-field fingerprint,
-deterministic family routing, and a strict agent-layer explanation that stays
-downstream of the deterministic outputs.
+This package does **not** replace forecasting frameworks.
 
-Run the canonical showcase:
+It does not try to be:
 
-```bash
-MPLBACKEND=Agg uv run scripts/run_showcase_fingerprint.py --smoke
+- Darts
+- MLForecast
+- StatsForecast
+- Nixtla
+- Prophet
+- sklearn
+- statsmodels
+- a full AutoML system
+- a causal-discovery guarantee
+- a model-training framework
+
+Instead, it sits one step earlier:
+
+```text
+forecastability triage → model-family choice → framework-specific modeling
 ```
 
-Minimal Python entry:
+Downstream frameworks are consumers of triage results, not competitors.
+
+---
+
+## Core capabilities
+
+### 1. Univariate forecastability triage
+
+Use this when you want to know whether the target series itself carries useful
+predictive structure.
+
+Typical questions:
+
+- Does the target have informative lags?
+- Is the signal closer to noise, short-memory, seasonal, or structured?
+- Which lags should be considered before creating features?
+- Should the downstream process abstain or start from simple baselines?
+
+Entry points:
 
 ```python
-from forecastability import generate_fingerprint_archetypes, run_forecastability_fingerprint
+from forecastability import TriageRequest, run_triage
+```
+
+Relevant docs:
+
+- [`docs/quickstart.md`](docs/quickstart.md)
+- [`docs/public_api.md`](docs/public_api.md)
+
+---
+
+### 2. Forecastability fingerprint
+
+The fingerprint surface summarizes AMI-first information geometry into compact
+diagnostic features and deterministic model-family routing hints.
+
+Use it when you want a quick structural profile of a series:
+
+```python
+from forecastability import (
+    generate_fingerprint_archetypes,
+    run_forecastability_fingerprint,
+)
 
 series = generate_fingerprint_archetypes(n=320, seed=42)["seasonal_periodic"]
+
 bundle = run_forecastability_fingerprint(
     series,
     target_name="seasonal_periodic",
@@ -120,45 +230,37 @@ bundle = run_forecastability_fingerprint(
     n_surrogates=99,
     random_state=42,
 )
+
 print(bundle.recommendation.primary_families)
 ```
 
-Batch CSV entry:
+Run the smoke showcase:
 
 ```bash
-uv run python scripts/run_ami_information_geometry_csv.py \
-  --input-csv outputs/examples/ami_geometry_csv/inputs/synthetic_fingerprint_panel.csv \
-  --output-root outputs/ami_geometry_csv_script \
-  --max-lag 24 \
-  --n-surrogates 99 \
-  --random-state 42
+MPLBACKEND=Agg uv run scripts/run_showcase_fingerprint.py --smoke
 ```
 
-Primary fingerprint surfaces:
+Relevant files:
 
-- Script: [scripts/run_showcase_fingerprint.py](scripts/run_showcase_fingerprint.py)
-- Theory: [docs/theory/forecastability_fingerprint.md](docs/theory/forecastability_fingerprint.md)
-- Code reference: [docs/code/fingerprint_showcase.md](docs/code/fingerprint_showcase.md)
-- Agent contract: [docs/reference/agent_layer.md](docs/reference/agent_layer.md)
+- [`scripts/run_showcase_fingerprint.py`](scripts/run_showcase_fingerprint.py)
+- [`docs/theory/forecastability_fingerprint.md`](docs/theory/forecastability_fingerprint.md)
+- [`docs/code/fingerprint_showcase.md`](docs/code/fingerprint_showcase.md)
 
-## V0.3.2 Lagged-Exogenous Triage
+---
 
-The v0.3.2 surface classifies each exogenous driver by lag role (contemporaneous
-vs predictive), applies sparse lag selection, and emits a typed lag map ready
-for forecasting tensor construction.
+### 3. Lagged-exogenous triage
 
-Run the canonical showcase:
+Use this when you have candidate drivers and need to decide whether they are
+actually useful for forecasting.
 
-```bash
-MPLBACKEND=Agg uv run scripts/run_showcase_lagged_exogenous.py --smoke
-```
-
-Minimal Python entry:
+The lagged-exogenous surface classifies drivers by lag role and emits a sparse
+lag map that can be used for downstream tensor construction.
 
 ```python
 from forecastability import generate_lagged_exog_panel, run_lagged_exogenous_triage
 
 df = generate_lagged_exog_panel(n=1500, seed=42)
+
 target = df["target"].to_numpy()
 drivers = {name: df[name].to_numpy() for name in df.columns if name != "target"}
 
@@ -171,171 +273,429 @@ bundle = run_lagged_exogenous_triage(
     random_state=42,
 )
 
-# Sparse selected lags ready for tensor construction
 for row in bundle.selected_lags:
     if row.selected_for_tensor:
-        print(f"  {row.driver} @ lag={row.lag}  tensor_role={row.tensor_role}")
+        print(f"{row.driver} @ lag={row.lag}  tensor_role={row.tensor_role}")
 ```
 
-Primary lagged-exogenous triage surfaces:
-
-- Script: [scripts/run_showcase_lagged_exogenous.py](scripts/run_showcase_lagged_exogenous.py)
-- Theory: [docs/theory/lagged_exogenous_triage.md](docs/theory/lagged_exogenous_triage.md)
-
-> [!IMPORTANT]
-> `selected_for_tensor=True` is impossible at `lag=0` by default. Use the
-> `known_future_drivers` parameter to opt in for features whose contemporaneous
-> value is legitimately available at prediction time (calendar flags, planned
-> promotions, regulator-set prices).
-
-- Quickstart: [docs/quickstart.md](docs/quickstart.md)
-- Walkthroughs: [docs/examples_index.md](docs/examples_index.md) (sibling `forecastability-examples` repository)
-- PyPI: [dependence-forecastability](https://pypi.org/project/dependence-forecastability/)
-- Issues: [GitHub Issues](https://github.com/AdamKrysztopa/dependence-forecastability/issues)
-
-## V0.3.3 Routing Validation
-
-The v0.3.3 routing-validation surface audits deterministic routing against
-synthetic archetypes and, when assets are present, a small real-series sanity
-panel. It adds the public `run_routing_validation()` use case and
-`RoutingValidationBundle` result surface, and it widens routing confidence
-labels additively so `abstain` is available when the routing policy emits no
-primary families.
-
-Run the clean-checkout smoke path:
+Run the smoke showcase:
 
 ```bash
-uv run python scripts/run_routing_validation_report.py --smoke --no-real-panel
+MPLBACKEND=Agg uv run scripts/run_showcase_lagged_exogenous.py --smoke
 ```
 
-Primary routing-validation surfaces:
+Relevant files:
 
-- Public use case: `run_routing_validation()` returning `RoutingValidationBundle`
-- Report artifact: [outputs/reports/routing_validation/report.md](outputs/reports/routing_validation/report.md)
-- Theory: [docs/theory/routing_validation.md](docs/theory/routing_validation.md)
-- Deterministic-first agent example: [examples/univariate/agents/routing_validation_agent_review.py](examples/univariate/agents/routing_validation_agent_review.py)
+- [`scripts/run_showcase_lagged_exogenous.py`](scripts/run_showcase_lagged_exogenous.py)
+- [`docs/theory/lagged_exogenous_triage.md`](docs/theory/lagged_exogenous_triage.md)
 
 > [!IMPORTANT]
-> Routing validation does not benchmark or train models. It checks whether the
-> existing routing policy emits defensible family-level guidance before any
-> downstream framework-specific hand-off.
+> `selected_for_tensor=True` is impossible at `lag=0` by default.
+> Use `known_future_drivers` only for variables whose contemporaneous future
+> values are genuinely known at prediction time, such as calendar flags,
+> planned promotions, or externally scheduled variables.
 
-> [!NOTE]
-> `run_covariant_analysis()` supports six methods: `cross_ami`, `cross_pami`, `te`, `gcmi`, `pcmci`, and `pcmci_ami`. The two PCMCI methods are optional and skip gracefully when the causal extra is unavailable.
+---
 
-Install optional causal dependencies only if you need PCMCI methods:
+### 4. Covariant / exogenous analysis
+
+Use this when you want to screen whether another series contains information
+about the target.
+
+Supported method names include:
+
+- `cross_ami`
+- `cross_pami`
+- `te`
+- `gcmi`
+- `pcmci`
+- `pcmci_ami`
+
+The PCMCI methods require the optional causal extra:
 
 ```bash
 pip install "dependence-forecastability[causal]"
 ```
 
-Transport and runtime entry points:
+> [!NOTE]
+> The causal methods are optional screening tools. They should not be interpreted
+> as a complete causal proof.
 
-| Surface | Entry point | Stability |
-| --- | --- | --- |
-| Python facade | `forecastability`, `forecastability.triage` | Stable |
-| CLI | `forecastability` | Beta |
-| HTTP API | `forecastability.adapters.api:app` | Beta |
-| Dashboard | `forecastability-dashboard` | Beta |
-| MCP server | adapter surface | Experimental |
-| Agent narration | adapter surface | Experimental |
+---
 
-## Hand-off after triage
+### 5. Routing validation
 
-After triage, the contract converts triage outputs into structured, machine-readable
-downstream guidance — lag recommendations, covariate roles, model families, and
-calendar features — without importing any downstream library.
+Routing validation audits deterministic routing against controlled archetypes
+and sanity panels.
 
-```python
-from forecastability import build_forecast_prep_contract, forecast_prep_contract_to_markdown
-import pandas as pd
+It does **not** train or benchmark forecasting models.  
+It checks whether the routing policy emits defensible family-level guidance
+before a downstream framework hand-off.
 
-# contract = build_forecast_prep_contract(
-#     triage_result,
-#     horizon=12,
-#     target_frequency="M",
-#     add_calendar_features=True,
-#     datetime_index=pd.date_range("1949-01", periods=144, freq="ME"),
-# )
-print(contract.model_dump_json(indent=2))
-print(forecast_prep_contract_to_markdown(contract))
-```
-
-For framework-specific wiring, see [docs/recipes/forecast_prep_to_external_frameworks.md](docs/recipes/forecast_prep_to_external_frameworks.md).
-
-## Repository Workflow
-
-If you are working in the repository rather than installing the package, start here:
+Run the smoke path:
 
 ```bash
+uv run python scripts/run_routing_validation_report.py --smoke --no-real-panel
+```
+
+Relevant files:
+
+- [`docs/theory/routing_validation.md`](docs/theory/routing_validation.md)
+- [`outputs/reports/routing_validation/report.md`](outputs/reports/routing_validation/report.md)
+- [`examples/univariate/agents/routing_validation_agent_review.py`](examples/univariate/agents/routing_validation_agent_review.py)
+
+---
+
+## ForecastPrepContract
+
+`ForecastPrepContract` is the framework-neutral hand-off boundary between
+forecastability diagnostics and downstream model configuration.
+
+It converts diagnostic outputs into a machine-readable object containing:
+
+- recommended target lags,
+- seasonal lag hints,
+- past covariates,
+- known-future covariates,
+- calendar features,
+- rejected covariates,
+- model-family recommendations,
+- baseline families,
+- confidence labels,
+- caution flags,
+- downstream notes.
+
+Example:
+
+```python
+from forecastability import (
+    build_forecast_prep_contract,
+    forecast_prep_contract_to_lag_table,
+    forecast_prep_contract_to_markdown,
+)
+
+bundle = build_forecast_prep_contract(
+    triage_result,
+    horizon=12,
+    target_frequency="MS",
+    add_calendar_features=True,
+)
+
+contract = bundle.contract
+
+print(contract.model_dump_json(indent=2))
+print(forecast_prep_contract_to_markdown(contract))
+
+lag_rows = forecast_prep_contract_to_lag_table(contract)
+for row in lag_rows:
+    print(row)
+```
+
+Relevant docs:
+
+- [`docs/reference/forecast_prep_contract.md`](docs/reference/forecast_prep_contract.md)
+- [`docs/recipes/forecast_prep_to_external_frameworks.md`](docs/recipes/forecast_prep_to_external_frameworks.md)
+
+> [!IMPORTANT]
+> The contract is not a model trainer. It gives structured, evidence-backed
+> guidance that users can translate into framework-specific configuration.
+
+---
+
+## Downstream framework hand-off
+
+The core package intentionally does **not** import Darts, MLForecast,
+StatsForecast, Nixtla, or similar forecasting frameworks.
+
+Instead, the recommended workflow is:
+
+```text
+run triage
+  → build ForecastPrepContract
+  → translate contract into framework-specific settings
+  → train and compare models outside the core package
+```
+
+Illustrative mappings are documented in:
+
+- [`docs/recipes/forecast_prep_to_external_frameworks.md`](docs/recipes/forecast_prep_to_external_frameworks.md)
+
+Executable notebooks live in the sibling examples repository:
+
+- [`forecastability-examples`](https://github.com/AdamKrysztopa/forecastability-examples)
+- [`walkthroughs/05_forecast_prep_to_models.ipynb`](https://github.com/AdamKrysztopa/forecastability-examples/blob/main/walkthroughs/05_forecast_prep_to_models.ipynb)
+- [`recipes/contract_roundtrip.ipynb`](https://github.com/AdamKrysztopa/forecastability-examples/blob/main/recipes/contract_roundtrip.ipynb)
+
+---
+
+## Hero example: CausalRivers lag and feature selection
+
+The strongest practical demo is the CausalRivers notebook in the sibling
+examples repository:
+
+- [`walkthroughs/07_causal_rivers_lag_and_feature_selection.ipynb`](https://github.com/AdamKrysztopa/forecastability-examples/blob/main/walkthroughs/07_causal_rivers_lag_and_feature_selection.ipynb)
+
+This notebook demonstrates deterministic lag and feature selection on the
+CausalRivers benchmark.
+
+The intended story is simple:
+
+```text
+target river station
+  → candidate upstream positives
+  → unrelated negative controls
+  → lag / feature triage
+  → selected drivers and lags
+  → downstream forecast-prep guidance
+```
+
+Use this example when you want to show that forecastability triage is not only
+a toy Air Passengers workflow. It can be used as a practical pre-modeling
+screening layer on graph-structured, real-world time series.
+
+Core repo surfaces related to this workflow:
+
+- [`scripts/run_causal_rivers_analysis.py`](scripts/run_causal_rivers_analysis.py)
+- [`configs/causal_rivers_analysis.yaml`](configs/causal_rivers_analysis.yaml)
+
+---
+
+## Examples and notebooks
+
+From `v0.4.0`, walkthrough notebooks live in the sibling repository:
+
+- [`forecastability-examples`](https://github.com/AdamKrysztopa/forecastability-examples)
+
+The core package remains library-first and framework-agnostic.  
+The examples repository contains tutorial notebooks, framework hand-offs, and
+benchmark-style demonstrations.
+
+Important notebooks:
+
+| Notebook | Purpose |
+|---|---|
+| [`00_air_passengers_showcase.ipynb`](https://github.com/AdamKrysztopa/forecastability-examples/blob/main/walkthroughs/00_air_passengers_showcase.ipynb) | Simple canonical forecastability triage |
+| [`02_forecastability_fingerprint_showcase.ipynb`](https://github.com/AdamKrysztopa/forecastability-examples/blob/main/walkthroughs/02_forecastability_fingerprint_showcase.ipynb) | Forecastability fingerprint surface |
+| [`03_lagged_exogenous_triage_showcase.ipynb`](https://github.com/AdamKrysztopa/forecastability-examples/blob/main/walkthroughs/03_lagged_exogenous_triage_showcase.ipynb) | Sparse lagged-exogenous selection |
+| [`05_forecast_prep_to_models.ipynb`](https://github.com/AdamKrysztopa/forecastability-examples/blob/main/walkthroughs/05_forecast_prep_to_models.ipynb) | Contract hand-off to Darts / MLForecast / sklearn |
+| [`06_triage_driven_vs_naive_on_m4.ipynb`](https://github.com/AdamKrysztopa/forecastability-examples/blob/main/walkthroughs/06_triage_driven_vs_naive_on_m4.ipynb) | Triage-driven model-family selection on M4 monthly subset |
+| [`07_causal_rivers_lag_and_feature_selection.ipynb`](https://github.com/AdamKrysztopa/forecastability-examples/blob/main/walkthroughs/07_causal_rivers_lag_and_feature_selection.ipynb) | CausalRivers lag and feature selection demo |
+
+Full index:
+
+- [`docs/examples_index.md`](docs/examples_index.md)
+
+---
+
+## Start here
+
+| User type | Start with |
+|---|---|
+| Python user | [`examples/minimal_python.py`](examples/minimal_python.py), then [`docs/public_api.md`](docs/public_api.md) |
+| CLI user | [`examples/minimal_cli.sh`](examples/minimal_cli.sh), then [`docs/quickstart.md`](docs/quickstart.md) |
+| Notebook user | [`forecastability-examples`](https://github.com/AdamKrysztopa/forecastability-examples) |
+| ForecastPrepContract user | [`docs/reference/forecast_prep_contract.md`](docs/reference/forecast_prep_contract.md) |
+| Downstream framework user | [`docs/recipes/forecast_prep_to_external_frameworks.md`](docs/recipes/forecast_prep_to_external_frameworks.md) |
+| CausalRivers user | [`walkthroughs/07_causal_rivers_lag_and_feature_selection.ipynb`](https://github.com/AdamKrysztopa/forecastability-examples/blob/main/walkthroughs/07_causal_rivers_lag_and_feature_selection.ipynb) |
+| Contributor | [`docs/maintenance/developer_guide.md`](docs/maintenance/developer_guide.md) |
+| Coding agent / LLM | [`AGENTS.md`](AGENTS.md), [`llms.txt`](llms.txt), [`.github/copilot-instructions.md`](.github/copilot-instructions.md) |
+
+---
+
+## Runtime surfaces
+
+| Surface | Entry point | Stability |
+|---|---|---|
+| Python facade | `forecastability` | Stable |
+| Advanced triage namespace | `forecastability.triage` | Stable |
+| CLI | `forecastability` | Beta |
+| Dashboard | `forecastability-dashboard` | Beta |
+| HTTP API | `forecastability.adapters.api:app` | Beta |
+| MCP adapter | experimental adapter surface | Experimental |
+| Agent narration | experimental adapter surface | Experimental |
+
+The primary integration surface is the Python API:
+
+```python
+from forecastability import TriageRequest, run_triage
+```
+
+Advanced users can import triage-specific models from:
+
+```python
+from forecastability.triage import BatchTriageRequest, run_batch_triage_with_details
+```
+
+See:
+
+- [`docs/public_api.md`](docs/public_api.md)
+
+---
+
+## Repository workflow
+
+For local development:
+
+```bash
+git clone https://github.com/AdamKrysztopa/dependence-forecastability.git
+cd dependence-forecastability
+
 uv sync
 ```
 
-Canonical maintainer scripts:
+Run tests:
+
+```bash
+uv run pytest
+```
+
+Run linting:
+
+```bash
+uv run ruff check .
+uv run ruff format --check .
+```
+
+Run a smoke showcase:
+
+```bash
+MPLBACKEND=Agg uv run scripts/run_showcase_fingerprint.py --smoke
+```
+
+Run routing validation smoke path:
+
+```bash
+uv run python scripts/run_routing_validation_report.py --smoke --no-real-panel
+```
+
+Main maintainer scripts:
 
 | Script | Role |
-| --- | --- |
+|---|---|
 | `scripts/run_canonical_triage.py` | Canonical single-series workflow |
 | `scripts/run_benchmark_panel.py` | Benchmark-panel workflow |
 | `scripts/build_report_artifacts.py` | Report artifact builder |
+| `scripts/run_triage_handoff_demo.py` | Triage-first downstream hand-off demo |
+| `scripts/run_causal_rivers_analysis.py` | CausalRivers triage analysis |
+| `scripts/check_repo_contract.py` | Repository contract validation |
+| `scripts/check_published_release.py` | Post-publish PyPI / GitHub release verification |
 
-Secondary utilities:
+---
 
-- `scripts/download_data.py`
-- `scripts/run_exog_analysis.py`
-- `scripts/rebuild_benchmark_fixture_artifacts.py`
-- `scripts/rebuild_diagnostic_regression_fixtures.py`
-
-Current config status:
-
-| Config | Current role |
-| --- | --- |
-| `configs/benchmark_panel.yaml` | Active benchmark-panel configuration |
-| `configs/canonical_examples.yaml` | Descriptive reference for canonical examples, not the root runner's only source of truth |
-| `configs/interpretation_rules.yaml` | Reference thresholds for interpretation policy |
-| `configs/benchmark_exog_panel.yaml` | Secondary exogenous benchmark workflow |
-| `configs/exogenous_screening_workbench.yaml` | Secondary workbench configuration |
-| `configs/robustness_study.yaml` | Secondary robustness-study workflow |
-
-## Tutorials, Walkthroughs, and Integrations
-
-Notebooks and interactive walkthroughs live in the
-[`forecastability-examples`](https://github.com/AdamKrysztopa/forecastability-examples)
-sibling repository. See [docs/examples_index.md](docs/examples_index.md) for the full
-index with source and executed-output links.
-
-For issues with notebooks or walkthroughs, file in the
-[`forecastability-examples` issue tracker](https://github.com/AdamKrysztopa/forecastability-examples/issues).
-For issues with the core library API, file in the
-[core repo issue tracker](https://github.com/AdamKrysztopa/dependence-forecastability/issues).
-
-Main checked-in artifact surfaces:
-
-- `outputs/json/canonical_examples_summary.json` and related canonical JSON outputs
-- `outputs/tables/*.csv`
-- `outputs/reports/*.md`
-
-> [!NOTE]
-> Checked-in artifacts are reference outputs. They are useful examples of the output surface, but they should not be treated as guaranteed-fresh build products for the current working tree.
-
-## Statistical Notes
+## Statistical notes
 
 - AMI is computed per horizon rather than aggregated before computation.
-- pAMI is a project extension and a linear-residual approximation, not exact conditional mutual information.
-- Surrogate significance uses phase-randomized FFT surrogates with at least 99 surrogates and two-sided 95% bands.
-- “Significance skipped” and “no significant lags” are different outcomes. Use `compute_surrogates` or the route choice to tell them apart.
-- In rolling-origin workflows, diagnostics are computed on the training window only.
+- pAMI is a project extension and a linear-residual approximation, not exact
+  conditional mutual information.
+- Surrogate significance uses phase-randomized FFT surrogates with two-sided
+  confidence bands.
+- "Significance skipped" and "no significant lags" are different outcomes.
+- In rolling-origin workflows, diagnostics should be computed on the training
+  window only.
 - Phase surrogates can be conservative for strongly periodic series.
+- Covariate informativeness is not the same as causal proof.
+- Model-family routing is deterministic guidance, not a replacement for
+  validation on holdout data.
+- The package may recommend abstention when the evidence is weak or the input
+  is not ready.
 
-## Documentation Map
+---
+
+## Methodological boundaries
+
+This package is designed to be useful, but conservative.
+
+It is appropriate for:
+
+- pre-modeling diagnostics,
+- lag selection,
+- exogenous-driver screening,
+- forecastability profiling,
+- deterministic model-family routing,
+- contract generation for downstream model search,
+- agent- and LLM-readable forecasting preparation.
+
+It is not enough for:
+
+- final model validation,
+- production forecast approval,
+- causal claims without domain evidence,
+- automated business decisions without holdout testing,
+- replacing expert review in high-stakes settings.
+
+---
+
+## Documentation map
 
 | Need | Start here |
-| --- | --- |
-| Documentation index by role | [docs/README.md](docs/README.md) |
-| Stable imports and runtime entry points | [docs/public_api.md](docs/public_api.md) |
-| Live module layout | [docs/code/module_map.md](docs/code/module_map.md) |
-| HTTP API contract | [docs/reference/api_contract.md](docs/reference/api_contract.md) |
-| Walkthroughs and integrations | [docs/examples_index.md](docs/examples_index.md) |
-| Contributor workflow | [docs/maintenance/developer_guide.md](docs/maintenance/developer_guide.md) |
+|---|---|
+| Quickstart | [`docs/quickstart.md`](docs/quickstart.md) |
+| Public API | [`docs/public_api.md`](docs/public_api.md) |
+| ForecastPrepContract | [`docs/reference/forecast_prep_contract.md`](docs/reference/forecast_prep_contract.md) |
+| Framework recipes | [`docs/recipes/forecast_prep_to_external_frameworks.md`](docs/recipes/forecast_prep_to_external_frameworks.md) |
+| Examples index | [`docs/examples_index.md`](docs/examples_index.md) |
+| Theory docs | [`docs/theory`](docs/theory) |
+| Module map | [`docs/code/module_map.md`](docs/code/module_map.md) |
+| HTTP API contract | [`docs/reference/api_contract.md`](docs/reference/api_contract.md) |
+| Developer guide | [`docs/maintenance/developer_guide.md`](docs/maintenance/developer_guide.md) |
+| Release notes | [`CHANGELOG.md`](CHANGELOG.md), [`RELEASES.md`](RELEASES.md) |
 
-For the repository-wide docs map, see [docs/README.md](docs/README.md).
+---
+
+## Project status
+
+The package is in **beta**.
+
+The current direction is:
+
+```text
+library-first core
+  + framework-agnostic contracts
+  + examples in a sibling repository
+  + better visibility for coding agents and LLM workflows
+```
+
+The core repository should stay focused on deterministic triage logic and stable
+contract surfaces.
+
+Executable walkthroughs, benchmark notebooks, and framework-specific examples
+belong in:
+
+- [`forecastability-examples`](https://github.com/AdamKrysztopa/forecastability-examples)
+
+---
+
+## Citation
+
+If this package supports your research, analysis, or tooling, please cite the
+repository using the metadata in:
+
+- [`CITATION.cff`](CITATION.cff)
+
+---
+
+## Contributing
+
+Contributions are welcome, especially around:
+
+- clearer documentation,
+- additional benchmark examples,
+- forecast-prep contract improvements,
+- deterministic validation cases,
+- downstream recipe examples in the sibling examples repository,
+- better tests for edge cases and readiness failures.
+
+For contributor workflow, see:
+
+- [`docs/maintenance/developer_guide.md`](docs/maintenance/developer_guide.md)
+
+For issues:
+
+- Core library issues: <https://github.com/AdamKrysztopa/dependence-forecastability/issues>
+- Notebook / examples issues: <https://github.com/AdamKrysztopa/forecastability-examples/issues>
+
+---
+
+## License
+
+MIT — see [`LICENSE`](LICENSE).
