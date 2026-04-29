@@ -81,14 +81,6 @@ dev = [
   "twine>=5.0",
   "ty==0.0.22",
 ]
-examples = [
-  "jupyter>=1.1.1",
-  "jupyterlab>=4.3.5",
-  "ipykernel>=6.29.5",
-  "nbformat>=5.10.4",
-  "nbconvert>=7.16.4",
-  "ipywidgets>=8.1.5",
-]
 
 [build-system]
 requires = ["hatchling>=1.27.0"]

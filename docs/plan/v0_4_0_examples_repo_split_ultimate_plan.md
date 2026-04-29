@@ -5,9 +5,9 @@
 **Audience:** Maintainer, reviewer, documentation contributor, examples-repo maintainer, Jr. developer
 **Target release:** `0.4.0` — **library-first slim release**, ships fourth in the 0.3.3 → 0.3.4 → 0.3.5 → 0.4.0 chain
 **Current released version:** `0.3.6` (after the docs hardening pass)
-**Branch:** `feat/v0.4.0-examples-split`
-**Status:** Draft / Proposed
-**Last reviewed:** 2026-04-28
+**Branch:** `chore/0-4-0-repos-split`
+**Status:** Release candidate
+**Last reviewed:** 2026-04-29
 **Batch 1a landed:** 2026-04-28 — EX-D01 (sibling repo bootstrap at https://github.com/AdamKrysztopa/forecastability-examples), EX-D02 (zero-notebook decision recorded)
 **Batch 1b landed:** 2026-04-28 — EX-CPL-02 (`RELEASES.md` index), EX-LOCAL-01 (bootstrap script, code-workspace, `docs/development/local_workspace.md`, `forbid-cross-repo-staging` pre-commit hook)
 **Batch 2a landed:** 2026-04-28 — EX-MIG-01 (15 notebooks migrated with `git filter-repo`, history preserved), EX-MIG-02 (nbconvert CI in `notebooks.yml` + `release.yml`), EX-MIG-03 (darts, mlforecast, statsforecast, causal/tigramite, agent/pydantic-ai pinned in sibling `pyproject.toml`), EX-NB-LOCK-01 (`uv.lock` committed, CI uses `--frozen`), EX-NB-MATRIX-01 (python × source two-axis matrix in CI), EX-NB-EXEC-01 (cleared outputs committed; executed notebooks uploaded as CI artifacts), EX-NB-DATA-01 (sibling `data/` populated with vendored CSVs and regression fixtures; `data/README.md` origin table)
@@ -18,6 +18,19 @@
 **Batch 4b landed:** 2026-04-29 — EX-D05 (`docs/reference/implementation_status.md` notebook rows updated to sibling repo links + two-repo one-liner appended; `docs/explanation/surface_guide.md` notebook workflow row updated, Section 6 updated, two-repo one-liner appended), EX-NB-04 (`docs/recipes/forecast_prep_to_external_frameworks.md` gains forward link table to EX-NB-01/EX-NB-02; sibling `recipes/README.md` gains release-assets link). Bonus: sibling CI fixed (removed broken lint step, fixed `--override-dependencies` → `uv pip install --force-reinstall`, timeout 15→45min).
 **Batch 5a landed:** 2026-04-29 — EX-CHG-01 (CHANGELOG `[0.4.0]` section: library-first slim release entry with Added/Changed/Removed/Notes, rationale link, and forward link to `walkthroughs/05_forecast_prep_to_models.ipynb`), EX-R01 (version bumped to `0.4.0` in `pyproject.toml`, `src/forecastability/__init__.py`, `CITATION.cff`; `repo_contract.yaml` updated to `current_released_version: "0.4.0"` / `next_planned_version: "0.5.0"`). Tests: 1186 passed, 1 skipped — exit 0. All docs-contract checks green.
 **Batch 5b landed:** 2026-04-29 — EX-REL-01 (sibling `RELEASING.md` rewritten: comprehensive two-repo release dance with prerequisites checklist, notebook-with-data commit policy, 6-step sequence, EXAMPLES_DISPATCH_TOKEN setup, rollback procedure), EX-REL-02 (sibling `.github/workflows/preflight.yml` created: `workflow_dispatch` only, `source ∈ {testpypi, git}` axis, python 3.11/3.12 matrix, notebook execution, 14-day artifact upload), EX-R02 (Trusted Publishing already wired in existing `publish-pypi.yml` — gate satisfied without code change), EX-R03 (sibling `pyproject.toml` pin updated to `dependence-forecastability>=0.4.0,<0.5`), EX-CPL-01 (core `publish-pypi.yml` gains `notify-sibling` job: fires `repository_dispatch` event `core_release` with `client_payload.version` to `forecastability-examples` using `EXAMPLES_DISPATCH_TOKEN`). Bonus: sibling `CONTRIBUTING.md` notebook policy updated to commit WITH data; sibling `README.md` stale placeholder replaced with full 19-notebook index table; core `docs/releases/v0.4.0.md` release notes created (required by `release.yml` validation gate). Tests: green. All docs-contract checks green.
+
+## Release gate status
+
+- [x] Core repo notebook removal: complete
+- [x] Sibling examples repo bootstrap: complete
+- [x] Cross-links (docs, examples_index, llms.txt, AGENTS.md): complete
+- [x] Package build verified clean (zero .ipynb in sdist/wheel): complete
+- [ ] Core branch merged to main: pending
+- [ ] Tag v0.4.0 pushed: pending
+- [ ] PyPI publish: pending
+- [ ] Sibling dependency updated to `>=0.4.0,<0.5`: pending (fix in progress)
+- [ ] Examples CI pinned source mandatory (no continue-on-error): pending (fix in progress)
+- [ ] Examples notebooks executed against release candidate branch: pending
 
 **Driver documents:**
 
