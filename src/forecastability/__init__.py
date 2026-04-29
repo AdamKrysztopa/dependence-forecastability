@@ -153,7 +153,7 @@ from forecastability.utils.types import (
 )
 from forecastability.utils.validation import validate_time_series
 
-__version__ = "0.3.6"
+__version__ = "0.4.0"
 
 __all__ = [
     "AmiGeometryCurvePoint",
