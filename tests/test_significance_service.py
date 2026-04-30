@@ -3,10 +3,67 @@
 from __future__ import annotations
 
 import numpy as np
+import pytest
 
 from forecastability.metrics.scorers import default_registry
-from forecastability.services.significance_service import compute_significance_bands_generic
+from forecastability.services.significance_service import (
+    compute_significance_bands_generic,
+    compute_significance_bands_transfer_entropy,
+)
 from forecastability.utils.synthetic import generate_white_noise
+
+
+def test_generic_significance_rejects_too_few_surrogates_before_generation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Direct generic service calls should enforce the significance surrogate floor."""
+    series = generate_white_noise(n=120, seed=1)
+    info = default_registry().get("mi")
+
+    def _raise_if_called(*_args: object, **_kwargs: object) -> np.ndarray:
+        raise AssertionError("phase_surrogates should not be called")
+
+    monkeypatch.setattr(
+        "forecastability.services.significance_service.phase_surrogates",
+        _raise_if_called,
+    )
+
+    with pytest.raises(ValueError, match="n_surrogates must be >= 99"):
+        compute_significance_bands_generic(
+            series,
+            n_surrogates=98,
+            random_state=42,
+            max_lag=3,
+            info=info,
+            which="raw",
+            min_pairs=30,
+            n_jobs=1,
+        )
+
+
+def test_transfer_entropy_significance_rejects_too_few_surrogates_before_generation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Direct TE service calls should enforce the significance surrogate floor."""
+    series = generate_white_noise(n=120, seed=2)
+
+    def _raise_if_called(*_args: object, **_kwargs: object) -> np.ndarray:
+        raise AssertionError("phase_surrogates should not be called")
+
+    monkeypatch.setattr(
+        "forecastability.services.significance_service.phase_surrogates",
+        _raise_if_called,
+    )
+
+    with pytest.raises(ValueError, match="n_surrogates must be >= 99"):
+        compute_significance_bands_transfer_entropy(
+            series,
+            n_surrogates=98,
+            random_state=42,
+            max_lag=3,
+            min_pairs=30,
+            n_jobs=1,
+        )
 
 
 def test_significance_default_matches_explicit_predictive_lag_range() -> None:

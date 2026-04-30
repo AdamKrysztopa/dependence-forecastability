@@ -14,6 +14,13 @@ from forecastability.metrics.scorers import DependenceScorer, ScorerInfo
 from forecastability.services.partial_curve_service import compute_partial_curve
 from forecastability.services.raw_curve_service import compute_raw_curve
 
+_MIN_SIGNIFICANCE_SURROGATES = 99
+
+
+def _validate_significance_surrogate_count(n_surrogates: int) -> None:
+    if n_surrogates < _MIN_SIGNIFICANCE_SURROGATES:
+        raise ValueError("n_surrogates must be >= 99")
+
 
 def compute_significance_bands_generic(
     series: np.ndarray,
@@ -51,6 +58,7 @@ def compute_significance_bands_generic(
     Returns:
         ``(lower_band, upper_band)`` arrays aligned to the evaluated lag range.
     """
+    _validate_significance_surrogate_count(n_surrogates)
     surr = phase_surrogates(series, n_surrogates=n_surrogates, random_state=random_state)
     compute_fn = compute_raw_curve if which == "raw" else compute_partial_curve
     n_workers = (os.cpu_count() or 1) if n_jobs == -1 else n_jobs
@@ -110,6 +118,7 @@ def compute_significance_bands_transfer_entropy(
     Returns:
         ``(lower_band, upper_band)`` arrays of shape ``(max_lag,)``.
     """
+    _validate_significance_surrogate_count(n_surrogates)
     if source is not None and source.shape != series.shape:
         raise ValueError("source must match target shape for TE significance bands")
 

@@ -11,6 +11,7 @@ checkout only stages files tracked by that repo's index. The hook is a
 paranoia catch for shell aliases or editor integrations that might not
 respect working-tree boundaries.
 """
+
 from __future__ import annotations
 
 import subprocess

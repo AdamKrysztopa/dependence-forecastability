@@ -83,7 +83,7 @@ Ordered by implementation sequence (matches the PR plan in §7). The numeric ID 
 
 | Order | ID | Feature | Phase | Priority | Status |
 | ---: | --- | --- | --- | --- | --- |
-| 1 | PBE-F00 | Significance-service correctness gate (`n_surrogates >= 99`) | 0 | P0 | Not started |
+| 1 | PBE-F00 | Significance-service correctness gate (`n_surrogates >= 99`) | 0 | P0 | Done |
 | 2 | PBE-F01 | Performance baseline config and timing script | 1 | P0 | Not started |
 | 3 | PBE-F02 | Hotspot profiling script and report artifacts | 1 | P0 | Not started |
 | 4 | PBE-F03 | Covariant method-subset work avoidance | 2 | P0 | Not started |
