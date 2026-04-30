@@ -1,11 +1,7 @@
-<!--
-Optional banner placeholder.
-Enable this block once the final banner path is stable.
-
+<!-- type: reference -->
 <p align="center">
-  <img src="docs/assets/forecastability-triage-banner.png" alt="Forecastability Triage Toolkit">
+  <img src="docs/img/df-banner.png" alt="Forecastability Triage Toolkit" width="100%">
 </p>
--->
 
 # Forecastability Triage Toolkit
 
@@ -25,7 +21,8 @@ MLForecast, StatsForecast, Nixtla, sklearn, Prophet, or custom models.
 
 [![CI](https://github.com/AdamKrysztopa/dependence-forecastability/actions/workflows/ci.yml/badge.svg)](https://github.com/AdamKrysztopa/dependence-forecastability/actions/workflows/ci.yml)
 [![PyPI version](https://img.shields.io/pypi/v/dependence-forecastability.svg)](https://pypi.org/project/dependence-forecastability/)
-[![Python 3.11-3.12](https://img.shields.io/badge/python-3.11%20to%203.12-blue.svg)](https://python.org)
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/dependence-forecastability?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/dependence-forecastability)
+[![Python 3.11–3.12](https://img.shields.io/badge/python-3.11%E2%80%933.12-blue.svg)](https://python.org)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Research base](https://img.shields.io/badge/research%20base-AMI%20%2B%20pAMI%20%2B%20causal%20screening-2E8B57.svg)](docs/theory)
 [![Examples](https://img.shields.io/badge/examples-forecastability--examples-0A7B83.svg)](https://github.com/AdamKrysztopa/forecastability-examples)
@@ -67,6 +64,8 @@ The goal is to avoid blind model iteration by asking practical questions first:
 
 ```bash
 pip install dependence-forecastability
+# or with uv
+uv add dependence-forecastability
 ```
 
 Optional extras:
@@ -88,7 +87,7 @@ pip install "dependence-forecastability[calendar]"
 Supported Python versions:
 
 ```text
-Python >=3.11,<3.13
+Python 3.11, 3.12
 ```
 
 ---
