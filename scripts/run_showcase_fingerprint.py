@@ -34,6 +34,9 @@ from forecastability.reporting.fingerprint_showcase import (
     verify_showcase_records,
     write_frame_csv,
 )
+from forecastability.services.ami_information_geometry_service import (
+    AmiInformationGeometryConfig,
+)
 from forecastability.services.linear_information_service import compute_linear_information_curve
 from forecastability.use_cases.run_forecastability_fingerprint import (
     run_forecastability_fingerprint,
@@ -75,6 +78,15 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         action="store_true",
         help="suppress the verbose stage banners; only print the final verification line",
     )
+    parser.add_argument(
+        "--n-jobs",
+        type=int,
+        default=1,
+        help=(
+            "Number of parallel workers for the geometry shuffle-surrogate matrix; "
+            "-1 uses all cores. Default 1 preserves serial deterministic behavior."
+        ),
+    )
     return parser.parse_args(argv)
 
 
@@ -109,6 +121,9 @@ def main(argv: list[str] | None = None) -> int:
     args = _parse_args(argv)
     if args.n_surrogates < 99:
         raise ValueError(f"n_surrogates must be >= 99, got {args.n_surrogates}")
+    if args.n_jobs == 0:
+        raise ValueError("--n-jobs must be a non-zero integer (-1 enables all cores).")
+    geometry_config = AmiInformationGeometryConfig(n_jobs=args.n_jobs)
 
     quiet = bool(args.quiet)
     n_obs = _resolved_n(args)
@@ -165,6 +180,7 @@ def main(argv: list[str] | None = None) -> int:
             max_lag=args.max_lag,
             n_surrogates=args.n_surrogates,
             random_state=args.random_state,
+            geometry_config=geometry_config,
         )
         baseline = compute_linear_information_curve(
             series,

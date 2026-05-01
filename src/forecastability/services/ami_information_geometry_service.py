@@ -71,11 +71,24 @@ def _resolve_max_horizon(n: int, config: AmiInformationGeometryConfig) -> int:
 
     Explicit ``max_horizon`` takes precedence and is treated as a hard cap.
     ``max_lag_frac`` is only applied when ``max_horizon`` is not provided.
+
+    PBE-F07: the resolved horizon is also capped by the largest horizon ``h``
+    for which ``n - h >= _guard_pairs_required(config)``. Beyond that cap the
+    per-horizon ``n_pairs < min_pairs`` guard inside ``_compute_raw_profile``
+    would skip every entry while still paying the full surrogate cost. To
+    avoid surfacing an empty curve when even the first horizon is infeasible,
+    the cap is floored at ``1`` and the per-horizon guard remains in place
+    defensively.
     """
     if config.max_horizon is not None:
-        return min(config.max_horizon, n - 1)
-    frac_horizon = max(1, int(math.floor(n * config.max_lag_frac)))
-    return min(frac_horizon, n - 1)
+        resolved = min(config.max_horizon, n - 1)
+    else:
+        frac_horizon = max(1, int(math.floor(n * config.max_lag_frac)))
+        resolved = min(frac_horizon, n - 1)
+    max_feasible = n - _guard_pairs_required(config)
+    if max_feasible < 1:
+        return max(1, resolved)
+    return min(resolved, max_feasible)
 
 
 def _guard_pairs_required(config: AmiInformationGeometryConfig) -> int:

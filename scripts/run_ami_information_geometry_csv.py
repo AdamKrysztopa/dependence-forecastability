@@ -6,6 +6,9 @@ import argparse
 from pathlib import Path
 
 from forecastability.adapters.csv import run_ami_geometry_csv_batch
+from forecastability.services.ami_information_geometry_service import (
+    AmiInformationGeometryConfig,
+)
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -41,12 +44,24 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Do not write one full bundle JSON file per analyzed series.",
     )
+    parser.add_argument(
+        "--n-jobs",
+        type=int,
+        default=1,
+        help=(
+            "Number of parallel workers for the geometry shuffle-surrogate matrix; "
+            "-1 uses all cores. Default 1 preserves serial deterministic behavior."
+        ),
+    )
     return parser
 
 
 def main() -> None:
     """Run the CSV geometry adapter and print emitted artifact paths."""
     args = _build_parser().parse_args()
+    if args.n_jobs == 0:
+        raise ValueError("--n-jobs must be a non-zero integer (-1 enables all cores).")
+    geometry_config = AmiInformationGeometryConfig(n_jobs=args.n_jobs)
     result = run_ami_geometry_csv_batch(
         args.input_csv,
         output_root=args.output_root,
@@ -54,6 +69,7 @@ def main() -> None:
         n_surrogates=args.n_surrogates,
         random_state=args.random_state,
         write_bundle_json=not args.skip_bundle_json,
+        geometry_config=geometry_config,
     )
 
     print("AMI Information Geometry CSV Batch")

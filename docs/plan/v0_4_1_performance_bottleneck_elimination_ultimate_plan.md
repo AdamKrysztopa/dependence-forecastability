@@ -122,7 +122,7 @@ Ordered by execution sequence (matches the PR plan in §7). The numeric ID suffi
 | 8 | PBE-F04 | Single-horizon rolling-origin compute path | 2 | P0 | Done |
 | 9 | PBE-F06 | pAMI lag-design/residualization optimization | 3 | P1 | Done |
 | 10 | PBE-F14 | PCMCI-AMI hybrid `knn_cmi` profiling and fast-path hardening | 3 | P0 | Done (hygiene only — wall-time budget unmet; see [aux_documents/pbe_f14_pcmci_microbench.md](aux_documents/pbe_f14_pcmci_microbench.md)) |
-| 11 | PBE-F08 | Lagged-exog surrogate parallelism and distance-scorer guardrails | 3 | P1 | Not started |
+| 11 | PBE-F08 | Lagged-exog surrogate parallelism and distance-scorer guardrails | 3 | P1 | Done |
 | 12 | PBE-F07 | Fingerprint geometry parallel/preset optimization | 3 | P1 | Not started |
 | 13 | PBE-F12 | Batch workbench per-series parallelism with deterministic ordering | 3 | P1 | Not started |
 | 14 | PBE-F10 | Performance decision matrix, refreshed profiles, and stop/go backlog | 4 | P0 | Not started |
