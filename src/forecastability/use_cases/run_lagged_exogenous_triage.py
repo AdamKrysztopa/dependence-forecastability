@@ -188,6 +188,7 @@ def run_lagged_exogenous_triage(
     include_zero_lag_diagnostic: bool = True,
     include_cross_correlation: bool = True,
     include_cross_ami: bool = True,
+    n_jobs: int = 1,
 ) -> LaggedExogBundle:
     """Run fixed-lag exogenous triage and return a typed lagged-exog bundle.
 
@@ -204,6 +205,11 @@ def run_lagged_exogenous_triage(
         include_zero_lag_diagnostic: Whether profile rows should include lag 0.
         include_cross_correlation: Whether to compute signed cross-correlation profile.
         include_cross_ami: Whether to compute cross-AMI profile and surrogate bands.
+        n_jobs: Worker count forwarded to the surrogate-band executor.
+            ``1`` (default) preserves serial behaviour; ``-1`` uses all CPUs.
+            Per-driver iteration order is always deterministic regardless of
+            ``n_jobs`` because parallelism only fans out within each driver's
+            surrogate-band call.
 
     Returns:
         Composite :class:`LaggedExogBundle` with profile rows and sparse selections.
@@ -211,6 +217,9 @@ def run_lagged_exogenous_triage(
     Raises:
         ValueError: If inputs are invalid.
     """
+    if n_jobs != -1 and n_jobs < 1:
+        raise ValueError("n_jobs must be -1 or >= 1")
+
     validated_target, validated_drivers = _validate_inputs(
         target=target,
         drivers=drivers,
@@ -279,7 +288,7 @@ def run_lagged_exogenous_triage(
                 "raw",
                 exog=driver_series,
                 min_pairs=30,
-                n_jobs=1,
+                n_jobs=n_jobs,
                 lag_range=lag_range,
             )
 

@@ -350,6 +350,11 @@ def _kendall_scorer(
     return 0.0 if np.isnan(tau) else float(abs(tau))
 
 
+# PBE-F08 guardrail: each _dcov_centred call materialises an N x N float64
+# matrix (~3.0 GiB at N=20_000); two are needed per _distance_scorer call.
+_DISTANCE_SCORER_PAIR_BUDGET = 20_000
+
+
 def _dcov_centred(x: np.ndarray) -> np.ndarray:
     """Compute a doubly-centred Euclidean distance matrix."""
     d = squareform(pdist(x.reshape(-1, 1), metric="euclidean"))
@@ -370,8 +375,18 @@ def _distance_scorer(
     Distance correlation is bounded [0, 1] and equals zero iff X and Y are
     independent.  Placed in the "bounded_nonlinear" family for triage
     threshold calibration.
+
+    Raises:
+        ValueError: If ``past.size`` exceeds the per-call N x N working-set
+            budget.  Aggregate or downsample inputs before scoring.
     """
     del random_state
+    if past.size > _DISTANCE_SCORER_PAIR_BUDGET:
+        raise ValueError(
+            "distance correlation scorer requires "
+            f"past.size <= {_DISTANCE_SCORER_PAIR_BUDGET} (got {past.size}); "
+            "aggregate or downsample before scoring"
+        )
     a = _dcov_centred(past)
     b = _dcov_centred(future)
     n = past.size
