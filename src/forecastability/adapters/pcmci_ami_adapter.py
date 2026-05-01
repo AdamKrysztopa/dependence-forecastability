@@ -337,6 +337,10 @@ class PcmciAmiAdapter:
         1. Run PCMCI+ with ``link_assumptions`` built from the Phase 0 survivors.
         2. Map PCMCI+ output (which already performs skeleton + MCI orientation)
            to ``CausalGraphResult``.
+
+    The ``n_permutations`` argument controls the shuffle-test null size of the
+    ``knn_cmi`` CI test. The default is 199 and the floor is 99; values below
+    99 are rejected at construction time to keep p-values meaningful.
     """
 
     def __init__(
@@ -347,16 +351,22 @@ class PcmciAmiAdapter:
         n_neighbors: int = 8,
         min_pairs: int = 50,
         shuffle_scheme: Literal["iid", "block"] = "iid",
+        n_permutations: int = 199,
     ) -> None:
         from forecastability.diagnostics.knn_cmi_ci_test import _validate_shuffle_scheme
 
         _validate_shuffle_scheme(shuffle_scheme)
+        if n_permutations < 99:
+            raise ValueError(
+                f"n_permutations must be >= 99 for significance claims; got {n_permutations}"
+            )
         _check_tigramite_available()
         self._ci_test_name = ci_test
         self._ami_threshold = ami_threshold
         self._n_neighbors = n_neighbors
         self._min_pairs = min_pairs
         self._shuffle_scheme: Literal["iid", "block"] = shuffle_scheme
+        self._n_permutations = n_permutations
 
     def _build_ci_test(self, *, seed: int = 42) -> object:
         """Instantiate the tigramite conditional-independence test."""
@@ -365,7 +375,7 @@ class PcmciAmiAdapter:
 
             return build_knn_cmi_test(
                 n_neighbors=self._n_neighbors,
-                n_permutations=199,
+                n_permutations=self._n_permutations,
                 residual_backend="linear_residual",
                 seed=seed,
                 shuffle_scheme=self._shuffle_scheme,

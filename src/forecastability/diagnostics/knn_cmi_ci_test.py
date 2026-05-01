@@ -20,9 +20,13 @@ import importlib
 from typing import TYPE_CHECKING, Literal
 
 import numpy as np
+from sklearn.feature_selection import mutual_info_regression
 
 if TYPE_CHECKING:
     pass
+
+_PERMUTATION_FLOOR = 99
+_INNER_MIN_PAIRS = 50
 
 ShuffleScheme = Literal["iid", "block"]
 _VALID_SHUFFLE_SCHEMES: tuple[str, ...] = ("iid", "block")
@@ -132,8 +136,19 @@ def build_knn_cmi_test(
 
     Returns:
         An instantiated ``KnnCMI`` conditional-independence test object.
+
+    Raises:
+        ValueError: If ``shuffle_scheme`` is unsupported, ``n_permutations`` is
+            below the significance floor of 99, or ``n_neighbors`` is < 1.
     """
     _validate_shuffle_scheme(shuffle_scheme)
+    if n_permutations < _PERMUTATION_FLOOR:
+        raise ValueError(
+            "n_permutations must be >= "
+            f"{_PERMUTATION_FLOOR} for significance claims; got {n_permutations}"
+        )
+    if n_neighbors < 1:
+        raise ValueError(f"n_neighbors must be >= 1; got {n_neighbors}")
     base_module = importlib.import_module(
         "tigramite.independence_tests.independence_tests_base",
     )
@@ -280,6 +295,20 @@ def build_knn_cmi_test(
             linear_fast_path = self._residual_backend == "linear_residual"
             projector = _build_linear_projector(z) if linear_fast_path else None
 
+            # Hoist per-iteration validation: the inner null-MI call always uses
+            # an empty conditioning matrix, so ``compute_conditional_mi_with_backend``'s
+            # min_pairs / n_neighbors / coercion checks would fire identically every
+            # permutation. Validate once and call ``mutual_info_regression`` directly
+            # in the loop. This is a semantics-preserving fast path because
+            # ``_residualize_target_with_backend(target, conditioning=empty, ...)``
+            # short-circuits to return ``target`` unchanged (no copy, no centering).
+            if _INNER_MIN_PAIRS < 50:
+                # Defensive: the inner caller hard-codes 50 above the
+                # _CONDITIONAL_MIN_PAIRS_FLOOR.
+                raise ValueError(f"_INNER_MIN_PAIRS must be >= 50; got {_INNER_MIN_PAIRS}")
+            if self._n_neighbors < 1:
+                raise ValueError(f"n_neighbors must be >= 1; got {self._n_neighbors}")
+
             null_dist = np.empty(self._n_permutations)
             for b in range(self._n_permutations):
                 if self._shuffle_scheme == "block":
@@ -302,14 +331,13 @@ def build_knn_cmi_test(
                         random_state=self._random_state_seed + 1,
                     )
 
-                null_dist[b] = compute_conditional_mi_with_backend(
-                    residual_past,
+                permuted_mi = mutual_info_regression(
+                    residual_past.reshape(-1, 1),
                     residual_future,
-                    conditioning=None,
                     n_neighbors=self._n_neighbors,
-                    min_pairs=50,
                     random_state=self._random_state_seed,
-                )
+                )[0]
+                null_dist[b] = max(float(permuted_mi), 0.0)
 
             # Phipson & Smyth (2010) correction
             p_value = float((1 + np.sum(null_dist >= value)) / (1 + self._n_permutations))

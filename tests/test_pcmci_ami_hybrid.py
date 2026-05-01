@@ -319,3 +319,155 @@ def test_knn_cmi_finds_nonlinear_parents() -> None:
         f"Expected ('driver_nonlin_sq', 1) in parents; got {target_parents}"
     )
     assert result.metadata["ci_test"] == "knn_cmi"
+
+
+# ---------------------------------------------------------------------------
+# PBE-F14 — n_permutations floor + bit-identical shuffle null regression
+# ---------------------------------------------------------------------------
+
+
+def _f14_synthetic_ci_inputs() -> tuple[np.ndarray, np.ndarray]:
+    """Small synthetic (array, xyz) used by the F14 parity tests."""
+    rng = np.random.default_rng(0)
+    t_len = 300
+    z = rng.standard_normal((t_len, 1))
+    x = z[:, 0] + 0.3 * rng.standard_normal(t_len)
+    y = 0.4 * z[:, 0] + 0.5 * x + 0.3 * rng.standard_normal(t_len)
+    array = np.vstack([x, y, z[:, 0]])
+    xyz = np.array([0, 1, 2])
+    return array, xyz
+
+
+@pytest.mark.parametrize("bad_n_perm", [0, -1, 50, 98])
+def test_build_knn_cmi_test_rejects_n_permutations_below_floor(bad_n_perm: int) -> None:
+    """build_knn_cmi_test must reject n_permutations below the 99 floor."""
+    _require_tigramite()
+    from forecastability.diagnostics.knn_cmi_ci_test import build_knn_cmi_test
+
+    with pytest.raises(ValueError, match=r"n_permutations.*99"):
+        build_knn_cmi_test(n_permutations=bad_n_perm)
+
+
+def test_build_knn_cmi_test_rejects_n_neighbors_below_one() -> None:
+    """n_neighbors < 1 is rejected before tigramite construction."""
+    _require_tigramite()
+    from forecastability.diagnostics.knn_cmi_ci_test import build_knn_cmi_test
+
+    with pytest.raises(ValueError, match=r"n_neighbors.*>= 1"):
+        build_knn_cmi_test(n_neighbors=0)
+
+
+@pytest.mark.parametrize("scheme", ["iid", "block"])
+def test_knn_cmi_shuffle_null_is_bit_identical_under_fixed_seed(scheme: str) -> None:
+    """Two builds at the same seed must produce a bit-identical null + p-value."""
+    _require_tigramite()
+    from forecastability.diagnostics.knn_cmi_ci_test import build_knn_cmi_test
+
+    array, xyz = _f14_synthetic_ci_inputs()
+
+    def _run() -> tuple[float, np.ndarray]:
+        test = build_knn_cmi_test(
+            n_neighbors=8,
+            n_permutations=199,
+            residual_backend="linear_residual",
+            seed=42,
+            shuffle_scheme=scheme,  # type: ignore[arg-type]
+        )
+        observed = test.get_dependence_measure(array, xyz)  # type: ignore[attr-defined]
+        p_value, null = test.get_shuffle_significance(  # type: ignore[attr-defined]
+            array, xyz, observed, return_null_dist=True
+        )
+        return float(p_value), np.asarray(null)
+
+    p_first, null_first = _run()
+    p_second, null_second = _run()
+    assert p_first == p_second
+    assert np.array_equal(null_first, null_second)
+
+
+def test_knn_cmi_shuffle_null_matches_pre_refactor_baseline() -> None:
+    """Regression guard: null_dist tail must match the pre-F14 hard-coded baseline.
+
+    Captured against the F06 pre-F14 implementation by running
+    ``build_knn_cmi_test(n_neighbors=8, n_permutations=199,
+    residual_backend='linear_residual', seed=42, shuffle_scheme='iid')`` against
+    the synthetic input from :func:`_f14_synthetic_ci_inputs`. Both the iid and
+    block schemes are pinned to guard the inner-loop refactor.
+    """
+    _require_tigramite()
+    from forecastability.diagnostics.knn_cmi_ci_test import build_knn_cmi_test
+
+    array, xyz = _f14_synthetic_ci_inputs()
+
+    expected_iid_tail = np.array(
+        [
+            0.0494604571329913,
+            0.05002141682603467,
+            0.05611142600825003,
+            0.0667239068863772,
+            0.07327048658879765,
+        ]
+    )
+    expected_iid_sum = 1.6620371093120507
+    expected_block_tail = np.array(
+        [
+            0.05185371857353305,
+            0.05916590515852693,
+            0.05980693366669376,
+            0.06412417255244174,
+            0.06429374441123104,
+        ]
+    )
+    expected_block_sum = 1.7725101855080103
+
+    cases = [
+        ("iid", expected_iid_tail, expected_iid_sum),
+        ("block", expected_block_tail, expected_block_sum),
+    ]
+    for scheme, expected_tail, expected_sum in cases:
+        test = build_knn_cmi_test(
+            n_neighbors=8,
+            n_permutations=199,
+            residual_backend="linear_residual",
+            seed=42,
+            shuffle_scheme=scheme,  # type: ignore[arg-type]
+        )
+        observed = test.get_dependence_measure(array, xyz)  # type: ignore[attr-defined]
+        p_value, null = test.get_shuffle_significance(  # type: ignore[attr-defined]
+            array, xyz, observed, return_null_dist=True
+        )
+        null_arr = np.asarray(null)
+        # Sorted by construction (return_null_dist=True returns np.sort(null_dist)).
+        assert null_arr.shape == (199,)
+        assert np.array_equal(null_arr[-5:], expected_tail), (
+            f"scheme={scheme}: tail drift; got {null_arr[-5:].tolist()}"
+        )
+        assert float(null_arr.sum()) == expected_sum, (
+            f"scheme={scheme}: sum drift; got {float(null_arr.sum())}"
+        )
+        # observed >> max(null) for this case, so p hits the (1 + 0) / (1 + B) floor.
+        assert float(p_value) == 1.0 / (1.0 + 199.0)
+
+
+def test_pcmci_ami_adapter_rejects_n_permutations_below_floor() -> None:
+    """Adapter ctor rejects n_permutations < 99 before any compute work."""
+    with pytest.raises(ValueError, match=r"n_permutations.*99"):
+        PcmciAmiAdapter(ci_test="knn_cmi", n_permutations=50)
+
+
+def test_pcmci_ami_adapter_default_n_permutations_is_199() -> None:
+    """Default adapter wires through n_permutations=199 to the knn_cmi CI test."""
+    _require_tigramite()
+    adapter = PcmciAmiAdapter()
+    assert adapter._n_permutations == 199
+    ci_test = adapter._build_ci_test(seed=42)
+    assert ci_test._n_permutations == 199  # type: ignore[attr-defined]
+
+
+def test_pcmci_ami_adapter_custom_n_permutations_propagates() -> None:
+    """A custom n_permutations is forwarded to the underlying CI test."""
+    _require_tigramite()
+    adapter = PcmciAmiAdapter(ci_test="knn_cmi", n_permutations=149)
+    assert adapter._n_permutations == 149
+    ci_test = adapter._build_ci_test(seed=42)
+    assert ci_test._n_permutations == 149  # type: ignore[attr-defined]
