@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import numpy as np
 import pytest
 
 from forecastability.reporting.forecastability_workbench_reporting import (
@@ -113,3 +114,79 @@ def test_reports_include_technical_and_executive_surfaces(
     assert "Forecasting Portfolio Brief" in executive
     assert "Decision Summary" in executive
     assert "white_noise" in executive
+
+
+def _build_parity_request() -> BatchTriageRequest:
+    """Build a small deterministic request mixing ok and blocked outcomes."""
+    return BatchTriageRequest(
+        items=[
+            BatchSeriesRequest(
+                series_id="ar1_monotonic",
+                series=generate_ar1_monotonic(n=_N, seed=42).tolist(),
+            ),
+            BatchSeriesRequest(
+                series_id="seasonal_periodic",
+                series=generate_seasonal_periodic(n=_N, period=12, seed=42).tolist(),
+            ),
+            BatchSeriesRequest(
+                series_id="too_short",
+                series=generate_white_noise(n=24, seed=7).tolist(),
+            ),
+        ],
+        max_lag=_MAX_LAG,
+        n_surrogates=_N_SURROGATES,
+        random_state=42,
+    )
+
+
+def _assert_results_bit_identical(
+    left: BatchForecastabilityWorkbenchResult,
+    right: BatchForecastabilityWorkbenchResult,
+) -> None:
+    """Compare two workbench results structurally, including embedded numpy arrays.
+
+    Some embedded fields (e.g. ``TriageRequest.series`` and the geometry profiles
+    inside ``FingerprintBundle``) store ``numpy.ndarray`` values, which break
+    Pydantic's element-wise ``__eq__``. ``numpy.testing.assert_equal`` walks
+    nested mappings/sequences and applies array-aware comparison.
+    """
+    assert [item.series_id for item in left.items] == [item.series_id for item in right.items]
+    assert left.summary == right.summary
+    np.testing.assert_equal(
+        [item.model_dump() for item in left.items],
+        [item.model_dump() for item in right.items],
+    )
+
+
+def test_n_jobs_default_matches_explicit_serial() -> None:
+    """Omitting ``n_jobs`` must match ``n_jobs=1`` exactly."""
+    request = _build_parity_request()
+    default_result = run_batch_forecastability_workbench(request, top_n=2)
+    serial_result = run_batch_forecastability_workbench(request, top_n=2, n_jobs=1)
+    _assert_results_bit_identical(default_result, serial_result)
+
+
+def test_n_jobs_serial_vs_parallel_bit_identical() -> None:
+    """Parallel execution must be bit-identical to the serial path under fixed seeds."""
+    request = _build_parity_request()
+    serial_result = run_batch_forecastability_workbench(request, top_n=2, n_jobs=1)
+    parallel_result = run_batch_forecastability_workbench(request, top_n=2, n_jobs=2)
+    _assert_results_bit_identical(serial_result, parallel_result)
+
+
+def test_n_jobs_zero_is_rejected() -> None:
+    """``n_jobs=0`` is not a valid joblib value and must raise ``ValueError``."""
+    request = _build_parity_request()
+    with pytest.raises(ValueError, match="n_jobs"):
+        run_batch_forecastability_workbench(request, top_n=2, n_jobs=0)
+
+
+def test_item_ordering_preserved_across_n_jobs() -> None:
+    """Workbench item ordering must follow the upstream execution order regardless of ``n_jobs``."""
+    request = _build_parity_request()
+    serial_result = run_batch_forecastability_workbench(request, top_n=2, n_jobs=1)
+    parallel_result = run_batch_forecastability_workbench(request, top_n=2, n_jobs=2)
+    serial_ids = [item.series_id for item in serial_result.items]
+    parallel_ids = [item.series_id for item in parallel_result.items]
+    assert serial_ids == parallel_ids
+    assert set(serial_ids) == {"ar1_monotonic", "seasonal_periodic", "too_short"}
