@@ -118,7 +118,7 @@ Ordered by execution sequence (matches the PR plan in §7). The numeric ID suffi
 | 4 | PBE-F03 | Covariant method-subset work avoidance | 2 | P0 | Done |
 | 5 | PBE-F05 | Surrogate generation/evaluation reuse and preallocation | 3 | P1 | Done (hygiene only — wall-time budget unmet; see [aux_documents/pbe_f05_serial_microbench.md](aux_documents/pbe_f05_serial_microbench.md)) |
 | 6 | PBE-F16 | Generic curve validation/scaling hoist for raw, partial, TE, and GCMI loops | 3 | P1 | Done |
-| 7 | PBE-F13 | Shared lag-design scaffolding utility (prerequisite for F04, F06, and F14) | 3 | P1 | Not started |
+| 7 | PBE-F13 | Shared lag-design scaffolding utility (prerequisite for F04, F06, and F14) | 3 | P1 | Done |
 | 8 | PBE-F04 | Single-horizon rolling-origin compute path | 2 | P0 | Done |
 | 9 | PBE-F06 | pAMI lag-design/residualization optimization | 3 | P1 | Not started |
 | 10 | PBE-F14 | PCMCI-AMI hybrid `knn_cmi` profiling and fast-path hardening | 3 | P0 | Not started |

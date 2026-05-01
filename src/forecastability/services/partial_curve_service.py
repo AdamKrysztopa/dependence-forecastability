@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import numpy as np
-from sklearn.linear_model import LinearRegression
 
 from forecastability.metrics import _scale_series
-from forecastability.metrics._lag_design import build_intermediate_design
+from forecastability.metrics._lag_design import (
+    build_intermediate_design,
+    residualize_with_intercept,
+)
 from forecastability.metrics.scorers import DependenceScorer
 
 
@@ -88,12 +90,11 @@ def _residualize_prescaled(
     if h <= 1:
         return past, future
     z = build_intermediate_design(scaled, h)
-    model_future = LinearRegression().fit(z, future)
-    res_future = future - model_future.predict(z)
     if exog_present:
+        (res_future,) = residualize_with_intercept(z, (future,))
         return past.copy(), res_future
-    model_past = LinearRegression().fit(z, past)
-    return past - model_past.predict(z), res_future
+    res_past, res_future = residualize_with_intercept(z, (past, future))
+    return res_past, res_future
 
 
 def compute_partial_curve(

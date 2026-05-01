@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import numpy as np
 from sklearn.feature_selection import mutual_info_regression
-from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler
 
-from forecastability.metrics._lag_design import build_intermediate_design
+from forecastability.metrics._lag_design import (
+    build_intermediate_design,
+    residualize_with_intercept,
+)
 from forecastability.utils.validation import validate_time_series
 
 
@@ -86,12 +88,7 @@ def compute_pami_linear_residual(
             res_past = past
             res_future = future
         else:
-            model_past = LinearRegression()
-            model_future = LinearRegression()
-            model_past.fit(z, past)
-            model_future.fit(z, future)
-            res_past = past - model_past.predict(z)
-            res_future = future - model_future.predict(z)
+            res_past, res_future = residualize_with_intercept(z, (past, future))
 
         value = mutual_info_regression(
             res_past.reshape(-1, 1),
@@ -209,12 +206,7 @@ def compute_pami_at_horizon(
         res_past = past
         res_future = future
     else:
-        model_past = LinearRegression()
-        model_future = LinearRegression()
-        model_past.fit(z, past)
-        model_future.fit(z, future)
-        res_past = past - model_past.predict(z)
-        res_future = future - model_future.predict(z)
+        res_past, res_future = residualize_with_intercept(z, (past, future))
     value = mutual_info_regression(
         res_past.reshape(-1, 1),
         res_future,
