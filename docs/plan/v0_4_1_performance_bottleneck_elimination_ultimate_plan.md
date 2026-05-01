@@ -7,7 +7,7 @@
 **Current released version:** `0.4.0`  
 **Branch:** `feat/v0.4.1-performance-bottleneck-elimination`  
 **Status:** Draft  
-**Last reviewed:** 2026-04-30
+**Last reviewed:** 2026-05-01
 
 > [!IMPORTANT]
 > **Scope (binding).** This release ships a measured performance baseline, a code-evidenced bottleneck inventory, correctness gates for significance services, Python-level bottleneck elimination, and an optional-native-acceleration design document.
@@ -41,7 +41,7 @@
 
 The package is now broad enough that performance cost is no longer concentrated in one function. The high-cost paths are split across legacy AMI/pAMI, generic raw/partial curves, phase-surrogate significance, KSG-II fingerprint geometry, covariant method fan-out, and rolling-origin loops. Without a measured plan, isolated optimizations will move one benchmark while leaving the user-visible workflows slow.
 
-This release makes performance a deterministic, reviewable surface. It first establishes repeatable timing and memory baselines, then removes avoidable work without changing AMI/pAMI semantics. Native acceleration remains a later optional plugin path, not a core-package rewrite.
+This release makes performance a deterministic, reviewable surface. The Phase 1 profiling surface now exists; optimization work must use it to remove measured avoidable work without changing AMI/pAMI semantics. Native acceleration remains a later optional plugin path, not a core-package rewrite.
 
 The planning research read the current hot paths under `src/forecastability/metrics/`, `src/forecastability/services/`, `src/forecastability/diagnostics/`, `src/forecastability/use_cases/`, and the rolling-origin helpers. The plan therefore separates bottleneck elimination into four categories: work we can avoid, Python kernels we can tighten, alternate estimators we can expose only under honest names, and native kernels that may justify an out-of-tree Rust plugin after parity gates exist.
 
@@ -49,6 +49,16 @@ The release should let a downstream consumer answer two crisp questions:
 
 1. Which forecastability workflows are slow, by how much, and on which inputs?
 2. Which bottlenecks can be eliminated without weakening horizon-specific AMI/pAMI, surrogate significance, or rolling-origin leakage controls?
+
+### Measured elimination thesis
+
+The May 1, 2026 profiling run changes the optimization order from broad kernel speculation to a measured path:
+
+- The immediate user-visible bottleneck in the current synthetic callable profile is surrogate significance orchestration and repeated curve setup, not scalar AMI/pAMI curve calls. Medium `run_triage` with significance spent about `4.043s / 4.087s` in legacy `compute_significance_bands`; medium `run_batch_triage` spent about `8.057s / 8.151s` in the same path over two series; medium `run_covariant_analysis(methods=["cross_ami"])` spent about `0.626s / 0.640s` in generic significance with 99 surrogate evaluations and 100 raw-curve calls.
+- PBE-F03 remains first because it removes unrequested covariant work without touching estimator semantics. PBE-F05 is the first measured kernel-level optimization after F03 and must target legacy and generic significance functions before pAMI residualization rewrites, KSG-II geometry, or native plugin design.
+- F05 acceptance budget: after F03, the before/after artifacts must show medium `run_triage` with significance at least `20%` faster than the refreshed Phase 1 timing median (`3.862s`) or no worse than `3.09s`, medium `run_batch_triage` at least `20%` faster than the profiled wall (`8.151s`) or no worse than `6.52s`, and medium `cross_ami` at least `20%` faster than `0.640s` or no worse than `0.51s`, with semantic parity gates passing. If these budgets are not met, the PR must include serial or child-process profiles proving where the remaining cost lives before any broader rewrite is approved.
+- Scalar AMI/pAMI kernel changes are stop/go gated. Do not proceed to native plugin design, approximate estimators, or broad kernel rewrites unless refreshed profiles after PBE-F03, PBE-F05, and capped PBE-F04 panels still show kernel-level work as a material bottleneck.
+- PCMCI/KNN claims need their own profile evidence. A capped local profile (`T=220`, four variables, `max_lag=2`, `knn_cmi`) took `4.38s`; 18 shuffle-significance calls produced 3,632 `mutual_info_regression` calls. A direct `T=800`, `B=199` shuffle-significance micro-profile took about `0.34-0.44s` per CI test. F14 therefore targets full-PCMCI call volume and repeated sklearn MI setup around the existing fast path, not a silent estimator swap.
 
 > [!IMPORTANT]
 > The largest semantic risk is replacing a scientifically meaningful estimator with a faster but different estimand while keeping the same name. GCMI, Pearson, rank correlation, distance correlation, approximate nearest neighbors, or RF residualization may be useful explicit alternatives, but they must not silently replace AMI or linear-residual pAMI.
@@ -66,6 +76,16 @@ The release should let a downstream consumer answer two crisp questions:
 | Deterministic ordering | Parallel implementations must preserve fixed seeds, result order, and stable fixture outputs. |
 | Framework boundary | No Darts, MLForecast, StatsForecast, Nixtla, or framework-fitting helpers are introduced. |
 
+### Optimization PR evidence rule
+
+Every optimization PR after PBE-F02 must include these review artifacts:
+
+- Before/after `outputs/performance/performance_summary.json`, `outputs/performance/hotspots.csv`, and relevant `.prof` / `.pstats` files generated from the same `configs/performance_baseline.yaml` hash.
+- A short PR note naming the changed file targets, the affected deterministic forecastability triage surface, the median/p95/runtime-memory delta, and whether the change is additive, semantic-preserving, or an explicit contract change.
+- Parity or semantic guardrails for readiness, leakage risk, informative horizons, primary lags, seasonality structure, covariate informativeness, surrogate bands, and downstream hand-off surfaces touched by the PR.
+- For any ProcessPoolExecutor path, either serial profiling (`n_jobs=1`) or child-process profiling artifacts. Parent-process lock waiting is not sufficient evidence for estimator or kernel wins.
+- No accepted optimization PR may introduce downstream forecasting framework integrations, notebooks, mandatory native dependencies, or native Rust code in the core package.
+
 ### Architecture rules
 
 - The core package remains **framework-agnostic**: no `darts`, `mlforecast`, `statsforecast`, or `nixtla` imports at any tier.
@@ -76,6 +96,15 @@ The release should let a downstream consumer answer two crisp questions:
 - Native acceleration, if prototyped, is out-of-tree as a separate distribution discovered by entry points such as `forecastability.kernels`.
 - The pure-Python path remains authoritative and installed by default.
 - No new notebooks are added to this repository.
+
+### Compatibility classification
+
+All planned `0.4.1` implementation work is additive or semantic-preserving unless a feature item explicitly says otherwise.
+
+- **Additive surfaces:** `configs/performance_baseline.yaml` budgets, `scripts/run_performance_baseline.py`, `scripts/profile_hotspots.py`, private helper functions, deterministic `n_jobs` pass-through parameters that default to current serial behavior, and future `forecastability.ports.kernels` Protocol definitions.
+- **Semantic-preserving internal changes:** covariant method-subset work avoidance, surrogate result preallocation, per-call prevalidated/pre-scaled helper use, single-horizon helpers that exactly match full-curve outputs, lag-design scaffolding, and exact chunked scorer implementations.
+- **Explicit design-only surfaces:** optional native plugin design and provider Protocols. No native Rust code, framework integration, or downstream fitting helper ships in the core package.
+- **Contract changes:** none planned for `0.4.1`. Any proposal that changes estimator defaults, surrogate nulls, public result fields, or downstream hand-off semantics must be split from this additive plan and reviewed separately.
 
 ### Feature inventory
 
@@ -92,7 +121,7 @@ Ordered by implementation sequence (matches the PR plan in §7). The numeric ID 
 | 7 | PBE-F04 | Single-horizon rolling-origin compute path | 2 | P0 | Not started |
 | 8 | PBE-F06 | pAMI lag-design/residualization optimization | 3 | P1 | Not started |
 | 9 | PBE-F07 | Fingerprint geometry parallel/preset optimization | 3 | P1 | Not started |
-| 10 | PBE-F14 | PCMCI-AMI hybrid `knn_cmi` shuffle-significance fast-path | 3 | P0 | Not started |
+| 10 | PBE-F14 | PCMCI-AMI hybrid `knn_cmi` profiling and fast-path hardening | 3 | P0 | Not started |
 | 11 | PBE-F08 | Lagged-exog surrogate parallelism and distance-scorer guardrails | 3 | P1 | Not started |
 | 12 | PBE-F12 | Batch workbench per-series parallelism with deterministic ordering | 3 | P1 | Not started |
 | 13 | PBE-F15 | Typed kernel-provider Protocols in `forecastability.ports.kernels` | 4 | P1 | Not started |
@@ -132,14 +161,15 @@ Ordered by implementation sequence (matches the PR plan in §7). The numeric ID 
 5. **Rolling-origin single-horizon path**
    - Rolling-origin code no longer computes a full curve when only one horizon is consumed.
    - Tests prove lag `h` still maps to `curve[h - 1]` in the full-curve path, including `random_state + h` seed behavior.
-   - Holdout-perturbation test: mutating `series[origin:]` in place between two otherwise identical rolling-origin runs yields bit-identical `ami_curve[h-1]`, `pami_curve[h-1]`, `directness_ratio`, and surrogate bands per origin (`np.array_equal`). This test runs on every PR under PBE-F03..F08, not only F04.
+   - Holdout-perturbation tests: mutating future target values and, for exogenous rolling-origin, mutating future exogenous values independently between otherwise identical rolling-origin runs yields bit-identical `ami_curve[h-1]`, `pami_curve[h-1]`, `directness_ratio`, and surrogate bands per origin (`np.array_equal`). These tests run on every PR under PBE-F03..F08, not only F04.
    - Single-horizon parity is parametrized over `(lag_start ∈ {0, 1, k>1}, lag_end)`. The new helpers must satisfy `helper(train, h, R) == compute_ami(train, max_lag=H, random_state=R)[h-1]` for every `h ∈ [1..H]` and any `H ≥ h`, and the analogous identity for `compute_raw_curve` / `compute_partial_curve` indexed by `curve[h - lag_start]`.
 
 6. **Surrogate discipline**
    - Reusing target phase surrogates across drivers is treated as an explicit Monte Carlo design change, not a bitwise optimization. The null ("phase-randomized target, fixed driver/source") is unchanged; per-driver realizations and downstream fixtures will change. Reuse PRs MUST rebuild affected fixtures, add a band-shape tolerance test (not a bit-equality test), and document the change in metadata.
+   - When common target surrogates are reused across drivers, metadata must mark `common_target_surrogate_stream=true`. Per-driver bands remain marginal; cross-driver significant-count, ranking, or FDR-style interpretations must either use independent-stream mode or explicitly account for induced Monte Carlo dependence.
    - Raw, partial, TE, exogenous, and geometry surrogate nulls are not pooled together.
    - CrossAMI bands are never reused for pCrossAMI or TE, and geometry shuffle-surrogate `tau` is never replaced by phase-surrogate bands.
-   - For optimizations that do NOT change the seed stream (preallocation, validation hoist, `n_jobs` pass-through), `n_jobs=1` and `n_jobs>1` outputs are bit-identical for fixed seeds (`np.array_equal`). No shared mutable RNG across workers; each task derives its seed deterministically from `(random_state, h, surrogate_index)`. `joblib` is not introduced in this release; `concurrent.futures.ThreadPoolExecutor` remains the only parallelism backend.
+   - For optimizations that do NOT change the seed stream (preallocation, validation hoist, `n_jobs` pass-through), `n_jobs=1` and `n_jobs>1` outputs are bit-identical for fixed seeds (`np.array_equal`). No shared mutable RNG across workers; each task derives its seed deterministically from `(random_state, h, surrogate_index)`. No new `joblib` use is introduced in significance services; existing geometry `joblib` parallelism is either left untouched or moved behind a private parallel-map adapter under PBE-F07.
 
 7. **pAMI optimization safety**
    - Lag-design or residualization caches are per-series and per-train-window, not global.
@@ -254,9 +284,9 @@ Performance work changes *how much unnecessary work is performed*, not what the 
 | Legacy pAMI | `src/forecastability/metrics/metrics.py::compute_pami_linear_residual` | Rebuilds conditioning matrices and fits two regressions per horizon. | Cache lag design matrices within a curve call; benchmark closed-form least squares parity before replacing `LinearRegression`. |
 | Generic raw curves | `src/forecastability/services/raw_curve_service.py::compute_raw_curve` | Scales target and optional exog on every curve call; called inside surrogate and rolling-origin loops. | Accept prevalidated/pre-scaled arrays only through private helpers; keep public helper behavior unchanged. |
 | Generic partial curves | `src/forecastability/services/partial_curve_service.py::_residualize` | Rebuilds `np.column_stack` lag matrices and fits `LinearRegression` per horizon. | Share lag-design scaffolding and reduce repeated scaling/validation. |
-| Significance bands | `src/forecastability/services/significance_service.py` | Cost is `n_surrogates * curve_cost`; the **evaluation** path uses `values: list[np.ndarray] = [...]; np.vstack(values)` and lacks service-level `n_surrogates >= 99` guards. Phase-surrogate generation already preallocates (`np.empty((n_surrogates, arr.size))` in `phase_surrogates`), so do not re-flag generation as a preallocation gap. | Enforce surrogate floor, preallocate result matrices, expose deterministic `n_jobs`, reuse target surrogates where null permits. |
+| Significance bands | `src/forecastability/services/significance_service.py` | Cost is `n_surrogates * curve_cost`; the **evaluation** path uses `values: list[np.ndarray] = [...]; np.vstack(values)`. Phase-surrogate generation already preallocates (`np.empty((n_surrogates, arr.size))` in `phase_surrogates`), so do not re-flag generation as a preallocation gap. | Preserve the existing surrogate floor, validate `which`, `max_lag`, `min_pairs`, `n_jobs`, and target/exog shape before allocation, preallocate result matrices, expose deterministic `n_jobs`, reuse target surrogates only where null permits. |
 | Legacy significance bands | `src/forecastability/diagnostics/surrogates.py::compute_significance_bands` | Generates all surrogates, maps each to full AMI/pAMI curve, then stacks arrays. | Keep process-pool option, add matrix preallocation in serial path, and profile memory on large cases. |
-| PCMCI-AMI hybrid CMI null | `src/forecastability/adapters/pcmci_ami_adapter.py` + tigramite `KnnCMI.get_shuffle_significance` | Per-permutation residualize+CMI of `(X, Y | Z)`; dominates `discover_full(ci_test="knn_cmi")` on the routing-validation real panel (~134.6s of 135.6s on n=800, max_lag=2). | Cache residualized `Y` once per CI test; shuffle/residualize only `X` per permutation; preserve seeds and shuffle scheme; do not introduce a Tigramite-global RNG parallelism. Tracked under PBE-F14. |
+| PCMCI-AMI hybrid CMI null | `src/forecastability/adapters/pcmci_ami_adapter.py` + tigramite `KnnCMI.get_shuffle_significance` | Full PCMCI-AMI runtime is dominated by repeated shuffle-significance calls. The existing `linear_residual` path already residualizes `Y` once and builds the `Z` projector once per CI test; the capped local profile still made 18 shuffle tests and 3,632 sklearn MI calls in `4.38s`. | Benchmark and harden the existing fast path, validate `n_permutations >= 99`, reduce repeated validation/scaling/MI setup where parity permits, preserve seeds and shuffle scheme, and do not introduce Tigramite-global RNG parallelism. Tracked under PBE-F14. |
 | Fingerprint geometry | `src/forecastability/services/ami_information_geometry_service.py` | KSG-II nearest-neighbor fit per horizon and per shuffle surrogate. | Use existing `n_jobs` in script presets, skip impossible horizons early, keep exact KSG-II parity. |
 | Covariant analysis | `src/forecastability/use_cases/run_covariant_analysis.py` | Fan-out over drivers, lags, methods, surrogates; computes CrossAMI and pCrossAMI together when either is requested. | Split method-specific curve computation; expose cross-band parallelism; reuse target surrogates safely. |
 | Exogenous screening workbench | `src/forecastability/use_cases/run_exogenous_screening_workbench.py` | Per-driver evaluations call generic significance bands; nested loops over horizons; driver count typically large; rescales target series twice per driver. | Hoist target scaling once per workbench call; reuse target phase surrogates across drivers under the explicit Monte Carlo design clause (PBE-F05); deterministic `n_jobs` at the driver level. |
@@ -272,7 +302,8 @@ These are the concrete observations a reviewer should verify before approving op
 
 - `compute_ami()` scales once, then loops over `1..max_lag` and calls `mutual_info_regression` once per horizon. This is correct, but rolling-origin callers often discard every value except `curve[h - 1]`.
 - `compute_pami_linear_residual()` and generic `_residualize()` build the intermediate-lag design from slices on every horizon, then fit separate regressions. This is a good Python-level target because the pAMI estimand can stay unchanged.
-- `compute_significance_bands_generic()` and `compute_significance_bands_transfer_entropy()` neither service currently enforces `n_surrogates >= 99` at all (no guard exists in [src/forecastability/services/significance_service.py](../../src/forecastability/services/significance_service.py)); only the legacy `compute_significance_bands` enforces it. The public analyzer happens to enforce the floor upstream, but a direct service call passes any positive value into `phase_surrogates`.
+- F00 is closed for generic significance: `compute_significance_bands_generic()` and `compute_significance_bands_transfer_entropy()` validate `n_surrogates >= 99` before calling `phase_surrogates()`. PBE-F05 must preserve that ordering while replacing list/`vstack` evaluation with preallocated result matrices.
+- `compute_significance_bands_generic()` still accepts `which: str` and treats any non-`"raw"` value as partial. F00/F05 should add runtime validation for `which in {"raw", "partial"}`, `max_lag`, `min_pairs`, `n_jobs`, and target/exog shape before surrogate allocation while keeping the public signature backward-compatible.
 - `phase_surrogates(arr, *, n_surrogates: int, random_state: int) -> np.ndarray` in [src/forecastability/diagnostics/surrogates.py](../../src/forecastability/diagnostics/surrogates.py) uses keyword-only arguments. Native plugin contract in §3.7 must reflect this.
 - `run_covariant_analysis()` calls `_compute_cross_curves()` when either `cross_ami` or `cross_pami` is requested, so method-subset requests still pay for both curves.
 - `run_rolling_origin_evaluation()` and `run_exogenous_rolling_origin_evaluation()` call full-curve analyzers with `max_lag=horizon`, then read only `curve[horizon - 1]`.
@@ -284,46 +315,51 @@ These are the concrete observations a reviewer should verify before approving op
 
 ### 3.3. Phase 1 measured profile snapshot
 
-These numbers were generated by the Phase 1 artifacts on 2026-04-30 with:
+These numbers were generated by the Phase 1 artifacts on 2026-05-01 with:
 
-- `uv run python scripts/run_performance_baseline.py`
-- `uv run python scripts/profile_hotspots.py`
+- `MPLBACKEND=Agg uv run python scripts/run_performance_baseline.py`
+- `MPLBACKEND=Agg uv run python scripts/profile_hotspots.py`
 
 The machine snapshot recorded in `outputs/performance/performance_summary.json` was
-Python 3.11.11 on an Apple M4 Pro with 12 logical cores, package version `0.4.0`,
-git SHA `d8f1b45ee6896f593a04c5756e02f70cfa3f784a`.
+Python 3.11 on the local macOS development machine. The fresh artifacts are
+`outputs/performance/performance_summary.json`, `outputs/performance/hotspots.csv`,
+`outputs/performance/hotspots_manifest.json`, and 18 `.prof` / `.pstats` target artifacts.
+The artifacts report `forecastability_version: 0.4.0` because they are plan-time
+measurements for the `0.4.1` work, not a packaged `0.4.1` release run.
 
 Baseline cases:
 
 | Case | Input | Significance route | Median wall | p95 wall | Peak RSS |
 | --- | --- | ---: | ---: | ---: | ---: |
-| small univariate triage | synthetic AR(1), `n=180`, `max_lag=8` | no | 0.012s | 0.013s | 206.3 MiB |
-| medium univariate triage | synthetic seasonal AR(1), `n=360`, `max_lag=16` | yes | 4.376s | 4.421s | 206.3 MiB |
-| large univariate triage | synthetic seasonal AR(1), `n=720`, `max_lag=24` | yes | 4.855s | 4.873s | 207.7 MiB |
+| small univariate triage | synthetic AR(1), `max_lag=8` | no | 0.010s | recorded in artifact | recorded in artifact |
+| medium univariate triage | synthetic seasonal AR(1), `max_lag=16` | yes | 3.862s | 3.884s | 205.6 MiB |
+| large univariate triage | synthetic seasonal AR(1), `max_lag=24` | yes | 4.272s | 4.293s | 207.6 MiB |
 
 Profiled callable targets:
 
 | Rank | Target | Size | Wall | Dominant measured cost |
 | ---: | --- | --- | ---: | --- |
-| 1 | `run_batch_triage` | medium | 8.940s | Two `run_triage` calls; both dominated by surrogate significance. |
-| 2 | `run_triage` | medium | 4.435s | `diagnostics/surrogates.py::compute_significance_bands` consumed 4.386s through legacy AMI/pAMI surrogate bands. |
-| 3 | `run_covariant_analysis(methods=["cross_ami"])` | medium | 0.678s | `significance_service.compute_significance_bands_generic` consumed 0.662s through 99 `compute_raw_curve` evaluations. |
-| 4 | `run_rolling_origin_evaluation` | small/medium | 0.192-0.218s | In this smoke profile, ETS/autoregressive evaluation dominated more than AMI/pAMI curve computation. |
-| 5 | Standalone AMI/pAMI/raw/partial curves | medium | 0.025-0.039s | Single curve calls are cheap; repeated significance and orchestration loops make them expensive. |
+| 1 | `run_batch_triage` | medium | 8.151s | Two medium `run_triage` calls; about 8.057s is legacy surrogate significance. |
+| 2 | `run_triage` | medium | 4.087s | `diagnostics/surrogates.py::compute_significance_bands` consumed about 4.043s through legacy AMI/pAMI surrogate bands. |
+| 3 | `run_covariant_analysis(methods=["cross_ami"])` | medium | 0.640s | `significance_service.compute_significance_bands_generic` consumed about 0.626s through 99 surrogate evaluations and 100 `compute_raw_curve` calls. |
+| 4 | `run_rolling_origin_evaluation` | smoke | 0.189s | ETS/autoregressive evaluation dominated this smoke profile; it does not prove AMI/pAMI curve waste is the top rolling-origin bottleneck. |
+| 5 | Standalone AMI/pAMI/raw/partial curves | medium | cheap at this scale | Single curve calls are cheap; repeated significance and orchestration loops make them expensive. |
 | 6 | `build_forecast_prep_contract` | small/medium | <0.001s | Handoff export is not a performance bottleneck after triage is already computed. |
 
 Coverage caveat:
 
-- `profile_hotspots.py` emitted 45 manifest rows and profiled 18 callable-size combinations.
-- Live script, fixture-rebuild, packaged command, dashboard, optional AI adapter, archived, and real-data targets were recorded with explicit skip reasons by default. This satisfies the coverage-led manifest requirement, but it is not a full script-execution profile.
-- Before F11 release reporting, run a longer script-profile pass for the highest-value live scripts (`run_canonical_triage.py --no-bands`, `run_showcase_covariant.py --smoke`, `run_showcase_lagged_exogenous.py --smoke`, `run_showcase_fingerprint.py --smoke`, `run_routing_validation_report.py --smoke --no-real-panel`) so the public-demo budget is measured directly.
+- `profile_hotspots.py` emitted 45 manifest rows but executed only configured callable targets.
+- Live scripts, packaged commands, optional adapters, fixture rebuilders, real-data workflows, geometry/fingerprint/batch workbench, lagged-exog, exogenous screening, and PCMCI-AMI are mostly skipped or shallow in the fresh profile.
+- PBE-F02 follow-up must add smoke execution targets and budgets in `configs/performance_baseline.yaml` for live script paths, geometry/fingerprint/batch workbench, lagged-exog, exogenous screening, and PCMCI-AMI before release reporting claims coverage beyond synthetic callable triage.
+- Before F11 release reporting, run a longer script-profile pass for the highest-value live scripts (`scripts/run_canonical_triage.py --no-bands`, `scripts/run_showcase_covariant.py --smoke`, `scripts/run_showcase_lagged_exogenous.py --smoke`, `scripts/run_showcase_fingerprint.py --smoke`, `scripts/run_routing_validation_report.py --smoke --no-real-panel`, and `scripts/run_ami_information_geometry_csv.py` on a capped fixture) so public-demo and maintainer-workflow budgets are measured directly.
 
 Planning conclusions:
 
 - The highest measured cost is not the scalar AMI or pAMI kernel by itself; it is repeated surrogate significance evaluation.
-- The strongest immediate Python target after work-avoidance is PBE-F05: preallocate surrogate result matrices and reduce repeated generic-curve setup in significance loops without changing the null.
+- Legacy-significance `cpu_time_s` undercounts child-process work when triage uses `n_jobs=-1`; use wall time plus serial or child-process profiles when judging estimator improvements.
+- The strongest immediate Python target after work-avoidance is PBE-F05: preallocate surrogate result matrices, reduce repeated generic-curve setup, and profile legacy child-process work before claiming scalar estimator wins.
 - PBE-F03 remains the next implementation PR because it is pure covariant work avoidance and low risk.
-- PBE-F04 remains required for rolling-origin benchmark panels, but the callable smoke profile did not show it as the top current bottleneck; its value is workload-specific and must be judged on capped rolling-origin panels, not only the small smoke case.
+- PBE-F04 remains required for rolling-origin benchmark panels, but the refreshed smoke profile is ETS-dominated and does not prove AMI/pAMI curve waste is currently the top bottleneck; its value must be proven on capped rolling-origin panels with before/after artifacts.
 - Forecast-prep export should not receive optimization work in `0.4.1` beyond keeping it covered in the profiler.
 - A future additive `significance_mode` field may be useful because current triage routing computes surrogate significance automatically for series long enough to pass feasibility. It should not be added in this release unless the default preserves current behavior.
 
@@ -358,6 +394,43 @@ Planning conclusions:
 | Lagged-exog significance `n_jobs` pass-through | Existing code pays serial surrogate cost per driver. | Fixed-seed outputs match `n_jobs=1`, and result ordering remains deterministic. |
 | Distance-correlation budget guard | Exact scorer can allocate `n x n` matrices per lag; a guard is lower risk than an approximate rewrite. | Existing small-array scorer tests pass; oversized use produces an explicit warning or documented error. |
 | Hoisted scaling inside surrogate loops | Public `compute_raw_curve` / `compute_partial_curve` rescale on every call; significance loops therefore call `_scale_series` (`StandardScaler.fit`) `n_surrogates` times per band. | Add a private helper that accepts pre-scaled arrays for the inner surrogate loop; public boundary scaling stays unchanged so exception semantics are preserved. |
+
+#### PBE-F03 concrete work package
+
+PBE-F03 is pure covariant work avoidance. It should not change scorer behavior, interpretation labels, summary-row ordering, or public result fields.
+
+- [src/forecastability/use_cases/run_covariant_analysis.py](../../src/forecastability/use_cases/run_covariant_analysis.py): split `_compute_cross_curves()` into method-specific helpers such as `_compute_cross_ami_curves()` and `_compute_cross_pami_curves()`. `methods=["cross_ami"]` must not call partial-curve residualization; `methods=["cross_pami"]` must not compute CrossAMI significance bands unless a summary row explicitly needs CrossAMI.
+- Preserve existing ranking and summary-row semantics for method sets that request both CrossAMI and pCrossAMI.
+- Add monkeypatch/call-count tests proving unrequested raw, partial, and significance helpers are not called.
+- Keep covariant significance `n_jobs` default behavior unchanged in F03; expose new parallel controls only in F05/F08 where deterministic ordering is tested.
+
+#### PBE-F05 concrete work package
+
+PBE-F05 is the first measured kernel-level optimization after PBE-F03. It targets these files and no public contract changes:
+
+- [src/forecastability/diagnostics/surrogates.py](../../src/forecastability/diagnostics/surrogates.py): keep `ProcessPoolExecutor` support, add a serial-profileable path, preallocate legacy AMI/pAMI surrogate result matrices, and record child-process or serial profiles before attributing time to scalar kernels.
+- [src/forecastability/services/significance_service.py](../../src/forecastability/services/significance_service.py): preallocate generic raw/partial/TE surrogate result matrices, add or reuse private prevalidated/pre-scaled raw/partial curve helpers, and preserve `n_surrogates >= 99` validation before allocation.
+- [src/forecastability/services/raw_curve_service.py](../../src/forecastability/services/raw_curve_service.py) and [src/forecastability/services/partial_curve_service.py](../../src/forecastability/services/partial_curve_service.py): expose private inner-loop helpers through a small service-internal boundary such as `CurveInputs` / `LagRange` so validated/scaled arrays do not leak across public modules; public functions keep current exceptions, scaling scope, return shape, and downstream hand-off behavior.
+- [configs/performance_baseline.yaml](../../configs/performance_baseline.yaml): add explicit F05 budgets for medium `run_triage`, medium `run_batch_triage`, and medium `cross_ami`, keyed to the May 1 artifacts.
+
+Acceptance criteria:
+
+- Before/after artifacts show medium `run_triage` with significance at least `20%` faster than `3.862s` timing median or no worse than `3.09s`, medium `run_batch_triage` at least `20%` faster than the profiled `8.151s` or no worse than `6.52s`, and medium `cross_ami` at least `20%` faster than `0.640s` or no worse than `0.51s`.
+- Fixed-seed legacy and generic significance bands are bit-identical for preallocation and helper-hoist changes. If a target-surrogate reuse change is proposed, it is separated under Invariant H with fixture rebuild, metadata note, and band-shape tolerance tests.
+- `n_jobs=1` and `n_jobs>1` preserve deterministic result order and seed mapping; no shared mutable RNG is introduced.
+- The PR includes serial or child-process profiles for legacy significance because parent cProfile mostly reports process-pool lock waiting.
+- Readiness, leakage risk, informative horizons, primary lags, seasonality structure, covariate informativeness, and downstream hand-off result semantics remain unchanged.
+
+#### PBE-F14 concrete work package
+
+PBE-F14 is a benchmark-and-harden item for PCMCI-AMI, not a replacement of the CI estimator. The current `linear_residual` implementation already residualizes `Y` once and reuses a QR projector for `Z`; the remaining bottleneck is repeated shuffle-significance call volume and repeated sklearn MI setup.
+
+- Add profiling targets for direct `build_knn_cmi_test(...).get_shuffle_significance(...)` micro-profiles (`iid` and `block`), direct `PcmciAmiAdapter(ci_test="knn_cmi").discover_full(...)` capped synthetic profiles, `run_covariant_analysis(methods=["pcmci_ami"])`, and real-panel routing validation when local fixtures exist.
+- Do not start alternate KNN, approximate-neighbor, or native-neighbor work until these profiles separate CI-test call count, sklearn MI setup, and Tigramite orchestration time.
+- Add a configurable but guarded `n_permutations` path for adapter construction only if the public default remains `199` and `build_knn_cmi_test(n_permutations < 99)` raises before any shuffle test is run.
+- Preserve p-values and `return_null_dist=True` sorted null arrays for fixed seeds in both `iid` and `block` shuffle schemes.
+- Any approximate nearest-neighbor, lower-`k`, lower-permutation, or alternate residual backend mode must be explicit in metadata and must not be labeled as the default `knn_cmi` fast path.
+- Acceptance: capped synthetic PCMCI-AMI and routing-validation real-panel profiles show at least `50%` runtime reduction versus the recorded baseline, or the PR includes call-count profiles proving the remaining bottleneck is inside Tigramite orchestration or sklearn MI internals outside the F14 scope.
 
 ### 3.6. What should stay as explicit alternative algorithms
 
@@ -405,13 +478,13 @@ Minimum parity gates for any future plugin:
 | Rank | Item | Expected impact | Risk | First tests |
 | --- | --- | --- | --- | --- |
 | 1 | Split covariant CrossAMI / pCrossAMI computation (PBE-F03) | High for method-subset covariant runs; low-risk first optimization before touching kernels | Low | `tests/test_covariant_facade.py`, new monkeypatch call-count tests |
-| 2 | Surrogate matrix preallocation and significance-loop setup reduction (PBE-F05) | Highest measured Phase 1 bottleneck: medium `run_triage` spent 4.386s/4.435s in legacy surrogate bands; covariant `cross_ami` spent 0.662s/0.678s in generic surrogate bands | Medium because seed stream and null isolation must not drift unless explicitly documented | Significance fixed-seed parity tests, generic raw/partial band parity, `n_jobs` determinism tests |
+| 2 | Surrogate matrix preallocation and significance-loop setup reduction (PBE-F05) | Highest measured Phase 1 bottleneck: medium `run_triage` spent 4.043s/4.087s in legacy surrogate bands; covariant `cross_ami` spent 0.626s/0.640s in generic surrogate bands | Medium because seed stream and null isolation must not drift unless explicitly documented | Significance fixed-seed parity tests, generic raw/partial band parity, `n_jobs` determinism tests |
 | 3 | Shared lag-design scaffolding utility (PBE-F13) | Medium across legacy pAMI, generic partial, and PCMCI-AMI; prerequisite for F06 and F14 | Low (no estimator change) | Lag-design parity tests, cache-invalidation fuzz test |
 | 4 | Single-horizon rolling-origin diagnostics (PBE-F04) | High for benchmark panels and causal-rivers workflows; not dominant in the small Phase 1 rolling-origin smoke profile | Medium because of lag indexing and train-window leakage risk | `tests/test_pipeline.py`, `tests/test_extensions.py`, holdout-perturbation tests |
 | 5 | Validation/scaling hoist in generic curves | Medium in surrogate loops; covariant profile showed 100 `compute_raw_curve` calls and 202 scaling calls in one medium `cross_ami` profile | Medium because public exceptions must stay stable | Raw/partial curve service tests |
 | 6 | pAMI residualization cache or `lstsq` helper (PBE-F06) | Medium for pAMI-heavy loops; standalone pAMI was cheap in Phase 1, but repeated pAMI significance can amplify it | Medium because residuals affect MI estimates | Metrics and partial-curve parity tests |
 | 7 | Geometry `n_jobs` presets and profile pruning (PBE-F07) | Medium to high for fingerprint batch; not exercised deeply by the Phase 1 callable smoke profile | Medium due deterministic ordering | Geometry regression and fingerprint tests |
-| 8 | PCMCI-AMI hybrid `knn_cmi` shuffle-significance fast-path (PBE-F14) | High for causal-rivers / routing validation based on prior ~134.6s real-panel evidence, not the Phase 1 synthetic smoke profile | Medium (must preserve Tigramite seed contract) | PCMCI-AMI parity fixtures, routing-validation regression |
+| 8 | PCMCI-AMI hybrid `knn_cmi` profiling and fast-path hardening (PBE-F14) | High for causal-rivers / routing validation based on prior ~134.6s real-panel evidence plus capped local evidence (`4.38s`, 18 shuffle tests, 3,632 sklearn MI calls) | Medium (must preserve Tigramite seed contract and permutation null) | PCMCI-AMI parity fixtures, shuffle-null tests, routing-validation regression |
 | 9 | Lagged-exog surrogate `n_jobs` pass-through (PBE-F08) | Medium to high for multi-driver screening; script smoke pass still needs direct timing | Medium due fixture output ordering | Lagged-exog regression and role-invariant tests |
 | 10 | GCMI/TE curve validation hoist | Medium in covariant runs | Medium because lag-specific min-pair checks differ | GCMI and TE service tests |
 | 11 | Distance-scorer guard or chunked exact implementation | Medium for users selecting distance correlation; not implicated in default MI profile | Medium due scorer semantics | Scorer parity tests |
@@ -424,11 +497,13 @@ Minimum parity gates for any future plugin:
 Performance work must preserve these statistical boundaries:
 
 - **Single-horizon parity:** AMI and pAMI helpers must exactly match the full-curve value at `h - 1`, including scaling, minimum-pair zero behavior, underdetermined pAMI break behavior, and `random_state + h` seed mapping.
-- **Train-only rolling origin:** every scaling, residualization, rank-normalization, surrogate generation, and dependence score inside rolling-origin diagnostics uses the train prefix only. Tests perturb holdout values and assert diagnostics are unchanged.
+- **Train-only rolling origin:** every scaling, residualization, rank-normalization, surrogate generation, and dependence score inside rolling-origin diagnostics uses the train prefix only. Tests perturb future target values and future exogenous values independently and assert diagnostics are unchanged.
 - **pAMI residualization:** linear pAMI uses `LinearRegression()`-equivalent OLS with an intercept for both past and future residuals; pCrossAMI residualizes only the future target when the predictor is exogenous.
 - **Surrogate null isolation:** raw, partial, TE, exogenous, and geometry surrogate matrices are not pooled. CrossAMI bands do not stand in for pCrossAMI or TE bands. Geometry shuffle-surrogate bias and `tau` remain separate from phase-surrogate bands.
+- **Common random numbers across drivers:** target-surrogate reuse across drivers is allowed only as an explicit common-random-number Monte Carlo design. Metadata must expose `common_target_surrogate_stream=true`; per-driver marginal bands remain valid, but cross-driver counts, rankings, and FDR-style summaries must either use independent streams or account for induced dependence.
 - **Ratio reporting:** raw `pAMI/AMI` and `pCrossAMI/CrossAMI` ratios are not clamped before reporting. Values above `1.0` remain warning evidence, not “high directness.”
 - **Estimator honesty:** changing `n_neighbors`, scaling scope, `min_pairs`, residualization backend, nearest-neighbor exactness, or surrogate count is a method/configuration change, not a performance-only optimization.
+- **PCMCI permutation floor:** `knn_cmi` shuffle significance must validate `n_permutations >= 99` before constructing or running a shuffle test. The adapter default remains `199`.
 - **Scaling scope (Invariant F):** Single-horizon helpers must call `_scale_series(train)` once on the full train series and then slice. Never scale the post-slice aligned pair. Parity tests must include a series with non-zero mean and non-unit std to falsify the wrong implementation.
 - **Underdetermined-pAMI asymmetry:** The legacy `compute_pami_linear_residual` breaks early on `z.shape[0] <= z.shape[1]` and leaves zeros for higher horizons. Generic `_residualize` does NOT break. Univariate rolling-origin uses legacy; exogenous rolling-origin and `compute_target_baseline_by_horizon` use generic. PBE-F04 ships **two** single-horizon helpers — one mirroring legacy break-then-zero, one mirroring generic compute-anyway. Each is parity-tested against its own caller. Do not unify them as a "speed" fix.
 - **Per-horizon seed convention:** `random_state + h` is used by legacy AMI/pAMI and by generic raw/partial curves; rolling-origin pre-adds `idx` (`run_rolling_origin_evaluation.py`) and the exogenous variant pre-adds `1000*horizon + idx` (`run_exogenous_rolling_origin_evaluation.py`). The PBE-F04 helper contract is `helper(train, h, random_state=R)` ≡ `compute_ami(train, max_lag=H, random_state=R)[h-1]` for every `h ∈ [1..H]` and any `H ≥ h`; the two callers pre-compose differently and the helper takes whatever `random_state` legacy would have received.
@@ -455,6 +530,7 @@ PBE-F02 is not complete if it profiles only the obvious estimator functions. The
 | Fingerprint/routing tools | `run_forecastability_fingerprint`, `run_batch_forecastability_workbench`, `run_routing_validation`, `run_ami_geometry_csv_batch` | Python callable plus `scripts/run_showcase_fingerprint.py --smoke`, `scripts/run_routing_validation_report.py --smoke --no-real-panel`, `scripts/run_ami_information_geometry_csv.py` | Cover KSG-II geometry, routing policy, batch workbench, CSV batch adapter, and report artifact writing. |
 | Forecast-prep hand-off | `build_forecast_prep_contract`, `forecast_prep_contract_to_markdown`, `forecast_prep_contract_to_lag_table` | Python callable plus `scripts/run_showcase_forecast_prep.py --smoke` | Confirm hand-off/export surfaces are cheap and do not dominate triage workflows. |
 | Rolling-origin tools | `run_rolling_origin_evaluation`, `run_exogenous_rolling_origin_evaluation`, `compute_target_baseline_by_horizon` | Python callable with capped horizons/origins | Profile full-curve waste before the single-horizon rewrite and preserve train-only diagnostics. |
+| PCMCI/KNN tools | `build_knn_cmi_test`, `PcmciAmiAdapter.discover_full`, `run_covariant_analysis(methods=["pcmci_ami"])`, routing-validation real panel when local fixtures exist | Direct micro-profile for `get_shuffle_significance` (`iid` and `block`) plus capped full-adapter profile | Separate CI-test call count, permutation loop cost, sklearn MI cost, and Tigramite orchestration before PBE-F14 claims. |
 | Canonical/showcase scripts | `scripts/run_canonical_triage.py`, `scripts/run_showcase.py`, `scripts/run_triage_handoff_demo.py`, `scripts/run_exog_analysis.py`, `scripts/run_benchmark_panel.py` | Smoke/no-bands/no-rolling modes where available | Measure public demo cost separately from estimator cost; full-band modes may be long-running benchmark cases. |
 | Fixture rebuild scripts | `scripts/rebuild_diagnostic_regression_fixtures.py`, `scripts/rebuild_covariant_regression_fixtures.py`, `scripts/rebuild_fingerprint_regression_fixtures.py`, `scripts/rebuild_lagged_exog_regression_fixtures.py`, `scripts/rebuild_forecast_prep_regression_fixtures.py`, `scripts/rebuild_routing_validation_fixtures.py`, `scripts/rebuild_causal_rivers_fixtures.py`, `scripts/rebuild_benchmark_fixture_artifacts.py` | Script commands with default fixture configs | Track maintainer cost; do not confuse fixture-rebuild runtime with user-facing runtime. |
 | Packaged commands/adapters | `forecastability`, `forecastability-dashboard`, `forecastability.adapters.api:app`, `forecastability.adapters.cli` (CLI surface), `forecastability.adapters.mcp_server` (MCP), `forecastability.adapters.pydantic_ai_agent` (skip with `optional_dependency_gate=ai-extra`), `forecastability.adapters.dashboard` (startup-only timing) | CLI smoke commands; dashboard/API startup-only timing | Verify adapter startup/import cost and command plumbing without requiring browser or network access. |
@@ -463,6 +539,18 @@ PBE-F02 is not complete if it profiles only the obvious estimator functions. The
 | Archived scripts | `scripts/archive/run_*.py` | Optional probes only | Record as skipped by default with `archived_script` reason unless a release explicitly revives the workflow. |
 
 The profiling manifest should emit at least these fields per target: `target_id`, `surface_group`, `entry_type`, `command_or_callable`, `input_size_label`, `optional_dependency_gate`, `network_required`, `writes_artifacts`, `profiled`, `skip_reason`, `wall_time_s`, `cpu_time_s`, `peak_memory_mb`, `hotspot_artifact`, `n_jobs_used`, `thread_backend`, `process_pool_workers`, `random_state_base`, `numpy_show_config_digest`, `omp_num_threads`, `mkl_num_threads`, `threadpoolctl_snapshot`, `forecastability_version`, and `uv_lock_hash`.
+
+Profiling coverage gap closure for PBE-F02/F11:
+
+- Before expanding target coverage, split target definitions/runners into a small `scripts/performance_targets.py` registry and keep [scripts/profile_hotspots.py](../../scripts/profile_hotspots.py) focused on profiling and artifact writing.
+- [scripts/profile_hotspots.py](../../scripts/profile_hotspots.py) must execute smoke paths, not only list manifest rows, for live scripts and packaged commands that can run without network or optional forecasting frameworks.
+- [configs/performance_baseline.yaml](../../configs/performance_baseline.yaml) must define budget thresholds for `run_triage`, `run_batch_triage`, `run_covariant_analysis(cross_ami)`, capped rolling-origin panels, geometry/fingerprint/batch workbench, lagged-exog, exogenous screening, and PCMCI-AMI smoke/fixture workflows.
+- Geometry/fingerprint/batch workbench coverage must include `run_forecastability_fingerprint`, `run_batch_forecastability_workbench`, and `run_ami_information_geometry_csv.py` on capped synthetic or fixture inputs.
+- Rolling-origin coverage must include diagnostic-only or separated timings so ETS/autoregressive forecast scoring does not mask AMI/pAMI diagnostic waste.
+- Lagged-exog and exogenous screening coverage must include surrogate-enabled and no-band modes so readiness/routing time can be separated from significance time.
+- PCMCI-AMI coverage must include capped synthetic micro/full profiles and, when local real-panel fixtures exist, a routing-validation real-panel profile with explicit skip reasons when data is unavailable.
+- Hotspot metadata must report the actual backend used. For legacy triage significance, `n_jobs_used=1` is misleading when analyzer defaults trigger process-pool `n_jobs=-1`; rows must distinguish parent-process profiling from child-process or serial profiling.
+- Acceptance requires `outputs/performance/hotspots_manifest.json` to mark each required target as profiled or skipped with one of the controlled reasons: `optional_dependency_unavailable`, `network_or_data_unavailable`, `archived_script`, `generated_fixture_path`, `manual_only`, or `out_of_scope_for_release_budget`.
 
 ---
 
@@ -476,6 +564,8 @@ The profiling manifest should emit at least these fields per target: `target_id`
 
 - `compute_significance_bands_generic` rejects `n_surrogates < 99`.
 - `compute_significance_bands_transfer_entropy` rejects `n_surrogates < 99`.
+- `compute_significance_bands_generic` rejects invalid `which`, `max_lag`, `min_pairs`, `n_jobs`, and target/exog shape before surrogate allocation.
+- `build_knn_cmi_test(n_permutations < 99)` rejects invalid shuffle-significance requests before constructing a CI test.
 - Tests cover the direct service calls, not only analyzer-mediated calls.
 - No public result field changes.
 
@@ -495,7 +585,10 @@ flowchart LR
 
 - Baseline script runs on synthetic data without network or optional forecasting frameworks.
 - Profile script uses `cProfile`/`pstats` to avoid new runtime dependencies.
+- Target definitions and runners live in a small registry module; `profile_hotspots.py` remains the artifact-writing adapter.
 - Profile script writes a target-coverage manifest proving which public tools, scripts, rebuilders, and adapters were profiled or intentionally skipped.
+- Follow-up coverage closes the May 1 gap by executing smoke paths for live scripts, geometry/fingerprint/batch workbench, lagged-exog, exogenous screening, and PCMCI-AMI where local inputs exist.
+- `configs/performance_baseline.yaml` carries explicit median/p95/RSS budgets for the measured triage targets and capped smoke budgets for uncovered workflow groups before F11 release reporting.
 - Performance outputs are deterministic enough for trend comparison but are not treated as scientific fixtures.
 - `uv run pytest --durations=25` is documented as a supporting diagnostic command.
 
@@ -507,7 +600,9 @@ flowchart LR
 
 - `run_covariant_analysis(methods=["cross_ami"])` computes CrossAMI only.
 - `run_covariant_analysis(methods=["cross_pami"])` computes pCrossAMI only.
+- PBE-F03 introduces method-specific CrossAMI/pCrossAMI helpers and call-count tests for unrequested raw, partial, and significance paths.
 - Rolling-origin consumers can compute a single requested horizon instead of a full curve.
+- PBE-F04 proves benefit on capped rolling-origin panels before being credited as a bottleneck elimination. The May 1 smoke profile is ETS-dominated and is not enough evidence by itself.
 - Existing full-curve results remain unchanged.
 
 ### Phase 3 — Kernel-level Python optimization
@@ -516,20 +611,23 @@ flowchart LR
 
 **Acceptance criteria:**
 
-- Surrogate services preallocate result matrices and expose deterministic `n_jobs` where safe.
+- PBE-F05 lands before residualization, geometry, distance-correlation, or native work and targets legacy `compute_significance_bands`, generic `compute_significance_bands_generic`, repeated curve setup, preallocation, and serial/child-process profiling.
+- Surrogate services preallocate result matrices and expose deterministic `n_jobs` where safe; medium `run_triage`, medium `run_batch_triage`, and medium `cross_ami` meet the F05 budget or include profiles proving why the remaining bottleneck moved elsewhere.
 - pAMI residualization reuses per-call lag scaffolding or equivalent validated caches.
 - GCMI and TE curve implementations validate arrays once per curve where possible.
 - Fingerprint scripts and batch workbench can opt into `AmiInformationGeometryConfig.n_jobs` without changing default API behavior.
 - Lagged-exogenous triage exposes safe surrogate `n_jobs` pass-through without changing defaults.
 - Distance-correlation scorer work is bounded by an explicit budget guard or an exact chunked implementation with parity tests.
 - Single-horizon helpers ship in two flavors (legacy-parity and generic-parity); each is parity-tested against its own rolling-origin caller (Invariant G asymmetry).
-- PCMCI-AMI hybrid `knn_cmi` shuffle path completes in ≤ 50% of the v0.4.0 baseline on the routing-validation real panel, under deterministic seed parity, with no Tigramite-global RNG parallelism (PBE-F14).
+- PCMCI-AMI hybrid `knn_cmi` hardening preserves the existing linear-residual fast path, validates `n_permutations >= 99`, preserves `iid` and `block` shuffle null arrays under fixed seeds, and completes in <= 50% of the v0.4.0 baseline on the routing-validation real panel or explains the remaining Tigramite/sklearn bottleneck with call-count profiles (PBE-F14).
 - Batch forecastability workbench accepts a `n_jobs` kwarg with deterministic ordering and seed mapping; serial vs parallel outputs are bit-identical under fixed seeds (PBE-F12).
 - Shared lag-design scaffolding utility (`forecastability.metrics._lag_design.build_intermediate_design`) is consumed by legacy `compute_pami_linear_residual`, generic `_residualize`, and the PCMCI-AMI residualization helper; cache is per-curve-call only (PBE-F13).
 
 ### Phase 4 — Optional native acceleration design
 
 **Scope.** Design, but do not ship, an out-of-tree native acceleration path.
+
+**Stop/go checkpoint.** Do not start PBE-F09 native plugin design or broad scalar kernel rewrites until refreshed profiles after PBE-F03, PBE-F05, and PBE-F04 show that remaining kernel-level work is still material for deterministic forecastability triage. If surrogate orchestration, script/report I/O, ETS/autoregressive evaluation, optional adapters, or workflow fan-out still dominate, keep optimizing those Python orchestration surfaces first.
 
 **Acceptance criteria:**
 
@@ -578,6 +676,8 @@ Run only when the relevant result surface changes:
 - Median wall time over 3 clean runs must be no worse than `+20%` versus the Phase 1 baseline unless justified in the release report.
 - p95 per-case/per-series time must be no worse than `+25%`.
 - Peak RSS must be no worse than `+15%` for small/medium/large synthetic cases.
+- `configs/performance_baseline.yaml` must include named budgets for the May 1 measured targets: small no-band triage `0.010s`, medium significance triage timing median `3.862s`, large significance triage timing median `4.272s`, medium batch triage profile `8.151s`, medium `cross_ami` profile `0.640s`, and rolling-origin smoke `0.189s`.
+- F05-specific improvement budgets are stricter than regression budgets: medium significance triage `<= 3.09s`, medium batch triage `<= 6.52s`, and medium `cross_ami` `<= 0.51s`, or the PR must show profiles proving why the remaining bottleneck is outside F05 scope.
 - No benchmark-panel series may hit the existing 120s timeout.
 - `run_canonical_triage.py --no-bands --max-workers 4` should be at least `1.5x` faster than `--max-workers 1`, or the report must explain why parallelism does not help.
 
@@ -596,22 +696,22 @@ Run only when the relevant result surface changes:
 
 ## 7. Implementation notes
 
-The first implementation PR should be deliberately small: add the missing service-level surrogate guards and tests. The second PR should add measurement scripts without changing scientific code. Only after those two are merged should optimization PRs start.
+F00/F01/F02 are already partially implemented in the working tree and must be kept consistent with the current code before optimization PRs start. The next planning update should close stale text, add the missing generic-significance interface validation, and expand the profiler coverage without changing scientific code.
 
 Recommended PR order:
 
-1. `PBE-F00`: significance guard tests and implementation; pin legacy `compute_significance_bands` regression. Must merge before any baseline runs to avoid mixing invalid-band paths into Phase 1 numbers.
-2. `PBE-F01/F02`: performance baseline and profile scripts.
+1. `PBE-F00`: preserve completed significance guard tests, add generic-significance interface validation, add the `knn_cmi` permutation-count floor, and pin legacy `compute_significance_bands` regression.
+2. `PBE-F01/F02`: performance baseline and profile scripts; split target registry from profiling adapter before expanding script/PCMCI coverage.
 3. `PBE-F03`: covariant method-subset compute split. This remains first because it is pure orchestration work avoidance with low statistical risk.
-4. `PBE-F05`: surrogate matrix preallocation and significance-loop setup reduction. Phase 1 profiling moved this ahead of F04/F06 because surrogate bands dominate measured `run_triage`, `run_batch_triage`, and covariant `cross_ami`.
+4. `PBE-F05`: surrogate matrix preallocation and significance-loop setup reduction. Phase 1 profiling moved this ahead of F04/F06 because surrogate bands dominate measured `run_triage`, `run_batch_triage`, and covariant `cross_ami`. This PR must include serial or child-process profiles for legacy significance before claiming scalar AMI/pAMI kernel wins.
 5. `PBE-F13`: shared lag-design scaffolding utility (prerequisite for F06 and F14).
-6. `PBE-F04`: single-horizon rolling-origin helpers (two flavors per Invariant G asymmetry). Keep this before residualization rewrites because it adds the parity harness needed for rolling-origin safety.
+6. `PBE-F04`: single-horizon rolling-origin helpers (two flavors per Invariant G asymmetry). Keep this before residualization rewrites because it adds the parity harness needed for rolling-origin safety; credit performance impact only after capped rolling-origin panels, not the May 1 smoke profile alone.
 7. `PBE-F06/F07`: pure-Python kernel optimizations, one bottleneck per PR.
-8. `PBE-F14`: PCMCI-AMI hybrid `knn_cmi` shuffle-significance fast-path (depends on F13).
+8. `PBE-F14`: PCMCI-AMI hybrid `knn_cmi` profiling and fast-path hardening (depends on F13).
 9. `PBE-F08`: lagged-exog surrogate parallelism and distance-scorer chunked exact.
 10. `PBE-F12`: batch forecastability workbench per-series parallelism.
 11. `PBE-F15`: typed kernel-provider Protocols in `forecastability.ports.kernels`.
 12. `PBE-F09/F10`: native plugin design and performance decision matrix.
 13. `PBE-F11`: performance release report.
 
-F03 lands before kernel work intentionally: it is a pure orchestration split with no estimator change. Phase 1 profiling then justifies moving F05 immediately after F03, because surrogate significance is the dominant measured cost. F04 remains before F06/F14 because it establishes single-horizon parity and train-window safety before deeper residualization or PCMCI changes.
+F03 lands before kernel work intentionally: it is a pure orchestration split with no estimator change. Phase 1 profiling then justifies moving F05 immediately after F03, because surrogate significance is the dominant measured cost. F04 remains before F06/F14 because it establishes single-horizon parity and train-window safety before deeper residualization or PCMCI changes. PBE-F09/F10 are stop/go gated by refreshed profiles after F03/F05/F04; if kernel-level work is no longer material, the release report records that decision instead of designing native acceleration prematurely.

@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 
 from forecastability.metrics.scorers import default_registry
+from forecastability.services import significance_service
 from forecastability.services.significance_service import (
     compute_significance_bands_generic,
     compute_significance_bands_transfer_entropy,
@@ -23,10 +24,7 @@ def test_generic_significance_rejects_too_few_surrogates_before_generation(
     def _raise_if_called(*_args: object, **_kwargs: object) -> np.ndarray:
         raise AssertionError("phase_surrogates should not be called")
 
-    monkeypatch.setattr(
-        "forecastability.services.significance_service.phase_surrogates",
-        _raise_if_called,
-    )
+    monkeypatch.setattr(significance_service, "phase_surrogates", _raise_if_called)
 
     with pytest.raises(ValueError, match="n_surrogates must be >= 99"):
         compute_significance_bands_generic(
@@ -50,10 +48,7 @@ def test_transfer_entropy_significance_rejects_too_few_surrogates_before_generat
     def _raise_if_called(*_args: object, **_kwargs: object) -> np.ndarray:
         raise AssertionError("phase_surrogates should not be called")
 
-    monkeypatch.setattr(
-        "forecastability.services.significance_service.phase_surrogates",
-        _raise_if_called,
-    )
+    monkeypatch.setattr(significance_service, "phase_surrogates", _raise_if_called)
 
     with pytest.raises(ValueError, match="n_surrogates must be >= 99"):
         compute_significance_bands_transfer_entropy(
