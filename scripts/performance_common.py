@@ -64,6 +64,34 @@ class ProfileConfig(BaseModel):
     profile_size_labels: list[str] = Field(default_factory=lambda: ["small"])
 
 
+class BudgetEntry(BaseModel):
+    """One acceptance budget keyed to a measured baseline."""
+
+    model_config = ConfigDict(frozen=True)
+
+    baseline_wall_s: float = Field(gt=0.0)
+    target_max_wall_s: float = Field(gt=0.0)
+
+
+class Pbef05BudgetsConfig(BaseModel):
+    """PBE-F05 acceptance budgets vs Phase 1 medians."""
+
+    model_config = ConfigDict(frozen=True)
+
+    notes: str = ""
+    medium_run_triage_with_significance: BudgetEntry
+    medium_run_batch_triage: BudgetEntry
+    medium_cross_ami: BudgetEntry
+
+
+class BudgetsConfig(BaseModel):
+    """Performance acceptance budgets section."""
+
+    model_config = ConfigDict(frozen=True)
+
+    pbe_f05: Pbef05BudgetsConfig | None = None
+
+
 class PerformanceBaselineConfig(BaseModel):
     """Validated performance baseline YAML config."""
 
@@ -72,6 +100,7 @@ class PerformanceBaselineConfig(BaseModel):
     metadata: PerformanceMetadataConfig
     cases: list[PerformanceCaseConfig]
     profile: ProfileConfig = Field(default_factory=ProfileConfig)
+    budgets: BudgetsConfig | None = None
 
 
 class RuntimeMeasurement(BaseModel):

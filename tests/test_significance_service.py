@@ -212,3 +212,214 @@ def test_significance_partial_curve_supports_lag_range() -> None:
 
     assert lower.shape == (4,)
     assert upper.shape == (4,)
+
+
+def _raise_phase_surrogates(*_args: object, **_kwargs: object) -> np.ndarray:
+    raise AssertionError("phase_surrogates should not be called")
+
+
+def test_generic_significance_rejects_invalid_which_before_generation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    series = generate_white_noise(n=120, seed=1)
+    info = default_registry().get("mi")
+    monkeypatch.setattr(significance_service, "phase_surrogates", _raise_phase_surrogates)
+    with pytest.raises(ValueError, match="which"):
+        compute_significance_bands_generic(
+            series,
+            n_surrogates=99,
+            random_state=42,
+            max_lag=3,
+            info=info,
+            which="bogus",
+            min_pairs=30,
+            n_jobs=1,
+        )
+
+
+def test_generic_significance_rejects_negative_max_lag_before_generation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    series = generate_white_noise(n=120, seed=1)
+    info = default_registry().get("mi")
+    monkeypatch.setattr(significance_service, "phase_surrogates", _raise_phase_surrogates)
+    with pytest.raises(ValueError, match="max_lag"):
+        compute_significance_bands_generic(
+            series,
+            n_surrogates=99,
+            random_state=42,
+            max_lag=-1,
+            info=info,
+            which="raw",
+            min_pairs=30,
+            n_jobs=1,
+        )
+
+
+def test_generic_significance_rejects_min_pairs_zero_before_generation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    series = generate_white_noise(n=120, seed=1)
+    info = default_registry().get("mi")
+    monkeypatch.setattr(significance_service, "phase_surrogates", _raise_phase_surrogates)
+    with pytest.raises(ValueError, match="min_pairs"):
+        compute_significance_bands_generic(
+            series,
+            n_surrogates=99,
+            random_state=42,
+            max_lag=3,
+            info=info,
+            which="raw",
+            min_pairs=0,
+            n_jobs=1,
+        )
+
+
+def test_generic_significance_rejects_zero_n_jobs_before_generation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    series = generate_white_noise(n=120, seed=1)
+    info = default_registry().get("mi")
+    monkeypatch.setattr(significance_service, "phase_surrogates", _raise_phase_surrogates)
+    with pytest.raises(ValueError, match="n_jobs"):
+        compute_significance_bands_generic(
+            series,
+            n_surrogates=99,
+            random_state=42,
+            max_lag=3,
+            info=info,
+            which="raw",
+            min_pairs=30,
+            n_jobs=0,
+        )
+
+
+def test_generic_significance_rejects_exog_shape_mismatch_before_generation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    series = generate_white_noise(n=120, seed=1)
+    exog = generate_white_noise(n=121, seed=2)
+    info = default_registry().get("mi")
+    monkeypatch.setattr(significance_service, "phase_surrogates", _raise_phase_surrogates)
+    with pytest.raises(ValueError, match="exog"):
+        compute_significance_bands_generic(
+            series,
+            n_surrogates=99,
+            random_state=42,
+            max_lag=3,
+            info=info,
+            which="raw",
+            exog=exog,
+            min_pairs=30,
+            n_jobs=1,
+        )
+
+
+def test_te_significance_rejects_zero_max_lag_before_generation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    series = generate_white_noise(n=120, seed=1)
+    monkeypatch.setattr(significance_service, "phase_surrogates", _raise_phase_surrogates)
+    with pytest.raises(ValueError, match="max_lag"):
+        compute_significance_bands_transfer_entropy(
+            series,
+            n_surrogates=99,
+            random_state=42,
+            max_lag=0,
+            min_pairs=30,
+            n_jobs=1,
+        )
+
+
+def test_te_significance_rejects_zero_n_jobs_before_generation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    series = generate_white_noise(n=120, seed=1)
+    monkeypatch.setattr(significance_service, "phase_surrogates", _raise_phase_surrogates)
+    with pytest.raises(ValueError, match="n_jobs"):
+        compute_significance_bands_transfer_entropy(
+            series,
+            n_surrogates=99,
+            random_state=42,
+            max_lag=3,
+            min_pairs=30,
+            n_jobs=0,
+        )
+
+
+def test_generic_significance_n_jobs_serial_vs_parallel_bit_identical() -> None:
+    series = generate_white_noise(n=200, seed=11)
+    info = default_registry().get("mi")
+    serial = compute_significance_bands_generic(
+        series,
+        n_surrogates=99,
+        random_state=7,
+        max_lag=4,
+        info=info,
+        which="raw",
+        min_pairs=30,
+        n_jobs=1,
+    )
+    parallel = compute_significance_bands_generic(
+        series,
+        n_surrogates=99,
+        random_state=7,
+        max_lag=4,
+        info=info,
+        which="raw",
+        min_pairs=30,
+        n_jobs=2,
+    )
+    assert np.array_equal(serial[0], parallel[0])
+    assert np.array_equal(serial[1], parallel[1])
+
+
+def test_generic_significance_fixed_seed_regression() -> None:
+    """Pinned generic raw/partial bands guarding F05 preallocation/hoist parity."""
+    series = generate_white_noise(n=200, seed=11)
+    info = default_registry().get("mi")
+
+    raw_lower, raw_upper = compute_significance_bands_generic(
+        series,
+        n_surrogates=99,
+        random_state=7,
+        max_lag=4,
+        info=info,
+        which="raw",
+        min_pairs=30,
+        n_jobs=1,
+    )
+    partial_lower, partial_upper = compute_significance_bands_generic(
+        series,
+        n_surrogates=99,
+        random_state=7,
+        max_lag=4,
+        info=info,
+        which="partial",
+        min_pairs=30,
+        n_jobs=1,
+    )
+
+    expected_raw_lower = np.array([0.0, 0.0, 0.0, 0.0])
+    expected_raw_upper = np.array(
+        [
+            0.053734321302349675,
+            0.03634542031334253,
+            0.05994361852581409,
+            0.05704183680198599,
+        ]
+    )
+    expected_partial_lower = np.array([0.0, 0.0, 0.0, 0.0])
+    expected_partial_upper = np.array(
+        [
+            0.053734321302349675,
+            0.03808363780743239,
+            0.06037951854169674,
+            0.048159321685819934,
+        ]
+    )
+
+    np.testing.assert_allclose(raw_lower, expected_raw_lower, rtol=0, atol=0)
+    np.testing.assert_allclose(raw_upper, expected_raw_upper, rtol=0, atol=0)
+    np.testing.assert_allclose(partial_lower, expected_partial_lower, rtol=0, atol=0)
+    np.testing.assert_allclose(partial_upper, expected_partial_upper, rtol=0, atol=0)

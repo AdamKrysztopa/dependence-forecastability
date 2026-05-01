@@ -116,7 +116,7 @@ Ordered by execution sequence (matches the PR plan in §7). The numeric ID suffi
 | 2 | PBE-F01 | Performance baseline config and timing script | 1 | P0 | Done |
 | 3 | PBE-F02 | Hotspot profiling script, target registry, and coverage-gap closure | 1 | P0 | Follow-up needed |
 | 4 | PBE-F03 | Covariant method-subset work avoidance | 2 | P0 | Done |
-| 5 | PBE-F05 | Surrogate generation/evaluation reuse and preallocation | 3 | P1 | Not started |
+| 5 | PBE-F05 | Surrogate generation/evaluation reuse and preallocation | 3 | P1 | Done (hygiene only — wall-time budget unmet; see [aux_documents/pbe_f05_serial_microbench.md](aux_documents/pbe_f05_serial_microbench.md)) |
 | 6 | PBE-F16 | Generic curve validation/scaling hoist for raw, partial, TE, and GCMI loops | 3 | P1 | Not started |
 | 7 | PBE-F13 | Shared lag-design scaffolding utility (prerequisite for F04, F06, and F14) | 3 | P1 | Not started |
 | 8 | PBE-F04 | Single-horizon rolling-origin compute path | 2 | P0 | Done |
@@ -421,6 +421,9 @@ Acceptance criteria:
 - `n_jobs=1` and `n_jobs>1` preserve deterministic result order and seed mapping; no shared mutable RNG is introduced.
 - The PR includes serial or child-process profiles for legacy significance because parent cProfile mostly reports process-pool lock waiting.
 - Readiness, leakage risk, informative horizons, primary lags, seasonality structure, covariate informativeness, and downstream hand-off result semantics remain unchanged.
+
+> [!NOTE]
+> **Measured outcome (2026-05-01).** PBE-F05 landed as hygiene only. Serial micro-benchmarks of `compute_significance_bands` (legacy AMI) and `compute_significance_bands_generic` (raw, raw+exog, partial) are within run-to-run noise (Δ medians +0.2% to +1.5%). Parent-process hotspot wall on `n_jobs=-1` defaults moved by +2.55% on `run_triage`, +1.31% on `run_batch_triage`, and −5.41% on `cross_ami` — within process-pool wait noise. The wall-time budget (≥20% faster than the May 1 medians) was not met. Per the F05 acceptance clause, the PR documents serial evidence in [aux_documents/pbe_f05_serial_microbench.md](aux_documents/pbe_f05_serial_microbench.md): the dominant serial cost is `sklearn.feature_selection.mutual_info_regression` invoked `n_surrogates × max_lag` times per band (~1.05 ms each). A real >20% reduction on the legacy AMI/pAMI surrogate path requires a batched kNN MI kernel that reuses Chebyshev neighbor structures across surrogates and/or horizons; that is deferred behind a parity-test harness and is **not** part of this F05 PR. The F05 hygiene changes ship because they (1) close the soft validation gap for `which`, `n_jobs`, `min_pairs`, and exog shape on the generic services before any allocation, (2) preallocate result matrices for cleaner memory profiles, (3) factor `_compute_raw_curve_prescaled` and `_compute_partial_curve_prescaled` boundaries that PBE-F08/F12 deterministic-parallel work can build on, and (4) remain bit-identical under fixed seeds (legacy + new generic regressions).
 
 #### PBE-F14 concrete work package
 

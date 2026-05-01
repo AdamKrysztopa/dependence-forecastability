@@ -10,9 +10,15 @@ import numpy as np
 
 from forecastability.diagnostics.surrogates import phase_surrogates
 from forecastability.diagnostics.transfer_entropy import compute_transfer_entropy_curve
+from forecastability.metrics import _scale_series
 from forecastability.metrics.scorers import DependenceScorer, ScorerInfo
-from forecastability.services.partial_curve_service import compute_partial_curve
-from forecastability.services.raw_curve_service import compute_raw_curve
+from forecastability.services.partial_curve_service import (
+    _compute_partial_curve_prescaled,
+)
+from forecastability.services.raw_curve_service import (
+    _compute_raw_curve_prescaled,
+    _resolve_lag_range,
+)
 
 _MIN_SIGNIFICANCE_SURROGATES = 99
 
@@ -20,6 +26,11 @@ _MIN_SIGNIFICANCE_SURROGATES = 99
 def _validate_significance_surrogate_count(n_surrogates: int) -> None:
     if n_surrogates < _MIN_SIGNIFICANCE_SURROGATES:
         raise ValueError("n_surrogates must be >= 99")
+
+
+def _validate_n_jobs(n_jobs: int) -> None:
+    if n_jobs != -1 and n_jobs < 1:
+        raise ValueError("n_jobs must be -1 or >= 1")
 
 
 def compute_significance_bands_generic(
@@ -58,33 +69,72 @@ def compute_significance_bands_generic(
     Returns:
         ``(lower_band, upper_band)`` arrays aligned to the evaluated lag range.
     """
+    if which not in {"raw", "partial"}:
+        raise ValueError(f"which must be 'raw' or 'partial', got {which!r}")
+    if max_lag < 0:
+        raise ValueError(f"max_lag must be >= 0, got {max_lag}")
+    if min_pairs < 1:
+        raise ValueError(f"min_pairs must be >= 1, got {min_pairs}")
+    _validate_n_jobs(n_jobs)
+    if exog is not None and exog.shape != series.shape:
+        raise ValueError("exog must match series shape for significance bands")
     _validate_significance_surrogate_count(n_surrogates)
+    lag_start, lag_end = _resolve_lag_range(max_lag=max_lag, lag_range=lag_range)
+    curve_size = max(lag_end - lag_start + 1, 0)
+
     surr = phase_surrogates(series, n_surrogates=n_surrogates, random_state=random_state)
-    compute_fn = compute_raw_curve if which == "raw" else compute_partial_curve
     n_workers = (os.cpu_count() or 1) if n_jobs == -1 else n_jobs
     bivariate_scorer = cast(DependenceScorer, info.scorer)
 
-    def _eval(idx: int) -> np.ndarray:
+    # Hoist exog scaling outside the per-surrogate loop (Invariant F: each
+    # surrogate target is still scaled once, but the exog predictor is scaled
+    # exactly once per band call).
+    scaled_exog = _scale_series(exog) if exog is not None else None
+    exog_present = exog is not None
+
+    def _eval_raw(idx: int) -> np.ndarray:
         seed = random_state + idx + 1
-        return compute_fn(
-            surr[idx],
+        scaled_surr = _scale_series(surr[idx])
+        predictor = scaled_exog if scaled_exog is not None else scaled_surr
+        return _compute_raw_curve_prescaled(
+            scaled_surr,
+            predictor,
             max_lag,
             bivariate_scorer,
-            exog=exog,
             min_pairs=min_pairs,
             random_state=seed,
             lag_range=lag_range,
         )
 
-    if n_workers == 1:
-        values: list[np.ndarray] = [_eval(i) for i in range(surr.shape[0])]
-    else:
-        with ThreadPoolExecutor(max_workers=min(n_workers, surr.shape[0])) as pool:
-            values = list(pool.map(_eval, range(surr.shape[0])))
+    def _eval_partial(idx: int) -> np.ndarray:
+        seed = random_state + idx + 1
+        scaled_surr = _scale_series(surr[idx])
+        predictor = scaled_exog if scaled_exog is not None else scaled_surr
+        return _compute_partial_curve_prescaled(
+            scaled_surr,
+            predictor,
+            max_lag,
+            bivariate_scorer,
+            exog_present=exog_present,
+            min_pairs=min_pairs,
+            random_state=seed,
+            lag_range=lag_range,
+        )
 
-    stacked = np.vstack(values)
-    lower = np.percentile(stacked, 2.5, axis=0)
-    upper = np.percentile(stacked, 97.5, axis=0)
+    eval_fn = _eval_raw if which == "raw" else _eval_partial
+
+    n_surr = surr.shape[0]
+    result = np.empty((n_surr, curve_size), dtype=float)
+    if n_workers == 1:
+        for i in range(n_surr):
+            result[i] = eval_fn(i)
+    else:
+        with ThreadPoolExecutor(max_workers=min(n_workers, n_surr)) as pool:
+            for i, row in enumerate(pool.map(eval_fn, range(n_surr))):
+                result[i] = row
+
+    lower = np.percentile(result, 2.5, axis=0)
+    upper = np.percentile(result, 97.5, axis=0)
     return lower, upper
 
 
@@ -118,9 +168,14 @@ def compute_significance_bands_transfer_entropy(
     Returns:
         ``(lower_band, upper_band)`` arrays of shape ``(max_lag,)``.
     """
-    _validate_significance_surrogate_count(n_surrogates)
+    if max_lag < 1:
+        raise ValueError(f"max_lag must be >= 1, got {max_lag}")
+    if min_pairs < 1:
+        raise ValueError(f"min_pairs must be >= 1, got {min_pairs}")
+    _validate_n_jobs(n_jobs)
     if source is not None and source.shape != series.shape:
         raise ValueError("source must match target shape for TE significance bands")
+    _validate_significance_surrogate_count(n_surrogates)
 
     surr = phase_surrogates(series, n_surrogates=n_surrogates, random_state=random_state)
     n_workers = (os.cpu_count() or 1) if n_jobs == -1 else n_jobs
@@ -137,13 +192,16 @@ def compute_significance_bands_transfer_entropy(
             random_state=seed,
         )
 
+    n_surr = surr.shape[0]
+    result = np.empty((n_surr, max_lag), dtype=float)
     if n_workers == 1:
-        values: list[np.ndarray] = [_eval(i) for i in range(surr.shape[0])]
+        for i in range(n_surr):
+            result[i] = _eval(i)
     else:
-        with ThreadPoolExecutor(max_workers=min(n_workers, surr.shape[0])) as pool:
-            values = list(pool.map(_eval, range(surr.shape[0])))
+        with ThreadPoolExecutor(max_workers=min(n_workers, n_surr)) as pool:
+            for i, row in enumerate(pool.map(_eval, range(n_surr))):
+                result[i] = row
 
-    stacked = np.vstack(values)
-    lower = np.percentile(stacked, 2.5, axis=0)
-    upper = np.percentile(stacked, 97.5, axis=0)
+    lower = np.percentile(result, 2.5, axis=0)
+    upper = np.percentile(result, 97.5, axis=0)
     return lower, upper

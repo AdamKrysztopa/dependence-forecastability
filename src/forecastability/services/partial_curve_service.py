@@ -67,6 +67,23 @@ def _residualize(
     Returns:
         Tuple of ``(residualized_past, residualized_future)``.
     """
+    return _residualize_prescaled(scaled, h, past, future, exog_present=exog is not None)
+
+
+def _residualize_prescaled(
+    scaled: np.ndarray,
+    h: int,
+    past: np.ndarray,
+    future: np.ndarray,
+    *,
+    exog_present: bool,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Residualize past and future using a boolean exog flag.
+
+    Service-internal variant of :func:`_residualize` that takes a boolean
+    flag instead of an array reference, so prescaled callers do not need to
+    keep the original exog array around.
+    """
     if h <= 1:
         return past, future
     n_rows = scaled.size - h
@@ -74,7 +91,7 @@ def _residualize(
     z = np.column_stack(cols)
     model_future = LinearRegression().fit(z, future)
     res_future = future - model_future.predict(z)
-    if exog is not None:
+    if exog_present:
         return past.copy(), res_future
     model_past = LinearRegression().fit(z, past)
     return past - model_past.predict(z), res_future
@@ -114,6 +131,50 @@ def compute_partial_curve(
     """
     scaled = _scale_series(series)
     predictor = _scale_series(exog) if exog is not None else scaled
+    return _compute_partial_curve_prescaled(
+        scaled,
+        predictor,
+        max_lag,
+        scorer,
+        exog_present=exog is not None,
+        min_pairs=min_pairs,
+        random_state=random_state,
+        lag_range=lag_range,
+    )
+
+
+def _compute_partial_curve_prescaled(
+    scaled: np.ndarray,
+    predictor: np.ndarray,
+    max_lag: int,
+    scorer: DependenceScorer,
+    *,
+    exog_present: bool,
+    min_pairs: int,
+    random_state: int,
+    lag_range: tuple[int, int] | None = None,
+) -> np.ndarray:
+    """Inner partial-curve loop on already-scaled inputs.
+
+    Service-internal helper that skips ``_scale_series`` so callers (such as
+    significance bands) can hoist scaling outside per-surrogate loops while
+    keeping behavior bit-identical to :func:`compute_partial_curve`.
+
+    Args:
+        scaled: Pre-scaled target series (output of ``_scale_series``).
+        predictor: Pre-scaled predictor series; equals ``scaled`` for the
+            univariate case or pre-scaled exog otherwise.
+        max_lag: Maximum lag to evaluate.
+        scorer: Callable dependence scorer.
+        exog_present: ``True`` when an exogenous predictor is in use; controls
+            whether *past* is residualized (mirrors :func:`_residualize`).
+        min_pairs: Minimum number of sample pairs required per lag.
+        random_state: Base random seed for the scorer.
+        lag_range: Optional inclusive lag bounds ``(start_lag, end_lag)``.
+
+    Returns:
+        1-D array with one score per evaluated lag.
+    """
     lag_start, lag_end = _resolve_lag_range(max_lag=max_lag, lag_range=lag_range)
 
     if lag_end < lag_start:
@@ -129,7 +190,9 @@ def compute_partial_curve(
         else:
             past = predictor[:-h]
             future = scaled[h:]
-        res_past, res_future = _residualize(scaled, h, past, future, exog=exog)
+        res_past, res_future = _residualize_prescaled(
+            scaled, h, past, future, exog_present=exog_present
+        )
         curve[h - lag_start] = scorer(res_past, res_future, random_state=random_state + h)
     return curve
 
