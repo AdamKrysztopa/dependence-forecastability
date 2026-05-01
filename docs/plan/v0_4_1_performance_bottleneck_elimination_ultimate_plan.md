@@ -115,7 +115,7 @@ Ordered by implementation sequence (matches the PR plan in §7). The numeric ID 
 | 1 | PBE-F00 | Significance-service correctness gate (`n_surrogates >= 99`) | 0 | P0 | Done |
 | 2 | PBE-F01 | Performance baseline config and timing script | 1 | P0 | Done |
 | 3 | PBE-F02 | Hotspot profiling script and report artifacts | 1 | P0 | Done |
-| 4 | PBE-F03 | Covariant method-subset work avoidance | 2 | P0 | Not started |
+| 4 | PBE-F03 | Covariant method-subset work avoidance | 2 | P0 | Done |
 | 5 | PBE-F05 | Surrogate generation/evaluation reuse and preallocation | 3 | P1 | Not started |
 | 6 | PBE-F13 | Shared lag-design scaffolding utility (prerequisite for F06 and F14) | 3 | P1 | Not started |
 | 7 | PBE-F04 | Single-horizon rolling-origin compute path | 2 | P0 | Not started |

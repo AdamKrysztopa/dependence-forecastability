@@ -6,6 +6,7 @@ import importlib
 from collections import defaultdict
 from collections.abc import Callable
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -249,6 +250,56 @@ def test_requested_cross_method_only_populates_its_own_summary_column(
     else:
         assert "contains_target_only_methods" not in result.metadata
         assert "conditioning_scope_disclaimer" not in result.metadata
+
+
+@pytest.mark.parametrize(
+    ("methods", "expected_calls"),
+    [
+        (["cross_ami"], {"raw": 1, "partial": 0, "significance": 1}),
+        (["cross_pami"], {"raw": 0, "partial": 1, "significance": 0}),
+        (["cross_ami", "cross_pami"], {"raw": 1, "partial": 1, "significance": 1}),
+    ],
+)
+def test_cross_method_subset_skips_unrequested_curve_work(
+    monkeypatch: pytest.MonkeyPatch,
+    methods: list[str],
+    expected_calls: dict[str, int],
+) -> None:
+    calls = {"raw": 0, "partial": 0, "significance": 0}
+
+    def _raw_curve(*args: object, **kwargs: object) -> np.ndarray:
+        del args, kwargs
+        calls["raw"] += 1
+        return np.array([0.10, 0.20])
+
+    def _partial_curve(*args: object, **kwargs: object) -> np.ndarray:
+        del args, kwargs
+        calls["partial"] += 1
+        return np.array([0.05, 0.07])
+
+    def _significance_bands(*args: object, **kwargs: object) -> tuple[np.ndarray, np.ndarray]:
+        del args, kwargs
+        calls["significance"] += 1
+        return np.array([0.0, 0.0]), np.array([0.15, 0.25])
+
+    monkeypatch.setattr(covariant_module, "compute_exog_raw_curve", _raw_curve)
+    monkeypatch.setattr(covariant_module, "compute_exog_partial_curve", _partial_curve)
+    monkeypatch.setattr(covariant_module, "compute_significance_bands_generic", _significance_bands)
+
+    target = np.arange(12, dtype=float)
+    drivers = {"driver": target + 1.0}
+
+    result = run_covariant_analysis(
+        target,
+        drivers,
+        max_lag=2,
+        methods=methods,
+        n_surrogates=99,
+        random_state=42,
+    )
+
+    assert calls == expected_calls
+    assert len(result.summary_table) == 2
 
 
 def test_lagged_exog_conditioning_metadata_is_truthful(

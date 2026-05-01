@@ -118,17 +118,16 @@ def _validate_inputs(
     return validated_target, validated_drivers
 
 
-def _compute_cross_curves(
+def _compute_cross_ami_curves(
     *,
     target: np.ndarray,
     drivers: dict[str, np.ndarray],
     max_lag: int,
     random_state: int,
-) -> tuple[dict[str, np.ndarray], dict[str, np.ndarray]]:
+) -> dict[str, np.ndarray]:
     registry = default_registry()
     mi_scorer = cast(DependenceScorer, registry.get("mi").scorer)
     cross_ami_curves: dict[str, np.ndarray] = {}
-    cross_pami_curves: dict[str, np.ndarray] = {}
 
     for index, (driver_name, driver_series) in enumerate(drivers.items()):
         seed = random_state + index
@@ -139,6 +138,22 @@ def _compute_cross_curves(
             mi_scorer,
             random_state=seed,
         )
+    return cross_ami_curves
+
+
+def _compute_cross_pami_curves(
+    *,
+    target: np.ndarray,
+    drivers: dict[str, np.ndarray],
+    max_lag: int,
+    random_state: int,
+) -> dict[str, np.ndarray]:
+    registry = default_registry()
+    mi_scorer = cast(DependenceScorer, registry.get("mi").scorer)
+    cross_pami_curves: dict[str, np.ndarray] = {}
+
+    for index, (driver_name, driver_series) in enumerate(drivers.items()):
+        seed = random_state + index
         cross_pami_curves[driver_name] = compute_exog_partial_curve(
             target,
             driver_series,
@@ -146,7 +161,7 @@ def _compute_cross_curves(
             mi_scorer,
             random_state=seed,
         )
-    return cross_ami_curves, cross_pami_curves
+    return cross_pami_curves
 
 
 def _compute_te_curves(
@@ -492,25 +507,31 @@ def run_covariant_analysis(
     pcmci_ami_result: PcmciAmiResult | None = None
     lagged_exog: LaggedExogBundle | None = None
 
-    if {"cross_ami", "cross_pami"} & requested_method_set:
-        cross_ami_curves, cross_pami_curves = _compute_cross_curves(
+    if "cross_ami" in requested_method_set:
+        cross_ami_curves = _compute_cross_ami_curves(
             target=validated_target,
             drivers=validated_drivers,
             max_lag=max_lag,
             random_state=random_state,
         )
-        if "cross_ami" in requested_method_set:
-            active_methods.add("cross_ami")
-            bands = _compute_cross_ami_bands(
-                target=validated_target,
-                drivers=validated_drivers,
-                max_lag=max_lag,
-                n_surrogates=n_surrogates,
-                random_state=random_state,
-            )
-            cross_ami_upper_bands = {name: upper for name, (lower, upper) in bands.items()}
-        if "cross_pami" in requested_method_set:
-            active_methods.add("cross_pami")
+        active_methods.add("cross_ami")
+        bands = _compute_cross_ami_bands(
+            target=validated_target,
+            drivers=validated_drivers,
+            max_lag=max_lag,
+            n_surrogates=n_surrogates,
+            random_state=random_state,
+        )
+        cross_ami_upper_bands = {name: upper for name, (lower, upper) in bands.items()}
+
+    if "cross_pami" in requested_method_set:
+        cross_pami_curves = _compute_cross_pami_curves(
+            target=validated_target,
+            drivers=validated_drivers,
+            max_lag=max_lag,
+            random_state=random_state,
+        )
+        active_methods.add("cross_pami")
 
     if "te" in requested_method_set:
         te_curves = _compute_te_curves(
