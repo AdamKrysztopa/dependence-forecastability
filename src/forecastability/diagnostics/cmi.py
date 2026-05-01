@@ -11,6 +11,7 @@ from sklearn.feature_selection import mutual_info_regression
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler
 
+from forecastability.metrics._lag_design import build_intermediate_design
 from forecastability.utils.validation import validate_time_series
 
 CMIBackendName = Literal["linear_residual", "rf_residual", "extra_trees_residual"]
@@ -77,11 +78,7 @@ def _scale_series(ts: np.ndarray) -> np.ndarray:
 
 def _build_conditioning_matrix(ts: np.ndarray, lag: int) -> np.ndarray:
     """Build conditioning matrix using intermediate lags 1..lag-1."""
-    if lag <= 1:
-        return np.empty((ts.size - lag, 0), dtype=float)
-    n_rows = ts.size - lag
-    cols = [ts[offset : offset + n_rows] for offset in range(1, lag)]
-    return np.column_stack(cols)
+    return build_intermediate_design(ts, lag)
 
 
 def _backend_from_name(

@@ -7,6 +7,7 @@ from sklearn.feature_selection import mutual_info_regression
 from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import StandardScaler
 
+from forecastability.metrics._lag_design import build_intermediate_design
 from forecastability.utils.validation import validate_time_series
 
 
@@ -50,12 +51,7 @@ def compute_ami(
 
 def _build_conditioning_matrix(ts: np.ndarray, lag: int) -> np.ndarray:
     """Build conditioning matrix using intermediate lags 1..lag-1."""
-    if lag <= 1:
-        return np.empty((ts.size - lag, 0), dtype=float)
-
-    n_rows = ts.size - lag
-    cols = [ts[offset : offset + n_rows] for offset in range(1, lag)]
-    return np.column_stack(cols)
+    return build_intermediate_design(ts, lag)
 
 
 def compute_pami_linear_residual(

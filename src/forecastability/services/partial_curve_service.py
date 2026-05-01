@@ -6,6 +6,7 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 
 from forecastability.metrics import _scale_series
+from forecastability.metrics._lag_design import build_intermediate_design
 from forecastability.metrics.scorers import DependenceScorer
 
 
@@ -86,9 +87,7 @@ def _residualize_prescaled(
     """
     if h <= 1:
         return past, future
-    n_rows = scaled.size - h
-    cols = [scaled[offset : offset + n_rows] for offset in range(1, h)]
-    z = np.column_stack(cols)
+    z = build_intermediate_design(scaled, h)
     model_future = LinearRegression().fit(z, future)
     res_future = future - model_future.predict(z)
     if exog_present:
