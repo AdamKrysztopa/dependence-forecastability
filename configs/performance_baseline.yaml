@@ -1,0 +1,53 @@
+metadata:
+  release: "0.4.1"
+  random_state_base: 42
+  repeats: 3
+  output_dir: "outputs/performance"
+  notes: "Synthetic, network-free Phase 1 timing baseline for trend comparison."
+
+cases:
+  - case_id: "small_univariate_triage"
+    size_label: "small"
+    workflow: "run_triage"
+    n_obs: 180
+    max_lag: 8
+    n_surrogates: 99
+    compute_significance: false
+    signal: "ar1"
+    random_state: 101
+
+  - case_id: "medium_univariate_triage"
+    size_label: "medium"
+    workflow: "run_triage"
+    n_obs: 360
+    max_lag: 16
+    n_surrogates: 99
+    compute_significance: true
+    signal: "seasonal_ar1"
+    random_state: 202
+
+  - case_id: "large_univariate_triage"
+    size_label: "large"
+    workflow: "run_triage"
+    n_obs: 720
+    max_lag: 24
+    n_surrogates: 99
+    compute_significance: true
+    signal: "seasonal_ar1"
+    random_state: 303
+
+profile:
+  top_n: 25
+  enabled_targets:
+    - "callable.forecastability.run_triage"
+    - "callable.forecastability.triage.run_batch_triage"
+    - "callable.metrics.compute_ami"
+    - "callable.metrics.compute_pami_linear_residual"
+    - "callable.services.compute_raw_curve"
+    - "callable.services.compute_partial_curve"
+    - "callable.use_cases.run_covariant_analysis.cross_ami"
+    - "callable.use_cases.build_forecast_prep_contract"
+    - "callable.pipeline.run_rolling_origin_evaluation"
+  profile_size_labels:
+    - "small"
+    - "medium"
