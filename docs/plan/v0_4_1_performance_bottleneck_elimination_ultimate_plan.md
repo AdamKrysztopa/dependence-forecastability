@@ -119,7 +119,7 @@ Ordered by execution sequence (matches the PR plan in §7). The numeric ID suffi
 | 5 | PBE-F05 | Surrogate generation/evaluation reuse and preallocation | 3 | P1 | Not started |
 | 6 | PBE-F16 | Generic curve validation/scaling hoist for raw, partial, TE, and GCMI loops | 3 | P1 | Not started |
 | 7 | PBE-F13 | Shared lag-design scaffolding utility (prerequisite for F04, F06, and F14) | 3 | P1 | Not started |
-| 8 | PBE-F04 | Single-horizon rolling-origin compute path | 2 | P0 | Not started |
+| 8 | PBE-F04 | Single-horizon rolling-origin compute path | 2 | P0 | Done |
 | 9 | PBE-F06 | pAMI lag-design/residualization optimization | 3 | P1 | Not started |
 | 10 | PBE-F14 | PCMCI-AMI hybrid `knn_cmi` profiling and fast-path hardening | 3 | P0 | Not started |
 | 11 | PBE-F08 | Lagged-exog surrogate parallelism and distance-scorer guardrails | 3 | P1 | Not started |

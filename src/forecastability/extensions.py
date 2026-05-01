@@ -6,8 +6,11 @@ import numpy as np
 import pandas as pd
 from pydantic import BaseModel, ConfigDict
 
-from forecastability.pipeline import ForecastabilityAnalyzerExog, run_canonical_example
+from forecastability.metrics.scorers import _mi_scorer
+from forecastability.pipeline import run_canonical_example
 from forecastability.pipeline.rolling_origin import build_expanding_window_splits
+from forecastability.services.partial_curve_service import compute_partial_at_horizon
+from forecastability.services.raw_curve_service import compute_raw_at_horizon
 from forecastability.utils.aggregation import summarize_canonical_result
 from forecastability.utils.types import CanonicalExampleResult
 
@@ -129,26 +132,26 @@ def compute_target_baseline_by_horizon(
         ami_values: list[float] = []
         pami_values: list[float] = []
         for index, split in enumerate(splits):
-            analyzer = ForecastabilityAnalyzerExog(
-                n_surrogates=n_surrogates,
-                random_state=random_state + (1000 * horizon) + index,
-            )
-            ami_curve = analyzer.compute_raw(
+            effective_rs = random_state + (1000 * horizon) + index
+            # Single-horizon helpers avoid full-curve computation (PBE-F04).
+            ami_val = compute_raw_at_horizon(
                 split.train,
-                max_lag=horizon,
-                method="mi",
+                horizon,
+                _mi_scorer,
+                exog=None,
                 min_pairs=min_pairs_raw,
-                exog=None,
+                random_state=effective_rs,
             )
-            pami_curve = analyzer.compute_partial(
+            pami_val = compute_partial_at_horizon(
                 split.train,
-                max_lag=horizon,
-                method="mi",
-                min_pairs=min_pairs_partial,
+                horizon,
+                _mi_scorer,
                 exog=None,
+                min_pairs=min_pairs_partial,
+                random_state=effective_rs,
             )
-            ami_values.append(float(ami_curve[horizon - 1]))
-            pami_values.append(float(pami_curve[horizon - 1]))
+            ami_values.append(ami_val)
+            pami_values.append(pami_val)
 
         if ami_values:
             ami_by_horizon[horizon] = float(np.mean(ami_values))
