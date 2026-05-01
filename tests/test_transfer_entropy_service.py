@@ -106,3 +106,55 @@ def test_default_registry_exposes_te_scorer() -> None:
     assert info.family == "nonlinear"
     scorer = info.scorer
     assert isinstance(scorer, DependenceScorer)
+
+
+# ---------------------------------------------------------------------------
+# PBE-F16: curve hoist parity and validation guards
+# ---------------------------------------------------------------------------
+
+
+def test_compute_transfer_entropy_curve_matches_per_lag_calls() -> None:
+    x, y = _generate_directional_pair(seed=1234)
+    curve = compute_transfer_entropy_curve(
+        x,
+        y,
+        max_lag=4,
+        min_pairs=50,
+        backend="linear_residual",
+        random_state=42,
+    )
+    expected = np.array(
+        [
+            compute_transfer_entropy(
+                x,
+                y,
+                lag=lag,
+                backend="linear_residual",
+                min_pairs=50,
+                random_state=42 + lag,
+            )
+            for lag in range(1, 5)
+        ],
+        dtype=float,
+    )
+    assert np.array_equal(curve, expected)
+
+
+def test_compute_transfer_entropy_curve_rejects_invalid_max_lag() -> None:
+    x, y = _generate_directional_pair(seed=3)
+    with pytest.raises(ValueError, match="max_lag must be >= 1"):
+        compute_transfer_entropy_curve(x, y, max_lag=0)
+
+
+def test_compute_transfer_entropy_curve_rejects_invalid_history_mode() -> None:
+    x, y = _generate_directional_pair(seed=4)
+    with pytest.raises(ValueError, match="history_mode must be one of"):
+        compute_transfer_entropy_curve(x, y, max_lag=2, history_mode="bogus")  # type: ignore[arg-type]
+
+
+def test_compute_transfer_entropy_curve_rejects_mismatched_lengths() -> None:
+    rng = np.random.default_rng(5)
+    x = rng.standard_normal(400)
+    y = rng.standard_normal(380)
+    with pytest.raises(ValueError, match="identical lengths"):
+        compute_transfer_entropy_curve(x, y, max_lag=2, min_pairs=50)
