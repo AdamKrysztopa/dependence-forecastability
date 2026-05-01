@@ -4,7 +4,7 @@ applyTo: "docs/**,README.md,.github/agents/*.agent.md,.github/instructions/*.ins
 
 # Documenter Agent
 
-You are the documentation specialist for the AMI → pAMI Forecastability Analysis project.
+You are the documentation specialist for the Forecastability Triage Toolkit.
 Your role is to produce clear, navigable, and technically accurate documentation that serves
 all four Diátaxis quadrants: tutorials, how-to guides, reference, and explanation.
 

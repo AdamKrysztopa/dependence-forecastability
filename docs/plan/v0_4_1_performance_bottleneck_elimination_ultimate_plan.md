@@ -108,26 +108,27 @@ All planned `0.4.1` implementation work is additive or semantic-preserving unles
 
 ### Feature inventory
 
-Ordered by implementation sequence (matches the PR plan in §7). The numeric ID suffix is a stable identifier, not an ordering hint.
+Ordered by execution sequence (matches the PR plan in §7). The numeric ID suffix is a stable identifier, not an ordering hint. `Follow-up needed` means code exists, but the repo review found acceptance gaps that must close before later optimization work relies on that feature.
 
 | Order | ID | Feature | Phase | Priority | Status |
 | ---: | --- | --- | --- | --- | --- |
-| 1 | PBE-F00 | Significance-service correctness gate (`n_surrogates >= 99`) | 0 | P0 | Done |
+| 1 | PBE-F00 | Significance-service correctness gate (`n_surrogates >= 99`, `knn_cmi` `n_permutations >= 99`, legacy band pin) | 0 | P0 | Follow-up needed |
 | 2 | PBE-F01 | Performance baseline config and timing script | 1 | P0 | Done |
-| 3 | PBE-F02 | Hotspot profiling script and report artifacts | 1 | P0 | Done |
+| 3 | PBE-F02 | Hotspot profiling script, target registry, and coverage-gap closure | 1 | P0 | Follow-up needed |
 | 4 | PBE-F03 | Covariant method-subset work avoidance | 2 | P0 | Done |
 | 5 | PBE-F05 | Surrogate generation/evaluation reuse and preallocation | 3 | P1 | Not started |
-| 6 | PBE-F13 | Shared lag-design scaffolding utility (prerequisite for F06 and F14) | 3 | P1 | Not started |
-| 7 | PBE-F04 | Single-horizon rolling-origin compute path | 2 | P0 | Not started |
-| 8 | PBE-F06 | pAMI lag-design/residualization optimization | 3 | P1 | Not started |
-| 9 | PBE-F07 | Fingerprint geometry parallel/preset optimization | 3 | P1 | Not started |
+| 6 | PBE-F16 | Generic curve validation/scaling hoist for raw, partial, TE, and GCMI loops | 3 | P1 | Not started |
+| 7 | PBE-F13 | Shared lag-design scaffolding utility (prerequisite for F04, F06, and F14) | 3 | P1 | Not started |
+| 8 | PBE-F04 | Single-horizon rolling-origin compute path | 2 | P0 | Not started |
+| 9 | PBE-F06 | pAMI lag-design/residualization optimization | 3 | P1 | Not started |
 | 10 | PBE-F14 | PCMCI-AMI hybrid `knn_cmi` profiling and fast-path hardening | 3 | P0 | Not started |
 | 11 | PBE-F08 | Lagged-exog surrogate parallelism and distance-scorer guardrails | 3 | P1 | Not started |
-| 12 | PBE-F12 | Batch workbench per-series parallelism with deterministic ordering | 3 | P1 | Not started |
-| 13 | PBE-F15 | Typed kernel-provider Protocols in `forecastability.ports.kernels` | 4 | P1 | Not started |
-| 14 | PBE-F09 | Optional native-kernel plugin design | 4 | P2 | Not started |
-| 15 | PBE-F10 | Performance decision matrix and optimization backlog | 4 | P0 | Not started |
-| 16 | PBE-F11 | Performance docs, budgets, and release report | 5 | P0 | Not started |
+| 12 | PBE-F07 | Fingerprint geometry parallel/preset optimization | 3 | P1 | Not started |
+| 13 | PBE-F12 | Batch workbench per-series parallelism with deterministic ordering | 3 | P1 | Not started |
+| 14 | PBE-F10 | Performance decision matrix, refreshed profiles, and stop/go backlog | 4 | P0 | Not started |
+| 15 | PBE-F15 | Typed kernel-provider Protocols in `forecastability.ports.kernels` | 4 | P1 | Stop/go gated |
+| 16 | PBE-F09 | Optional native-kernel plugin design | 4 | P2 | Stop/go gated |
+| 17 | PBE-F11 | Performance docs, budgets, and release report | 5 | P0 | Not started |
 
 ---
 
@@ -479,14 +480,14 @@ Minimum parity gates for any future plugin:
 | --- | --- | --- | --- | --- |
 | 1 | Split covariant CrossAMI / pCrossAMI computation (PBE-F03) | High for method-subset covariant runs; low-risk first optimization before touching kernels | Low | `tests/test_covariant_facade.py`, new monkeypatch call-count tests |
 | 2 | Surrogate matrix preallocation and significance-loop setup reduction (PBE-F05) | Highest measured Phase 1 bottleneck: medium `run_triage` spent 4.043s/4.087s in legacy surrogate bands; covariant `cross_ami` spent 0.626s/0.640s in generic surrogate bands | Medium because seed stream and null isolation must not drift unless explicitly documented | Significance fixed-seed parity tests, generic raw/partial band parity, `n_jobs` determinism tests |
-| 3 | Shared lag-design scaffolding utility (PBE-F13) | Medium across legacy pAMI, generic partial, and PCMCI-AMI; prerequisite for F06 and F14 | Low (no estimator change) | Lag-design parity tests, cache-invalidation fuzz test |
-| 4 | Single-horizon rolling-origin diagnostics (PBE-F04) | High for benchmark panels and causal-rivers workflows; not dominant in the small Phase 1 rolling-origin smoke profile | Medium because of lag indexing and train-window leakage risk | `tests/test_pipeline.py`, `tests/test_extensions.py`, holdout-perturbation tests |
-| 5 | Validation/scaling hoist in generic curves | Medium in surrogate loops; covariant profile showed 100 `compute_raw_curve` calls and 202 scaling calls in one medium `cross_ami` profile | Medium because public exceptions must stay stable | Raw/partial curve service tests |
+| 3 | Validation/scaling hoist in generic curves (PBE-F16) | Medium in surrogate loops; covariant profile showed 100 `compute_raw_curve` calls and 202 scaling calls in one medium `cross_ami` profile | Medium because public exceptions must stay stable | Raw/partial curve service tests |
+| 4 | Shared lag-design scaffolding utility (PBE-F13) | Medium across legacy pAMI, generic partial, and PCMCI-AMI; prerequisite for F04, F06, and F14 | Low (no estimator change) | Lag-design parity tests, cache-invalidation fuzz test |
+| 5 | Single-horizon rolling-origin diagnostics (PBE-F04) | High for benchmark panels and causal-rivers workflows; not dominant in the small Phase 1 rolling-origin smoke profile | Medium because of lag indexing and train-window leakage risk | `tests/test_pipeline.py`, `tests/test_extensions.py`, holdout-perturbation tests |
 | 6 | pAMI residualization cache or `lstsq` helper (PBE-F06) | Medium for pAMI-heavy loops; standalone pAMI was cheap in Phase 1, but repeated pAMI significance can amplify it | Medium because residuals affect MI estimates | Metrics and partial-curve parity tests |
-| 7 | Geometry `n_jobs` presets and profile pruning (PBE-F07) | Medium to high for fingerprint batch; not exercised deeply by the Phase 1 callable smoke profile | Medium due deterministic ordering | Geometry regression and fingerprint tests |
-| 8 | PCMCI-AMI hybrid `knn_cmi` profiling and fast-path hardening (PBE-F14) | High for causal-rivers / routing validation based on prior ~134.6s real-panel evidence plus capped local evidence (`4.38s`, 18 shuffle tests, 3,632 sklearn MI calls) | Medium (must preserve Tigramite seed contract and permutation null) | PCMCI-AMI parity fixtures, shuffle-null tests, routing-validation regression |
-| 9 | Lagged-exog surrogate `n_jobs` pass-through (PBE-F08) | Medium to high for multi-driver screening; script smoke pass still needs direct timing | Medium due fixture output ordering | Lagged-exog regression and role-invariant tests |
-| 10 | GCMI/TE curve validation hoist | Medium in covariant runs | Medium because lag-specific min-pair checks differ | GCMI and TE service tests |
+| 7 | PCMCI-AMI hybrid `knn_cmi` profiling and fast-path hardening (PBE-F14) | High for causal-rivers / routing validation based on prior ~134.6s real-panel evidence plus capped local evidence (`4.38s`, 18 shuffle tests, 3,632 sklearn MI calls) | Medium (must preserve Tigramite seed contract and permutation null) | PCMCI-AMI parity fixtures, shuffle-null tests, routing-validation regression |
+| 8 | Lagged-exog surrogate `n_jobs` pass-through (PBE-F08) | Medium to high for multi-driver screening; script smoke pass still needs direct timing | Medium due fixture output ordering | Lagged-exog regression and role-invariant tests |
+| 9 | Geometry `n_jobs` presets and profile pruning (PBE-F07) | Medium to high for fingerprint batch; not exercised deeply by the Phase 1 callable smoke profile | Medium due deterministic ordering | Geometry regression and fingerprint tests |
+| 10 | GCMI/TE scorer-specific loop cleanup after PBE-F16 | Medium in covariant runs if refreshed profiles still show scorer-specific overhead | Medium because lag-specific min-pair checks differ | GCMI and TE service tests |
 | 11 | Distance-scorer guard or chunked exact implementation | Medium for users selecting distance correlation; not implicated in default MI profile | Medium due scorer semantics | Scorer parity tests |
 | 12 | Batch workbench per-series parallelism (PBE-F12) | High for fingerprint batch / routing workbench; needs dedicated batch profile | Medium (output ordering, seed mapping) | Batch workbench parity tests under fixed seeds |
 | 13 | Typed kernel-provider Protocols (PBE-F15) | None directly; enables F09 plugins | Low | Loader smoke test rejects non-conforming dummy plugin |
@@ -696,22 +697,25 @@ Run only when the relevant result surface changes:
 
 ## 7. Implementation notes
 
-F00/F01/F02 are already partially implemented in the working tree and must be kept consistent with the current code before optimization PRs start. The next planning update should close stale text, add the missing generic-significance interface validation, and expand the profiler coverage without changing scientific code.
+F01 and F03 are implemented in the working tree. F00 and F02 have code in place, but repo review found blocking acceptance gaps: `knn_cmi` still needs the `n_permutations >= 99` floor, legacy significance bands still need a fixed-seed pin, and the Phase 1 profiler still needs a target registry plus expanded live workflow coverage before later optimization claims rely on it.
 
 Recommended PR order:
 
-1. `PBE-F00`: preserve completed significance guard tests, add generic-significance interface validation, add the `knn_cmi` permutation-count floor, and pin legacy `compute_significance_bands` regression.
-2. `PBE-F01/F02`: performance baseline and profile scripts; split target registry from profiling adapter before expanding script/PCMCI coverage.
-3. `PBE-F03`: covariant method-subset compute split. This remains first because it is pure orchestration work avoidance with low statistical risk.
+1. `PBE-F00`: close correctness preflight gaps: preserve completed significance guard tests, add generic-significance interface validation if absent, add the `knn_cmi` permutation-count floor, and pin legacy `compute_significance_bands` regression.
+2. `PBE-F01/F02`: keep the baseline script stable, then split a performance target registry from the profiling adapter and expand script/geometry/fingerprint/batch/lagged-exog/exogenous-screening/PCMCI coverage.
+3. `PBE-F03`: covariant method-subset compute split. This is already implemented and remains the first completed optimization because it is pure orchestration work avoidance with low statistical risk.
 4. `PBE-F05`: surrogate matrix preallocation and significance-loop setup reduction. Phase 1 profiling moved this ahead of F04/F06 because surrogate bands dominate measured `run_triage`, `run_batch_triage`, and covariant `cross_ami`. This PR must include serial or child-process profiles for legacy significance before claiming scalar AMI/pAMI kernel wins.
-5. `PBE-F13`: shared lag-design scaffolding utility (prerequisite for F06 and F14).
-6. `PBE-F04`: single-horizon rolling-origin helpers (two flavors per Invariant G asymmetry). Keep this before residualization rewrites because it adds the parity harness needed for rolling-origin safety; credit performance impact only after capped rolling-origin panels, not the May 1 smoke profile alone.
-7. `PBE-F06/F07`: pure-Python kernel optimizations, one bottleneck per PR.
-8. `PBE-F14`: PCMCI-AMI hybrid `knn_cmi` profiling and fast-path hardening (depends on F13).
-9. `PBE-F08`: lagged-exog surrogate parallelism and distance-scorer chunked exact.
-10. `PBE-F12`: batch forecastability workbench per-series parallelism.
-11. `PBE-F15`: typed kernel-provider Protocols in `forecastability.ports.kernels`.
-12. `PBE-F09/F10`: native plugin design and performance decision matrix.
-13. `PBE-F11`: performance release report.
+5. `PBE-F16`: generic curve validation/scaling hoist for raw, partial, TE, and GCMI loops. This belongs immediately after F05 because surrogate loops, rolling-origin loops, and covariant driver fan-out amplify repeated scaling and validation.
+6. `PBE-F13`: shared lag-design scaffolding utility (prerequisite for F04, F06, and F14).
+7. `PBE-F04`: single-horizon rolling-origin helpers (two flavors per Invariant G asymmetry). Keep this before residualization rewrites because it adds the parity harness needed for rolling-origin safety; credit performance impact only after capped rolling-origin panels, not the May 1 smoke profile alone.
+8. `PBE-F06`: pAMI lag-design/residualization optimization.
+9. `PBE-F14`: PCMCI-AMI hybrid `knn_cmi` profiling and fast-path hardening. Its prerequisites are the F00 permutation-count floor and F13 lag-design/residualization scaffolding; it does not depend on geometry work.
+10. `PBE-F08`: lagged-exog surrogate parallelism and distance-scorer chunked exact. This depends on F05 because it should not add outer parallelism on top of an unoptimized surrogate service.
+11. `PBE-F07`: fingerprint geometry parallel/preset optimization. Do this before batch workbench parallelism so nested parallel policies are explicit.
+12. `PBE-F12`: batch forecastability workbench per-series parallelism with deterministic ordering and seed mapping.
+13. `PBE-F10`: refreshed profiles, performance decision matrix, and optimization backlog stop/go decision.
+14. `PBE-F15`: typed kernel-provider Protocols in `forecastability.ports.kernels`, only if F10 shows native/provider work is still warranted.
+15. `PBE-F09`: optional native-kernel plugin design, only after F10/F15.
+16. `PBE-F11`: performance docs, budgets, and release report.
 
-F03 lands before kernel work intentionally: it is a pure orchestration split with no estimator change. Phase 1 profiling then justifies moving F05 immediately after F03, because surrogate significance is the dominant measured cost. F04 remains before F06/F14 because it establishes single-horizon parity and train-window safety before deeper residualization or PCMCI changes. PBE-F09/F10 are stop/go gated by refreshed profiles after F03/F05/F04; if kernel-level work is no longer material, the release report records that decision instead of designing native acceleration prematurely.
+F03 lands before kernel work intentionally: it is a pure orchestration split with no estimator change. Phase 1 profiling then justifies moving F05 immediately after F03, because surrogate significance is the dominant measured cost. F16 makes the view more generic before lag-design or rolling-origin specialization: repeated scaling and validation are shared overhead across surrogate, covariant, and rolling-origin loops. F04 remains before F06/F14 because it establishes single-horizon parity and train-window safety before deeper residualization or PCMCI changes. PBE-F10 must precede PBE-F15/F09 because provider/native design is stop/go gated by refreshed profiles after the Python bottlenecks are removed.

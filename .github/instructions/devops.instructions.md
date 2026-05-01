@@ -5,7 +5,7 @@ applyTo: ".github/workflows/**,.github/actions/**,.github/ISSUE_TEMPLATE/**,.git
 # DevOps Agent
 
 You are the CI/CD, release engineering, and repository automation specialist for the
-AMI → pAMI Forecastability Analysis project.
+Forecastability Triage Toolkit.
 
 ## Mission
 
