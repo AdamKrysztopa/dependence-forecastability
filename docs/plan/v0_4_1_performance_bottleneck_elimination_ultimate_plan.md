@@ -128,7 +128,7 @@ Ordered by execution sequence (matches the PR plan in §7). The numeric ID suffi
 | 14 | PBE-F10 | Performance decision matrix, refreshed profiles, and stop/go backlog | 4 | P0 | Done |
 | 15 | PBE-F15 | Typed kernel-provider Protocols in `forecastability.ports.kernels` | 4 | P1 | Done |
 | 16 | PBE-F09 | Optional native-kernel plugin design | 4 | P2 | Done |
-| 17 | PBE-F11 | Performance docs, budgets, and release report | 5 | P0 | Not started |
+| 17 | PBE-F11 | Performance docs, budgets, and release report | 5 | P0 | Done |
 
 ---
 

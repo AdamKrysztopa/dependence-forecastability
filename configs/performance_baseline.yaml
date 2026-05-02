@@ -64,3 +64,37 @@ budgets:
     medium_cross_ami:
       baseline_wall_s: 0.640
       target_max_wall_s: 0.51
+
+  phase_1_baseline:
+    notes: "May 1 2026 measured medians on Apple M4 Pro, Python 3.11.11, macOS. Source: docs/plan/v0_4_1_performance_bottleneck_elimination_ultimate_plan.md §5."
+    small_univariate_triage_no_significance:
+      median_wall_s: 0.010
+    medium_univariate_triage_with_significance:
+      median_wall_s: 3.862
+    large_univariate_triage_with_significance:
+      median_wall_s: 4.272
+    medium_batch_triage_profile:
+      wall_s: 8.151
+    medium_cross_ami_profile:
+      wall_s: 0.640
+    rolling_origin_smoke:
+      wall_s: 0.189
+
+  regression:
+    notes: "Regression ceilings vs Phase 1 baseline: +20% on median wall, +25% on p95 wall, +15% on peak RSS."
+    small_univariate_triage_no_significance:
+      max_median_wall_s: 0.012
+    medium_univariate_triage_with_significance:
+      max_median_wall_s: 4.634
+      max_p95_wall_s: 4.828
+      max_peak_rss_mb: 237.2
+    large_univariate_triage_with_significance:
+      max_median_wall_s: 5.126
+      max_p95_wall_s: 5.340
+      max_peak_rss_mb: 238.6
+    medium_batch_triage_profile:
+      max_wall_s: 9.781
+    medium_cross_ami_profile:
+      max_wall_s: 0.768
+    rolling_origin_smoke:
+      max_wall_s: 0.227
