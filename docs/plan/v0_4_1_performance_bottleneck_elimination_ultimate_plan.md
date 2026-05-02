@@ -125,9 +125,9 @@ Ordered by execution sequence (matches the PR plan in §7). The numeric ID suffi
 | 11 | PBE-F08 | Lagged-exog surrogate parallelism and distance-scorer guardrails | 3 | P1 | Done |
 | 12 | PBE-F07 | Fingerprint geometry parallel/preset optimization | 3 | P1 | Done |
 | 13 | PBE-F12 | Batch workbench per-series parallelism with deterministic ordering | 3 | P1 | Done |
-| 14 | PBE-F10 | Performance decision matrix, refreshed profiles, and stop/go backlog | 4 | P0 | Not started |
-| 15 | PBE-F15 | Typed kernel-provider Protocols in `forecastability.ports.kernels` | 4 | P1 | Stop/go gated |
-| 16 | PBE-F09 | Optional native-kernel plugin design | 4 | P2 | Stop/go gated |
+| 14 | PBE-F10 | Performance decision matrix, refreshed profiles, and stop/go backlog | 4 | P0 | Done |
+| 15 | PBE-F15 | Typed kernel-provider Protocols in `forecastability.ports.kernels` | 4 | P1 | Done |
+| 16 | PBE-F09 | Optional native-kernel plugin design | 4 | P2 | Done |
 | 17 | PBE-F11 | Performance docs, budgets, and release report | 5 | P0 | Not started |
 
 ---

@@ -12,6 +12,16 @@ from typing import Any, Protocol, runtime_checkable
 import numpy as np
 
 from forecastability.metrics.scorers import DependenceScorer, ScorerInfo
+from forecastability.ports.kernels import (
+    KernelProvider,
+    KernelProviderError,
+    KernelProviderMetadata,
+    Ksg2ProfileKernel,
+    LagDesignKernel,
+    LinearResidualizeKernel,
+    PhaseSurrogateKernel,
+    load_kernel_provider,
+)
 from forecastability.triage.events import TriageEvent
 from forecastability.utils.types import (
     CanonicalExampleResult,
@@ -27,11 +37,19 @@ __all__ = [
     "CurveComputePort",
     "EventEmitterPort",
     "InterpretationPort",
+    "KernelProvider",
+    "KernelProviderError",
+    "KernelProviderMetadata",
+    "Ksg2ProfileKernel",
+    "LagDesignKernel",
+    "LinearResidualizeKernel",
+    "PhaseSurrogateKernel",
     "RecommendationPort",
     "ReportRendererPort",
     "SeriesValidatorPort",
     "SettingsPort",
     "SignificanceBandsPort",
+    "load_kernel_provider",
 ]
 
 
