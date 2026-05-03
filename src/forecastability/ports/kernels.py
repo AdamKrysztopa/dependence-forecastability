@@ -39,6 +39,7 @@ import numpy as np
 from pydantic import BaseModel, ConfigDict
 
 __all__ = [
+    "BatchedKnnMiKernel",
     "KernelProvider",
     "KernelProviderError",
     "KernelProviderMetadata",
@@ -144,6 +145,51 @@ class Ksg2ProfileKernel(Protocol):
         k_list: list[int],
         max_horizon: int,
         jitter_seed: int,
+    ) -> np.ndarray: ...
+
+
+# ---------------------------------------------------------------------------
+# BatchedKnnMiKernel Protocol (PBE-F23)
+# ---------------------------------------------------------------------------
+
+
+@runtime_checkable
+class BatchedKnnMiKernel(Protocol):
+    """Batch-curve-level kNN MI estimator for multiple (past, future) pairs.
+
+    Accepts a list of (past_array, future_array) pairs — each a 1-D float64
+    array of equal length — and returns a 1-D array of MI estimates, one per
+    pair.
+
+    Parity requirement: for each pair, the result must match the scalar MI
+    estimate returned by the existing single-pair path within floating-point
+    tolerance (atol=1e-9, rtol=1e-9).  The batched path may share kNN index
+    construction across pairs when the marginal arrays are identical (e.g.
+    multiple lags of the same target series with the same surrogate pair).
+
+    Parameters
+    ----------
+    pairs:
+        Sequence of (past, future) array pairs. Each pair must have arrays of
+        the same length.
+    n_neighbors:
+        Number of neighbours for the KSG estimator. Must be >= 1.
+    random_state:
+        Integer seed for any jitter or tie-breaking. Never a Generator.
+
+    Returns
+    -------
+    np.ndarray
+        1-D array of float64 MI estimates, shape (len(pairs),).
+        Non-negative values only; negative estimates are clipped to 0.
+    """
+
+    def batched_knn_mi(
+        self,
+        pairs: list[tuple[np.ndarray, np.ndarray]],
+        *,
+        n_neighbors: int,
+        random_state: int,
     ) -> np.ndarray: ...
 
 
