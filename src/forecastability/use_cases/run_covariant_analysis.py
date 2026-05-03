@@ -7,7 +7,7 @@ without introducing new metric math in the use-case layer.
 
 from __future__ import annotations
 
-from typing import cast
+from typing import Literal, cast
 
 import numpy as np
 
@@ -90,9 +90,12 @@ def _validate_inputs(
     max_lag: int,
     alpha: float,
     n_surrogates: int,
+    pcmci_ami_n_permutations: int = 199,
 ) -> tuple[np.ndarray, dict[str, np.ndarray]]:
     if n_surrogates < 99:
         raise ValueError(f"n_surrogates must be >= 99, got {n_surrogates}")
+    if pcmci_ami_n_permutations < 99:
+        raise ValueError(f"pcmci_ami_n_permutations must be >= 99, got {pcmci_ami_n_permutations}")
     if max_lag < 1:
         raise ValueError(f"max_lag must be >= 1, got {max_lag}")
     if not target_name.strip():
@@ -212,9 +215,10 @@ def _run_pcmci(
     max_lag: int,
     alpha: float,
     random_state: int,
+    verbosity: int = 0,
 ) -> CausalGraphResult | None:
     try:
-        port: CausalGraphPort = build_pcmci_plus(ci_test="parcorr")
+        port: CausalGraphPort = build_pcmci_plus(ci_test="parcorr", verbosity=verbosity)
     except ImportError:
         return None
 
@@ -235,9 +239,21 @@ def _run_pcmci_ami(
     ami_threshold: float,
     alpha: float,
     random_state: int,
+    pcmci_ami_n_permutations: int = 199,
+    pcmci_ami_ci_test: Literal["knn_cmi", "parcorr"] = "knn_cmi",
+    pcmci_ami_max_lag: int | None = None,
+    pcmci_verbosity: int = 0,
+    n_jobs_pcmci_ami_phase0: int = 1,
 ) -> PcmciAmiResult | None:
     try:
-        port = build_pcmci_ami_hybrid(ami_threshold=ami_threshold)
+        port = build_pcmci_ami_hybrid(
+            ami_threshold=ami_threshold,
+            n_permutations=pcmci_ami_n_permutations,
+            ci_test=pcmci_ami_ci_test,
+            pcmci_max_lag=pcmci_ami_max_lag,
+            verbosity=pcmci_verbosity,
+            n_jobs_phase0=n_jobs_pcmci_ami_phase0,
+        )
     except ImportError:
         return None
 
@@ -461,6 +477,11 @@ def run_covariant_analysis(
     n_surrogates: int = 99,
     random_state: int = 42,
     include_lagged_exog_triage: bool = False,
+    pcmci_ami_n_permutations: int = 199,
+    pcmci_ami_ci_test: Literal["knn_cmi", "parcorr"] = "knn_cmi",
+    pcmci_ami_max_lag: int | None = None,
+    pcmci_verbosity: int = 0,
+    n_jobs_pcmci_ami_phase0: int = 1,
 ) -> CovariantAnalysisBundle:
     """Run the covariant analysis bundle and assemble a unified summary table.
 
@@ -476,6 +497,18 @@ def run_covariant_analysis(
         random_state: Deterministic random seed.
         include_lagged_exog_triage: When ``True``, attach a Phase 2
             lagged-exogenous triage bundle.
+        pcmci_ami_n_permutations: Shuffle-test null size for the PCMCI-AMI
+            kNN-CMI test (floor 99). Reducing from the default 199 to 99 gives
+            roughly 2× speedup with minimal p-value inflation.
+        pcmci_ami_ci_test: CI test backend for PCMCI-AMI.  ``"parcorr"`` is
+            50–200× faster than ``"knn_cmi"`` (linear vs. non-parametric).
+        pcmci_ami_max_lag: Optional maximum lag for PCMCI-AMI Phase 1/2.
+            When set, Phase 0 MI is computed over the full ``max_lag`` range
+            but PCMCI+ only sees candidates up to ``pcmci_ami_max_lag``.
+        pcmci_verbosity: Tigramite verbosity level for both PCMCI and
+            PCMCI-AMI adapters (0 = silent).
+        n_jobs_pcmci_ami_phase0: Parallel workers for PCMCI-AMI Phase 0 MI
+            computation (1 = sequential).
 
     Returns:
         CovariantAnalysisBundle with pairwise, directional, and causal results.
@@ -492,6 +525,7 @@ def run_covariant_analysis(
         max_lag=max_lag,
         alpha=alpha,
         n_surrogates=n_surrogates,
+        pcmci_ami_n_permutations=pcmci_ami_n_permutations,
     )
     horizons = list(range(1, max_lag + 1))
     active_methods: set[str] = set()
@@ -562,6 +596,7 @@ def run_covariant_analysis(
             max_lag=max_lag,
             alpha=alpha,
             random_state=random_state,
+            verbosity=pcmci_verbosity,
         )
         if pcmci_graph is None:
             skipped_optional_methods.add("pcmci")
@@ -576,6 +611,11 @@ def run_covariant_analysis(
             ami_threshold=ami_threshold,
             alpha=alpha,
             random_state=random_state,
+            pcmci_ami_n_permutations=pcmci_ami_n_permutations,
+            pcmci_ami_ci_test=pcmci_ami_ci_test,
+            pcmci_ami_max_lag=pcmci_ami_max_lag,
+            pcmci_verbosity=pcmci_verbosity,
+            n_jobs_pcmci_ami_phase0=n_jobs_pcmci_ami_phase0,
         )
         if pcmci_ami_result is None:
             skipped_optional_methods.add("pcmci_ami")

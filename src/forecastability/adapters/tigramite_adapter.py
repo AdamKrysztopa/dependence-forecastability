@@ -21,9 +21,15 @@ from forecastability.utils.types import CausalGraphResult
 class TigramiteAdapter:
     """Adapter wrapping tigramite PCMCI+ behind the CausalGraphPort contract."""
 
-    def __init__(self, ci_test: Literal["parcorr", "gpdc", "cmiknn"] = "parcorr") -> None:
+    def __init__(
+        self,
+        ci_test: Literal["parcorr", "gpdc", "cmiknn"] = "parcorr",
+        *,
+        verbosity: int = 0,
+    ) -> None:
         _check_tigramite_available()
         self._ci_test_name = ci_test
+        self._verbosity = verbosity
 
     def _build_ci_test(self) -> object:
         if self._ci_test_name == "parcorr":
@@ -74,7 +80,11 @@ class TigramiteAdapter:
         # if exact reproducibility is required.
         np.random.seed(random_state)
         dataframe = pp.DataFrame(data.astype(float, copy=False), var_names=var_names)
-        pcmci = pcmci_cls(dataframe=dataframe, cond_ind_test=self._build_ci_test(), verbosity=0)
+        pcmci = pcmci_cls(
+            dataframe=dataframe,
+            cond_ind_test=self._build_ci_test(),
+            verbosity=self._verbosity,
+        )
         results = pcmci.run_pcmciplus(tau_min=0, tau_max=max_lag, pc_alpha=alpha)
 
         return self._map_results(

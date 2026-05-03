@@ -582,3 +582,70 @@ def test_rank_ordering_consistent_with_primary_score(benchmark_df: pd.DataFrame)
     rank1_row = next(r for r in result.summary_table if r.rank == 1)
     best_ami = max(r.cross_ami for r in result.summary_table if r.cross_ami is not None)
     assert rank1_row.cross_ami == best_ami
+
+
+# ---------------------------------------------------------------------------
+# PBE-F25 — new run_covariant_analysis parameter tests
+# ---------------------------------------------------------------------------
+
+
+def test_run_covariant_pcmci_ami_n_permutations_below_floor(
+    benchmark_df: pd.DataFrame,
+) -> None:
+    """run_covariant_analysis raises ValueError when pcmci_ami_n_permutations < 99."""
+    drivers = {"driver_direct": benchmark_df["driver_direct"].to_numpy()}
+    with pytest.raises(ValueError, match="pcmci_ami_n_permutations"):
+        run_covariant_analysis(
+            benchmark_df["target"].to_numpy(),
+            drivers,
+            max_lag=3,
+            methods=["pcmci_ami"],
+            pcmci_ami_n_permutations=98,
+        )
+
+
+def test_run_covariant_pcmci_ami_ci_test_param_accepted(
+    benchmark_df: pd.DataFrame,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """pcmci_ami_ci_test='parcorr' is accepted by run_covariant_analysis without error."""
+
+    class _MinimalPcmciAmiPort:
+        def discover(
+            self, data: object, var_names: list[str], **_: object
+        ) -> CausalGraphResult:
+            parents = {name: [] for name in var_names}
+            link_matrix = [["" for _ in var_names] for _ in var_names]
+            return CausalGraphResult(
+                parents=parents, link_matrix=link_matrix, metadata={"method": "pcmci_ami_hybrid"}
+            )
+
+        def discover_full(
+            self, data: object, var_names: list[str], **_: object
+        ) -> PcmciAmiResult:
+            graph = self.discover(data, var_names)
+            return PcmciAmiResult(
+                causal_graph=graph,
+                phase0_mi_scores=[],
+                phase0_pruned_count=0,
+                phase0_kept_count=0,
+                phase1_skeleton=graph,
+                phase2_final=graph,
+                ami_threshold=0.05,
+                metadata={"method": "pcmci_ami_hybrid"},
+            )
+
+    monkeypatch.setattr(
+        covariant_module, "build_pcmci_ami_hybrid", lambda **_: _MinimalPcmciAmiPort()
+    )
+    drivers = {"driver_direct": benchmark_df["driver_direct"].to_numpy()[:100]}
+    result = run_covariant_analysis(
+        benchmark_df["target"].to_numpy()[:100],
+        drivers,
+        max_lag=2,
+        methods=["pcmci_ami"],
+        pcmci_ami_ci_test="parcorr",
+        n_surrogates=99,
+        random_state=42,
+    )
+    assert result.pcmci_ami_result is not None

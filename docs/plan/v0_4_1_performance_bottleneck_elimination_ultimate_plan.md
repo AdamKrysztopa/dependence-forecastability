@@ -153,10 +153,10 @@ Ordered by execution sequence (matches the PR plan in §7). The numeric ID suffi
 | 22 | PBE-F21 | Significance parallel-policy benchmark and backend selection | 6 | P1 | Added after audit |
 | 23 | PBE-F22 | Batched phase-surrogate generation/evaluation design | 6 | P1 | Added after audit |
 | 24 | PBE-F23 | Exact batched kNN MI / PCMCI null kernel implementation path | 6 | P0 | Added after audit |
-| 25 | PBE-F24 | `verbosity` parameter in `run_covariant_analysis` threaded to tigramite adapter | 6 | P1 | Added after NB-08 review |
-| 26 | PBE-F25 | PCMCI-AMI Phase 1/2 CI-test cost reduction: expose `n_permutations`, `ci_test`, per-method `max_lag` | 6 | P0 | Added after NB-08 review — **root cause of 12-hour runtime** |
+| 25 | PBE-F24 | `verbosity` parameter in `run_covariant_analysis` threaded to tigramite adapter | 6 | P1 | Done |
+| 26 | PBE-F25 | PCMCI-AMI Phase 1/2 CI-test cost reduction: expose `n_permutations`, `ci_test`, per-method `max_lag` | 6 | P0 | Done |
 | 27 | PBE-F26 | Investigate and expose tigramite `n_jobs` for PCMCI+ inner CI-test calls | 6 | P2 | Added after NB-08 review |
-| 28 | PBE-F27 | PCMCI-AMI Phase 0 loop parallelism (joblib) — secondary speedup, not the bottleneck | 6 | P1 | Added after NB-08 review |
+| 28 | PBE-F27 | PCMCI-AMI Phase 0 loop parallelism (joblib) — secondary speedup, not the bottleneck | 6 | P1 | Done |
 
 ---
 

@@ -471,3 +471,79 @@ def test_pcmci_ami_adapter_custom_n_permutations_propagates() -> None:
     assert adapter._n_permutations == 149
     ci_test = adapter._build_ci_test(seed=42)
     assert ci_test._n_permutations == 149  # type: ignore[attr-defined]
+
+
+# ---------------------------------------------------------------------------
+# PBE-F25, PBE-F24, PBE-F27 — new parameter tests
+# ---------------------------------------------------------------------------
+
+
+def test_n_permutations_floor_rejection() -> None:
+    """PcmciAmiAdapter raises ValueError when n_permutations < 99."""
+    _require_tigramite()
+    with pytest.raises(ValueError, match="n_permutations"):
+        PcmciAmiAdapter(ci_test="parcorr", n_permutations=98)
+
+
+def test_pcmci_ami_ci_test_parcorr_runs() -> None:
+    """discover_full() with ci_test='parcorr' on a small fixture returns PcmciAmiResult."""
+    _require_tigramite()
+    rng = np.random.default_rng(42)
+    data = rng.standard_normal((400, 3))
+    var_names = ["x", "y", "z"]
+    adapter = PcmciAmiAdapter(ci_test="parcorr")
+    result = adapter.discover_full(data, var_names, max_lag=2, alpha=0.05, random_state=42)
+    assert isinstance(result, PcmciAmiResult)
+
+
+def test_pcmci_ami_max_lag_smaller() -> None:
+    """pcmci_max_lag=2 with max_lag=4: Phase 0 sees lags 3-4; metadata records pcmci_max_lag=2."""
+    _require_tigramite()
+    rng = np.random.default_rng(42)
+    data = rng.standard_normal((400, 3))
+    var_names = ["x", "y", "z"]
+
+    # Use ami_threshold < 0 to force all Phase 0 triplets to survive threshold filtering,
+    # so phase0_mi_scores will contain all lags up to max_lag=4.
+    adapter = PcmciAmiAdapter(ci_test="parcorr", pcmci_max_lag=2, ami_threshold=-1.0)
+    result = adapter.discover_full(data, var_names, max_lag=4, alpha=0.05, random_state=42)
+
+    all_lags = {s.lag for s in result.phase0_mi_scores}
+    assert 3 in all_lags and 4 in all_lags, (
+        f"Phase 0 should include lags 3 and 4 when max_lag=4; got {all_lags}"
+    )
+    assert result.causal_graph.metadata["pcmci_max_lag"] == 2, (
+        "metadata pcmci_max_lag should be 2; got "
+        f"{result.causal_graph.metadata.get('pcmci_max_lag')}"
+    )
+
+
+def test_n_jobs_phase0_parity() -> None:
+    """n_jobs_phase0=1 and n_jobs_phase0=2 produce identical results for fixed random_state."""
+    _require_tigramite()
+    rng = np.random.default_rng(99)
+    data = rng.standard_normal((400, 3))
+    var_names = ["a", "b", "c"]
+
+    adapter_1 = PcmciAmiAdapter(ci_test="parcorr", n_jobs_phase0=1)
+    result_1 = adapter_1.discover_full(data, var_names, max_lag=2, alpha=0.05, random_state=99)
+
+    adapter_2 = PcmciAmiAdapter(ci_test="parcorr", n_jobs_phase0=2)
+    result_2 = adapter_2.discover_full(data, var_names, max_lag=2, alpha=0.05, random_state=99)
+
+    assert len(result_1.phase0_mi_scores) == len(result_2.phase0_mi_scores), (
+        "n_jobs_phase0=1 and n_jobs_phase0=2 must yield the same number of Phase 0 scores"
+    )
+    for s1, s2 in zip(result_1.phase0_mi_scores, result_2.phase0_mi_scores, strict=True):
+        assert s1 == s2, f"Phase 0 score mismatch between n_jobs=1 and n_jobs=2: {s1} vs {s2}"
+
+
+def test_default_params_unchanged() -> None:
+    """PcmciAmiAdapter() defaults: n_permutations=199, ci_test='knn_cmi', pcmci_max_lag=None."""
+    _require_tigramite()
+    adapter = PcmciAmiAdapter()
+    assert adapter._n_permutations == 199
+    assert adapter._ci_test_name == "knn_cmi"
+    assert adapter._pcmci_max_lag is None
+    assert adapter._verbosity == 0
+    assert adapter._n_jobs_phase0 == 1
