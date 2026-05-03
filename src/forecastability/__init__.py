@@ -5,11 +5,6 @@ from __future__ import annotations
 from importlib import import_module
 from typing import Any
 
-from forecastability.adapters.csv import (
-    CsvGeometryBatchItem,
-    CsvGeometryBatchResult,
-    run_ami_geometry_csv_batch,
-)
 from forecastability.diagnostics.gcmi import compute_gcmi
 from forecastability.extensions import (
     TargetBaselineCurves,
@@ -160,6 +155,14 @@ from forecastability.utils.validation import validate_time_series
 
 __version__ = "0.4.0"
 
+# PBE-F18: symbols moved from eager imports to __getattr__ because their
+# modules transitively import matplotlib at module-load time.
+_LAZY_EXPORT_MAP: dict[str, tuple[str, str | None]] = {
+    "CsvGeometryBatchItem": ("forecastability.adapters.csv", None),
+    "CsvGeometryBatchResult": ("forecastability.adapters.csv", None),
+    "run_ami_geometry_csv_batch": ("forecastability.adapters.csv", None),
+}
+
 _NOTEBOOK_COMPAT_EXPORTS: dict[str, tuple[str, str | None]] = {
     "build_canonical_markdown": ("forecastability.reporting", None),
     "build_case_summary": ("forecastability.exog_benchmark", None),
@@ -258,8 +261,12 @@ _NOTEBOOK_COMPAT_EXPORTS: dict[str, tuple[str, str | None]] = {
 
 
 def __getattr__(name: str) -> Any:
-    """Resolve migrated notebook compatibility exports lazily."""
-    target = _NOTEBOOK_COMPAT_EXPORTS.get(name)
+    """Resolve lazily-loaded symbols on first attribute access.
+
+    Handles both PBE-F18 heavy-import symbols (_LAZY_EXPORT_MAP) and
+    migrated notebook compatibility exports (_NOTEBOOK_COMPAT_EXPORTS).
+    """
+    target = _LAZY_EXPORT_MAP.get(name) or _NOTEBOOK_COMPAT_EXPORTS.get(name)
     if target is None:
         raise AttributeError(f"module 'forecastability' has no attribute {name!r}")
     module_name, attr_name = target
