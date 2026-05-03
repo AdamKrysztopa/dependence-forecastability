@@ -146,11 +146,11 @@ Ordered by execution sequence (matches the PR plan in §7). The numeric ID suffi
 | 15 | PBE-F15 | Typed kernel-provider Protocols in `forecastability.ports.kernels` | 4 | P1 | Done |
 | 16 | PBE-F09 | Optional native-kernel plugin design | 4 | P2 | Done |
 | 17 | PBE-F11 | Performance docs, budgets, and release report | 5 | P0 | Done |
-| 18 | PBE-F17 | Post-implementation performance claim audit and artifact provenance gate | 6 | P0 | Added after audit |
+| 18 | PBE-F17 | Post-implementation performance claim audit and artifact provenance gate | 6 | P0 | Done |
 | 19 | PBE-F18 | Public import diet and lazy top-level exports | 6 | P0 | Done |
 | 20 | PBE-F19 | User-visible significance controls for covariant and lagged-exog screening | 6 | P0 | Done |
-| 21 | PBE-F20 | Public workflow benchmark coverage expansion (`run_covariant_analysis`, `run_lagged_exogenous_triage`, PCMCI, imports) | 6 | P0 | Added after audit |
-| 22 | PBE-F21 | Significance parallel-policy benchmark and backend selection | 6 | P1 | Added after audit |
+| 21 | PBE-F20 | Public workflow benchmark coverage expansion (`run_covariant_analysis`, `run_lagged_exogenous_triage`, PCMCI, imports) | 6 | P0 | Done |
+| 22 | PBE-F21 | Significance parallel-policy benchmark and backend selection | 6 | P1 | Done |
 | 23 | PBE-F22 | Batched phase-surrogate generation/evaluation design | 6 | P1 | Added after audit |
 | 24 | PBE-F23 | Exact batched kNN MI / PCMCI null kernel implementation path | 6 | P0 | Added after audit |
 | 25 | PBE-F24 | `verbosity` parameter in `run_covariant_analysis` threaded to tigramite adapter | 6 | P1 | Done |

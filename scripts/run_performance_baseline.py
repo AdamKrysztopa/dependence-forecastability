@@ -3,7 +3,11 @@
 from __future__ import annotations
 
 import argparse
+import importlib.metadata
+import json
 import statistics
+import subprocess
+import sys
 import time
 from pathlib import Path
 from typing import cast
@@ -135,6 +139,98 @@ def _run_baseline(
     return case_summaries, repeat_rows
 
 
+def _bench_public_workflows(
+    cases: list[dict[str, object]],
+    rng: np.random.Generator,
+    *,
+    version: str,
+) -> list[dict[str, object]]:
+    """Benchmark public-workflow entries from the ``public_workflows`` config section.
+
+    Args:
+        cases: Raw workflow case dicts from the YAML config.
+        rng: NumPy random generator for deterministic test-data generation.
+        version: Installed forecastability version string for artifact labelling.
+
+    Returns:
+        List of result dicts with keys ``name``, ``method``, ``elapsed_s``, ``version``.
+    """
+    from forecastability.use_cases import (  # noqa: PLC0415
+        run_covariant_analysis,
+        run_lagged_exogenous_triage,
+    )
+
+    results: list[dict[str, object]] = []
+    for case in cases:
+        name = str(case["name"])
+        method = str(case["method"])
+
+        if method == "import":
+            start = time.perf_counter()
+            subprocess.run(
+                [sys.executable, "-c", "import forecastability"],
+                check=True,
+                capture_output=True,
+            )
+            elapsed: float = time.perf_counter() - start
+            results.append(
+                {"name": name, "method": method, "elapsed_s": elapsed, "version": version}
+            )
+            continue
+
+        if method in {"run_covariant_analysis", "run_lagged_exogenous_triage"}:
+            series_length = int(cast(int, case["series_length"]))
+            n_series = int(cast(int, case.get("n_series", 2)))
+            max_lag = int(cast(int, case["max_lag"]))
+            significance_mode = str(case.get("significance_mode", "phase"))
+            n_surrogates = int(cast(int, case.get("n_surrogates", 99)))
+            target = rng.normal(size=series_length)
+            drivers = {f"driver_{i}": rng.normal(size=series_length) for i in range(n_series)}
+
+            start = time.perf_counter()
+            if method == "run_covariant_analysis":
+                raw_methods = case.get("methods")
+                methods_arg: list[str] | None = (
+                    [str(m) for m in cast(list[object], raw_methods)]
+                    if raw_methods is not None
+                    else None
+                )
+                run_covariant_analysis(
+                    target,
+                    drivers,
+                    max_lag=max_lag,
+                    methods=methods_arg,
+                    n_surrogates=n_surrogates,
+                    random_state=42,
+                    significance_mode=significance_mode,  # type: ignore[arg-type]
+                )
+            else:
+                run_lagged_exogenous_triage(
+                    target,
+                    drivers,
+                    target_name="bench_target",
+                    max_lag=max_lag,
+                    n_surrogates=n_surrogates,
+                    random_state=42,
+                    significance_mode=significance_mode,  # type: ignore[arg-type]
+                )
+            elapsed = time.perf_counter() - start
+            results.append(
+                {"name": name, "method": method, "elapsed_s": elapsed, "version": version}
+            )
+        else:
+            results.append(
+                {
+                    "name": name,
+                    "method": method,
+                    "elapsed_s": 0.0,
+                    "version": version,
+                    "skip_reason": f"unknown method {method!r}",
+                }
+            )
+    return results
+
+
 def main() -> None:
     """Run configured synthetic baselines and write ``performance_summary.json``."""
     args = _parse_args()
@@ -144,9 +240,36 @@ def main() -> None:
     config = load_performance_config(args.config)
     output_dir = Path(config.metadata.output_dir)
 
+    installed_version = importlib.metadata.version("forecastability")
+    prior_artifact = output_dir / "performance_summary.json"
+    if prior_artifact.exists():
+        try:
+            prior_data = json.loads(prior_artifact.read_text(encoding="utf-8"))
+            prior_version = str(
+                prior_data.get("command_metadata", {}).get("forecastability_version", "")
+            )
+            if prior_version and prior_version != installed_version:
+                print(
+                    f"Warning: prior artifact was produced with "
+                    f"forecastability {prior_version!r}; "
+                    f"installed is {installed_version!r}. "
+                    "Results may not be comparable.",
+                    file=sys.stderr,
+                )
+        except (json.JSONDecodeError, KeyError):
+            pass
+
     start_wall = time.perf_counter()
     start_cpu = time.process_time()
     case_summaries, repeat_rows = _run_baseline(config)
+    rng = np.random.default_rng(config.metadata.random_state_base)
+    public_workflow_results: list[dict[str, object]] = []
+    if config.public_workflows is not None:
+        public_workflow_results = _bench_public_workflows(
+            config.public_workflows,
+            rng,
+            version=installed_version,
+        )
     summary = {
         "schema_version": 1,
         "artifact_type": "performance_baseline_summary",
@@ -156,6 +279,7 @@ def main() -> None:
         "total_cpu_time_s": time.process_time() - start_cpu,
         "cases": case_summaries,
         "repeats": repeat_rows,
+        "public_workflow_results": public_workflow_results,
     }
     write_json(output_dir / "performance_summary.json", summary)
     print(f"Wrote {output_dir / 'performance_summary.json'}")

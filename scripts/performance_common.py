@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import contextlib
 import hashlib
+import importlib.metadata
 import io
 import json
 import os
@@ -19,8 +20,6 @@ from typing import Any, Literal
 import numpy as np
 import yaml
 from pydantic import BaseModel, ConfigDict, Field
-
-import forecastability
 
 WorkflowName = Literal["run_triage"]
 SignalName = Literal["ar1", "seasonal_ar1", "white_noise"]
@@ -101,6 +100,7 @@ class PerformanceBaselineConfig(BaseModel):
     cases: list[PerformanceCaseConfig]
     profile: ProfileConfig = Field(default_factory=ProfileConfig)
     budgets: BudgetsConfig | None = None
+    public_workflows: list[dict[str, object]] | None = None
 
 
 class RuntimeMeasurement(BaseModel):
@@ -225,7 +225,7 @@ def runtime_metadata(*, config_path: Path, config_hash: str) -> dict[str, Any]:
         "threadpoolctl_snapshot": threadpoolctl_snapshot(),
         "omp_num_threads": os.environ.get("OMP_NUM_THREADS"),
         "mkl_num_threads": os.environ.get("MKL_NUM_THREADS"),
-        "forecastability_version": forecastability.__version__,
+        "forecastability_version": importlib.metadata.version("forecastability"),
         "uv_lock_hash": sha256_file(root / "uv.lock"),
     }
 

@@ -45,7 +45,9 @@ profile:
     - "callable.metrics.compute_pami_linear_residual"
     - "callable.services.compute_raw_curve"
     - "callable.services.compute_partial_curve"
+    - "callable.services.compute_significance_bands_generic"
     - "callable.use_cases.run_covariant_analysis.cross_ami"
+    - "callable.use_cases.run_covariant_analysis.cross_ami.significance_none"
     - "callable.use_cases.build_forecast_prep_contract"
     - "callable.pipeline.run_rolling_origin_evaluation"
   profile_size_labels:
@@ -98,3 +100,46 @@ budgets:
       max_wall_s: 0.768
     rolling_origin_smoke:
       max_wall_s: 0.227
+
+public_workflows:
+  - name: "import_time"
+    description: "Cold import of the forecastability top-level package"
+    method: "import"
+
+  - name: "covariant_cross_ami_significance_none"
+    description: "run_covariant_analysis with significance_mode='none' (skip phase surrogates)"
+    method: "run_covariant_analysis"
+    significance_mode: "none"
+    methods:
+      - "cross_ami"
+    n_series: 3
+    series_length: 300
+    max_lag: 10
+
+  - name: "covariant_cross_ami_significance_phase"
+    description: "run_covariant_analysis with significance_mode='phase' (full surrogates)"
+    method: "run_covariant_analysis"
+    significance_mode: "phase"
+    methods:
+      - "cross_ami"
+    n_series: 3
+    series_length: 300
+    max_lag: 10
+    n_surrogates: 99
+
+  - name: "lagged_exog_significance_none"
+    description: "run_lagged_exogenous_triage with significance_mode='none'"
+    method: "run_lagged_exogenous_triage"
+    significance_mode: "none"
+    n_series: 2
+    series_length: 300
+    max_lag: 10
+
+  - name: "lagged_exog_significance_phase"
+    description: "run_lagged_exogenous_triage with significance_mode='phase'"
+    method: "run_lagged_exogenous_triage"
+    significance_mode: "phase"
+    n_series: 2
+    series_length: 300
+    max_lag: 10
+    n_surrogates: 99

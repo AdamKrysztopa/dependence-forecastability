@@ -16,10 +16,11 @@ import numpy as np
 
 from forecastability.extensions import compute_target_baseline_by_horizon
 from forecastability.metrics.metrics import compute_ami, compute_pami_linear_residual
-from forecastability.metrics.scorers import DependenceScorer, default_registry
+from forecastability.metrics.scorers import DependenceScorer, ScorerInfo, default_registry
 from forecastability.pipeline import run_rolling_origin_evaluation
 from forecastability.services.partial_curve_service import compute_partial_curve
 from forecastability.services.raw_curve_service import compute_raw_curve
+from forecastability.services.significance_service import compute_significance_bands_generic
 from forecastability.triage import (
     BatchSeriesRequest,
     BatchTriageRequest,
@@ -198,6 +199,36 @@ def _run_forecast_prep_target(case: PerformanceCaseConfig) -> None:
     build_forecast_prep_contract(result, add_calendar_features=False)
 
 
+def _run_significance_bands_target(case: PerformanceCaseConfig) -> None:
+    mi_info = default_registry().get("mi")
+    if mi_info is None:
+        raise ValueError("No 'mi' scorer in default registry")
+    compute_significance_bands_generic(
+        make_synthetic_series(case),
+        n_surrogates=case.n_surrogates,
+        random_state=case.random_state,
+        max_lag=case.max_lag,
+        info=mi_info,
+        which="raw",
+        min_pairs=30,
+        n_jobs=1,
+    )
+
+
+def _run_covariant_significance_none_target(case: PerformanceCaseConfig) -> None:
+    target = make_synthetic_series(case)
+    driver = make_synthetic_exog(target, seed=case.random_state + 100)
+    run_covariant_analysis(
+        target,
+        {"driver": driver},
+        max_lag=min(case.max_lag, 4),
+        methods=["cross_ami"],
+        n_surrogates=case.n_surrogates,
+        random_state=case.random_state,
+        significance_mode="none",
+    )
+
+
 def _cached_forecast_prep_result(case: PerformanceCaseConfig) -> TriageResult:
     cached = _FORECAST_PREP_TRIAGE_CACHE.get(case.case_id)
     if cached is not None:
@@ -361,6 +392,31 @@ def _coverage_targets() -> list[ProfileTarget]:
             False,
             "not_in_phase1_smoke_budget",
             _run_target_baseline_target,
+        ),
+        ProfileTarget(
+            "callable.services.compute_significance_bands_generic",
+            "Surrogate significance",
+            "callable",
+            "forecastability.services.significance_service.compute_significance_bands_generic",
+            "",
+            False,
+            False,
+            "",
+            _run_significance_bands_target,
+        ),
+        ProfileTarget(
+            "callable.use_cases.run_covariant_analysis.cross_ami.significance_none",
+            "Covariant tools",
+            "callable",
+            (
+                "forecastability.use_cases.run_covariant_analysis"
+                "(methods=['cross_ami'], significance_mode='none')"
+            ),
+            "",
+            False,
+            False,
+            "",
+            _run_covariant_significance_none_target,
         ),
     ]
 
