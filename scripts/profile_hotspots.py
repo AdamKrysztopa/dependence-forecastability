@@ -16,7 +16,7 @@ import numpy as np
 
 from forecastability.extensions import compute_target_baseline_by_horizon
 from forecastability.metrics.metrics import compute_ami, compute_pami_linear_residual
-from forecastability.metrics.scorers import DependenceScorer, ScorerInfo, default_registry
+from forecastability.metrics.scorers import DependenceScorer, default_registry
 from forecastability.pipeline import run_rolling_origin_evaluation
 from forecastability.services.partial_curve_service import compute_partial_curve
 from forecastability.services.raw_curve_service import compute_raw_curve

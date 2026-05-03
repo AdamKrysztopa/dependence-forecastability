@@ -13,6 +13,7 @@ import numpy as np
 
 from forecastability.metrics.scorers import DependenceScorer, ScorerInfo
 from forecastability.ports.kernels import (
+    BatchedKnnMiKernel,
     KernelProvider,
     KernelProviderError,
     KernelProviderMetadata,
@@ -31,6 +32,7 @@ from forecastability.utils.types import (
 )
 
 __all__ = [
+    "BatchedKnnMiKernel",
     "CausalGraphFullPort",
     "CausalGraphPort",
     "CheckpointPort",
