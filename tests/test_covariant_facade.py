@@ -543,6 +543,74 @@ def test_rank_is_always_populated(benchmark_df: pd.DataFrame) -> None:
     assert sorted(ranks) == list(range(1, len(result.summary_table) + 1))
 
 
+def test_significance_mode_none_skips_bands() -> None:
+    """significance_mode='none' produces rows with significance=None for cross_ami."""
+    rng = np.random.default_rng(42)
+    target = rng.standard_normal(200)
+    drivers = {"d1": rng.standard_normal(200), "d2": rng.standard_normal(200)}
+
+    bundle = run_covariant_analysis(
+        target,
+        drivers,
+        methods=["cross_ami"],
+        max_lag=5,
+        n_surrogates=99,
+        random_state=42,
+        significance_mode="none",
+    )
+
+    assert all(row.significance is None for row in bundle.summary_table)
+
+
+def test_significance_mode_none_vs_phase_ami_values() -> None:
+    """cross_ami values are identical regardless of significance_mode."""
+    rng = np.random.default_rng(42)
+    target = rng.standard_normal(200)
+    drivers = {"d1": rng.standard_normal(200), "d2": rng.standard_normal(200)}
+
+    bundle_none = run_covariant_analysis(
+        target,
+        drivers,
+        methods=["cross_ami"],
+        max_lag=5,
+        n_surrogates=99,
+        random_state=42,
+        significance_mode="none",
+    )
+    bundle_phase = run_covariant_analysis(
+        target,
+        drivers,
+        methods=["cross_ami"],
+        max_lag=5,
+        n_surrogates=99,
+        random_state=42,
+        significance_mode="phase",
+    )
+
+    ami_none = [row.cross_ami for row in bundle_none.summary_table]
+    ami_phase = [row.cross_ami for row in bundle_phase.summary_table]
+    assert ami_none == ami_phase
+
+
+def test_significance_mode_none_in_metadata() -> None:
+    """significance_mode='none' is recorded in bundle metadata."""
+    rng = np.random.default_rng(42)
+    target = rng.standard_normal(200)
+    drivers = {"d1": rng.standard_normal(200)}
+
+    bundle = run_covariant_analysis(
+        target,
+        drivers,
+        methods=["cross_ami"],
+        max_lag=5,
+        n_surrogates=99,
+        random_state=42,
+        significance_mode="none",
+    )
+
+    assert bundle.metadata["significance_mode"] == "none"
+
+
 def test_interpretation_tag_populated_when_cross_ami_requested(
     benchmark_df: pd.DataFrame,
 ) -> None:

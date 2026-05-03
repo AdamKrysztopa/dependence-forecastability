@@ -6,7 +6,7 @@ selection into a typed :class:`LaggedExogBundle` output.
 
 from __future__ import annotations
 
-from typing import cast
+from typing import Literal, cast
 
 import numpy as np
 
@@ -189,6 +189,7 @@ def run_lagged_exogenous_triage(
     include_cross_correlation: bool = True,
     include_cross_ami: bool = True,
     n_jobs: int = 1,
+    significance_mode: Literal["phase", "none"] = "phase",
 ) -> LaggedExogBundle:
     """Run fixed-lag exogenous triage and return a typed lagged-exog bundle.
 
@@ -210,6 +211,10 @@ def run_lagged_exogenous_triage(
             Per-driver iteration order is always deterministic regardless of
             ``n_jobs`` because parallelism only fans out within each driver's
             surrogate-band call.
+        significance_mode: Controls phase-surrogate significance computation.
+            ``"phase"`` (default) preserves full behaviour; ``"none"`` skips
+            all surrogate-band computation and returns rows with
+            ``significance=None`` and ``significance_source="not_computed"``.
 
     Returns:
         Composite :class:`LaggedExogBundle` with profile rows and sparse selections.
@@ -278,7 +283,7 @@ def run_lagged_exogenous_triage(
         )
 
         upper_band: np.ndarray | None = None
-        if include_cross_ami:
+        if include_cross_ami and significance_mode == "phase":
             _, upper_band = compute_significance_bands_generic(
                 validated_target,
                 n_surrogates,
@@ -315,7 +320,9 @@ def run_lagged_exogenous_triage(
                     cross_pami=None,
                     significance=significance,
                     significance_source=(
-                        "phase_surrogate_xami" if include_cross_ami else "not_computed"
+                        "phase_surrogate_xami"
+                        if include_cross_ami and significance_mode == "phase"
+                        else "not_computed"
                     ),
                 )
             )
@@ -348,6 +355,7 @@ def run_lagged_exogenous_triage(
         "include_cross_correlation": int(include_cross_correlation),
         "include_cross_ami": int(include_cross_ami),
         "selector_name": selector_config.selector_name,
+        "significance_mode": significance_mode,
     }
     if known_future_driver_names:
         metadata["known_future_contract_caution"] = _KNOWN_FUTURE_CAUTION

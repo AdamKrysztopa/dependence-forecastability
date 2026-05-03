@@ -179,3 +179,44 @@ def test_n_jobs_zero_rejected(lagged_panel: pd.DataFrame) -> None:
     kwargs = _two_driver_kwargs(lagged_panel)
     with pytest.raises(ValueError, match="n_jobs"):
         run_lagged_exogenous_triage(**kwargs, n_jobs=0)  # type: ignore[arg-type]
+
+
+def test_significance_mode_none_skips_bands_lagged() -> None:
+    """significance_mode='none' produces significance=None and source='not_computed'."""
+    import numpy as np
+
+    rng = np.random.default_rng(42)
+    target = rng.standard_normal(200)
+    drivers = {"d1": rng.standard_normal(200), "d2": rng.standard_normal(200)}
+
+    bundle = run_lagged_exogenous_triage(
+        target,
+        drivers,
+        target_name="t",
+        max_lag=5,
+        significance_mode="none",
+    )
+
+    assert all(row.significance is None for row in bundle.profile_rows)
+    assert all(row.significance_source == "not_computed" for row in bundle.profile_rows)
+
+
+def test_significance_mode_phase_default_unchanged() -> None:
+    """Default (phase) mode produces significance_source='phase_surrogate_xami'."""
+    import numpy as np
+
+    rng = np.random.default_rng(42)
+    target = rng.standard_normal(200)
+    drivers = {"d1": rng.standard_normal(200)}
+
+    bundle = run_lagged_exogenous_triage(
+        target,
+        drivers,
+        target_name="t",
+        max_lag=3,
+        n_surrogates=99,
+        random_state=42,
+        include_cross_ami=True,
+    )
+
+    assert all(row.significance_source == "phase_surrogate_xami" for row in bundle.profile_rows)

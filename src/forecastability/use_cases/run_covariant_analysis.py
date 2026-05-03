@@ -482,6 +482,7 @@ def run_covariant_analysis(
     pcmci_ami_max_lag: int | None = None,
     pcmci_verbosity: int = 0,
     n_jobs_pcmci_ami_phase0: int = 1,
+    significance_mode: Literal["phase", "none"] = "phase",
 ) -> CovariantAnalysisBundle:
     """Run the covariant analysis bundle and assemble a unified summary table.
 
@@ -509,6 +510,10 @@ def run_covariant_analysis(
             PCMCI-AMI adapters (0 = silent).
         n_jobs_pcmci_ami_phase0: Parallel workers for PCMCI-AMI Phase 0 MI
             computation (1 = sequential).
+        significance_mode: Controls phase-surrogate significance computation.
+            ``"phase"`` (default) preserves full behaviour; ``"none"`` skips
+            all surrogate-band computation (faster) and returns rows with
+            ``significance=None``.
 
     Returns:
         CovariantAnalysisBundle with pairwise, directional, and causal results.
@@ -549,14 +554,15 @@ def run_covariant_analysis(
             random_state=random_state,
         )
         active_methods.add("cross_ami")
-        bands = _compute_cross_ami_bands(
-            target=validated_target,
-            drivers=validated_drivers,
-            max_lag=max_lag,
-            n_surrogates=n_surrogates,
-            random_state=random_state,
-        )
-        cross_ami_upper_bands = {name: upper for name, (lower, upper) in bands.items()}
+        if significance_mode == "phase":
+            bands = _compute_cross_ami_bands(
+                target=validated_target,
+                drivers=validated_drivers,
+                max_lag=max_lag,
+                n_surrogates=n_surrogates,
+                random_state=random_state,
+            )
+            cross_ami_upper_bands = {name: upper for name, (lower, upper) in bands.items()}
 
     if "cross_pami" in requested_method_set:
         cross_pami_curves = _compute_cross_pami_curves(
@@ -741,10 +747,13 @@ def run_covariant_analysis(
         target_name=target_name,
         driver_names=list(validated_drivers.keys()),
         horizons=horizons,
-        metadata=_build_bundle_metadata(
-            requested_methods=requested_methods,
-            active_methods=active_methods,
-            skipped_optional_methods=skipped_optional_methods,
-            n_surrogates=n_surrogates,
-        ),
+        metadata={
+            **_build_bundle_metadata(
+                requested_methods=requested_methods,
+                active_methods=active_methods,
+                skipped_optional_methods=skipped_optional_methods,
+                n_surrogates=n_surrogates,
+            ),
+            "significance_mode": significance_mode,
+        },
     )
