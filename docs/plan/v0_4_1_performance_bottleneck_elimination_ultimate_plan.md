@@ -7,7 +7,7 @@
 **Current released version:** `0.4.0`  
 **Branch:** `feat/v0.4.1-performance-bottleneck-elimination`  
 **Status:** Draft  
-**Last reviewed:** 2026-05-01
+**Last reviewed:** 2026-05-03
 
 > [!IMPORTANT]
 > **Scope (binding).** This release ships a measured performance baseline, a code-evidenced bottleneck inventory, correctness gates for significance services, Python-level bottleneck elimination, and an optional-native-acceleration design document.
@@ -59,6 +59,23 @@ The May 1, 2026 profiling run changes the optimization order from broad kernel s
 - F05 acceptance budget: after F03, the before/after artifacts must show medium `run_triage` with significance at least `20%` faster than the refreshed Phase 1 timing median (`3.862s`) or no worse than `3.09s`, medium `run_batch_triage` at least `20%` faster than the profiled wall (`8.151s`) or no worse than `6.52s`, and medium `cross_ami` at least `20%` faster than `0.640s` or no worse than `0.51s`, with semantic parity gates passing. If these budgets are not met, the PR must include serial or child-process profiles proving where the remaining cost lives before any broader rewrite is approved.
 - Scalar AMI/pAMI kernel changes are stop/go gated. Do not proceed to native plugin design, approximate estimators, or broad kernel rewrites unless refreshed profiles after PBE-F03, PBE-F05, and capped PBE-F04 panels still show kernel-level work as a material bottleneck.
 - PCMCI/KNN claims need their own profile evidence. A capped local profile (`T=220`, four variables, `max_lag=2`, `knn_cmi`) took `4.38s`; 18 shuffle-significance calls produced 3,632 `mutual_info_regression` calls. A direct `T=800`, `B=199` shuffle-significance micro-profile took about `0.34-0.44s` per CI test. F14 therefore targets full-PCMCI call volume and repeated sklearn MI setup around the existing fast path, not a silent estimator swap.
+
+### 2026-05-02 implementation audit verdict
+
+The honest post-implementation answer is: **0.4.1 has not materially removed the bottlenecks users are complaining about.** It added measurement infrastructure, correctness guards, work-avoidance for explicit method subsets, validation/scaling hygiene, and a native-kernel design boundary. Those are useful engineering steps, but they are not a demonstrated removal of the slow PCMCI, covariant, or lagged-exogenous significance paths.
+
+Current evidence:
+
+- The release report already states that PBE-F05 and PBE-F14 missed their wall-time budgets and shipped as hygiene only.
+- A fresh May 2 local rerun of `scripts/run_performance_baseline.py` wrote `outputs/performance/performance_summary.json` with medium `run_triage` at about `9.259s` and large `run_triage` at about `7.221s`, both above the Phase 1 medians recorded in this plan (`3.862s` and `4.272s`). This may include machine-load and environment drift, but it is not evidence of a speedup.
+- A fresh May 2 local rerun of `scripts/profile_hotspots.py` wrote `outputs/performance/hotspots.csv` with medium `run_triage` at about `9.703s`, medium `run_batch_triage` at about `18.461s`, medium `run_covariant_analysis(methods=["cross_ami"])` at about `1.174s`, and medium rolling-origin at about `0.241s`. These values fail the current regression ceilings and must be reconciled before 0.4.1 is called a performance win.
+- `run_covariant_analysis(methods=["cross_ami"])` avoids unrequested covariant methods, but still computes 99 phase-surrogate CrossAMI bands per driver. This is the dominant work in the user-visible `cross_ami` path.
+- `run_covariant_analysis(methods=None)` still means all methods, including optional causal methods when dependencies are available. PBE-F03 does not make the default all-method workflow lightweight.
+- `run_lagged_exogenous_triage()` defaults to `include_cross_ami=True` and computes cross-AMI curves plus 99 surrogate bands per driver. PBE-F08 added `n_jobs`, but default behavior remains serial and still expensive.
+- The top-level import surface is not covered by the existing budgets. A local timing of `from forecastability import run_covariant_analysis, run_lagged_exogenous_triage` took about `1.31s` on a warm run, and a separate cold run observed by the audit took about `3.69s`. The eager `forecastability.__init__` export surface is therefore itself a user-visible latency target.
+- `outputs/performance/*` currently records `forecastability_version=0.4.0` while the report labels the run as release `0.4.1`; release evidence must pin the installed package/version provenance before acceptance.
+
+Conclusion: rename claims in review language from "bottleneck elimination" to "bottleneck identification plus hygiene" unless a later PR lands measurable wins against the public workflows below. The next performance work must target user-visible defaults and significance/PCMCI kernels, not only internal curve helpers.
 
 > [!IMPORTANT]
 > The largest semantic risk is replacing a scientifically meaningful estimator with a faster but different estimand while keeping the same name. GCMI, Pearson, rank correlation, distance correlation, approximate nearest neighbors, or RF residualization may be useful explicit alternatives, but they must not silently replace AMI or linear-residual pAMI.
@@ -129,6 +146,17 @@ Ordered by execution sequence (matches the PR plan in §7). The numeric ID suffi
 | 15 | PBE-F15 | Typed kernel-provider Protocols in `forecastability.ports.kernels` | 4 | P1 | Done |
 | 16 | PBE-F09 | Optional native-kernel plugin design | 4 | P2 | Done |
 | 17 | PBE-F11 | Performance docs, budgets, and release report | 5 | P0 | Done |
+| 18 | PBE-F17 | Post-implementation performance claim audit and artifact provenance gate | 6 | P0 | Added after audit |
+| 19 | PBE-F18 | Public import diet and lazy top-level exports | 6 | P0 | Added after audit |
+| 20 | PBE-F19 | User-visible significance controls for covariant and lagged-exog screening | 6 | P0 | Added after audit |
+| 21 | PBE-F20 | Public workflow benchmark coverage expansion (`run_covariant_analysis`, `run_lagged_exogenous_triage`, PCMCI, imports) | 6 | P0 | Added after audit |
+| 22 | PBE-F21 | Significance parallel-policy benchmark and backend selection | 6 | P1 | Added after audit |
+| 23 | PBE-F22 | Batched phase-surrogate generation/evaluation design | 6 | P1 | Added after audit |
+| 24 | PBE-F23 | Exact batched kNN MI / PCMCI null kernel implementation path | 6 | P0 | Added after audit |
+| 25 | PBE-F24 | `verbosity` parameter in `run_covariant_analysis` threaded to tigramite adapter | 6 | P1 | Added after NB-08 review |
+| 26 | PBE-F25 | PCMCI-AMI Phase 1/2 CI-test cost reduction: expose `n_permutations`, `ci_test`, per-method `max_lag` | 6 | P0 | Added after NB-08 review — **root cause of 12-hour runtime** |
+| 27 | PBE-F26 | Investigate and expose tigramite `n_jobs` for PCMCI+ inner CI-test calls | 6 | P2 | Added after NB-08 review |
+| 28 | PBE-F27 | PCMCI-AMI Phase 0 loop parallelism (joblib) — secondary speedup, not the bottleneck | 6 | P1 | Added after NB-08 review |
 
 ---
 
@@ -653,6 +681,109 @@ flowchart LR
 - Runtime budgets compare median and p95 times against the Phase 1 baseline.
 - Memory budgets compare peak RSS against the Phase 1 baseline.
 
+### Phase 6 — Post-audit remediation
+
+**Scope.** Convert 0.4.1 from an overbroad "bottleneck elimination" claim into a measured public-workflow performance plan. This phase is required before any release note, README, or report claims that user-visible bottlenecks were removed.
+
+**PBE-F17 — Post-implementation performance claim audit and artifact provenance gate**
+
+- Update the release report from the latest `outputs/performance/performance_summary.json` and `outputs/performance/hotspots.csv`, not stale plan-time values.
+- Record the exact git SHA, installed package version, `uv.lock` hash, config hash, CPU/threadpool snapshot, and whether the command used the editable workspace or an installed wheel.
+- Acceptance: every performance claim is one of `measured speedup`, `measured no-change`, `measured slowdown/regression`, `coverage gap`, or `design-only`. "Done" is not sufficient evidence of bottleneck removal.
+- Acceptance: CI or a release-check script fails when the performance artifact release label and `forecastability.__version__` disagree.
+
+**PBE-F18 — Public import diet and lazy top-level exports**
+
+- Profile `python -X importtime -c "from forecastability import run_covariant_analysis, run_lagged_exogenous_triage"` and the equivalent direct submodule imports.
+- Move heavy reporting, plotting, optional adapter, and broad synthetic-data exports behind lazy `__getattr__` or narrower submodule imports where public API compatibility allows.
+- Keep `from forecastability import run_covariant_analysis, run_lagged_exogenous_triage` working.
+- Acceptance: warm import time is at least `50%` lower than the May 2 audit timing, or the report names the remaining import modules and why they cannot be deferred.
+
+**PBE-F19 — User-visible significance controls for covariant and lagged-exog screening**
+
+- Add explicit, additive controls for expensive significance work in `run_covariant_analysis()` and `run_lagged_exogenous_triage()`, for example `compute_significance: bool = True` or `significance_mode: Literal["phase", "none"] = "phase"`.
+- Preserve current defaults unless a separate breaking-change plan explicitly changes them.
+- When significance is disabled, return rows with `significance_source="not_computed"` or equivalent metadata, never silently lower `n_surrogates`.
+- Public docs and examples must distinguish fast screening from full significance mode.
+- Acceptance: no-significance `cross_ami` and lagged-exog screening benchmarks are included and show the practical speedup users should expect.
+
+**PBE-F20 — Public workflow benchmark coverage expansion**
+
+- Add benchmark config cases and hotspot targets for:
+  - top-level import timing;
+  - `run_covariant_analysis(methods=["cross_ami"])` with and without significance;
+  - `run_covariant_analysis(methods=None)` with optional causal methods skipped or profiled explicitly;
+  - `run_covariant_analysis(methods=["pcmci_ami"])` when `tigramite` is available;
+  - `run_lagged_exogenous_triage()` with default settings, `include_cross_ami=False`, and no-significance screening;
+  - PCMCI direct `build_knn_cmi_test(...).get_shuffle_significance(...)` iid/block micro-profiles.
+- Acceptance: `outputs/performance/hotspots_manifest.json` records every target as profiled or skipped with a controlled reason.
+- Acceptance: lagged-exog and PCMCI are no longer inferred from nearby smoke scripts; they have direct public-call timings.
+
+**PBE-F21 — Significance parallel-policy benchmark and backend selection**
+
+- Benchmark serial, process-pool, thread-pool, and chunked execution for legacy and generic significance services under the same seeds.
+- Measure worker startup, parent wait time, child compute time, and result materialization separately.
+- Avoid nested parallelism when covariant, lagged-exog, batch, or PCMCI workflows already fan out at an outer level.
+- Acceptance: choose the fastest deterministic default only if it is reproducibly faster on small/medium/large cases; otherwise keep defaults and document when callers should opt into `n_jobs`.
+
+**PBE-F22 — Batched phase-surrogate generation/evaluation design**
+
+- Prototype batched phase draw and inverse FFT generation that preserves the current phase-surrogate null exactly.
+- Evaluate streaming versus full surrogate matrix materialization for memory and wall time.
+- Do not reuse target surrogates across drivers unless metadata records `common_target_surrogate_stream=true` and interpretation rules account for cross-driver Monte Carlo dependence.
+- Acceptance: fixed-seed band parity or a documented, reviewed Monte Carlo design change with fixture rebuilds.
+
+**PBE-F23 — Exact batched kNN MI / PCMCI null kernel implementation path**
+
+- Implement or integrate an exact batched kNN MI kernel only behind the `forecastability.ports.kernels` provider boundary until parity is proven.
+- Target curve-level and null-distribution calls, not scalar `DependenceScorer` callbacks.
+- Preserve KSG/sklearn-compatible neighbor semantics, tie behavior, jitter/seed behavior, and p-value computation where those are part of the current method contract.
+- Acceptance: medium `run_triage` significance, `run_covariant_analysis(methods=["cross_ami"])`, `run_lagged_exogenous_triage()`, and capped PCMCI-AMI profiles show material wall-time reduction against refreshed baselines, with statistical parity gates passing.
+
+**PBE-F24 — `verbosity` parameter in `run_covariant_analysis` threaded to tigramite adapter**
+
+- **Problem:** Both `TigramiteAdapter` and `PcmciAmiAdapter` hardcode `verbosity=0`; users have no way to tell whether a long-running PCMCI call is progressing or hung.
+- Add `verbosity: int = 0` keyword argument to `run_covariant_analysis` in `src/forecastability/use_cases/run_covariant_analysis.py`.
+- Thread it through `_run_pcmci()` and `_run_pcmci_ami()` private helpers to `TigramiteAdapter.discover()` and `PcmciAmiAdapter.discover_full()`.
+- In `TigramiteAdapter`, pass `verbosity` to `PCMCI(..., verbosity=verbosity)` and `run_pcmciplus(..., verbosity=verbosity)` so tigramite prints PC-step and MCI-step progress when `verbosity >= 1`.
+- In `PcmciAmiAdapter`, route `verbosity` to the inner tigramite `PCMCI` object used in Phases 1/2.
+- Default `verbosity=0` preserves silent behavior; `verbosity=1` prints tigramite iteration-step progress to stdout; `verbosity=2` prints full tigramite debug output.
+- Acceptance: `run_covariant_analysis(..., verbosity=1, methods=["pcmci"])` prints tigramite PC-step progress. `verbosity=0` (default) produces no extra output. Existing tests pass without change.
+- File targets: `src/forecastability/use_cases/run_covariant_analysis.py`, `src/forecastability/adapters/tigramite_adapter.py`, `src/forecastability/adapters/pcmci_ami_adapter.py`.
+
+**PBE-F25 — PCMCI-AMI Phase 1/2 CI-test cost reduction: expose `n_permutations`, `ci_test`, and per-method `max_lag`**
+
+> [!IMPORTANT]
+> **Root cause of the observed 12-hour runtime.** PCMCI-AMI Phase 0 (unconditional AMI on all triplets) finishes in ~15 seconds on the CausalRivers 8-station dataset at T=8,760. The bottleneck is entirely Phase 1/2: PCMCI+ runs with a kNN-CMI CI test that issues `n_permutations=199` shuffle evaluations **per CI test**. With 8 variables at `max_lag=20`, the PCMCI PC-algorithm can issue 200–500 CI tests with growing condition sets. At 2–5 seconds per shuffle evaluation on T=8,760: 300 tests × 200 perms × 3s ≈ **50 hours**. Neither `n_permutations` nor the CI test type is currently surfaced through `run_covariant_analysis()`.
+
+- **Sub-item 1 (P0 blocker):** Expose `pcmci_ami_n_permutations: int = 199` through the call chain: `run_covariant_analysis` → `_run_pcmci_ami` → `build_pcmci_ami_hybrid` → `PcmciAmiAdapter`. Floor is 99 (already enforced). Reducing from 199 to 99 halves CI-test cost.
+- **Sub-item 2 (P0 blocker):** Expose `pcmci_ami_ci_test: Literal["knn_cmi", "parcorr"] = "knn_cmi"` through the same chain. `parcorr` uses analytic significance (no shuffle loop) — 50–200× faster per CI test. This changes the estimand (linear vs nonlinear) and must be explicit; never a silent default.
+- **Sub-item 3 (P1):** Expose `pcmci_ami_max_lag: int | None = None` to allow using a smaller lag for Phase 1/2 PCMCI (e.g. 10) while Phase 0 AMI still runs at the caller's `max_lag`. If `None`, Phase 1/2 inherits the global `max_lag`. Halving max_lag from 20 to 10 dramatically reduces the PC search space.
+- Acceptance budgets (measured against CausalRivers 8-station, T=8,760, `max_lag=10`):
+  - `pcmci_ami_n_permutations=99` completes in ≤ 4 hours (vs observed 12+)
+  - `pcmci_ami_ci_test="parcorr"` completes in ≤ 5 minutes
+  - `pcmci_ami_max_lag=10` (vs `max_lag=20`) reduces wall time by ≥ 40%
+  - All three sub-items preserve Phase 0 `phase0_mi_scores` unchanged
+  - A regression test asserts that `pcmci_ami_n_permutations=199` (default) and `pcmci_ami_ci_test="knn_cmi"` (default) produce bit-identical output to the current baseline for a small synthetic panel (T=200, 4 variables, max_lag=3)
+- File targets: `src/forecastability/use_cases/run_covariant_analysis.py`, `src/forecastability/services/pcmci_ami_service.py`, `src/forecastability/adapters/pcmci_ami_adapter.py`.
+
+**PBE-F26 — Investigate and expose tigramite `n_jobs` for PCMCI+ inner CI-test calls**
+
+- Audit the installed tigramite version's `PCMCI` class constructor and `run_pcmciplus()` signature for any `n_jobs`, `n_cpus`, or `cpcmci` parallel mode.
+- If supported, expose as `n_jobs_pcmci: int = 1` on `TigramiteAdapter.discover()` and thread through `run_covariant_analysis`.
+- If tigramite does not natively support parallelism for `run_pcmciplus`, document this finding in `docs/plan/aux_documents/pbe_f26_tigramite_njobs_audit.md` with the tigramite version tested, the API surface examined, and the recommended alternative (e.g. run PCMCI+ and PCMCI-AMI in separate processes from the caller side as shown in `walkthroughs/08_pcmci_causal_discovery.ipynb`).
+- Acceptance: the audit document exists and includes the tigramite version, the API examination result, and a clear recommendation. If `n_jobs` is exposed, a regression test asserts serial and parallel produce identical graphs (`np.array_equal` on `parents`).
+- File targets: `src/forecastability/adapters/tigramite_adapter.py` and/or `docs/plan/aux_documents/pbe_f26_tigramite_njobs_audit.md`.
+
+**PBE-F27 — PCMCI-AMI Phase 0 loop parallelism (joblib)**
+
+- **Note:** Phase 0 is NOT the 12-hour bottleneck (it runs in ~15 seconds). This item provides a secondary speedup for large panels with many variables.
+- The Phase 0 MI computation loop in `src/forecastability/adapters/pcmci_ami_adapter.py` iterates over `(target, source, lag)` triplets sequentially; each triplet is a stateless `(past, future) → mi` kNN-MI call.
+- Parallelize using `joblib.Parallel` with `n_jobs` defaulting to `1` (serial, preserving current behavior).
+- Add `n_jobs_phase0: int = 1` to `PcmciAmiAdapter.discover_full()` and propagate through `_run_pcmci_ami()`.
+- Acceptance: `n_jobs_phase0=-1` produces the same `phase0_mi_scores`, `phase0_kept_count`, `phase0_pruned_count`, and final `causal_graph` as `n_jobs_phase0=1` for fixed `random_state` (`np.array_equal` on all score values). Phase 0 wall-time with `-1` is at least 1.5× faster than serial on a 4-core machine for the 8-driver × max_lag=20 CausalRivers input.
+- File targets: `src/forecastability/adapters/pcmci_ami_adapter.py`, `src/forecastability/use_cases/run_covariant_analysis.py`.
+
 ---
 
 ## 5. Verification plan
@@ -682,6 +813,8 @@ Run only when the relevant result surface changes:
 - Peak RSS must be no worse than `+15%` for small/medium/large synthetic cases.
 - `configs/performance_baseline.yaml` must include named budgets for the May 1 measured targets: small no-band triage `0.010s`, medium significance triage timing median `3.862s`, large significance triage timing median `4.272s`, medium batch triage profile `8.151s`, medium `cross_ami` profile `0.640s`, and rolling-origin smoke `0.189s`.
 - F05-specific improvement budgets are stricter than regression budgets: medium significance triage `<= 3.09s`, medium batch triage `<= 6.52s`, and medium `cross_ami` `<= 0.51s`, or the PR must show profiles proving why the remaining bottleneck is outside F05 scope.
+- Post-audit budgets must include direct public-call ceilings for import latency, covariant no-significance screening, covariant full-significance, lagged-exog no-significance screening, lagged-exog full-significance, and PCMCI-AMI capped synthetic panels.
+- Any refreshed artifact that exceeds the regression ceiling must be labeled as `measured slowdown/regression` in the report until explained by controlled reruns.
 - No benchmark-panel series may hit the existing 120s timeout.
 - `run_canonical_triage.py --no-bands --max-workers 4` should be at least `1.5x` faster than `--max-workers 1`, or the report must explain why parallelism does not help.
 
@@ -720,5 +853,16 @@ Recommended PR order:
 14. `PBE-F15`: typed kernel-provider Protocols in `forecastability.ports.kernels`, only if F10 shows native/provider work is still warranted.
 15. `PBE-F09`: optional native-kernel plugin design, only after F10/F15.
 16. `PBE-F11`: performance docs, budgets, and release report.
+17. `PBE-F17`: update the performance report and artifact provenance before any release claim uses the word "eliminated".
+18. `PBE-F18`: reduce top-level import latency for the public covariant/lagged-exog surface.
+19. `PBE-F20`: expand direct public-workflow benchmark coverage before additional optimization claims.
+20. `PBE-F19`: add explicit no-significance screening controls for covariant and lagged-exog workflows.
+21. `PBE-F21`: benchmark and choose significance parallel policy after public-call coverage exists.
+22. `PBE-F22`: design batched surrogate generation/evaluation with null-dependence metadata.
+23. `PBE-F23`: implement exact batched kNN MI / PCMCI null kernels behind the provider boundary with parity gates.
+24. `PBE-F24`: add `verbosity` parameter to `run_covariant_analysis` and thread to tigramite adapter (enables user to see PCMCI progress and detect hung runs).
+25. `PBE-F25` (**P0 — root cause of 12-hour runtime**): expose `pcmci_ami_n_permutations`, `pcmci_ami_ci_test`, and `pcmci_ami_max_lag` through `run_covariant_analysis` → `_run_pcmci_ami` → `build_pcmci_ami_hybrid` → `PcmciAmiAdapter`; add fast-path defaults documentation.
+26. `PBE-F26`: audit tigramite `n_jobs` support for `run_pcmciplus`; expose if available, document finding if not.
+27. `PBE-F27`: parallelize PCMCI-AMI Phase 0 MI loop with joblib; default `n_jobs=1` preserves current behavior (secondary speedup, Phase 0 is ~15s not the bottleneck).
 
 F03 lands before kernel work intentionally: it is a pure orchestration split with no estimator change. Phase 1 profiling then justifies moving F05 immediately after F03, because surrogate significance is the dominant measured cost. F16 makes the view more generic before lag-design or rolling-origin specialization: repeated scaling and validation are shared overhead across surrogate, covariant, and rolling-origin loops. F04 remains before F06/F14 because it establishes single-horizon parity and train-window safety before deeper residualization or PCMCI changes. PBE-F10 must precede PBE-F15/F09 because provider/native design is stop/go gated by refreshed profiles after the Python bottlenecks are removed.
