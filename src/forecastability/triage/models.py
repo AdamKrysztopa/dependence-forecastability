@@ -9,6 +9,9 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from forecastability.pipeline.analyzer import AnalyzeResult
 from forecastability.triage.complexity_band import ComplexityBandResult
+from forecastability.triage.extended_forecastability import (
+    ExtendedForecastabilityAnalysisResult,
+)
 from forecastability.triage.forecastability_profile import ForecastabilityProfile
 from forecastability.triage.lyapunov import LargestLyapunovExponentResult
 from forecastability.triage.theoretical_limit_diagnostics import TheoreticalLimitDiagnostics
@@ -127,6 +130,9 @@ class TriageResult(BaseModel):
         theoretical_limit_diagnostics: Information-theoretic ceiling on
             predictive improvement per horizon, derived from the AMI curve;
             ``None`` when blocked or when no analyze result is available.
+        extended_forecastability_analysis: Optional opt-in Phase 2 extended
+            fingerprint and routing bundle; omitted from serialization when the
+            opt-in path is disabled.
         complexity_band: Entropy-based complexity classification for the
             target series (F6); ``None`` when blocked.
         largest_lyapunov_exponent: Estimated largest Lyapunov exponent from
@@ -147,5 +153,9 @@ class TriageResult(BaseModel):
     timing: dict[str, float] | None = None  # stage_name -> duration_ms (AGT-013)
     forecastability_profile: ForecastabilityProfile | None = None
     theoretical_limit_diagnostics: TheoreticalLimitDiagnostics | None = None
+    extended_forecastability_analysis: ExtendedForecastabilityAnalysisResult | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+    )
     complexity_band: ComplexityBandResult | None = None
     largest_lyapunov_exponent: LargestLyapunovExponentResult | None = None

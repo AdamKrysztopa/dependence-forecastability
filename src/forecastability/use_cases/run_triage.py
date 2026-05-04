@@ -160,6 +160,7 @@ def run_triage(
     event_emitter: EventEmitterPort | None = None,
     checkpoint: CheckpointPort | None = None,
     checkpoint_key: str = "default",
+    include_extended_fingerprint: bool = False,
 ) -> TriageResult:
     """Orchestrate the full triage pipeline for a forecastability request.
 
@@ -422,6 +423,21 @@ def run_triage(
     complexity_band = build_complexity_band(request.series)
 
     # ------------------------------------------------------------------ #
+    # Stage 7b: opt-in extended forecastability analysis (FSE-F08)      #
+    # ------------------------------------------------------------------ #
+    extended_forecastability_analysis = None
+    if include_extended_fingerprint and method_plan.route != "exogenous":
+        from forecastability.use_cases._run_extended_forecastability_analysis_impl import (
+            run_extended_forecastability_analysis,
+        )
+
+        extended_forecastability_analysis = run_extended_forecastability_analysis(
+            request.series,
+            name="triage",
+            max_lag=request.max_lag,
+        )
+
+    # ------------------------------------------------------------------ #
     # Stage 8: largest Lyapunov exponent (F5, experimental)              #
     # ------------------------------------------------------------------ #
     from forecastability.triage.lyapunov import LargestLyapunovExponentResult
@@ -445,6 +461,7 @@ def run_triage(
         timing=timing if timing else None,
         forecastability_profile=forecastability_profile,
         theoretical_limit_diagnostics=theoretical_limit_diagnostics,
+        extended_forecastability_analysis=extended_forecastability_analysis,
         complexity_band=complexity_band,
         largest_lyapunov_exponent=largest_lyapunov_exponent,
     )

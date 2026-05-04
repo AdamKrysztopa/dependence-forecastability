@@ -131,6 +131,52 @@ Expected output snippet:
 }
 ```
 
+## 10.5 Minutes: Extended AMI-First Analysis
+
+Use the extended surface when you want the additive fingerprint and routing
+profile without leaving deterministic triage.
+
+```bash
+uv run python - <<'PY'
+import json
+from forecastability import generate_ar1, run_extended_forecastability_analysis
+
+series = generate_ar1(n_samples=150, phi=0.85, random_state=42)
+result = run_extended_forecastability_analysis(series, max_lag=20)
+
+summary = {
+    "signal_strength": result.profile.signal_strength,
+    "predictability_sources": list(result.profile.predictability_sources),
+    "descriptive_only": result.routing_metadata["descriptive_only"],
+}
+print(json.dumps(summary, indent=2))
+PY
+```
+
+CLI equivalent:
+
+```bash
+uv run forecastability extended \
+  --series "$AR1_JSON" \
+  --max-lag 20 \
+  --format brief
+```
+
+> [!IMPORTANT]
+> This surface remains AMI-first. If AMI geometry is disabled with
+> `--without-ami-geometry` or unavailable for the input, the output stays
+> descriptive-only and does not emit routing-grade family recommendations.
+
+> [!NOTE]
+> `run_triage(..., include_extended_fingerprint=True)` additively attaches
+> `extended_forecastability_analysis` for non-exogenous requests. Exogenous
+> requests keep that field omitted rather than pretending exogenous-aware
+> extended analysis exists.
+
+For the field-by-field guide to this surface, including routing metadata and
+theory cross-references, see
+[`how-to/extended_forecastability_fingerprint.md`](how-to/extended_forecastability_fingerprint.md).
+
 ## 11 Minutes: Fingerprint Workflow
 
 Use the geometry-backed fingerprint workflow when you want compact AMI summary
@@ -611,8 +657,11 @@ Expected tool output snippet:
 ## Triage Extension Diagnostics
 
 Beyond the core triage output, `run_triage()` populates optional diagnostic
-fields (F1–F6) when the series is not blocked. These give deeper insight into
-*why* the series is forecastable and *where* the information ceiling lies.
+fields (F1–F6) when the series is not blocked. It can also attach the additive
+`extended_forecastability_analysis` bundle when
+`include_extended_fingerprint=True` and the routed request is not exogenous.
+These diagnostics give deeper insight into *why* the series is forecastable and
+*where* the information ceiling lies.
 
 ```python
 from forecastability.triage import run_triage, TriageRequest

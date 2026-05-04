@@ -207,7 +207,53 @@ Relevant docs:
 
 ---
 
-### 2. Forecastability fingerprint
+### 2. Extended forecastability analysis
+
+Use this when you want the implemented AMI-first extended fingerprint plus a
+deterministic routing summary in one additive result.
+
+Entry points:
+
+```python
+from forecastability import TriageRequest, run_extended_forecastability_analysis, run_triage
+```
+
+Direct use case:
+
+```python
+result = run_extended_forecastability_analysis(series, max_lag=24, period=12)
+
+print(result.profile.predictability_sources)
+print(result.routing_metadata["descriptive_only"])
+```
+
+CLI equivalent:
+
+```bash
+forecastability extended --csv data.csv --col value --max-lag 24 --period 12 --format brief
+```
+
+Operational notes:
+
+- AMI geometry stays first. If it is disabled or unavailable, the profile
+  remains descriptive-only and does not emit routing-grade family
+  recommendations.
+- `run_triage(..., include_extended_fingerprint=True)` additively attaches
+  `extended_forecastability_analysis` for non-exogenous routes only. Exogenous
+  requests leave the field omitted rather than pretending exogenous-aware
+  extended analysis exists.
+- The surface suggests starting model families only; it does not fit models or
+  wire downstream frameworks.
+
+Relevant docs:
+
+- [`docs/how-to/extended_forecastability_fingerprint.md`](docs/how-to/extended_forecastability_fingerprint.md)
+- [`docs/explanation/extended_forecastability_profile.md`](docs/explanation/extended_forecastability_profile.md)
+- [`docs/public_api.md`](docs/public_api.md)
+
+---
+
+### 3. Forecastability fingerprint
 
 The fingerprint surface summarizes AMI-first information geometry into compact
 diagnostic features and deterministic model-family routing hints.
@@ -247,7 +293,7 @@ Relevant files:
 
 ---
 
-### 3. Lagged-exogenous triage
+### 4. Lagged-exogenous triage
 
 Use this when you have candidate drivers and need to decide whether they are
 actually useful for forecasting.
@@ -296,7 +342,7 @@ Relevant files:
 
 ---
 
-### 4. Covariant / exogenous analysis
+### 5. Covariant / exogenous analysis
 
 Use this when you want to screen whether another series contains information
 about the target.
@@ -322,7 +368,7 @@ pip install "dependence-forecastability[causal]"
 
 ---
 
-### 5. Routing validation
+### 6. Routing validation
 
 Routing validation audits deterministic routing against controlled archetypes
 and sanity panels.

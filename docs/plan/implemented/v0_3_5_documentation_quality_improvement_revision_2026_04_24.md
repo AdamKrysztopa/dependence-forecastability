@@ -121,7 +121,7 @@ Required banner text:
 > [`forecastability-examples`](https://github.com/example/forecastability-examples)
 > sibling repository. The library itself will keep only deterministic Python
 > APIs, scripts under `scripts/`, and recipe pages under `docs/recipes/`.
-> See [docs/plan/v0_4_0_examples_repo_split_ultimate_plan.md](../../docs/plan/v0_4_0_examples_repo_split_ultimate_plan.md).
+> See [docs/plan/implemented/v0_4_0_examples_repo_split_ultimate_plan.md](v0_4_0_examples_repo_split_ultimate_plan.md).
 
 > [!NOTE]
 > The actual GitHub URL is a placeholder until the v0.4.0 plan creates the

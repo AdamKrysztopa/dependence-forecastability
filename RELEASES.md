@@ -18,7 +18,9 @@ v0.4.0+ product history is visible in one place.
 
 | Core tag | Sibling tag | Core highlights | Sibling highlights |
 | --- | --- | --- | --- |
-| *(upcoming)* `v0.4.0` | *(upcoming)* `v0.4.0` | Library-first slim release; `notebooks/` removed; causal-rivers extensions promoted | Notebook migration complete; 12 walkthroughs, 6 triage walkthroughs, 1 recipe notebook; EX-NB-01–05 |
+| *(upcoming)* `v0.4.2` | *(planned)* `v0.4.2` | AMI-first forecastability structure expansion; extended fingerprint, extended routing, and spectral/ordinal/classical/memory diagnostics | Extended walkthrough refresh and showcase updates for the expanded fingerprint |
+| `v0.4.1` | — | Performance hardening, benchmark visibility, and fast-screening controls | — |
+| `v0.4.0` | `v0.4.0` | Library-first slim release; `notebooks/` removed; causal-rivers extensions promoted | Notebook migration complete; 12 walkthroughs, 6 triage walkthroughs, 1 recipe notebook; EX-NB-01–05 |
 | `v0.3.6` | — | Release-truth and docs-integrity automation | — |
 | `v0.3.5` | — | Documentation quality hardening; redirect-stub cleanup; recipe page for forecast-prep hand-off | — |
 | `v0.3.4` | — | `ForecastPrepContract` public API; `build_forecast_prep_contract`; `docs/recipes/forecast_prep_to_external_frameworks.md` | — |
@@ -29,7 +31,7 @@ v0.4.0+ product history is visible in one place.
 
 ## How cross-repo releases are coordinated
 
-See [EX-REL-01 in the v0.4.0 plan](docs/plan/v0_4_0_examples_repo_split_ultimate_plan.md)
+See [EX-REL-01 in the v0.4.0 plan](docs/plan/implemented/v0_4_0_examples_repo_split_ultimate_plan.md)
 for the two-repo release dance. In brief:
 
 1. Core publishes a release candidate to TestPyPI.
@@ -40,4 +42,4 @@ for the two-repo release dance. In brief:
    the core release page.
 
 The [shared GitHub Project](https://github.com/orgs/AdamKrysztopa/projects)
-tracks issues and PRs across both repos under a single `v0.4.0` milestone.
+tracks issues and PRs across both repos under the current release milestone.

@@ -9,9 +9,44 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
+from forecastability.utils.datasets import generate_henon_map, generate_sine_wave
 from forecastability.utils.types import RoutingValidationOutcome
+
+
+class ExtendedFingerprintShowcaseCase(BaseModel):
+    """One deterministic series specification for the Phase 3 showcase panel."""
+
+    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
+
+    series_name: str = Field(description="Stable identifier for the synthetic showcase series.")
+    description: str = Field(description="Human-readable description of the showcase series.")
+    generator: str = Field(description="Generator function used to create the series.")
+    period: int | None = Field(
+        default=None,
+        description="Optional seasonal period supplied to period-aware diagnostics.",
+    )
+    expected_story: str = Field(
+        description="Short deterministic description of what the showcase should demonstrate.",
+    )
+    series: np.ndarray = Field(description="Generated univariate series values.")
+
+    @field_validator("series", mode="before")
+    @classmethod
+    def _coerce_series(cls, value: object) -> np.ndarray:
+        """Coerce showcase series to the stable 1-D ndarray contract."""
+        if isinstance(value, str | bytes):
+            raise TypeError("series must be a numeric array or array-like sequence")
+        array = np.asarray(value, dtype=float)
+        if array.ndim != 1:
+            raise ValueError("showcase series must be one-dimensional")
+        return array
+
+    @field_serializer("series", when_used="json")
+    def _serialize_series(self, value: np.ndarray) -> list[float]:
+        """Serialize showcase series values as a JSON-friendly list."""
+        return value.tolist()
 
 
 def generate_covariant_benchmark(
@@ -386,6 +421,214 @@ def generate_seasonal_periodic(
     for t in range(max(1, period), n):
         x[t] = ar_phi * x[t - 1] + seasonal_phi * x[t - period] + rng.standard_normal()
     return x
+
+
+def generate_additive_seasonal_plus_noise(
+    n: int = 1000,
+    *,
+    period: int = 12,
+    amplitude: float = 1.0,
+    noise_std: float = 0.45,
+    seed: int = 42,
+) -> np.ndarray:
+    """Generate a deterministic seasonal-plus-noise showcase series.
+
+    Args:
+        n: Number of observations to generate.
+        period: Seasonal period used by the sinusoidal component.
+        amplitude: Amplitude of the deterministic seasonal component.
+        noise_std: Standard deviation of the additive Gaussian noise.
+        seed: Random seed for reproducibility.
+
+    Returns:
+        One-dimensional additive seasonal series with noise.
+    """
+    if period <= 1:
+        raise ValueError(f"period must be greater than 1, got {period}")
+
+    rng = np.random.default_rng(seed)
+    time_index = np.arange(n, dtype=float)
+    seasonal = amplitude * np.sin((2.0 * np.pi * time_index) / float(period))
+    noise = rng.normal(0.0, noise_std, size=n)
+    return seasonal + noise
+
+
+def generate_linear_trend_plus_noise(
+    n: int = 1000,
+    *,
+    slope: float = 0.025,
+    noise_std: float = 0.55,
+    seed: int = 42,
+) -> np.ndarray:
+    """Generate a linear-trend-plus-noise showcase series.
+
+    Args:
+        n: Number of observations to generate.
+        slope: Deterministic linear trend slope.
+        noise_std: Standard deviation of the additive Gaussian noise.
+        seed: Random seed for reproducibility.
+
+    Returns:
+        One-dimensional trend-dominated series with additive noise.
+    """
+    rng = np.random.default_rng(seed)
+    time_index = np.arange(n, dtype=float)
+    trend = slope * time_index
+    noise = rng.normal(0.0, noise_std, size=n)
+    return trend + noise
+
+
+def _normalize_showcase_series(values: np.ndarray) -> np.ndarray:
+    """Return a centered, unit-scale showcase series."""
+    centered = values - np.mean(values)
+    return centered / (np.std(centered) + 1e-12)
+
+
+def _generate_ami_first_long_memory_candidate(
+    n: int,
+    *,
+    seed: int,
+) -> np.ndarray:
+    """Generate a long-memory showcase series that still clears the AMI gate."""
+    base_series, _ = generate_long_memory_archetype(n=n, seed=seed, hurst=0.75)
+    normalized_base = _normalize_showcase_series(base_series)
+    smoothed = np.convolve(normalized_base, np.ones(6, dtype=float) / 6.0, mode="same")
+    normalized_smoothed = _normalize_showcase_series(smoothed)
+    blended = 0.65 * normalized_base + 0.35 * normalized_smoothed
+    return _normalize_showcase_series(blended)
+
+
+def _generate_henon_lag_product_showcase(n: int) -> np.ndarray:
+    """Generate a Hénon-derived nonlinear showcase with a strong ordinal cue."""
+    base = generate_henon_map(n_samples=n, a=1.2, b=0.2, discard=400)
+    lag_product = base * np.roll(base, 1)
+    lag_product[0] = lag_product[1]
+    return _normalize_showcase_series(lag_product)
+
+
+def generate_extended_fingerprint_showcase_panel(
+    n: int = 360,
+    *,
+    seed: int = 42,
+    seasonal_period: int = 12,
+) -> tuple[ExtendedFingerprintShowcaseCase, ...]:
+    """Build the deterministic Phase 3 extended-fingerprint showcase panel.
+
+    Args:
+        n: Number of observations per synthetic series.
+        seed: Base seed used for stochastic generators.
+        seasonal_period: Seasonal period used for the sine and seasonal examples.
+
+    Returns:
+        Ordered showcase cases spanning null, seasonal, autoregressive, trend,
+        long-memory-like, and nonlinear structured signals.
+    """
+    if n < max(120, seasonal_period * 8):
+        raise ValueError("n must be at least max(120, seasonal_period * 8) for the showcase panel")
+
+    clean_sine = generate_sine_wave(
+        n_samples=n,
+        cycles=float(n) / float(seasonal_period),
+        noise_std=1e-6,
+        random_state=seed + 1,
+    )
+    seasonal_plus_noise = generate_additive_seasonal_plus_noise(
+        n=n,
+        period=seasonal_period,
+        amplitude=1.0,
+        noise_std=0.45,
+        seed=seed + 2,
+    )
+    ar1 = generate_ar1_monotonic(n=n, phi=0.86, seed=seed + 3)
+    trend_plus_noise = generate_linear_trend_plus_noise(
+        n=n,
+        slope=0.025,
+        noise_std=0.55,
+        seed=seed + 4,
+    )
+    long_memory_candidate = _generate_ami_first_long_memory_candidate(n=n, seed=seed + 5)
+    henon_map = _generate_henon_lag_product_showcase(n=n)
+
+    return (
+        ExtendedFingerprintShowcaseCase(
+            series_name="white_noise",
+            description="IID Gaussian noise used as the AMI-first null baseline.",
+            generator="generate_white_noise",
+            expected_story=(
+                "Lag geometry and the additive diagnostics should stay weak enough to keep "
+                "the route on simple baseline families."
+            ),
+            series=generate_white_noise(n=n, seed=seed),
+        ),
+        ExtendedFingerprintShowcaseCase(
+            series_name="clean_sine_wave",
+            description="Near-noiseless sine wave with a fixed seasonal period.",
+            generator="generate_sine_wave",
+            period=seasonal_period,
+            expected_story=(
+                "AMI geometry should show stable repeating structure, with spectral and "
+                "seasonality diagnostics reinforcing the recurring signal story."
+            ),
+            series=clean_sine,
+        ),
+        ExtendedFingerprintShowcaseCase(
+            series_name="seasonal_plus_noise",
+            description="Additive seasonal signal with moderate observational noise.",
+            generator="generate_additive_seasonal_plus_noise",
+            period=seasonal_period,
+            expected_story=(
+                "AMI should retain usable seasonal signal while the additive diagnostics "
+                "show a noisier but still seasonal structure than the clean sine case."
+            ),
+            series=seasonal_plus_noise,
+        ),
+        ExtendedFingerprintShowcaseCase(
+            series_name="ar1",
+            description="Short-memory AR(1) process with monotone lag decay.",
+            generator="generate_ar1_monotonic",
+            expected_story=(
+                "AMI should detect lag dependence with a compact autoregressive routing story "
+                "rather than a seasonal or nonlinear one."
+            ),
+            series=ar1,
+        ),
+        ExtendedFingerprintShowcaseCase(
+            series_name="trend_plus_noise",
+            description="Linear deterministic trend with additive Gaussian noise.",
+            generator="generate_linear_trend_plus_noise",
+            expected_story=(
+                "The AMI-first view should show lagged structure while the classical block "
+                "surfaces trend-dominated nonstationarity."
+            ),
+            series=trend_plus_noise,
+        ),
+        ExtendedFingerprintShowcaseCase(
+            series_name="long_memory_candidate",
+            description=(
+                "Persistent long-memory proxy blended with a short-range smooth component so "
+                "the AMI-first lag cue remains visible."
+            ),
+            generator="generate_long_memory_archetype + normalized_moving_average_blend",
+            expected_story=(
+                "AMI should retain a short lag-dependence cue while the memory block adds a "
+                "persistence-across-scales cue rather than replacing the AMI-first story."
+            ),
+            series=long_memory_candidate,
+        ),
+        ExtendedFingerprintShowcaseCase(
+            series_name="henon_map",
+            description=(
+                "Nonlinear lag-product measurement derived from a deterministic Henon map "
+                "trajectory."
+            ),
+            generator="generate_henon_map + lag_product_measurement",
+            expected_story=(
+                "AMI should remain the primary gate while ordinal redundancy provides the "
+                "strongest nonlinear cue in the panel beyond the seasonal sine examples."
+            ),
+            series=henon_map,
+        ),
+    )
 
 
 def generate_nonlinear_mixed(

@@ -9,6 +9,50 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-05-04
+
+> **AMI-first forecastability structure expansion.**
+> This release extends the univariate forecastability fingerprint with additive
+> spectral, ordinal, classical, and memory diagnostics, plus an extended
+> routing/profile surface and CLI entry point. It remains a deterministic
+> triage release: no model fitting, no framework-specific training helpers,
+> and no causal-discovery expansion are added here.
+
+### Added
+
+- `run_extended_forecastability_analysis(...)` as the direct public entry point
+  for the extended univariate fingerprint.
+- `ExtendedForecastabilityAnalysisResult`,
+  `ExtendedForecastabilityFingerprint`, and
+  `ExtendedForecastabilityProfile` on the stable public facade and
+  `forecastability.triage`.
+- Additive spectral, ordinal, classical, and memory diagnostic blocks around
+  the existing AMI-first fingerprint.
+- `forecastability extended` CLI output surface for `json`, `markdown`, and
+  `brief` rendering.
+- Theory and usage docs for spectral forecastability, ordinal complexity,
+  classical structure features, memory diagnostics, and the extended profile.
+
+### Changed
+
+- `run_triage(..., include_extended_fingerprint=True)` can now attach
+  `extended_forecastability_analysis` for non-exogenous requests without
+  changing the default triage contract.
+- Deterministic routing now exposes `predictability_sources`,
+  `recommended_model_families`, `avoid_model_families`, `signal_strength`, and
+  `noise_risk` on `ExtendedForecastabilityProfile`.
+- When AMI geometry is disabled or unavailable, the extended router switches to
+  descriptive-only mode instead of emitting routing-grade family
+  recommendations from secondary diagnostics alone.
+
+### Notes
+
+- The extended surface is **AMI-first**. The secondary diagnostics explain why
+  a series may be forecastable; they do not replace lagged-information
+  analysis.
+- No downstream model fitting, forecasting-framework integration, or causal
+  expansion ships in this release.
+
 ## [0.4.1] - 2026-05-03
 
 > **Performance hardening, benchmark visibility, and fast-screening controls.**

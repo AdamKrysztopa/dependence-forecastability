@@ -224,7 +224,7 @@ sf = StatsForecast(models=models, freq=freq)
 - **Executable end-to-end demos ship in the sibling `forecastability-examples`
   repository from v0.4.0.** The notebook and runner that were originally
   planned for this release were descoped; see the
-  [v0.4.0 examples-repository split plan](../plan/v0_4_0_examples_repo_split_ultimate_plan.md).
+  [v0.4.0 examples-repository split plan](../plan/implemented/v0_4_0_examples_repo_split_ultimate_plan.md).
 - **These snippets are documentation, not tested code.** They are never
   executed by core CI and are not part of the package test suite. They are
   provided to illustrate the translation pattern, not to guarantee that any

@@ -19,10 +19,20 @@ from typing import Any, Literal
 
 import numpy as np
 import yaml
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 WorkflowName = Literal["run_triage"]
 SignalName = Literal["ar1", "seasonal_ar1", "white_noise"]
+PublicWorkflowMethod = Literal[
+    "import",
+    "run_covariant_analysis",
+    "run_lagged_exogenous_triage",
+    "run_extended_forecastability_analysis",
+    "compute_spectral_forecastability",
+    "compute_ordinal_complexity",
+    "compute_classical_structure",
+    "compute_memory_structure",
+]
 
 
 class PerformanceCaseConfig(BaseModel):
@@ -91,6 +101,64 @@ class BudgetsConfig(BaseModel):
     pbe_f05: Pbef05BudgetsConfig | None = None
 
 
+class PublicWorkflowConfig(BaseModel):
+    """One measured public workflow or import-latency benchmark."""
+
+    model_config = ConfigDict(frozen=True)
+
+    name: str
+    description: str = ""
+    method: PublicWorkflowMethod
+    import_statement: str | None = None
+    n_series: int | None = Field(default=None, ge=1)
+    series_length: int | None = Field(default=None, ge=1)
+    max_lag: int | None = Field(default=None, ge=1)
+    n_surrogates: int | None = Field(default=None, ge=99)
+    significance_mode: Literal["none", "phase"] | None = None
+    methods: list[str] | None = None
+    signal: SignalName = "seasonal_ar1"
+    period: int | None = Field(default=None, gt=1)
+    include_ami_geometry: bool = True
+    ordinal_embedding_dimension: int = Field(default=3, ge=2)
+    ordinal_delay: int = Field(default=1, ge=1)
+    memory_min_scale: int | None = Field(default=None, ge=4)
+    memory_max_scale: int | None = Field(default=None, ge=5)
+    random_state: int = 42
+
+    @model_validator(mode="after")
+    def _validate_method_requirements(self) -> PublicWorkflowConfig:
+        """Enforce lightweight config invariants per workflow method."""
+        if self.method == "import":
+            return self
+
+        if self.series_length is None:
+            raise ValueError("series_length is required for non-import public workflows")
+
+        if (
+            self.method
+            in {
+                "run_covariant_analysis",
+                "run_lagged_exogenous_triage",
+            }
+            and self.max_lag is None
+        ):
+            raise ValueError("max_lag is required for multiseries public workflows")
+
+        if self.method == "run_covariant_analysis" and self.significance_mode is None:
+            raise ValueError("significance_mode is required for run_covariant_analysis")
+
+        if self.method == "run_lagged_exogenous_triage" and self.significance_mode is None:
+            raise ValueError("significance_mode is required for run_lagged_exogenous_triage")
+
+        if self.method == "run_extended_forecastability_analysis" and self.max_lag is None:
+            raise ValueError("max_lag is required for run_extended_forecastability_analysis")
+
+        if self.memory_max_scale is not None and self.memory_min_scale is not None:
+            if self.memory_max_scale <= self.memory_min_scale:
+                raise ValueError("memory_max_scale must be greater than memory_min_scale")
+        return self
+
+
 class PerformanceBaselineConfig(BaseModel):
     """Validated performance baseline YAML config."""
 
@@ -100,7 +168,7 @@ class PerformanceBaselineConfig(BaseModel):
     cases: list[PerformanceCaseConfig]
     profile: ProfileConfig = Field(default_factory=ProfileConfig)
     budgets: BudgetsConfig | None = None
-    public_workflows: list[dict[str, object]] | None = None
+    public_workflows: list[PublicWorkflowConfig] | None = None
 
 
 class RuntimeMeasurement(BaseModel):
@@ -225,24 +293,48 @@ def runtime_metadata(*, config_path: Path, config_hash: str) -> dict[str, Any]:
         "threadpoolctl_snapshot": threadpoolctl_snapshot(),
         "omp_num_threads": os.environ.get("OMP_NUM_THREADS"),
         "mkl_num_threads": os.environ.get("MKL_NUM_THREADS"),
-        "forecastability_version": importlib.metadata.version("forecastability"),
+        "forecastability_version": resolve_forecastability_version(),
         "uv_lock_hash": sha256_file(root / "uv.lock"),
     }
 
 
+def resolve_forecastability_version() -> str:
+    """Return the installed or workspace-local forecastability version string."""
+    try:
+        return importlib.metadata.version("forecastability")
+    except importlib.metadata.PackageNotFoundError:
+        from forecastability import __version__
+
+        return __version__
+
+
 def make_synthetic_series(case: PerformanceCaseConfig) -> np.ndarray:
     """Generate deterministic synthetic data for a baseline or profile case."""
-    rng = np.random.default_rng(case.random_state)
-    if case.signal == "white_noise":
-        return rng.normal(0.0, 1.0, size=case.n_obs)
+    return make_synthetic_series_spec(
+        n_obs=case.n_obs,
+        signal=case.signal,
+        random_state=case.random_state,
+    )
 
-    innovations = rng.normal(0.0, 0.7, size=case.n_obs)
-    series = np.zeros(case.n_obs, dtype=float)
-    for idx in range(1, case.n_obs):
+
+def make_synthetic_series_spec(
+    *,
+    n_obs: int,
+    signal: SignalName,
+    random_state: int,
+) -> np.ndarray:
+    """Generate deterministic synthetic data from the shared signal spec."""
+    rng = np.random.default_rng(random_state)
+    if signal == "white_noise":
+        return rng.normal(0.0, 1.0, size=n_obs)
+
+    innovations = rng.normal(0.0, 0.7, size=n_obs)
+    series = np.zeros(n_obs, dtype=float)
+    for idx in range(1, n_obs):
         series[idx] = 0.68 * series[idx - 1] + innovations[idx]
 
-    if case.signal == "seasonal_ar1":
-        t = np.arange(case.n_obs, dtype=float)
+    if signal == "seasonal_ar1":
+        t = np.arange(n_obs, dtype=float)
         series = series + 0.8 * np.sin(2.0 * np.pi * t / 12.0)
     return series
 

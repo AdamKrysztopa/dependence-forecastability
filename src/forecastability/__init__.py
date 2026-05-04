@@ -43,7 +43,7 @@ from forecastability.utils.types import (
 )
 from forecastability.utils.validation import validate_time_series
 
-__version__ = "0.4.1"
+__version__ = "0.4.2"
 
 # ---------------------------------------------------------------------------
 # Lazy export map — loaded on first attribute access via __getattr__.
@@ -94,15 +94,32 @@ _LAZY_EXPORT_MAP: dict[str, tuple[str, str | None]] = {
     "forecast_prep_contract_to_lag_table": ("forecastability.services.forecast_prep_export", None),
     "forecast_prep_contract_to_markdown": ("forecastability.services.forecast_prep_export", None),
     # Triage sub-models (not commonly needed by API users)
+    "ClassicalStructureResult": ("forecastability.triage.extended_forecastability", None),
+    "ExtendedForecastabilityAnalysisResult": (
+        "forecastability.triage.extended_forecastability",
+        None,
+    ),
+    "ExtendedForecastabilityFingerprint": (
+        "forecastability.triage.extended_forecastability",
+        None,
+    ),
+    "ExtendedForecastabilityProfile": ("forecastability.triage.extended_forecastability", None),
     "ForecastabilityProfile": ("forecastability.triage.forecastability_profile", None),
+    "MemoryStructureResult": ("forecastability.triage.extended_forecastability", None),
+    "OrdinalComplexityResult": ("forecastability.triage.extended_forecastability", None),
     "PredictiveInfoLearningCurve": (
         "forecastability.triage.predictive_info_learning_curve",
         None,
     ),
+    "SpectralForecastabilityResult": ("forecastability.triage.extended_forecastability", None),
     "SpectralPredictabilityResult": ("forecastability.triage.spectral_predictability", None),
     # Non-core use cases
     "run_batch_forecastability_workbench": ("forecastability.use_cases", None),
     "run_batch_triage": ("forecastability.use_cases", None),
+    "run_extended_forecastability_analysis": (
+        "forecastability.use_cases",
+        "_run_extended_forecastability_analysis_public",
+    ),
     "run_routing_validation": ("forecastability.use_cases", None),
     "run_forecastability_fingerprint": (
         "forecastability.use_cases.run_forecastability_fingerprint",
@@ -340,6 +357,9 @@ __all__ = [
     "ExpectedFamilyMetadata",
     "ExogenousBenchmarkConfig",
     "ExogenousBenchmarkResult",
+    "ExtendedForecastabilityAnalysisResult",
+    "ExtendedForecastabilityFingerprint",
+    "ExtendedForecastabilityProfile",
     "FamilyRecommendation",
     "FingerprintBundle",
     "ForecastPrepConfidence",
@@ -351,6 +371,7 @@ __all__ = [
     "ForecastabilityAnalyzer",
     "ForecastabilityAnalyzerExog",
     "ForecastabilityFingerprint",
+    "ClassicalStructureResult",
     "ForecastingNextStepPlan",
     "ForecastabilityProfile",
     "ForecastResult",
@@ -393,6 +414,8 @@ __all__ = [
     "MetricConfig",
     "MetricCurve",
     "ModelConfig",
+    "MemoryStructureResult",
+    "OrdinalComplexityResult",
     "OutputConfig",
     "PcmciAmiResult",
     "Phase0MiScore",
@@ -410,6 +433,7 @@ __all__ = [
     "run_batch_triage",
     "run_batch_forecastability_workbench",
     "run_covariant_analysis",
+    "run_extended_forecastability_analysis",
     "run_lagged_exogenous_triage",
     "run_forecastability_fingerprint",
     "run_routing_validation",
@@ -423,6 +447,7 @@ __all__ = [
     "ScorerRegistry",
     "SensitivityConfig",
     "SeriesEvaluationResult",
+    "SpectralForecastabilityResult",
     "SpectralPredictabilityResult",
     "TensorRoleLabel",
     "TargetBaselineCurves",

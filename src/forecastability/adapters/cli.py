@@ -41,7 +41,13 @@ from forecastability.triage.batch_models import (
     BatchTriageRequest,
     BatchTriageResponse,
 )
+from forecastability.triage.extended_forecastability import (
+    ExtendedForecastabilityAnalysisResult,
+)
 from forecastability.triage.models import AnalysisGoal, TriageRequest, TriageResult
+from forecastability.use_cases._run_extended_forecastability_analysis_impl import (
+    run_extended_forecastability_analysis,
+)
 from forecastability.use_cases.run_batch_triage import run_batch_triage
 from forecastability.use_cases.run_triage import run_triage
 
@@ -229,6 +235,13 @@ def _batch_result_to_dict(result: BatchTriageResponse) -> dict[str, object]:
     }
 
 
+def _extended_result_to_dict(
+    result: ExtendedForecastabilityAnalysisResult,
+) -> dict[str, object]:
+    """Serialise an extended analysis result to a JSON-safe dictionary."""
+    return result.model_dump(mode="json")
+
+
 def _render_markdown(data: dict[str, Any]) -> str:
     """Render a triage result dict as Markdown text.
 
@@ -314,6 +327,52 @@ def _render_scorers_markdown(scorers: list[dict[str, str]]) -> str:
     ]
     for info in scorers:
         lines.append(f"| `{info['name']}` | {info['family']} | {info['description']} |")
+    return "\n".join(lines)
+
+
+def _render_extended_markdown(data: dict[str, object]) -> str:
+    """Render an extended forecastability result as an executive-style brief."""
+    profile = data.get("profile")
+    typed_profile = (
+        {str(key): value for key, value in profile.items()} if isinstance(profile, dict) else {}
+    )
+    sources_obj = typed_profile.get("predictability_sources")
+    recommended_obj = typed_profile.get("recommended_model_families")
+    avoid_obj = typed_profile.get("avoid_model_families")
+    explanation_obj = typed_profile.get("explanation")
+    signal_strength_obj = typed_profile.get("signal_strength")
+    noise_risk_obj = typed_profile.get("noise_risk")
+
+    sources = sources_obj if isinstance(sources_obj, list) else []
+    recommended = recommended_obj if isinstance(recommended_obj, list) else []
+    avoid = avoid_obj if isinstance(avoid_obj, list) else []
+    explanation = explanation_obj if isinstance(explanation_obj, list) else []
+    signal_strength = signal_strength_obj if isinstance(signal_strength_obj, str) else "unclear"
+    noise_risk = noise_risk_obj if isinstance(noise_risk_obj, str) else "unclear"
+    lines: list[str] = ["# Extended Forecastability Brief", ""]
+    lines.append(f"**Forecastability profile:** {signal_strength}")
+    lines.append(f"**Noise risk:** {noise_risk}")
+
+    if isinstance(sources, list) and len(sources) > 0:
+        lines.extend(["", "Detected sources:"])
+        for source in sources:
+            lines.append(f"- {source}")
+
+    if isinstance(recommended, list) and len(recommended) > 0:
+        lines.extend(["", "Suggested families:"])
+        for family in recommended:
+            lines.append(f"- {family}")
+
+    if isinstance(avoid, list) and len(avoid) > 0:
+        lines.extend(["", "Avoid:"])
+        for family in avoid:
+            lines.append(f"- {family}")
+
+    if isinstance(explanation, list) and len(explanation) > 0:
+        lines.extend(["", "Why:"])
+        for line in explanation:
+            lines.append(f"- {line}")
+
     return "\n".join(lines)
 
 
@@ -464,6 +523,48 @@ def cmd_triage_batch(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_extended(args: argparse.Namespace) -> int:
+    """Execute the ``extended`` subcommand.
+
+    Args:
+        args: Parsed CLI arguments from :func:`build_parser`.
+
+    Returns:
+        Exit code (``0`` = success, ``1`` = validation error).
+    """
+    if args.csv is not None:
+        series = _series_from_csv(Path(args.csv), args.col)
+    else:
+        series = _series_from_json(args.series)
+
+    try:
+        result = run_extended_forecastability_analysis(
+            series,
+            name=args.name,
+            max_lag=args.max_lag,
+            period=args.period,
+            include_ami_geometry=args.include_ami_geometry,
+            include_spectral=args.include_spectral,
+            include_ordinal=args.include_ordinal,
+            include_classical=args.include_classical,
+            include_memory=args.include_memory,
+            ordinal_embedding_dimension=args.ordinal_embedding_dimension,
+            ordinal_delay=args.ordinal_delay,
+            memory_min_scale=args.memory_min_scale,
+            memory_max_scale=args.memory_max_scale,
+        )
+    except (ValidationError, ValueError) as exc:
+        print(f"Error: invalid extended analysis input: {exc}", file=sys.stderr)
+        return 1
+
+    data = _extended_result_to_dict(result)
+    if args.format == "json":
+        print(json.dumps(data, indent=2))
+    else:
+        print(_render_extended_markdown(data))
+    return 0
+
+
 def cmd_list_scorers(args: argparse.Namespace) -> int:
     """Execute the ``list-scorers`` subcommand.
 
@@ -566,6 +667,117 @@ def build_parser() -> argparse.ArgumentParser:
         help="Output format (default: json).",
     )
     triage_p.set_defaults(func=cmd_triage)
+
+    # ------------------------------------------------------------------
+    # extended subcommand
+    # ------------------------------------------------------------------
+    extended_p = subparsers.add_parser(
+        "extended",
+        help="Run the AMI-first extended forecastability analysis.",
+    )
+    extended_source = extended_p.add_mutually_exclusive_group(required=True)
+    extended_source.add_argument("--csv", metavar="PATH", help="Path to CSV file.")
+    extended_source.add_argument("--series", metavar="JSON", help="Series as JSON array.")
+    extended_p.add_argument(
+        "--col",
+        "--value-col",
+        dest="col",
+        default=None,
+        metavar="COL",
+        help="CSV column name.",
+    )
+    extended_p.add_argument("--name", default=None, help="Optional series identifier.")
+    extended_p.add_argument(
+        "--max-lag",
+        dest="max_lag",
+        type=int,
+        default=40,
+        metavar="N",
+        help="Maximum lag to evaluate (default: 40).",
+    )
+    extended_p.add_argument(
+        "--period",
+        type=int,
+        default=None,
+        metavar="N",
+        help="Optional seasonal period.",
+    )
+    extended_p.add_argument(
+        "--ordinal-embedding-dimension",
+        dest="ordinal_embedding_dimension",
+        type=int,
+        default=3,
+        metavar="N",
+        help="Ordinal embedding dimension (default: 3).",
+    )
+    extended_p.add_argument(
+        "--ordinal-delay",
+        dest="ordinal_delay",
+        type=int,
+        default=1,
+        metavar="N",
+        help="Ordinal delay (default: 1).",
+    )
+    extended_p.add_argument(
+        "--memory-min-scale",
+        dest="memory_min_scale",
+        type=int,
+        default=None,
+        metavar="N",
+        help="Optional minimum DFA scale.",
+    )
+    extended_p.add_argument(
+        "--memory-max-scale",
+        dest="memory_max_scale",
+        type=int,
+        default=None,
+        metavar="N",
+        help="Optional maximum DFA scale.",
+    )
+    extended_p.add_argument(
+        "--without-ami-geometry",
+        dest="include_ami_geometry",
+        action="store_false",
+        help="Disable the AMI geometry block.",
+    )
+    extended_p.add_argument(
+        "--without-spectral",
+        dest="include_spectral",
+        action="store_false",
+        help="Disable the spectral diagnostics block.",
+    )
+    extended_p.add_argument(
+        "--without-ordinal",
+        dest="include_ordinal",
+        action="store_false",
+        help="Disable the ordinal diagnostics block.",
+    )
+    extended_p.add_argument(
+        "--without-classical",
+        dest="include_classical",
+        action="store_false",
+        help="Disable the classical diagnostics block.",
+    )
+    extended_p.add_argument(
+        "--without-memory",
+        dest="include_memory",
+        action="store_false",
+        help="Disable the memory diagnostics block.",
+    )
+    extended_p.add_argument(
+        "--format",
+        choices=["json", "markdown", "brief"],
+        default="json",
+        help="Output format (default: json).",
+    )
+    extended_p.set_defaults(
+        func=cmd_extended,
+        include_ami_geometry=True,
+        include_spectral=True,
+        include_ordinal=True,
+        include_classical=True,
+        include_memory=True,
+    )
 
     # ------------------------------------------------------------------
     # triage-batch subcommand

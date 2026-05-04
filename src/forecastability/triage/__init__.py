@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from importlib import import_module
+from typing import Any
+
 from forecastability.adapters.result_bundle_io import (
     load_result_bundle,
     save_result_bundle,
@@ -29,6 +32,15 @@ from forecastability.triage.events import (
     TriageEvent,
     TriageStageCompleted,
     TriageStageStarted,
+)
+from forecastability.triage.extended_forecastability import (
+    ClassicalStructureResult,
+    ExtendedForecastabilityAnalysisResult,
+    ExtendedForecastabilityFingerprint,
+    ExtendedForecastabilityProfile,
+    MemoryStructureResult,
+    OrdinalComplexityResult,
+    SpectralForecastabilityResult,
 )
 from forecastability.triage.forecastability_profile import ForecastabilityProfile
 from forecastability.triage.lyapunov import LargestLyapunovExponentResult
@@ -76,6 +88,26 @@ from forecastability.utils.types import (
     LagRecommendation,
 )
 
+_LAZY_EXPORT_MAP: dict[str, tuple[str, str | None]] = {
+    "run_extended_forecastability_analysis": (
+        "forecastability.use_cases",
+        "_run_extended_forecastability_analysis_public",
+    ),
+}
+
+
+def __getattr__(name: str) -> Any:
+    """Resolve heavier triage exports on first attribute access."""
+    target = _LAZY_EXPORT_MAP.get(name)
+    if target is None:
+        raise AttributeError(f"module 'forecastability.triage' has no attribute {name!r}")
+    module_name, attr_name = target
+    module = import_module(module_name)
+    value: Any = getattr(module, attr_name or name)
+    globals()[name] = value
+    return value
+
+
 __all__ = [
     "AnalysisGoal",
     "BatchSeriesRequest",
@@ -115,10 +147,17 @@ __all__ = [
     "LagRecommendation",
     "CovariateRecommendation",
     "FamilyRecommendation",
+    "ClassicalStructureResult",
+    "ExtendedForecastabilityAnalysisResult",
+    "ExtendedForecastabilityFingerprint",
+    "ExtendedForecastabilityProfile",
     "ForecastabilityProfile",
     "ComplexityBandResult",
     "LargestLyapunovExponentResult",
+    "MemoryStructureResult",
+    "OrdinalComplexityResult",
     "PredictiveInfoLearningCurve",
+    "SpectralForecastabilityResult",
     "SpectralPredictabilityResult",
     "TheoreticalLimitDiagnostics",
     "assess_readiness",
@@ -129,6 +168,7 @@ __all__ = [
     "rank_batch_items",
     "run_batch_triage",
     "run_batch_triage_with_details",
+    "run_extended_forecastability_analysis",
     "run_triage",
     "build_triage_result_bundle",
     "save_result_bundle",
