@@ -37,6 +37,7 @@ Use these pages when you need a task-oriented route to a result.
 | Document | Why |
 | --- | --- |
 | [how-to/golden_path.md](how-to/golden_path.md) | Shortest route from install to a trustworthy first result |
+| [how-to/extended_forecastability_fingerprint.md](how-to/extended_forecastability_fingerprint.md) | Phase 0 reading-order stub for the planned AMI-first extended fingerprint surface |
 | [how-to/use_cases_industrial.md](how-to/use_cases_industrial.md) | Practical industrial usage patterns and deployment-shaped scenarios |
 
 ## Explanations
@@ -46,9 +47,21 @@ Use these pages when you need rationale, caveats, or the conceptual shape of the
 | Document | Why |
 | --- | --- |
 | [explanation/architecture.md](explanation/architecture.md) | Actual layered architecture and dependency direction |
+| [explanation/extended_forecastability_profile.md](explanation/extended_forecastability_profile.md) | Why `ExtendedForecastabilityProfile` additively extends the existing AMI-first profile contract |
 | [explanation/surface_guide.md](explanation/surface_guide.md) | Which surfaces are stable, beta, or experimental, and what most users can ignore |
 | [explanation/results_summary.md](explanation/results_summary.md) | Evidence-oriented output summary |
 | [explanation/limitations.md](explanation/limitations.md) | Statistical and operational limitations |
+
+## Theory
+
+Use these pages when you need method-level rationale behind the AMI-first fingerprint and its planned deterministic extensions.
+
+| Document | Why |
+| --- | --- |
+| [theory/spectral_forecastability.md](theory/spectral_forecastability.md) | Phase 0 stub for spectral concentration and periodicity semantics in the extended fingerprint |
+| [theory/ordinal_complexity.md](theory/ordinal_complexity.md) | Phase 0 stub for ordinal-pattern entropy and redundancy semantics |
+| [theory/classical_structure.md](theory/classical_structure.md) | Phase 0 stub for cheap trend, seasonality, and autocorrelation summaries |
+| [theory/memory_structure.md](theory/memory_structure.md) | Phase 0 stub for DFA/Hurst-style persistence summaries |
 
 ## References
 

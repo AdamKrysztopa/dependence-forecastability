@@ -6,7 +6,8 @@
 **Target release:** `0.4.2`  
 **Current released version:** `0.4.1`  
 **Branch:** `feat/v0_4_2_forecastability_structure_expansion`  
-**Status:** Draft — ready for implementation  
+**Status:** Active release plan — Phase 0 implemented; later phases remain planned  
+**Progress:** FSE-F00 and the Phase 0 scaffolding milestone are complete; Phases 1-6 remain open  
 **Last reviewed:** 2026-05-04
 
 > [!IMPORTANT]
@@ -128,7 +129,7 @@ The release therefore extends the fingerprint around **structure source detectio
 
 | ID | Feature | Phase | Priority | Status |
 | --- | --- | --- | --- | --- |
-| FSE-F00 | Typed result models (`SpectralForecastabilityResult`, `OrdinalComplexityResult`, `ClassicalStructureResult`, `MemoryStructureResult`, `ExtendedForecastabilityFingerprint`, `ForecastabilityProfile`, `ExtendedForecastabilityAnalysisResult`) | 0 | P0 | Not started |
+| FSE-F00 | Typed result models (`SpectralForecastabilityResult`, `OrdinalComplexityResult`, `ClassicalStructureResult`, `MemoryStructureResult`, `ExtendedForecastabilityFingerprint`, `ExtendedForecastabilityProfile`, `ExtendedForecastabilityAnalysisResult`) | 0 | P0 | Complete |
 | FSE-F01 | Spectral forecastability service (F01) | 1 | P0 | Not started |
 | FSE-F02 | Ordinal complexity service (F02) | 1 | P0 | Not started |
 | FSE-F03 | Classical structure service (F03) | 1 | P0 | Not started |
@@ -217,13 +218,13 @@ The release therefore extends the fingerprint around **structure source detectio
 
 ### 1.bis.2 Core algorithm
 
-For each enabled diagnostic, the use case runs the corresponding service on the input series and packages the result into `ExtendedForecastabilityFingerprint`. The router then maps the fingerprint to a `ForecastabilityProfile` via deterministic, documented heuristics:
+For each enabled diagnostic, the use case runs the corresponding service on the input series and packages the result into `ExtendedForecastabilityFingerprint`. The router then maps the fingerprint to an `ExtendedForecastabilityProfile`, which additively extends the existing `ForecastabilityProfile` contract rather than replacing it, via deterministic, documented heuristics:
 
 1. Validate inputs (`max_lag`, `period`, ordinal `m, τ`, memory scale bounds).
 2. Run AMI information geometry (existing) when enabled.
 3. Run spectral, ordinal, classical, memory services in any order; each is independent and side-effect-free.
 4. Compose results into `ExtendedForecastabilityFingerprint`.
-5. Apply routing rules (F06) to derive `ForecastabilityProfile.predictability_sources`, `recommended_model_families`, `avoid_model_families`, and `explanation`.
+5. Apply routing rules (F06) to derive `ExtendedForecastabilityProfile.predictability_sources`, `recommended_model_families`, `avoid_model_families`, and `explanation`.
 6. Return `ExtendedForecastabilityAnalysisResult`.
 
 ### 1.bis.3 Mathematical invariants
@@ -714,12 +715,14 @@ class ExtendedForecastabilityFingerprint(BaseModel):
 
 ---
 
-### 6.6 ForecastabilityProfile
+### 6.6 ExtendedForecastabilityProfile
+
+This contract additively extends the existing `ForecastabilityProfile` surface. The inherited AMI-profile fields remain part of the public contract; the new extended-routing fields layer on top without replacing the legacy profile.
 
 ```python
-class ForecastabilityProfile(BaseModel):
+class ExtendedForecastabilityProfile(ForecastabilityProfile):
     signal_strength: Literal["low", "medium", "high", "unclear"]
-    predictability_sources: set[
+    predictability_sources: tuple[
         Literal[
             "lag_dependence",
             "seasonality",
@@ -727,7 +730,8 @@ class ForecastabilityProfile(BaseModel):
             "spectral_concentration",
             "ordinal_redundancy",
             "long_memory",
-        ]
+        ],
+        ...,
     ]
     noise_risk: Literal["low", "medium", "high", "unclear"]
     recommended_model_families: list[str]
@@ -746,7 +750,7 @@ class ExtendedForecastabilityAnalysisResult(BaseModel):
     max_lag: int
     period: int | None
     fingerprint: ExtendedForecastabilityFingerprint
-    profile: ForecastabilityProfile
+    profile: ExtendedForecastabilityProfile
     routing_metadata: dict[str, Any]
 ```
 
@@ -844,12 +848,17 @@ This overview maps the FSE feature inventory to the template's phased-delivery m
 
 ### Phase 0 — Domain contracts
 
-**Scope.** Land the seven typed result models (FSE-F00) and their re-exports.
+**Scope.** Land the seven typed result models (FSE-F00) and their re-exports, with `ExtendedForecastabilityProfile` layered additively on top of the existing `ForecastabilityProfile` contract.
+
+**Status.** Complete for the implemented Phase 0 scaffold.
+
+**Implementation note.** The scaffold service tests are executable `NotImplementedError` guards rather than skipped placeholders, so unimplemented Phase 1 services fail explicitly while the Phase 0 contract remains testable.
 
 **Acceptance criteria:**
 
 - All result models exist as frozen Pydantic models with closed `Literal` label fields.
-- `from forecastability import ExtendedForecastabilityAnalysisResult` and `ExtendedForecastabilityFingerprint` resolve from both the facade and the `forecastability.triage` namespace.
+- `ExtendedForecastabilityProfile` additively extends the existing `ForecastabilityProfile` contract; the legacy profile remains supported and is not replaced.
+- `from forecastability import ExtendedForecastabilityAnalysisResult`, `ExtendedForecastabilityFingerprint`, and `ExtendedForecastabilityProfile` resolve from both the facade and the `forecastability.triage` namespace.
 - The docs-contract `--imports` check passes.
 - No framework runtime import is introduced anywhere under `src/`.
 
@@ -1192,7 +1201,7 @@ The router is deterministic and heuristic. It does not learn from data and does 
 
 ### Implementation tasks
 
-- [ ] Add `ForecastabilityProfile`.
+- [ ] Wire deterministic routing that returns `ExtendedForecastabilityProfile` on top of the existing `ForecastabilityProfile` contract.
 - [ ] Add deterministic routing rules.
 - [ ] Add explanation strings for every fired rule.
 - [ ] Add avoid-list for low-value model families where applicable.
@@ -1528,10 +1537,12 @@ Reason:
 
 ### Phase 0 — Scaffolding
 
-- [ ] Add models.
-- [ ] Add empty service modules.
-- [ ] Add test files with skipped placeholders or failing acceptance-first tests.
-- [ ] Add docs stubs.
+**Status.** Complete for the scaffold milestone.
+
+- [x] Add models.
+- [x] Add empty service modules.
+- [x] Add test files with executable `NotImplementedError` guards instead of skipped placeholders.
+- [x] Add docs stubs.
 
 ### Phase 1 — Spectral engine
 
@@ -1726,6 +1737,6 @@ search begins.
 1. Should `run_triage(..., include_extended_fingerprint=True)` ever flip its default to `True` in a future release, or stay opt-in indefinitely to protect downstream serialized outputs? Decision needed before Phase 2.
 2. What is the correct fallback for `period` in `run_extended_forecastability_analysis` when the user does not supply one — always `None` (no seasonality computed) or run a cheap spectral peak-pick to suggest a candidate period without committing to it? Decision needed before Phase 1 (Classical block).
 3. What memory-scale defaults are safe across short and long industrial series? The current plan defers to F04 service defaults; we need empirical evidence from the F11 synthetic panel before locking the values.
-4. Where should the `ForecastabilityProfile.recommended_model_families` vocabulary live — as a closed `Literal`, an open `str` list with documented canonical values, or a separate registry? Decision affects router stability across releases.
+4. Where should the `ExtendedForecastabilityProfile.recommended_model_families` vocabulary live — as a closed `Literal`, an open `str` list with documented canonical values, or a separate registry? Decision affects router stability across releases.
 5. Should the showcase script produce a deterministic regression fixture (under `docs/fixtures/extended_fingerprint/`) or only human-readable artifacts? Decision affects what counts as a "silent output flip" in section 1's Reviewer acceptance block, item 3.
 

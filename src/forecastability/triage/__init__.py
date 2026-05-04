@@ -30,6 +30,15 @@ from forecastability.triage.events import (
     TriageStageCompleted,
     TriageStageStarted,
 )
+from forecastability.triage.extended_forecastability import (
+    ClassicalStructureResult,
+    ExtendedForecastabilityAnalysisResult,
+    ExtendedForecastabilityFingerprint,
+    ExtendedForecastabilityProfile,
+    MemoryStructureResult,
+    OrdinalComplexityResult,
+    SpectralForecastabilityResult,
+)
 from forecastability.triage.forecastability_profile import ForecastabilityProfile
 from forecastability.triage.lyapunov import LargestLyapunovExponentResult
 from forecastability.triage.models import (
@@ -115,10 +124,17 @@ __all__ = [
     "LagRecommendation",
     "CovariateRecommendation",
     "FamilyRecommendation",
+    "ClassicalStructureResult",
+    "ExtendedForecastabilityAnalysisResult",
+    "ExtendedForecastabilityFingerprint",
+    "ExtendedForecastabilityProfile",
     "ForecastabilityProfile",
     "ComplexityBandResult",
     "LargestLyapunovExponentResult",
+    "MemoryStructureResult",
+    "OrdinalComplexityResult",
     "PredictiveInfoLearningCurve",
+    "SpectralForecastabilityResult",
     "SpectralPredictabilityResult",
     "TheoreticalLimitDiagnostics",
     "assess_readiness",
