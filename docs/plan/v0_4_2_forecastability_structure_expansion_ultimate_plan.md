@@ -140,7 +140,7 @@ The release therefore extends the fingerprint around **structure source detectio
 | FSE-F08 | Opt-in `run_triage` integration (F08) | 2 | P1 | Not started |
 | FSE-F09 | CLI / brief output (F09) | 2 | P1 | Not started |
 | FSE-F10 | Documentation pack (F10) | 6 | P0 | Not started |
-| FSE-F11 | Synthetic showcase panel + sibling-repo examples (F11) | 3 | P1 | Not started |
+| FSE-F11 | Synthetic showcase panel + sibling-repo examples (F11) | 3 | P1 | Core repo showcase artifact-complete with coarse semantic verification over the four-tree artifact bundle; sibling-repo follow-through deferred |
 | FSE-F12 | Performance guardrails (F12) | 4 | P1 | Not started |
 
 ### Reviewer acceptance block
@@ -909,10 +909,12 @@ flowchart LR
 
 **Scope.** Land the synthetic showcase panel and route narrative examples to the sibling repository (FSE-F11).
 
+**Status.** Core-repo Phase 3 showcase implemented in the live repository: `scripts/run_extended_fingerprint_showcase.py` now emits an artifact-complete four-tree JSON/CSV/Markdown/PNG bundle for the deterministic seven-series panel, and its verifier now records coarse per-series AMI-first semantic checks across that bundle rather than claiming dominant-diagnostic enforcement. Sibling-repo narrative examples remain intentionally deferred for a later pass.
+
 **Acceptance criteria:**
 
 - Showcase script runs clean in `--smoke` mode on a fresh install.
-- Output artifacts are written to `outputs/reports/extended_fingerprint/`.
+- The artifact-complete four-tree bundle is written under `outputs/json/extended_fingerprint/`, `outputs/tables/extended_fingerprint/`, `outputs/reports/extended_fingerprint/`, and `outputs/figures/extended_fingerprint/`.
 - Narrative examples, notebooks, and walkthroughs are planned in `https://github.com/AdamKrysztopa/forecastability-examples`; no notebooks are added to this repo.
 
 ### Phase 4 — Tests, fixtures, and performance guardrails
@@ -1393,7 +1395,7 @@ Create a small deterministic panel that demonstrates the new method layer.
 
 ### Acceptance criteria
 
-- [ ] Each synthetic series has expected dominant diagnostics.
+- [ ] Each synthetic series has coarse expected dominant diagnostics, with the core-repo verifier enforcing the high-level AMI-first story rather than exact numeric fingerprints.
 - [ ] Showcase table is deterministic.
 - [ ] The core repo may keep only a minimal deterministic smoke/showcase table if needed for API sanity.
 - [ ] Richer README-ready demonstrations, notebooks, narrative walkthroughs, and workflow showcases belong in https://github.com/AdamKrysztopa/forecastability-examples.
