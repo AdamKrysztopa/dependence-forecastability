@@ -6,8 +6,8 @@
 **Target release:** `0.4.2`  
 **Current released version:** `0.4.1`  
 **Branch:** `feat/v0_4_2_forecastability_structure_expansion`  
-**Status:** Active release plan — broad Phases 0-1 are implemented; later phases remain planned  
-**Progress:** FSE-F00..F05 and the Phase 1 build-logic milestone are complete; FSE-F06..F12 remain planned, including the public router/use-case layer  
+**Status:** Active release plan — broad Phases 0-2 are implemented; later phases remain planned  
+**Progress:** FSE-F00..F09 are complete; FSE-F11 has the core showcase and sibling authoring in place with one final sibling rerun pending after output-path hardening; FSE-F10 and FSE-F12 remain planned  
 **Last reviewed:** 2026-05-04
 
 > [!IMPORTANT]
@@ -135,12 +135,12 @@ The release therefore extends the fingerprint around **structure source detectio
 | FSE-F03 | Classical structure service (F03) | 1 | P0 | Complete |
 | FSE-F04 | DFA / Hurst memory service (F04) | 1 | P1 | Complete |
 | FSE-F05 | Extended fingerprint composition service (F05) | 1 | P0 | Complete |
-| FSE-F06 | Forecastability profile router (F06) | 2 | P0 | Not started |
-| FSE-F07 | `run_extended_forecastability_analysis` use case (F07) | 2 | P0 | Not started |
-| FSE-F08 | Opt-in `run_triage` integration (F08) | 2 | P1 | Not started |
-| FSE-F09 | CLI / brief output (F09) | 2 | P1 | Not started |
+| FSE-F06 | Forecastability profile router (F06) | 2 | P0 | Complete |
+| FSE-F07 | `run_extended_forecastability_analysis` use case (F07) | 2 | P0 | Complete |
+| FSE-F08 | Opt-in `run_triage` integration (F08) | 2 | P1 | Complete |
+| FSE-F09 | CLI / brief output (F09) | 2 | P1 | Complete |
 | FSE-F10 | Documentation pack (F10) | 6 | P0 | Not started |
-****| FSE-F11 | Synthetic showcase panel + sibling-repo examples (F11) | 3 | P1 | Core repo showcase artifact-complete with coarse semantic verification over the four-tree artifact bundle; sibling notebooks were authored and manually exercised, and one final sibling rerun is pending after output-path hardening |
+| FSE-F11 | Synthetic showcase panel + sibling-repo examples (F11) | 3 | P1 | Core repo showcase artifact-complete with coarse semantic verification over the four-tree artifact bundle; sibling notebooks were authored and manually exercised, and one final sibling rerun is pending after output-path hardening |
 | FSE-F12 | Performance guardrails (F12) | 4 | P1 | Not started |
 
 ### Reviewer acceptance block
@@ -1209,11 +1209,11 @@ The router is deterministic and heuristic. It does not learn from data and does 
 
 ### Implementation tasks
 
-- [ ] Wire deterministic routing that returns `ExtendedForecastabilityProfile` on top of the existing `ForecastabilityProfile` contract.
-- [ ] Add deterministic routing rules.
-- [ ] Add explanation strings for every fired rule.
-- [ ] Add avoid-list for low-value model families where applicable.
-- [ ] Keep routing conservative.
+- [x] Wire deterministic routing that returns `ExtendedForecastabilityProfile` on top of the existing `ForecastabilityProfile` contract.
+- [x] Add deterministic routing rules.
+- [x] Add explanation strings for every fired rule.
+- [x] Add avoid-list for low-value model families where applicable.
+- [x] Keep routing conservative.
 
 ### Suggested routing rules
 
@@ -1229,12 +1229,12 @@ The router is deterministic and heuristic. It does not learn from data and does 
 
 ### Acceptance criteria
 
-- [ ] Sine wave routes to spectral/seasonal candidates.
-- [ ] AR(1) routes to lag/autoregressive candidates.
-- [ ] trend signal routes to trend/differencing candidates.
-- [ ] white noise routes to simple/naive and warns against expensive search.
-- [ ] mixed signal produces multiple predictability sources.
-- [ ] Explanation strings are deterministic and user-readable.
+- [x] Sine wave routes to spectral/seasonal candidates.
+- [x] AR(1) routes to lag/autoregressive candidates.
+- [x] trend signal routes to trend/differencing candidates.
+- [x] white noise routes to simple/naive and warns against expensive search.
+- [x] mixed signal produces multiple predictability sources.
+- [x] Explanation strings are deterministic and user-readable.
 
 ---
 
@@ -1246,20 +1246,20 @@ Provide one stable public entrypoint that developers and coding agents can call.
 
 ### Implementation tasks
 
-- [ ] Add use-case function.
-- [ ] Add docstring with Google style.
-- [ ] Add typed inputs/outputs.
-- [ ] Validate `period`, `max_lag`, ordinal parameters, and memory scales.
-- [ ] Return `ExtendedForecastabilityAnalysisResult`.
-- [ ] Ensure function does not run heavy surrogate significance by default.
+- [x] Add use-case function.
+- [x] Add docstring with Google style.
+- [x] Add typed inputs/outputs.
+- [x] Validate `period`, `max_lag`, ordinal parameters, and memory scales.
+- [x] Return `ExtendedForecastabilityAnalysisResult`.
+- [x] Ensure function does not run heavy surrogate significance by default.
 
 ### Acceptance criteria
 
-- [ ] Works on NumPy arrays, pandas Series, and list-like input if current conventions support them.
-- [ ] Does not mutate input.
-- [ ] Produces JSON-serializable output.
-- [ ] Runs quickly on small/medium series.
-- [ ] Does not import optional heavy dependencies at top level.
+- [x] Works on NumPy arrays, pandas Series, and list-like input if current conventions support them.
+- [x] Does not mutate input.
+- [x] Produces JSON-serializable output.
+- [x] Runs quickly on small/medium series.
+- [x] Does not import optional heavy dependencies at top level.
 
 ---
 
@@ -1271,10 +1271,10 @@ Allow existing users to opt into the extended fingerprint without breaking the c
 
 ### Implementation tasks
 
-- [ ] Add an opt-in parameter only.
-- [ ] Preserve current default behavior.
-- [ ] Attach extended fingerprint under a clearly named result field.
-- [ ] Add migration note.
+- [x] Add an opt-in parameter only.
+- [x] Preserve current default behavior.
+- [x] Attach extended fingerprint under a clearly named result field.
+- [x] Add migration note.
 
 ### Preferred API
 
@@ -1288,9 +1288,9 @@ run_triage(
 
 ### Acceptance criteria
 
-- [ ] Current tests pass without output drift.
-- [ ] Existing serialized outputs are unchanged unless opt-in is enabled.
-- [ ] Extended output includes all enabled diagnostics.
+- [x] Current tests pass without output drift.
+- [x] Existing serialized outputs are unchanged unless opt-in is enabled.
+- [x] Extended output includes all enabled diagnostics.
 
 ---
 
@@ -1302,10 +1302,10 @@ Make the method expansion visible and easy to show off.
 
 ### Implementation tasks
 
-- [ ] Add CLI command or subcommand.
-- [ ] Add JSON output.
-- [ ] Add Markdown brief output.
-- [ ] Add one human-readable “executive brief” formatter.
+- [x] Add CLI command or subcommand.
+- [x] Add JSON output.
+- [x] Add Markdown brief output.
+- [x] Add one human-readable “executive brief” formatter.
 
 ### Example brief
 
@@ -1328,9 +1328,9 @@ Avoid:
 
 ### Acceptance criteria
 
-- [ ] CLI returns non-zero exit for invalid input.
-- [ ] CLI output is deterministic.
-- [ ] Markdown brief is suitable for README snippet.
+- [x] CLI returns non-zero exit for invalid input.
+- [x] CLI output is deterministic.
+- [x] Markdown brief is suitable for README snippet.
 
 ---
 
@@ -1580,21 +1580,21 @@ Reason:
 
 ### Phase 5 — Extended fingerprint and router
 
-- [ ] Implement F05.
-- [ ] Implement F06.
-- [ ] Add integration tests.
+- [x] Implement F05.
+- [x] Implement F06.
+- [x] Add integration tests.
 - [ ] Add synthetic validation table.
 
 ### Phase 6 — Public use case and CLI
 
-- [ ] Implement F07.
-- [ ] Implement F09.
-- [ ] Add README-ready examples.
+- [x] Implement F07.
+- [x] Implement F09.
+- [x] Add README-ready examples.
 
 ### Phase 7 — `run_triage` opt-in
 
-- [ ] Implement F08 only after standalone use case is stable.
-- [ ] Add backward-compatibility tests.
+- [x] Implement F08 only after standalone use case is stable.
+- [x] Add backward-compatibility tests.
 
 ### Phase 8 — Release hardening
 
