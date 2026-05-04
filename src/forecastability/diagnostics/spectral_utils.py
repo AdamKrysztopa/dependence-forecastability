@@ -10,7 +10,7 @@ def compute_normalised_psd(
     series: np.ndarray,
     *,
     nperseg: int | None = None,
-    detrend: str = "constant",
+    detrend: str | bool = "constant",
 ) -> tuple[np.ndarray, np.ndarray]:
     """Compute Welch PSD and return normalised frequency weights.
 
@@ -23,7 +23,7 @@ def compute_normalised_psd(
         nperseg: Segment length passed to ``scipy.signal.welch``.  Defaults to
             ``min(len(series), 256)``.
         detrend: Detrending applied by welch (``"constant"`` mean-centres,
-            ``"linear"`` removes linear trend, ``"none"`` skips).
+            ``"linear"`` removes linear trend, ``False`` skips detrending).
 
     Returns:
         Tuple ``(freqs, p)`` where ``freqs`` is the frequency array and ``p``

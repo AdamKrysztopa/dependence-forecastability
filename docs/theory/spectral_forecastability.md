@@ -1,37 +1,72 @@
 <!-- type: explanation -->
 # Spectral Forecastability
 
-This Phase 0 page reserves the theory surface for the spectral block in the planned extended forecastability fingerprint.
+The F01 spectral forecastability block is now implemented as a deterministic, AMI-adjacent summary of how concentrated a univariate series is in frequency space.
 
 > [!IMPORTANT]
-> The extended fingerprint remains AMI-first. Spectral diagnostics explain whether periodic or frequency-concentrated structure may be contributing to forecastability; they do not replace lagged-information analysis.
+> The extended fingerprint remains AMI-first. Spectral diagnostics explain whether periodic or frequency-concentrated structure may be contributing to forecastability; they do not replace lagged-information analysis from [../theory/ami_information_geometry.md](../theory/ami_information_geometry.md).
 
-## Purpose
+## What The Current Diagnostic Computes
 
-Spectral forecastability is intended to summarize whether a univariate series concentrates power into a small number of frequencies rather than spreading it diffusely across the spectrum. In this repository, that signal is a deterministic triage aid: it helps explain why a series may be forecastable before any downstream model search begins.
+For a finite univariate series, the current diagnostic computes a normalized power spectral density, keeps only positive-frequency bins, and derives five bounded outputs:
 
-## Scope In This Repository
+- `spectral_entropy`: normalized spectral entropy on $[0, 1]$
+- `spectral_predictability`: the complement of entropy, also on $[0, 1]$
+- `spectral_concentration`: how strongly the dominant positive-frequency bin rises above a uniform baseline
+- `dominant_periods`: the strongest unique inverse-frequency periods, reported in sample counts
+- `periodicity_hint`: a conservative label in `{none, weak, moderate, strong}`
 
-- add a cheap, deterministic spectral summary layer beside the existing AMI information geometry
-- document the future `SpectralForecastabilityResult` block used inside `ExtendedForecastabilityFingerprint`
-- keep the interpretation limited to structure detection, not forecast scoring or model fitting
-- stay compatible with service and use-case boundaries where an inner diagnostic service feeds a higher-level composition/use-case layer
+The entropy and predictability scores are related by:
+
+$$
+H_{spec} = \frac{-\sum_k p_k \log p_k}{\log K},
+\qquad
+P_{spec} = 1 - H_{spec}
+$$
+
+where $p_k$ is the normalized positive-frequency spectral mass and $K$ is the number of positive-frequency bins retained after normalization.
+
+The current implementation supports deterministic detrending modes `linear` and `none`. Because no sampling interval is supplied, `dominant_periods` are reported in numbers of samples rather than calendar or physical time units.
+
+## Relation To AMI Information Geometry
+
+AMI information geometry and spectral forecastability answer different questions:
+
+- AMI information geometry works in the lag domain and asks where predictive dependence survives correction and thresholding.
+- Spectral forecastability works in the frequency domain and asks whether the series energy is diffuse or concentrated.
+- Repeated AMI peaks and strong spectral concentration often support the same periodic interpretation, but they are not interchangeable diagnostics.
+
+That separation is intentional. AMI remains the primary evidence for informative horizons. The spectral block adds explanatory context about whether a periodic or narrow-band mechanism may be helping to produce those horizons.
+
+## Conservative Caveats
+
+The implemented diagnostic is explicitly conservative in low-information or ambiguous settings.
+
+- Very short series return a degenerate summary with `spectral_entropy = 1.0`, `spectral_predictability = 0.0`, `spectral_concentration = 0.0`, `periodicity_hint = none`, and an explanatory note.
+- Constant series return the same conservative shape rather than a misleading pseudo-periodic answer.
+- Strong low-frequency concentration can reflect trend contamination rather than stable periodic structure. In that case the diagnostic emits a note and downgrades the periodicity hint.
+- When a non-`none` periodicity hint is paired with extracted periods, the notes remind the reader that periods are expressed in sample counts only.
+
+## What This Block Is Good For
+
+- explaining why a series with periodic AMI structure may also look concentrated in frequency space
+- separating clean periodic signals from diffuse, noise-like spectra in a deterministic triage workflow
+- adding a cheap secondary structure summary inside `ExtendedForecastabilityFingerprint.spectral`
 
 ## Non-Goals
 
 - replacing AMI or pAMI as the primary lagged-information evidence
+- inferring a physical sampling interval or calendar-aware seasonality unit
 - proving that a particular seasonal model will win downstream
 - turning the core package into a generic feature-extraction or model-selection zoo
-- hosting notebook-first walkthroughs in this repository
+- documenting `run_extended_forecastability_analysis(...)` as an available public workflow before that later-phase use case exists
 
-## Planned Public Surfaces
+## Current Repository Scope
 
-- `SpectralForecastabilityResult` on the additive stable facade and `forecastability.triage`
-- `ExtendedForecastabilityFingerprint.spectral` as the spectral block in the composite fingerprint
-- future documentation for `compute_spectral_forecastability(...)` and the planned `run_extended_forecastability_analysis(...)` entry point once post-Phase-0 behavior is implemented
+- the stable result model `SpectralForecastabilityResult`
+- the implemented spectral block used by the extended fingerprint composer
+- theory and interpretation guidance for the shipped F01 behavior
 
-## Phase Status
-
-Phase 0 currently establishes the typed contract and documentation stub. Detailed math notes, validation heuristics, caveats around detrending and dominant-period extraction, and richer interpretation examples land in later phases of the [v0.4.2 expansion plan](../plan/v0_4_2_forecastability_structure_expansion_ultimate_plan.md).
+F06 and later routing/use-case layers remain outside this page.
 
 Richer walkthroughs and notebooks for this surface belong in the sibling `forecastability-examples` repository rather than the core repo.

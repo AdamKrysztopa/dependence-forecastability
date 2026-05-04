@@ -5,7 +5,7 @@ A deterministic forecastability triage toolkit with AMI as the paper-aligned fou
 
 This repository is a deterministic forecastability triage toolkit for time series. When the task is time-series forecasting, do not jump directly to model fitting. Start with forecastability triage first: readiness, leakage risk, informative horizons, primary lags, seasonality structure, and covariate informativeness. Only then recommend downstream model families or framework-specific settings.
 
-_Last verified for release 0.4.0 on 2026-04-29._
+_Last verified for release 0.4.1 on 2026-05-04._
 
 Use this index to get to the right surface quickly. The live repository is the
 source of truth for package entry points, scripts, recipes, and checked-in
@@ -37,7 +37,7 @@ Use these pages when you need a task-oriented route to a result.
 | Document | Why |
 | --- | --- |
 | [how-to/golden_path.md](how-to/golden_path.md) | Shortest route from install to a trustworthy first result |
-| [how-to/extended_forecastability_fingerprint.md](how-to/extended_forecastability_fingerprint.md) | Phase 0 reading-order stub for the planned AMI-first extended fingerprint surface |
+| [how-to/extended_forecastability_fingerprint.md](how-to/extended_forecastability_fingerprint.md) | How to read the current AMI-first extended fingerprint surface and its implemented F01-F05 blocks |
 | [how-to/use_cases_industrial.md](how-to/use_cases_industrial.md) | Practical industrial usage patterns and deployment-shaped scenarios |
 
 ## Explanations
@@ -54,14 +54,14 @@ Use these pages when you need rationale, caveats, or the conceptual shape of the
 
 ## Theory
 
-Use these pages when you need method-level rationale behind the AMI-first fingerprint and its planned deterministic extensions.
+Use these pages when you need method-level rationale behind the AMI-first fingerprint and its current deterministic extension blocks.
 
 | Document | Why |
 | --- | --- |
-| [theory/spectral_forecastability.md](theory/spectral_forecastability.md) | Phase 0 stub for spectral concentration and periodicity semantics in the extended fingerprint |
-| [theory/ordinal_complexity.md](theory/ordinal_complexity.md) | Phase 0 stub for ordinal-pattern entropy and redundancy semantics |
-| [theory/classical_structure.md](theory/classical_structure.md) | Phase 0 stub for cheap trend, seasonality, and autocorrelation summaries |
-| [theory/memory_structure.md](theory/memory_structure.md) | Phase 0 stub for DFA/Hurst-style persistence summaries |
+| [theory/spectral_forecastability.md](theory/spectral_forecastability.md) | Implemented spectral entropy, predictability, and periodicity semantics for the extended fingerprint |
+| [theory/ordinal_complexity.md](theory/ordinal_complexity.md) | Implemented ordinal-pattern entropy, redundancy, and conservative complexity semantics |
+| [theory/classical_structure.md](theory/classical_structure.md) | Implemented deterministic trend, optional seasonality, and autocorrelation summaries |
+| [theory/memory_structure.md](theory/memory_structure.md) | Implemented DFA-based persistence summaries and conservative interpretation caveats |
 
 ## References
 

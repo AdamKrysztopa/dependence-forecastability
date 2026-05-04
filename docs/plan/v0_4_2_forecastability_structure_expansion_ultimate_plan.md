@@ -6,8 +6,8 @@
 **Target release:** `0.4.2`  
 **Current released version:** `0.4.1`  
 **Branch:** `feat/v0_4_2_forecastability_structure_expansion`  
-**Status:** Active release plan — Phase 0 implemented; later phases remain planned  
-**Progress:** FSE-F00 and the Phase 0 scaffolding milestone are complete; Phases 1-6 remain open  
+**Status:** Active release plan — broad Phases 0-1 are implemented; later phases remain planned  
+**Progress:** FSE-F00..F05 and the Phase 1 build-logic milestone are complete; FSE-F06..F12 remain planned, including the public router/use-case layer  
 **Last reviewed:** 2026-05-04
 
 > [!IMPORTANT]
@@ -130,11 +130,11 @@ The release therefore extends the fingerprint around **structure source detectio
 | ID | Feature | Phase | Priority | Status |
 | --- | --- | --- | --- | --- |
 | FSE-F00 | Typed result models (`SpectralForecastabilityResult`, `OrdinalComplexityResult`, `ClassicalStructureResult`, `MemoryStructureResult`, `ExtendedForecastabilityFingerprint`, `ExtendedForecastabilityProfile`, `ExtendedForecastabilityAnalysisResult`) | 0 | P0 | Complete |
-| FSE-F01 | Spectral forecastability service (F01) | 1 | P0 | Not started |
-| FSE-F02 | Ordinal complexity service (F02) | 1 | P0 | Not started |
-| FSE-F03 | Classical structure service (F03) | 1 | P0 | Not started |
-| FSE-F04 | DFA / Hurst memory service (F04) | 1 | P1 | Not started |
-| FSE-F05 | Extended fingerprint composition service (F05) | 1 | P0 | Not started |
+| FSE-F01 | Spectral forecastability service (F01) | 1 | P0 | Complete |
+| FSE-F02 | Ordinal complexity service (F02) | 1 | P0 | Complete |
+| FSE-F03 | Classical structure service (F03) | 1 | P0 | Complete |
+| FSE-F04 | DFA / Hurst memory service (F04) | 1 | P1 | Complete |
+| FSE-F05 | Extended fingerprint composition service (F05) | 1 | P0 | Complete |
 | FSE-F06 | Forecastability profile router (F06) | 2 | P0 | Not started |
 | FSE-F07 | `run_extended_forecastability_analysis` use case (F07) | 2 | P0 | Not started |
 | FSE-F08 | Opt-in `run_triage` integration (F08) | 2 | P1 | Not started |
@@ -852,7 +852,7 @@ This overview maps the FSE feature inventory to the template's phased-delivery m
 
 **Status.** Complete for the implemented Phase 0 scaffold.
 
-**Implementation note.** The scaffold service tests are executable `NotImplementedError` guards rather than skipped placeholders, so unimplemented Phase 1 services fail explicitly while the Phase 0 contract remains testable.
+**Implementation note.** The Phase 0 typed-model scaffold is now the contract layer that the implemented Phase 1 services and composition builder target.
 
 **Acceptance criteria:**
 
@@ -865,6 +865,10 @@ This overview maps the FSE feature inventory to the template's phased-delivery m
 ### Phase 1 — Build logic
 
 **Scope.** Land the spectral, ordinal, classical, memory, and composition services (FSE-F01..F05).
+
+**Status.** Complete for the implemented broad Phase 1 service/composition layer.
+
+**Implementation note.** `src/forecastability/services/spectral_forecastability_service.py`, `ordinal_complexity_service.py`, `classical_structure_service.py`, `memory_structure_service.py`, and `extended_fingerprint_service.py` are implemented. This milestone stops at service/composition only: no public router or `run_extended_forecastability_analysis(...)` entrypoint is wired under `src/` yet. When `period` is omitted, it remains `None`; the current build logic does not infer a candidate period.
 
 ```mermaid
 flowchart LR
@@ -883,14 +887,16 @@ flowchart LR
 
 **Acceptance criteria:**
 
-- Each service exposes the documented signature and returns its frozen result model.
-- Constant, too-short, and degenerate inputs are handled with explicit notes.
-- No service imports any forecasting framework.
-- Unit tests cover the happy path and the degenerate path for each service.
+- [x] Each service exposes the documented signature and returns its frozen result model.
+- [x] Constant, too-short, and degenerate inputs are handled with explicit notes.
+- [x] No service imports any forecasting framework.
+- [x] Unit tests cover the happy path and the degenerate path for each service.
 
 ### Phase 2 — Exporters and adapters
 
 **Scope.** Land the forecastability profile router (FSE-F06), the `run_extended_forecastability_analysis` use case (FSE-F07), the opt-in `run_triage` integration (FSE-F08), and the CLI brief output (FSE-F09).
+
+**Status.** Planned. The router, public use-case, `run_triage` opt-in wiring, and CLI output remain unimplemented in `src/`.
 
 **Acceptance criteria:**
 
@@ -957,14 +963,14 @@ Spectral entropy treats the normalized spectral density as a probability distrib
 
 ### Implementation tasks
 
-- [ ] Add `SpectralForecastabilityResult`.
-- [ ] Add `compute_spectral_forecastability()`.
-- [ ] Estimate spectral power using a deterministic NumPy/SciPy path.
-- [ ] Normalize spectral density safely.
-- [ ] Compute normalized entropy in `[0, 1]`.
-- [ ] Compute `spectral_predictability = 1 - spectral_entropy`.
-- [ ] Extract top dominant periods.
-- [ ] Add notes for:
+- [x] Add `SpectralForecastabilityResult`.
+- [x] Add `compute_spectral_forecastability()`.
+- [x] Estimate spectral power using a deterministic NumPy/SciPy path.
+- [x] Normalize spectral density safely.
+- [x] Compute normalized entropy in `[0, 1]`.
+- [x] Compute `spectral_predictability = 1 - spectral_entropy`.
+- [x] Extract top dominant periods.
+- [x] Add notes for:
   - too-short series,
   - constant series,
   - trend-dominated low-frequency concentration,
@@ -985,12 +991,12 @@ def compute_spectral_forecastability(
 
 ### Acceptance criteria
 
-- [ ] White noise has high spectral entropy and low spectral predictability.
-- [ ] Clean sine wave has low spectral entropy and high spectral predictability.
-- [ ] Seasonal plus noise lands between sine and white noise.
-- [ ] Constant series returns a clear degenerate note.
-- [ ] Output is deterministic.
-- [ ] No dependency heavier than current numeric stack.
+- [x] White noise has high spectral entropy and low spectral predictability.
+- [x] Clean sine wave has low spectral entropy and high spectral predictability.
+- [x] Seasonal plus noise lands between sine and white noise.
+- [x] Constant series returns a clear degenerate note.
+- [x] Output is deterministic.
+- [x] No dependency heavier than current numeric stack.
 
 ### Documentation acceptance
 
@@ -1012,13 +1018,13 @@ Permutation entropy estimates complexity through ordinal patterns. It ignores ab
 
 ### Implementation tasks
 
-- [ ] Add `OrdinalComplexityResult`.
-- [ ] Implement ordinal pattern extraction.
-- [ ] Implement normalized permutation entropy.
-- [ ] Implement weighted permutation entropy.
-- [ ] Add degeneracy handling for constant and too-short series.
-- [ ] Add configurable `embedding_dimension` and `delay`.
-- [ ] Add interpretation classes.
+- [x] Add `OrdinalComplexityResult`.
+- [x] Implement ordinal pattern extraction.
+- [x] Implement normalized permutation entropy.
+- [x] Implement weighted permutation entropy.
+- [x] Add degeneracy handling for constant and too-short series.
+- [x] Add configurable `embedding_dimension` and `delay`.
+- [x] Add interpretation classes.
 
 ### Suggested function
 
@@ -1036,12 +1042,12 @@ def compute_ordinal_complexity(
 
 ### Acceptance criteria
 
-- [ ] Constant series is classified as `degenerate`.
-- [ ] White noise has high normalized permutation entropy.
-- [ ] Clean periodic series has lower permutation entropy than white noise.
-- [ ] Logistic-map synthetic signal lands in a plausible structured nonlinear region.
-- [ ] Invalid embedding dimension fails clearly.
-- [ ] Short series does not produce silent nonsense.
+- [x] Constant series is classified as `degenerate`.
+- [x] White noise has high normalized permutation entropy.
+- [x] Clean periodic series has lower permutation entropy than white noise.
+- [x] Logistic-map synthetic signal lands in a plausible structured nonlinear region.
+- [x] Invalid embedding dimension fails clearly.
+- [x] Short series does not produce silent nonsense.
 
 ### Documentation acceptance
 
@@ -1064,13 +1070,13 @@ Many time series are forecastable because of classical structures: trend, season
 
 ### Implementation tasks
 
-- [ ] Add `ClassicalStructureResult`.
-- [ ] Implement `acf1`.
-- [ ] Implement simple ACF decay summary.
-- [ ] Implement trend strength using deterministic decomposition/regression.
-- [ ] Implement seasonality strength when `period` is provided.
-- [ ] Implement residual variance ratio.
-- [ ] Add `stationarity_hint`.
+- [x] Add `ClassicalStructureResult`.
+- [x] Implement `acf1`.
+- [x] Implement simple ACF decay summary.
+- [x] Implement trend strength using deterministic decomposition/regression.
+- [x] Implement seasonality strength when `period` is provided.
+- [x] Implement residual variance ratio.
+- [x] Add `stationarity_hint`.
 
 ### Suggested function
 
@@ -1086,12 +1092,12 @@ def compute_classical_structure(
 
 ### Acceptance criteria
 
-- [ ] AR(1) synthetic signal has positive `acf1`.
-- [ ] White noise has low `acf1` and low trend/seasonality strength.
-- [ ] Linear trend synthetic signal has high trend strength.
-- [ ] Seasonal synthetic signal with known period has high seasonality strength.
-- [ ] No period returns `seasonality_strength=None`.
-- [ ] Constant series is handled safely.
+- [x] AR(1) synthetic signal has positive `acf1`.
+- [x] White noise has low `acf1` and low trend/seasonality strength.
+- [x] Linear trend synthetic signal has high trend strength.
+- [x] Seasonal synthetic signal with known period has high seasonality strength.
+- [x] No period returns `seasonality_strength=None`.
+- [x] Constant series is handled safely.
 
 ### Documentation acceptance
 
@@ -1113,12 +1119,12 @@ DFA estimates how fluctuations scale with window size after local detrending. It
 
 ### Implementation tasks
 
-- [ ] Add `MemoryStructureResult`.
-- [ ] Implement deterministic DFA with linear detrending.
-- [ ] Choose safe default scale range.
-- [ ] Compute slope of log fluctuation vs log scale.
-- [ ] Map slope to memory class.
-- [ ] Add notes for short series, unstable fit, and trend warnings.
+- [x] Add `MemoryStructureResult`.
+- [x] Implement deterministic DFA with linear detrending.
+- [x] Choose safe default scale range.
+- [x] Compute slope of log fluctuation vs log scale.
+- [x] Map slope to memory class.
+- [x] Add notes for short series, unstable fit, and trend warnings.
 
 ### Suggested function
 
@@ -1135,11 +1141,11 @@ def compute_memory_structure(
 
 ### Acceptance criteria
 
-- [ ] White noise returns `short_memory` or `unclear` near alpha ≈ 0.5.
-- [ ] Persistent synthetic signal returns `persistent`.
-- [ ] Anti-persistent synthetic signal returns `anti_persistent` if synthetic generator is available.
-- [ ] Too-short series returns `unclear` with notes.
-- [ ] Strong trend produces a warning note when alpha is suspiciously high.
+- [x] White noise returns `short_memory` or `unclear` near alpha ≈ 0.5.
+- [x] Persistent synthetic signal returns `persistent` or `long_memory_candidate`.
+- [x] Anti-persistent synthetic signal returns `anti_persistent` if synthetic generator is available.
+- [x] Too-short series returns `unclear` with notes.
+- [x] Strong trend or other nonstationary contamination produces a warning note when alpha is suspiciously high.
 
 ### Documentation acceptance
 
@@ -1157,11 +1163,11 @@ Compose AMI geometry, spectral, ordinal, classical, and memory diagnostics into 
 
 ### Implementation tasks
 
-- [ ] Add `ExtendedForecastabilityFingerprint`.
-- [ ] Add composition service.
-- [ ] Ensure each diagnostic can be disabled independently.
-- [ ] Preserve deterministic order in serialized output.
-- [ ] Add graceful partial result behavior if one optional diagnostic is disabled.
+- [x] Add `ExtendedForecastabilityFingerprint`.
+- [x] Add composition service.
+- [x] Ensure each diagnostic can be disabled independently.
+- [x] Preserve deterministic order in serialized output.
+- [x] Add graceful partial result behavior if one optional diagnostic is disabled.
 
 ### Suggested function
 
@@ -1182,10 +1188,10 @@ def build_extended_forecastability_fingerprint(
 
 ### Acceptance criteria
 
-- [ ] All enabled services are represented in output.
-- [ ] Disabled services are `None`, not missing.
-- [ ] Serialization is stable.
-- [ ] Result object is easy to convert to JSON.
+- [x] All enabled services are represented in output.
+- [x] Disabled services are `None`, not missing.
+- [x] Serialization is stable.
+- [x] Result object is easy to convert to JSON.
 
 ---
 
@@ -1735,7 +1741,7 @@ search begins.
 ## 17. Open questions
 
 1. Should `run_triage(..., include_extended_fingerprint=True)` ever flip its default to `True` in a future release, or stay opt-in indefinitely to protect downstream serialized outputs? Decision needed before Phase 2.
-2. What is the correct fallback for `period` in `run_extended_forecastability_analysis` when the user does not supply one — always `None` (no seasonality computed) or run a cheap spectral peak-pick to suggest a candidate period without committing to it? Decision needed before Phase 1 (Classical block).
+2. Should a later phase add an opt-in candidate-period suggestion when the user does not supply one? The current implemented Phase 1 behavior keeps `period=None` and does not infer a candidate period; any auto-suggestion would require a separate design decision.
 3. What memory-scale defaults are safe across short and long industrial series? The current plan defers to F04 service defaults; we need empirical evidence from the F11 synthetic panel before locking the values.
 4. Where should the `ExtendedForecastabilityProfile.recommended_model_families` vocabulary live — as a closed `Literal`, an open `str` list with documented canonical values, or a separate registry? Decision affects router stability across releases.
 5. Should the showcase script produce a deterministic regression fixture (under `docs/fixtures/extended_fingerprint/`) or only human-readable artifacts? Decision affects what counts as a "silent output flip" in section 1's Reviewer acceptance block, item 3.
