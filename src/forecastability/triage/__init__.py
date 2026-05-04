@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from importlib import import_module
+from typing import Any
+
 from forecastability.adapters.result_bundle_io import (
     load_result_bundle,
     save_result_bundle,
@@ -71,9 +74,6 @@ from forecastability.use_cases.run_batch_triage import (
     run_batch_triage,
     run_batch_triage_with_details,
 )
-from forecastability.use_cases.run_extended_forecastability_analysis import (
-    run_extended_forecastability_analysis,
-)
 from forecastability.use_cases.run_triage import run_triage
 from forecastability.utils.types import (
     CovariateRecommendation,
@@ -87,6 +87,26 @@ from forecastability.utils.types import (
     ForecastPrepLagRole,
     LagRecommendation,
 )
+
+_LAZY_EXPORT_MAP: dict[str, tuple[str, str | None]] = {
+    "run_extended_forecastability_analysis": (
+        "forecastability.use_cases",
+        "_run_extended_forecastability_analysis_public",
+    ),
+}
+
+
+def __getattr__(name: str) -> Any:
+    """Resolve heavier triage exports on first attribute access."""
+    target = _LAZY_EXPORT_MAP.get(name)
+    if target is None:
+        raise AttributeError(f"module 'forecastability.triage' has no attribute {name!r}")
+    module_name, attr_name = target
+    module = import_module(module_name)
+    value: Any = getattr(module, attr_name or name)
+    globals()[name] = value
+    return value
+
 
 __all__ = [
     "AnalysisGoal",

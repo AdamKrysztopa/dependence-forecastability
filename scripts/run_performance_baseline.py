@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import importlib.metadata
 import json
 import statistics
 import subprocess
@@ -21,9 +20,12 @@ try:
     from scripts.performance_common import (
         PerformanceBaselineConfig,
         PerformanceCaseConfig,
+        PublicWorkflowConfig,
         load_performance_config,
         make_synthetic_series,
+        make_synthetic_series_spec,
         measured_runtime,
+        resolve_forecastability_version,
         runtime_metadata,
         sha256_file,
         write_json,
@@ -32,9 +34,12 @@ except ModuleNotFoundError:
     from performance_common import (
         PerformanceBaselineConfig,
         PerformanceCaseConfig,
+        PublicWorkflowConfig,
         load_performance_config,
         make_synthetic_series,
+        make_synthetic_series_spec,
         measured_runtime,
+        resolve_forecastability_version,
         runtime_metadata,
         sha256_file,
         write_json,
@@ -139,8 +144,182 @@ def _run_baseline(
     return case_summaries, repeat_rows
 
 
+def _bench_import_workflow(case: PublicWorkflowConfig, *, version: str) -> dict[str, object]:
+    """Measure one subprocess-backed import statement."""
+    import_statement = case.import_statement or "import forecastability"
+    start = time.perf_counter()
+    subprocess.run(
+        [sys.executable, "-c", import_statement],
+        check=True,
+        capture_output=True,
+    )
+    return {
+        "name": case.name,
+        "method": case.method,
+        "description": case.description,
+        "import_statement": import_statement,
+        "elapsed_s": time.perf_counter() - start,
+        "version": version,
+    }
+
+
+def _build_public_workflow_series(case: PublicWorkflowConfig) -> np.ndarray:
+    """Build the deterministic univariate series used by extended diagnostics."""
+    if case.series_length is None:
+        raise ValueError("series_length is required for univariate public workflows")
+    return make_synthetic_series_spec(
+        n_obs=case.series_length,
+        signal=case.signal,
+        random_state=case.random_state,
+    )
+
+
+def _benchmark_multiseries_workflow(
+    case: PublicWorkflowConfig,
+    rng: np.random.Generator,
+    *,
+    version: str,
+) -> dict[str, object]:
+    """Benchmark existing covariate-aware public workflows."""
+    from forecastability.use_cases import (  # noqa: PLC0415
+        run_covariant_analysis,
+        run_lagged_exogenous_triage,
+    )
+
+    if case.series_length is None or case.max_lag is None:
+        raise ValueError("series_length and max_lag are required for multiseries workflows")
+    n_series = case.n_series or 2
+    significance_mode = case.significance_mode or "phase"
+    n_surrogates = case.n_surrogates or 99
+    target = rng.normal(size=case.series_length)
+    drivers = {f"driver_{i}": rng.normal(size=case.series_length) for i in range(n_series)}
+
+    start = time.perf_counter()
+    if case.method == "run_covariant_analysis":
+        run_covariant_analysis(
+            target,
+            drivers,
+            max_lag=case.max_lag,
+            methods=case.methods,
+            n_surrogates=n_surrogates,
+            random_state=42,
+            significance_mode=significance_mode,
+        )
+    else:
+        run_lagged_exogenous_triage(
+            target,
+            drivers,
+            target_name="bench_target",
+            max_lag=case.max_lag,
+            n_surrogates=n_surrogates,
+            random_state=42,
+            significance_mode=significance_mode,
+        )
+    return {
+        "name": case.name,
+        "method": case.method,
+        "description": case.description,
+        "elapsed_s": time.perf_counter() - start,
+        "version": version,
+        "series_length": case.series_length,
+        "n_series": n_series,
+        "max_lag": case.max_lag,
+        "signal": case.signal,
+        "significance_mode": significance_mode,
+        "n_surrogates": n_surrogates,
+    }
+
+
+def _benchmark_extended_univariate_workflow(
+    case: PublicWorkflowConfig,
+    *,
+    version: str,
+) -> dict[str, object]:
+    """Benchmark direct extended-diagnostic callables and the composite use case."""
+    from forecastability.services.classical_structure_service import (  # noqa: PLC0415
+        compute_classical_structure,
+    )
+    from forecastability.services.memory_structure_service import (  # noqa: PLC0415
+        compute_memory_structure,
+    )
+    from forecastability.services.ordinal_complexity_service import (  # noqa: PLC0415
+        compute_ordinal_complexity,
+    )
+    from forecastability.services.spectral_forecastability_service import (  # noqa: PLC0415
+        compute_spectral_forecastability,
+    )
+    from forecastability.use_cases import run_extended_forecastability_analysis  # noqa: PLC0415
+
+    series = _build_public_workflow_series(case)
+    start = time.perf_counter()
+    if case.method == "compute_spectral_forecastability":
+        compute_spectral_forecastability(series)
+    elif case.method == "compute_ordinal_complexity":
+        compute_ordinal_complexity(
+            series,
+            embedding_dimension=case.ordinal_embedding_dimension,
+            delay=case.ordinal_delay,
+        )
+    elif case.method == "compute_classical_structure":
+        compute_classical_structure(
+            series,
+            period=case.period,
+            max_lag=case.max_lag or 40,
+        )
+    elif case.method == "compute_memory_structure":
+        compute_memory_structure(
+            series,
+            min_scale=case.memory_min_scale,
+            max_scale=case.memory_max_scale,
+        )
+    else:
+        run_extended_forecastability_analysis(
+            series,
+            max_lag=case.max_lag or 40,
+            period=case.period,
+            include_ami_geometry=case.include_ami_geometry,
+            ordinal_embedding_dimension=case.ordinal_embedding_dimension,
+            ordinal_delay=case.ordinal_delay,
+            memory_min_scale=case.memory_min_scale,
+            memory_max_scale=case.memory_max_scale,
+            random_state=case.random_state,
+        )
+    return {
+        "name": case.name,
+        "method": case.method,
+        "description": case.description,
+        "elapsed_s": time.perf_counter() - start,
+        "version": version,
+        "series_length": case.series_length,
+        "max_lag": case.max_lag,
+        "signal": case.signal,
+        "period": case.period,
+        "include_ami_geometry": case.include_ami_geometry,
+        "ordinal_embedding_dimension": case.ordinal_embedding_dimension,
+        "ordinal_delay": case.ordinal_delay,
+        "memory_min_scale": case.memory_min_scale,
+        "memory_max_scale": case.memory_max_scale,
+    }
+
+
+def _skipped_public_workflow_result(
+    case: PublicWorkflowConfig,
+    *,
+    version: str,
+) -> dict[str, object]:
+    """Build a stable skipped-row payload for unsupported workflow methods."""
+    return {
+        "name": case.name,
+        "method": case.method,
+        "description": case.description,
+        "elapsed_s": 0.0,
+        "version": version,
+        "skip_reason": f"unknown method {case.method!r}",
+    }
+
+
 def _bench_public_workflows(
-    cases: list[dict[str, object]],
+    cases: list[PublicWorkflowConfig],
     rng: np.random.Generator,
     *,
     version: str,
@@ -155,79 +334,23 @@ def _bench_public_workflows(
     Returns:
         List of result dicts with keys ``name``, ``method``, ``elapsed_s``, ``version``.
     """
-    from forecastability.use_cases import (  # noqa: PLC0415
-        run_covariant_analysis,
-        run_lagged_exogenous_triage,
-    )
-
     results: list[dict[str, object]] = []
     for case in cases:
-        name = str(case["name"])
-        method = str(case["method"])
-
-        if method == "import":
-            start = time.perf_counter()
-            subprocess.run(
-                [sys.executable, "-c", "import forecastability"],
-                check=True,
-                capture_output=True,
-            )
-            elapsed: float = time.perf_counter() - start
-            results.append(
-                {"name": name, "method": method, "elapsed_s": elapsed, "version": version}
-            )
-            continue
-
-        if method in {"run_covariant_analysis", "run_lagged_exogenous_triage"}:
-            series_length = int(cast(int, case["series_length"]))
-            n_series = int(cast(int, case.get("n_series", 2)))
-            max_lag = int(cast(int, case["max_lag"]))
-            significance_mode = str(case.get("significance_mode", "phase"))
-            n_surrogates = int(cast(int, case.get("n_surrogates", 99)))
-            target = rng.normal(size=series_length)
-            drivers = {f"driver_{i}": rng.normal(size=series_length) for i in range(n_series)}
-
-            start = time.perf_counter()
-            if method == "run_covariant_analysis":
-                raw_methods = case.get("methods")
-                methods_arg: list[str] | None = (
-                    [str(m) for m in cast(list[object], raw_methods)]
-                    if raw_methods is not None
-                    else None
-                )
-                run_covariant_analysis(
-                    target,
-                    drivers,
-                    max_lag=max_lag,
-                    methods=methods_arg,
-                    n_surrogates=n_surrogates,
-                    random_state=42,
-                    significance_mode=significance_mode,  # type: ignore[arg-type]
-                )
-            else:
-                run_lagged_exogenous_triage(
-                    target,
-                    drivers,
-                    target_name="bench_target",
-                    max_lag=max_lag,
-                    n_surrogates=n_surrogates,
-                    random_state=42,
-                    significance_mode=significance_mode,  # type: ignore[arg-type]
-                )
-            elapsed = time.perf_counter() - start
-            results.append(
-                {"name": name, "method": method, "elapsed_s": elapsed, "version": version}
-            )
+        if case.method == "import":
+            result = _bench_import_workflow(case, version=version)
+        elif case.method in {"run_covariant_analysis", "run_lagged_exogenous_triage"}:
+            result = _benchmark_multiseries_workflow(case, rng, version=version)
+        elif case.method in {
+            "run_extended_forecastability_analysis",
+            "compute_spectral_forecastability",
+            "compute_ordinal_complexity",
+            "compute_classical_structure",
+            "compute_memory_structure",
+        }:
+            result = _benchmark_extended_univariate_workflow(case, version=version)
         else:
-            results.append(
-                {
-                    "name": name,
-                    "method": method,
-                    "elapsed_s": 0.0,
-                    "version": version,
-                    "skip_reason": f"unknown method {method!r}",
-                }
-            )
+            result = _skipped_public_workflow_result(case, version=version)
+        results.append(result)
     return results
 
 
@@ -240,7 +363,7 @@ def main() -> None:
     config = load_performance_config(args.config)
     output_dir = Path(config.metadata.output_dir)
 
-    installed_version = importlib.metadata.version("forecastability")
+    installed_version = resolve_forecastability_version()
     prior_artifact = output_dir / "performance_summary.json"
     if prior_artifact.exists():
         try:

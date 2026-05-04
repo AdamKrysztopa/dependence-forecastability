@@ -6,8 +6,8 @@
 **Target release:** `0.4.2`  
 **Current released version:** `0.4.1`  
 **Branch:** `feat/v0_4_2_forecastability_structure_expansion`  
-**Status:** Active release plan — broad Phases 0-2 are implemented; later phases remain planned  
-**Progress:** FSE-F00..F09 are complete; FSE-F11 has the core showcase and sibling authoring in place with one final sibling rerun pending after output-path hardening; FSE-F10 and FSE-F12 remain planned  
+**Status:** Active release plan — broad Phases 0-2 are implemented; FSE-F12 is complete for the local `0.4.2` performance-guardrail scope, while the remaining later-phase documentation and release work stays planned  
+**Progress:** FSE-F00..F09 and FSE-F12 are complete; FSE-F11 has the core showcase and sibling authoring in place with one final sibling rerun pending after output-path hardening; FSE-F10 remains planned  
 **Last reviewed:** 2026-05-04
 
 > [!IMPORTANT]
@@ -141,7 +141,7 @@ The release therefore extends the fingerprint around **structure source detectio
 | FSE-F09 | CLI / brief output (F09) | 2 | P1 | Complete |
 | FSE-F10 | Documentation pack (F10) | 6 | P0 | Not started |
 | FSE-F11 | Synthetic showcase panel + sibling-repo examples (F11) | 3 | P1 | Core repo showcase artifact-complete with coarse semantic verification over the four-tree artifact bundle; sibling notebooks were authored and manually exercised, and one final sibling rerun is pending after output-path hardening |
-| FSE-F12 | Performance guardrails (F12) | 4 | P1 | Not started |
+| FSE-F12 | Performance guardrails (F12) | 4 | P1 | Complete |
 
 ### Reviewer acceptance block
 
@@ -919,7 +919,9 @@ flowchart LR
 
 ### Phase 4 — Tests, fixtures, and performance guardrails
 
-**Scope.** Land the regression fixture rebuild script and the F12 timing guardrails.
+**Scope.** Land the regression fixture rebuild script and keep the completed F12 local timing/import guardrail slice in place.
+
+**Implementation note.** The implemented F12 guardrail slice covers timing evidence, import-latency evidence, and import-diet verification for the new diagnostics; it does not add CI wall-time pass/fail gates.
 
 **Acceptance criteria:**
 
@@ -1411,12 +1413,16 @@ Create a small deterministic panel that demonstrates the new method layer.
 
 Ensure method expansion does not worsen the 0.4.1 performance story.
 
+**Status note.** For `0.4.2`, F12 is complete based on local timing/import evidence stored in `outputs/performance/performance_summary.json` plus the automated lazy-import regression in `tests/test_run_extended_forecastability_analysis.py`. It does not add automated wall-time pass/fail gates to CI.
+
 ### Implementation tasks
 
-- [ ] Add timing smoke tests or benchmark script entries.
-- [ ] Add import-latency check if existing performance scripts support it.
-- [ ] Avoid top-level eager imports.
-- [ ] Avoid dependencies not already present unless explicitly approved.
+- [x] Add timing smoke tests or benchmark script entries.
+- [x] Add import-latency check if existing performance scripts support it.
+- [x] Avoid top-level eager imports.
+- [x] Avoid dependencies not already present unless explicitly approved.
+
+**Measured local release evidence (2026-05-04).** `outputs/performance/performance_summary.json` records `n=1_000` timings for the new extended diagnostics and stable-root cold-import timings on Apple M4 Pro / Python 3.11.11 / macOS. The recorded local timings were approximately `0.31 ms` for `compute_spectral_forecastability`, `2.15 ms` for `compute_ordinal_complexity`, `0.83 ms` for `compute_classical_structure`, `2.99 ms` for `compute_memory_structure`, and `7.55 ms` for `run_extended_forecastability_analysis(..., include_ami_geometry=False)`. Cold import evidence was also recorded for `forecastability` (`1.23 s`), `forecastability.triage` (`1.22 s`), and `forecastability.use_cases` (`1.19 s`). The only automated guard added in-core for this F12 slice is the lazy-import regression in `tests/test_run_extended_forecastability_analysis.py`.
 
 ### Acceptance budgets
 
@@ -1432,6 +1438,7 @@ Suggested local budgets, to be calibrated by current benchmarks:
 | top-level import delta | no material regression |
 
 Do not fail CI on exact wall-clock values unless the project already has a stable benchmark policy. Store results as release evidence.
+Treat these budgets as local calibration targets, not automated CI guardrails.
 
 ---
 

@@ -102,9 +102,20 @@ budgets:
       max_wall_s: 0.227
 
 public_workflows:
-  - name: "import_time"
+  - name: "import_forecastability"
     description: "Cold import of the forecastability top-level package"
     method: "import"
+    import_statement: "import forecastability"
+
+  - name: "import_forecastability_triage"
+    description: "Cold import of the stable forecastability.triage namespace"
+    method: "import"
+    import_statement: "import forecastability.triage"
+
+  - name: "import_forecastability_use_cases"
+    description: "Cold import of the stable forecastability.use_cases namespace"
+    method: "import"
+    import_statement: "import forecastability.use_cases"
 
   - name: "covariant_cross_ami_significance_none"
     description: "run_covariant_analysis with significance_mode='none' (skip phase surrogates)"
@@ -143,3 +154,51 @@ public_workflows:
     series_length: 300
     max_lag: 10
     n_surrogates: 99
+
+  - name: "extended_analysis_without_ami_geometry_n1000"
+    description: "run_extended_forecastability_analysis without AMI geometry on a seasonal AR(1) series"
+    method: "run_extended_forecastability_analysis"
+    signal: "seasonal_ar1"
+    series_length: 1000
+    max_lag: 24
+    period: 12
+    include_ami_geometry: false
+    ordinal_embedding_dimension: 3
+    ordinal_delay: 1
+    memory_min_scale: 8
+    memory_max_scale: 128
+    random_state: 404
+
+  - name: "spectral_forecastability_n1000"
+    description: "compute_spectral_forecastability on a seasonal AR(1) series"
+    method: "compute_spectral_forecastability"
+    signal: "seasonal_ar1"
+    series_length: 1000
+    random_state: 404
+
+  - name: "ordinal_complexity_n1000"
+    description: "compute_ordinal_complexity on a seasonal AR(1) series"
+    method: "compute_ordinal_complexity"
+    signal: "seasonal_ar1"
+    series_length: 1000
+    ordinal_embedding_dimension: 3
+    ordinal_delay: 1
+    random_state: 404
+
+  - name: "classical_structure_n1000"
+    description: "compute_classical_structure on a seasonal AR(1) series"
+    method: "compute_classical_structure"
+    signal: "seasonal_ar1"
+    series_length: 1000
+    max_lag: 24
+    period: 12
+    random_state: 404
+
+  - name: "memory_structure_n1000"
+    description: "compute_memory_structure on a seasonal AR(1) series"
+    method: "compute_memory_structure"
+    signal: "seasonal_ar1"
+    series_length: 1000
+    memory_min_scale: 8
+    memory_max_scale: 128
+    random_state: 404

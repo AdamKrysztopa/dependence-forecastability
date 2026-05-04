@@ -17,7 +17,6 @@ from forecastability.triage.models import (
 from forecastability.use_cases import (
     build_forecast_prep_contract,
     run_covariant_analysis,
-    run_extended_forecastability_analysis,
     run_lagged_exogenous_triage,
     run_triage,
 )
@@ -117,6 +116,10 @@ _LAZY_EXPORT_MAP: dict[str, tuple[str, str | None]] = {
     # Non-core use cases
     "run_batch_forecastability_workbench": ("forecastability.use_cases", None),
     "run_batch_triage": ("forecastability.use_cases", None),
+    "run_extended_forecastability_analysis": (
+        "forecastability.use_cases",
+        "_run_extended_forecastability_analysis_public",
+    ),
     "run_routing_validation": ("forecastability.use_cases", None),
     "run_forecastability_fingerprint": (
         "forecastability.use_cases.run_forecastability_fingerprint",

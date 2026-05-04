@@ -37,9 +37,6 @@ from forecastability.triage.models import (
 from forecastability.triage.readiness import assess_readiness
 from forecastability.triage.router import plan_method
 from forecastability.triage.theoretical_limit_diagnostics import TheoreticalLimitDiagnostics
-from forecastability.use_cases.run_extended_forecastability_analysis import (
-    run_extended_forecastability_analysis,
-)
 from forecastability.utils.types import CanonicalExampleResult, MetricCurve
 
 
@@ -430,6 +427,10 @@ def run_triage(
     # ------------------------------------------------------------------ #
     extended_forecastability_analysis = None
     if include_extended_fingerprint and method_plan.route != "exogenous":
+        from forecastability.use_cases.run_extended_forecastability_analysis import (
+            run_extended_forecastability_analysis,
+        )
+
         extended_forecastability_analysis = run_extended_forecastability_analysis(
             request.series,
             name="triage",

@@ -3,11 +3,16 @@
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
+import textwrap
+import typing
 from collections.abc import Callable
 
 import numpy as np
 import pandas as pd
 import pytest
+from numpy.typing import ArrayLike
 
 import forecastability
 import forecastability.triage as triage
@@ -21,6 +26,39 @@ def _seasonal_signal(*, n_samples: int = 256, period: int = 12) -> np.ndarray:
     time_index = np.arange(n_samples, dtype=float)
     signal = np.sin((2.0 * np.pi * time_index) / float(period))
     return signal + rng.normal(0.0, 0.1, size=n_samples)
+
+
+def _run_lazy_import_probe() -> dict[str, bool]:
+    """Measure stable-root import behavior in a fresh Python process."""
+    probe = textwrap.dedent(
+        """
+        import json
+        import sys
+
+        module_name = "forecastability.use_cases.run_extended_forecastability_analysis"
+
+        import forecastability
+        import forecastability.triage
+        import forecastability.use_cases
+
+        payload = {
+            "loaded_after_roots": module_name in sys.modules,
+        }
+        resolved = forecastability.run_extended_forecastability_analysis
+        payload["loaded_after_attr"] = module_name in sys.modules
+        resolved([0.0] * 64, max_lag=12, period=12, include_ami_geometry=False)
+        payload["loaded_after_call"] = module_name in sys.modules
+        print(json.dumps(payload))
+        """
+    )
+    completed = subprocess.run(
+        [sys.executable, "-c", probe],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    payload = json.loads(completed.stdout)
+    return {key: bool(value) for key, value in payload.items()}
 
 
 @pytest.mark.parametrize(
@@ -151,3 +189,22 @@ def test_extended_use_case_is_reexported_from_stable_import_roots() -> None:
         is run_extended_forecastability_analysis
     )
     assert triage.run_extended_forecastability_analysis is run_extended_forecastability_analysis
+
+
+def test_public_root_imports_do_not_eagerly_load_extended_use_case_module() -> None:
+    """Stable-root imports should keep the extended use-case submodule cold in a fresh process."""
+    payload = _run_lazy_import_probe()
+
+    assert payload == {
+        "loaded_after_roots": False,
+        "loaded_after_attr": False,
+        "loaded_after_call": True,
+    }
+
+
+def test_public_export_preserves_runtime_resolvable_type_hints() -> None:
+    """The stable public export should keep runtime-resolvable annotations."""
+    hints = typing.get_type_hints(forecastability.run_extended_forecastability_analysis)
+
+    assert hints["series"] == ArrayLike
+    assert hints["return"] is ExtendedForecastabilityAnalysisResult
