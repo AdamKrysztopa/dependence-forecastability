@@ -108,6 +108,10 @@ _LAZY_EXPORT_MAP: dict[str, tuple[str, str | None]] = {
         "forecastability.use_cases",
         "_run_extended_forecastability_analysis_public",
     ),
+    "run_lag_aware_mod_mrmr": (
+        "forecastability.use_cases.lag_aware_mod_mrmr",
+        None,
+    ),
 }
 
 
@@ -198,6 +202,7 @@ __all__ = [
     "run_batch_triage",
     "run_batch_triage_with_details",
     "run_extended_forecastability_analysis",
+    "run_lag_aware_mod_mrmr",
     "run_triage",
     "build_triage_result_bundle",
     "save_result_bundle",

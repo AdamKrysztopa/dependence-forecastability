@@ -128,6 +128,7 @@ _LAZY_EXPORT_MAP: dict[str, tuple[str, str | None]] = {
     "SpectralForecastabilityResult": ("forecastability.triage.extended_forecastability", None),
     "SpectralPredictabilityResult": ("forecastability.triage.spectral_predictability", None),
     # Non-core use cases
+    "run_lag_aware_mod_mrmr": ("forecastability.use_cases.lag_aware_mod_mrmr", None),
     "run_batch_forecastability_workbench": ("forecastability.use_cases", None),
     "run_batch_triage": ("forecastability.use_cases", None),
     "run_extended_forecastability_analysis": (
@@ -456,6 +457,7 @@ __all__ = [
     "run_batch_forecastability_workbench",
     "run_covariant_analysis",
     "run_extended_forecastability_analysis",
+    "run_lag_aware_mod_mrmr",
     "run_lagged_exogenous_triage",
     "run_forecastability_fingerprint",
     "run_routing_validation",
