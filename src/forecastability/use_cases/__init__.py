@@ -50,7 +50,7 @@ def run_extended_forecastability_analysis(
     routing_config: ExtendedForecastabilityRoutingConfig | None = None,
 ) -> ExtendedForecastabilityAnalysisResult:
     """Resolve the extended analysis use case lazily while preserving the stable API."""
-    from forecastability.use_cases.run_extended_forecastability_analysis import (
+    from forecastability.use_cases._run_extended_forecastability_analysis_impl import (
         run_extended_forecastability_analysis as _run_extended_forecastability_analysis,
     )
 

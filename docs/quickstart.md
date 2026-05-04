@@ -173,6 +173,10 @@ uv run forecastability extended \
 > requests keep that field omitted rather than pretending exogenous-aware
 > extended analysis exists.
 
+For the field-by-field guide to this surface, including routing metadata and
+theory cross-references, see
+[`how-to/extended_forecastability_fingerprint.md`](how-to/extended_forecastability_fingerprint.md).
+
 ## 11 Minutes: Fingerprint Workflow
 
 Use the geometry-backed fingerprint workflow when you want compact AMI summary

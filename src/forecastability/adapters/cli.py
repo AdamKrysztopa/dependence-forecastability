@@ -45,10 +45,10 @@ from forecastability.triage.extended_forecastability import (
     ExtendedForecastabilityAnalysisResult,
 )
 from forecastability.triage.models import AnalysisGoal, TriageRequest, TriageResult
-from forecastability.use_cases.run_batch_triage import run_batch_triage
-from forecastability.use_cases.run_extended_forecastability_analysis import (
+from forecastability.use_cases._run_extended_forecastability_analysis_impl import (
     run_extended_forecastability_analysis,
 )
+from forecastability.use_cases.run_batch_triage import run_batch_triage
 from forecastability.use_cases.run_triage import run_triage
 
 # ---------------------------------------------------------------------------

@@ -1,65 +1,117 @@
 <!-- type: explanation -->
 # Ordinal Complexity
 
-The F02 ordinal complexity block is now implemented as a deterministic summary of repeated order-pattern structure in a univariate series.
+Ordinal complexity is the rank-pattern block inside the AMI-first extended
+fingerprint. It summarizes whether short local windows of the series reuse a
+small family of orderings or span a broader, more noise-like ordinal state
+space.
 
 > [!IMPORTANT]
-> The extended fingerprint remains AMI-first. Ordinal diagnostics explain whether forecastability appears to be supported by repeated ordering patterns or nonlinear ordinal redundancy; they do not replace lag-aware AMI evidence.
+> Ordinal diagnostics are explanatory and conservative. They can support a
+> claim that the series has repeated local ordering structure, but they do not
+> replace lag-aware AMI evidence and they do not certify nonlinear forecast
+> accuracy.
 
-## What The Current Diagnostic Computes
+## What It Measures
 
-The implemented service builds ordinal embeddings with configurable embedding dimension and delay, encodes their rank-order patterns, and reports:
+The shipped `OrdinalComplexityResult` is built from ordinal embeddings with a
+public embedding dimension and delay.
 
-- `permutation_entropy`: normalized entropy of the observed ordinal-pattern distribution
-- `weighted_permutation_entropy`: an optional variance-weighted version of the same summary
-- `ordinal_redundancy`: a unit-scale redundancy proxy computed as `1 - permutation_entropy`
-- `complexity_class`: a conservative label such as `regular`, `structured_nonlinear`, `complex_but_redundant`, `noise_like`, `degenerate`, or `unclear`
-- `notes`: caveats about ties, sparse embeddings, or degeneracy
+| Field | Meaning | Conservative reading |
+| --- | --- | --- |
+| `permutation_entropy` | Normalized entropy of the observed ordinal-pattern distribution | Lower values mean fewer orderings are reused more often |
+| `weighted_permutation_entropy` | Optional variance-weighted entropy summary | Compare with unweighted entropy to see whether larger-amplitude patterns behave differently |
+| `ordinal_redundancy` | Unit-scale redundancy proxy computed from ordinal entropy | Higher values indicate more repeated ordinal structure |
+| `embedding_dimension` | Embedding size used to extract patterns | Larger values need longer series and more distinct patterns |
+| `delay` | Step between samples inside each ordinal vector | This changes which local ordering regime is being summarized |
+| `complexity_class` | Conservative label in `{degenerate, regular, structured_nonlinear, complex_but_redundant, noise_like, unclear}` | Treat this as the primary verbal summary |
+| `notes` | Deterministic caveats about ties, sparsity, or degeneracy | Read these before trusting the scalar values |
 
-Ties are handled explicitly with an average-rank policy and a tie-aware normalization of the ordinal state count. That matters for rounded, binary, or otherwise discrete-valued series where many embeddings are not strict permutations.
+Ties are handled explicitly. Rounded, discrete, or binary-valued series can
+still be summarized, but tie-heavy data should be read through `notes` rather
+than as strict permutation counts.
 
-## How To Read The Main Fields
+## Why It Matters For Forecastability
 
-- Lower `permutation_entropy` means the series reuses a smaller subset of ordering patterns.
-- Higher `ordinal_redundancy` means more repeated ordinal structure is present.
-- The gap between unweighted and weighted entropy helps separate purely frequent patterns from patterns that also carry larger amplitude variation.
+AMI geometry can show that dependence exists at useful horizons without telling
+you whether the local state transitions look regular, redundant, or mostly
+noise-like. The ordinal block adds that local-ordering perspective.
 
-In deterministic triage terms, this block is useful when the AMI profile suggests informative horizons but you also want to know whether the local ordering patterns look regular, nonlinear-but-structured, or mostly noise-like.
+- It distinguishes repeated short-window orderings from diffuse ordinal
+  behavior.
+- It can support the router's `ordinal_redundancy` explanation source.
+- It gives a rank-based view that is less sensitive to absolute scale than a
+  raw amplitude summary.
 
-## Conservative Sentinel Behavior
+## What It Does Not Prove
 
-> [!WARNING]
-> Short or degenerate ordinal outputs are conservative sentinel summaries. Interpret them through `notes` and `complexity_class`, not through the raw scalar fields alone.
+- It does not prove deterministic chaos, nonlinear identifiability, or the need
+  for a neural model.
+- It does not prove that tree, boosting, or other nonlinear families will win
+  downstream.
+- It does not replace AMI, pAMI, seasonality structure, or scale-based memory
+  diagnostics.
+- It does not justify routing on its own when AMI geometry is disabled.
 
-The implemented service stays conservative in exactly the cases that are easiest to over-read:
+## Input Assumptions
 
-- Constant series return a degenerate result with `complexity_class = degenerate`, `ordinal_redundancy = 1.0`, and an explicit note.
-- Series that are too short for the requested embedding return `complexity_class = unclear` with short-sample notes.
-- Sparse pattern counts relative to the ordinal state space force `complexity_class = unclear` even when scalar entropy values can still be computed.
-- Tie-heavy inputs emit an explicit note so the reader does not mistake tie-aware ranks for strict permutation counts.
+- The input must be a finite one-dimensional series after public validation.
+- The series must be long enough to support the requested
+  `embedding_dimension` and `delay`.
+- Interpretation becomes fragile when the realized ordinal state count is sparse
+  relative to the possible state space.
+- Tie-heavy inputs remain valid but require more conservative reading.
 
-This is deliberate. The current implementation prefers a conservative label over a false sense of ordinal precision.
+## Failure Modes
 
-## What This Block Is Good For
+- Constant series return `complexity_class = degenerate` with an explicit note.
+- Too-short series return `complexity_class = unclear` because the embedding is
+  not safely supported.
+- Sparse ordinal occupancy can make entropy values look stable while the state
+  coverage is still too weak for a strong class label.
+- Heavy rounding or repeated values can flatten distinctions between genuinely
+  different local mechanisms.
 
-- distinguishing repeated regular orderings from noise-like ordinal behavior
-- highlighting nonlinear-looking structure that survives a purely rank-based view
-- adding an explanatory block inside `ExtendedForecastabilityFingerprint.ordinal`
+## Synthetic Example
 
-## Non-Goals
+The public example below uses a logistic-map style sequence as a mechanically
+plausible nonlinear ordering pattern source. The expected read is not an exact
+label, but a structured result rather than `noise_like`.
 
-- certifying chaos, determinism, or nonlinear identifiability from one scalar summary
-- replacing AMI/pAMI, surrogate-aware lag analysis, or classical diagnostics
-- recommending one true best nonlinear model family
-- documenting `run_extended_forecastability_analysis(...)` as a shipped public workflow before that later phase exists
-- placing richer notebook walkthroughs in this repository
+```python
+import numpy as np
 
-## Current Repository Scope
+from forecastability import run_extended_forecastability_analysis
 
-- the stable result model `OrdinalComplexityResult`
-- the implemented ordinal diagnostic block used by the extended fingerprint composer
-- theory and interpretation guidance for the shipped F02 behavior
+def logistic_map(n: int, r: float = 3.9, x0: float = 0.2) -> np.ndarray:
+    values = np.empty(n, dtype=float)
+    values[0] = x0
+    for index in range(1, n):
+        values[index] = r * values[index - 1] * (1 - values[index - 1])
+    return values
 
-F06 and later routing/use-case layers remain outside this page.
+series = logistic_map(500)[100:]
+result = run_extended_forecastability_analysis(series, max_lag=24)
+print(result.fingerprint.ordinal.model_dump())
+```
 
-Richer walkthroughs and notebooks for ordinal-complexity interpretation belong in the sibling `forecastability-examples` repository rather than the core repo.
+Use the ordinal block as an explanatory layer. The primary routing read still
+comes from the AMI-backed `profile` and from whether the result is
+descriptive-only.
+
+## Interpretation Table
+
+| `complexity_class` | Typical reading | Forecastability implication |
+| --- | --- | --- |
+| `degenerate` | The series has too little ordinal variation to summarize meaningfully | Treat as a low-information edge case |
+| `regular` | A small set of orderings dominates the local windows | Repeated local structure is present |
+| `structured_nonlinear` | Rank-pattern structure is present without looking purely regular | A nonlinear follow-up may be worth checking after AMI evidence |
+| `complex_but_redundant` | Diversity and reuse coexist | Structure is present, but the mechanism is not simple |
+| `noise_like` | Ordinal patterns look broadly diffuse | Do not infer nonlinear benefit from this block |
+| `unclear` | Sample support or tie structure is too weak for a stable label | Defer to other diagnostics |
+
+## References
+
+- Christoph Bandt and Bernd Pompe, 2002, "Permutation Entropy"
+- Karsten Keller and colleagues, tie-aware and weighted ordinal-pattern extensions
+- Holger Kantz and Thomas Schreiber, 2004, nonlinear time-series analysis context

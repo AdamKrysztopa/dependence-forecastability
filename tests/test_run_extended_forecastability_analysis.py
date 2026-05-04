@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 import json
 import subprocess
 import sys
@@ -16,6 +17,7 @@ from numpy.typing import ArrayLike
 
 import forecastability
 import forecastability.triage as triage
+import forecastability.use_cases as use_cases
 from forecastability.triage import ExtendedForecastabilityAnalysisResult
 from forecastability.use_cases import run_extended_forecastability_analysis
 
@@ -35,7 +37,7 @@ def _run_lazy_import_probe() -> dict[str, bool]:
         import json
         import sys
 
-        module_name = "forecastability.use_cases.run_extended_forecastability_analysis"
+        module_name = "forecastability.use_cases._run_extended_forecastability_analysis_impl"
 
         import forecastability
         import forecastability.triage
@@ -59,6 +61,14 @@ def _run_lazy_import_probe() -> dict[str, bool]:
     )
     payload = json.loads(completed.stdout)
     return {key: bool(value) for key, value in payload.items()}
+
+
+def test_internal_use_case_module_does_not_shadow_public_export() -> None:
+    """Importing the implementation module must not replace the package export."""
+    importlib.import_module("forecastability.use_cases._run_extended_forecastability_analysis_impl")
+
+    assert callable(use_cases.run_extended_forecastability_analysis)
+    assert use_cases.run_extended_forecastability_analysis is run_extended_forecastability_analysis
 
 
 @pytest.mark.parametrize(

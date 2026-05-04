@@ -427,7 +427,7 @@ def run_triage(
     # ------------------------------------------------------------------ #
     extended_forecastability_analysis = None
     if include_extended_fingerprint and method_plan.route != "exogenous":
-        from forecastability.use_cases.run_extended_forecastability_analysis import (
+        from forecastability.use_cases._run_extended_forecastability_analysis_impl import (
             run_extended_forecastability_analysis,
         )
 

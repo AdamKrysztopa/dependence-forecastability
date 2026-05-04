@@ -37,7 +37,7 @@ Use these pages when you need a task-oriented route to a result.
 | Document | Why |
 | --- | --- |
 | [how-to/golden_path.md](how-to/golden_path.md) | Shortest route from install to a trustworthy first result |
-| [how-to/extended_forecastability_fingerprint.md](how-to/extended_forecastability_fingerprint.md) | How to run and read the implemented AMI-first extended analysis surface across Python, triage opt-in, and CLI |
+| [how-to/extended_forecastability_fingerprint.md](how-to/extended_forecastability_fingerprint.md) | How to run the extended analysis surface and inspect its public fields, routing metadata, and theory links |
 | [how-to/use_cases_industrial.md](how-to/use_cases_industrial.md) | Practical industrial usage patterns and deployment-shaped scenarios |
 
 ## Explanations
@@ -60,8 +60,8 @@ Use these pages when you need method-level rationale behind the AMI-first finger
 | --- | --- |
 | [theory/spectral_forecastability.md](theory/spectral_forecastability.md) | Implemented spectral entropy, predictability, and periodicity semantics for the extended fingerprint |
 | [theory/ordinal_complexity.md](theory/ordinal_complexity.md) | Implemented ordinal-pattern entropy, redundancy, and conservative complexity semantics |
-| [theory/classical_structure.md](theory/classical_structure.md) | Implemented deterministic trend, optional seasonality, and autocorrelation summaries |
-| [theory/memory_structure.md](theory/memory_structure.md) | Implemented DFA-based persistence summaries and conservative interpretation caveats |
+| [theory/classical_structure_features.md](theory/classical_structure_features.md) | Implemented deterministic trend, optional seasonality, and autocorrelation summaries |
+| [theory/memory_diagnostics.md](theory/memory_diagnostics.md) | Implemented DFA-based persistence summaries and conservative interpretation caveats |
 
 ## References
 

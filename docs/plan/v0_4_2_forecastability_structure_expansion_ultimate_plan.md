@@ -1342,31 +1342,38 @@ Avoid:
 
 Ship theory and practical docs with the implementation, not after it.
 
+**Status note.** Complete for the core-repo F10 documentation pack. The
+canonical theory filenames and compatibility forwarding pages are in place, the
+extended how-to and explanation pages match the shipped Phase 2 surface, and
+`uv run python scripts/check_docs_contract.py` passed on 2026-05-04. Requested
+`uv run mkdocs build`, `vale .`, and `markdownlint .` could not run in the
+current shell because `mkdocs`, `vale`, and `markdownlint` were unavailable.
+
 ### Required pages
 
-- [ ] `docs/theory/spectral_forecastability.md`
-- [ ] `docs/theory/ordinal_complexity.md`
-- [ ] `docs/theory/classical_structure_features.md`
-- [ ] `docs/theory/memory_diagnostics.md`
-- [ ] `docs/how-to/extended_forecastability_fingerprint.md`
-- [ ] `docs/explanation/extended_forecastability_profile.md`
+- [x] `docs/theory/spectral_forecastability.md`
+- [x] `docs/theory/ordinal_complexity.md`
+- [x] `docs/theory/classical_structure_features.md`
+- [x] `docs/theory/memory_diagnostics.md`
+- [x] `docs/how-to/extended_forecastability_fingerprint.md`
+- [x] `docs/explanation/extended_forecastability_profile.md`
 
 ### Each theory page must include
 
-- [ ] What the method measures.
-- [ ] Why it matters for forecastability.
-- [ ] What it does not prove.
-- [ ] Input assumptions.
-- [ ] Failure modes.
-- [ ] Interpretation table.
-- [ ] References.
+- [x] What the method measures.
+- [x] Why it matters for forecastability.
+- [x] What it does not prove.
+- [x] Input assumptions.
+- [x] Failure modes.
+- [x] Interpretation table.
+- [x] References.
 
 ### Acceptance criteria
 
-- [ ] Docs do not oversell metrics as forecast accuracy.
-- [ ] Every public result field is explained.
-- [ ] Every method has at least one synthetic example.
-- [ ] README links to the extended fingerprint guide.
+- [x] Docs do not oversell metrics as forecast accuracy.
+- [x] Every public result field is explained.
+- [x] Every method has at least one synthetic example.
+- [x] README links to the extended fingerprint guide.
 
 ---
 
