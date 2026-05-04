@@ -4,7 +4,7 @@
 **Plan type:** Actionable release plan — method-layer expansion for deterministic forecastability triage  
 **Audience:** Maintainer, reviewer, statistician reviewer, documentation writer, Jr. developer  
 **Target release:** `0.4.2`  
-**Current released version:** `0.4.1`  
+**Current released version:** `0.4.2`  
 **Branch:** `feat/v0_4_2_forecastability_structure_expansion`  
 **Status:** Active release plan — broad Phases 0-2 are implemented; FSE-F12 is complete for the local `0.4.2` performance-guardrail scope, while the remaining later-phase documentation and release work stays planned  
 **Progress:** FSE-F00..F09 and FSE-F12 are complete; FSE-F11 has the core showcase and sibling authoring in place with one final sibling rerun pending after output-path hardening; FSE-F10 remains planned  

@@ -5,7 +5,7 @@
 This guide covers how to work on [`dependence-forecastability`][core] and
 [`forecastability-examples`][sibling] simultaneously from a single parent
 workspace folder. This is the **EX-LOCAL-01** setup from the
-[v0.4.0 plan](../plan/v0_4_0_examples_repo_split_ultimate_plan.md).
+[v0.4.0 plan](../plan/implemented/v0_4_0_examples_repo_split_ultimate_plan.md).
 
 [core]: https://github.com/AdamKrysztopa/dependence-forecastability
 [sibling]: https://github.com/AdamKrysztopa/forecastability-examples

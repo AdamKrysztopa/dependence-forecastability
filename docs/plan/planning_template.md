@@ -6,7 +6,7 @@
 **Plan type:** Actionable release plan — <!-- TEMPLATE: one-line characterisation of the release, e.g. "typed surface hardening for routing outputs" -->
 **Audience:** Maintainer, reviewer, statistician reviewer, Jr. developer
 **Target release:** `X.Y.Z` — <!-- TEMPLATE: state the chain position, e.g. "ships first in the 0.3.5 → 0.4.0 chain" or "headline release" -->
-**Current released version:** `0.4.1`
+**Current released version:** `0.4.2`
 **Branch:** `feat/vX.Y.Z-<!-- TEMPLATE: kebab-case feature slug -->`
 **Status:** Draft
 **Last reviewed:** <!-- TEMPLATE: ISO date, e.g. 2026-05-01 -->

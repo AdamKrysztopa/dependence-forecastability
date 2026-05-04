@@ -16,8 +16,9 @@ Baseline framing, invariants, and mathematical definitions still live in the mai
 | **[v0_3_4_forecast_prep_contract_ultimate_plan.md](implemented/v0_3_4_forecast_prep_contract_ultimate_plan.md)** | **v0.3.4 — forecast-prep contract: framework-agnostic full plan (consolidated; absorbs the earlier 2026-04-24 scope-revision overlay)** | **Shipped (v0.3.4)** |
 | [aux_documents/v0_3_4_forecast_prep_contract_ultimate_plan.md](aux_documents/v0_3_4_forecast_prep_contract_ultimate_plan.md) | v0.3.4 — original draft with framework runners and `[darts]` / `[mlforecast]` extras | Superseded — audit trail |
 | **[v0_3_5_documentation_quality_improvement_revision_2026_04_24.md](implemented/v0_3_5_documentation_quality_improvement_revision_2026_04_24.md)** | **v0.3.5 — docs hygiene + reorganization: Invariant E, notebook transition banner, `docs/` Diátaxis bucketing, markdownlint + lychee CI** | **Shipped (v0.3.5)** |
-| **[v0_4_0_examples_repo_split_ultimate_plan.md](v0_4_0_examples_repo_split_ultimate_plan.md)** | **v0.4.0 — library-first slim release: notebook migration to sibling examples repo, cross-repo CI handshake, sprint-showcase notebooks** | **Active** |
-| **[v0_4_1_performance_bottleneck_elimination_ultimate_plan.md](v0_4_1_performance_bottleneck_elimination_ultimate_plan.md)** | **v0.4.1 — benchmark-first performance hardening: bottleneck inventory, correctness gates, Python optimizations, optional native-acceleration design** | Draft |
+| **[v0_4_0_examples_repo_split_ultimate_plan.md](implemented/v0_4_0_examples_repo_split_ultimate_plan.md)** | **v0.4.0 — library-first slim release: notebook migration to sibling examples repo, cross-repo CI handshake, sprint-showcase notebooks** | **Shipped (v0.4.0)** |
+| **[v0_4_1_performance_bottleneck_elimination_ultimate_plan.md](implemented/v0_4_1_performance_bottleneck_elimination_ultimate_plan.md)** | **v0.4.1 — performance hardening, benchmark visibility, and fast-screening controls** | **Shipped (v0.4.1)** |
+| **[v0_4_2_forecastability_structure_expansion_ultimate_plan.md](v0_4_2_forecastability_structure_expansion_ultimate_plan.md)** | **v0.4.2 — AMI-first forecastability structure expansion: spectral, ordinal, classical, and memory diagnostics with extended routing** | **Active release prep** |
 | [aux_documents/developer_instruction_repo_scope.md](../plan/aux_documents/developer_instruction_repo_scope.md) | Reviewer scope directive (driver document for v0.3.4 revision, v0.3.5 revision, v0.4.0) | Reference |
 
 ## Completed — triage extension epic
@@ -34,7 +35,7 @@ All nine feature groups (F1–F9) from the development plan have been implemente
 - **F8** Agent adapters (MCP server, dashboard, CLI)
 - **F9** Robustness study & benchmark panel
 
-Supporting deliverables: univariate examples (`examples/univariate/`), covariant-informative examples (`examples/covariant_informative/`), walkthrough notebooks (`notebooks/walkthroughs/` and `notebooks/triage/`), theory docs (`docs/theory/`), and end-to-end agent integration.
+Supporting deliverables: univariate examples (`examples/univariate/`), covariant-informative examples (`examples/covariant_informative/`), sibling walkthrough notebooks in `forecastability-examples`, theory docs (`docs/theory/`), and end-to-end agent integration.
 
 ## Source epic
 
