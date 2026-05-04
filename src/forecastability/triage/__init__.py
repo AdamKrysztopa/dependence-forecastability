@@ -43,6 +43,21 @@ from forecastability.triage.extended_forecastability import (
     SpectralForecastabilityResult,
 )
 from forecastability.triage.forecastability_profile import ForecastabilityProfile
+from forecastability.triage.lag_aware_mod_mrmr import (
+    BlockedLagAwareFeature,
+    ForecastSafeLagCandidate,
+    KnownFutureProvenance,
+    LagAwareModMRMRConfig,
+    LagAwareModMRMRResult,
+    LagLegalityLabel,
+    NormalizationStrategy,
+    PairwiseScorerSpec,
+    RejectedLagAwareFeature,
+    RejectionReason,
+    ScorerDiagnostics,
+    SelectedLagAwareFeature,
+    SignificanceMethod,
+)
 from forecastability.triage.lyapunov import LargestLyapunovExponentResult
 from forecastability.triage.models import (
     AnalysisGoal,
@@ -160,6 +175,20 @@ __all__ = [
     "SpectralForecastabilityResult",
     "SpectralPredictabilityResult",
     "TheoreticalLimitDiagnostics",
+    # Lag-Aware ModMRMR domain contracts (v0.4.3)
+    "BlockedLagAwareFeature",
+    "ForecastSafeLagCandidate",
+    "KnownFutureProvenance",
+    "LagAwareModMRMRConfig",
+    "LagAwareModMRMRResult",
+    "LagLegalityLabel",
+    "NormalizationStrategy",
+    "PairwiseScorerSpec",
+    "RejectedLagAwareFeature",
+    "RejectionReason",
+    "ScorerDiagnostics",
+    "SelectedLagAwareFeature",
+    "SignificanceMethod",
     "assess_readiness",
     "plan_method",
     "build_forecast_prep_contract",

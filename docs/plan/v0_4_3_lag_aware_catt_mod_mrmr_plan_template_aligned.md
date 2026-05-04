@@ -97,7 +97,7 @@ raw y(t), raw x_j(t)
 
 | ID | Feature | Phase | Priority | Status |
 | --- | --- | --- | --- | --- |
-| LAM-F00 | Frozen Pydantic domain contracts | 0 | P0 | Not started |
+| LAM-F00 | Frozen Pydantic domain contracts | 0 | P0 | Complete |
 | LAM-F01 | Forecast-safe lag-domain builder | 1 | P0 | Not started |
 | LAM-F02 | Pairwise scorer protocol, scorer registry, and built-in scorers | 1 | P0 | Not started |
 | LAM-F03 | Catt-style AMI / kNN MI relevance and similarity scorer adapters | 1 | P0 | Not started |
