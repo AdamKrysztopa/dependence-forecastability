@@ -203,7 +203,7 @@ bundle = run_covariant_analysis(
 > [!CAUTION]
 > `pcmci` and `pcmci_ami` are **computationally expensive** optional causal
 > methods — a single run can take several minutes to hours depending on sample
-> size, lag range, and CI-test backend.  They are designed for *confirmatory*
+> size, lag range, and CI-test backend.  They are designed for _confirmatory_
 > causal screening after a fast pairwise pass, not as a default first step.
 > Prefer `methods=["cross_ami", "gcmi"]` for fast initial screening.
 >
