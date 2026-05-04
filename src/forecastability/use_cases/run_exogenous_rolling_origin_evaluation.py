@@ -2,16 +2,13 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import numpy as np
 
-from forecastability.pipeline.analyzer import ForecastabilityAnalyzerExog as _DefaultAnalyzer
+from forecastability.metrics.scorers import _mi_scorer
 from forecastability.pipeline.rolling_origin import build_expanding_window_splits
+from forecastability.services.partial_curve_service import compute_partial_at_horizon
+from forecastability.services.raw_curve_service import compute_raw_at_horizon
 from forecastability.utils.types import ExogenousBenchmarkResult
-
-if TYPE_CHECKING:
-    from forecastability.pipeline.analyzer import ForecastabilityAnalyzerExog
 
 
 def run_exogenous_rolling_origin_evaluation(
@@ -29,9 +26,11 @@ def run_exogenous_rolling_origin_evaluation(
     min_pairs_partial: int = 50,
     analysis_scope: str = "both",
     project_extension: bool = True,
-    _analyzer_cls: type[ForecastabilityAnalyzerExog] | None = None,
 ) -> ExogenousBenchmarkResult:
     """Run train-only rolling-origin exogenous diagnostics for one pair.
+
+    Uses single-horizon helpers to avoid computing a full curve when only one
+    horizon value is consumed per rolling origin (PBE-F04).
 
     Args:
         target: Target time series array.
@@ -42,18 +41,16 @@ def run_exogenous_rolling_origin_evaluation(
         horizons: Forecast horizons to evaluate.
         n_origins: Number of rolling origins.
         random_state: Base random seed.
-        n_surrogates: Number of surrogates for significance testing.
+        n_surrogates: Number of surrogates for significance testing (carried
+            into result metadata; not used for curve computation).
         min_pairs_raw: Minimum sample pairs for raw MI estimation.
         min_pairs_partial: Minimum sample pairs for partial MI estimation.
         analysis_scope: Scope of analysis ("both", "raw", or "partial").
         project_extension: Whether to project to extension horizons.
-        _analyzer_cls: Internal injection point for the analyzer class.
-            Used by callers (e.g. pipeline.py) to allow monkeypatching.
 
     Returns:
         ExogenousBenchmarkResult with per-horizon cross-MI diagnostics.
     """
-    AnalyzerCls = _analyzer_cls if _analyzer_cls is not None else _DefaultAnalyzer
     if target.shape != exog.shape:
         raise ValueError("target and exog must have matching shape")
 
@@ -73,27 +70,28 @@ def run_exogenous_rolling_origin_evaluation(
         conditioned_vals: list[float] = []
         for idx, split in enumerate(splits):
             train_target = split.train
+            # Holdout discipline: only exog up to the origin index is used.
             train_exog = exog[: split.origin_index]
-            analyzer = AnalyzerCls(
-                n_surrogates=n_surrogates,
-                random_state=random_state + (1000 * horizon) + idx,
-            )
-            raw_curve = analyzer.compute_raw(
+            effective_rs = random_state + (1000 * horizon) + idx
+            # Single-horizon helpers avoid full-curve computation (PBE-F04).
+            raw_val = compute_raw_at_horizon(
                 train_target,
-                max_lag=horizon,
-                method="mi",
+                horizon,
+                _mi_scorer,
+                exog=train_exog,
                 min_pairs=min_pairs_raw,
-                exog=train_exog,
+                random_state=effective_rs,
             )
-            conditioned_curve = analyzer.compute_partial(
+            conditioned_val = compute_partial_at_horizon(
                 train_target,
-                max_lag=horizon,
-                method="mi",
-                min_pairs=min_pairs_partial,
+                horizon,
+                _mi_scorer,
                 exog=train_exog,
+                min_pairs=min_pairs_partial,
+                random_state=effective_rs,
             )
-            raw_vals.append(float(raw_curve[horizon - 1]))
-            conditioned_vals.append(float(conditioned_curve[horizon - 1]))
+            raw_vals.append(raw_val)
+            conditioned_vals.append(conditioned_val)
 
         if not raw_vals:
             continue
@@ -128,3 +126,4 @@ def run_exogenous_rolling_origin_evaluation(
             "project_extension": int(project_extension),
         },
     )
+

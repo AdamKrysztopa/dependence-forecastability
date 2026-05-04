@@ -199,3 +199,78 @@ def test_acceptance_mask_uses_strict_multiplier_rule(monkeypatch: pytest.MonkeyP
     assert [point.accepted for point in geometry.curve] == [False, True, False]
     assert geometry.informative_horizons == [2]
     assert geometry.information_horizon == 2
+
+
+def test_resolve_max_horizon_caps_to_feasible() -> None:
+    """PBE-F07: ``_resolve_max_horizon`` should cap the horizon at ``n - min_pairs``."""
+    # Default k_list=(3,5,8) -> min_pairs=40.
+    # n=80, max_lag_frac=1.0, max_horizon=None: pre-cap was n-1=79; now cap at n-40=40.
+    config_full_lag = AmiInformationGeometryConfig(
+        n_surrogates=99,
+        max_horizon=None,
+        max_lag_frac=1.0,
+        n_jobs=1,
+    )
+    assert geometry_service._resolve_max_horizon(80, config_full_lag) == 40
+
+    # Tiny series with min_n=16: n=50, frac=floor(50*1.0)=50, n-1=49, capped at n-40=10.
+    config_tiny = AmiInformationGeometryConfig(
+        n_surrogates=99,
+        max_horizon=None,
+        max_lag_frac=1.0,
+        min_n=16,
+        n_jobs=1,
+    )
+    assert geometry_service._resolve_max_horizon(50, config_tiny) == 10
+
+    # Long series where every horizon is already feasible: behavior unchanged.
+    # n=600, max_lag_frac=0.33, max_horizon=None -> frac=floor(600*0.33)=198,
+    # max_feasible=560, so resolved stays at 198.
+    config_long = AmiInformationGeometryConfig(
+        n_surrogates=99,
+        max_horizon=None,
+        max_lag_frac=0.33,
+        n_jobs=1,
+    )
+    assert geometry_service._resolve_max_horizon(600, config_long) == 198
+
+    # Explicit small max_horizon stays untouched on a long series.
+    config_explicit = AmiInformationGeometryConfig(
+        n_surrogates=99,
+        max_horizon=24,
+        n_jobs=1,
+    )
+    assert geometry_service._resolve_max_horizon(600, config_explicit) == 24
+
+
+def test_geometry_serial_vs_parallel_bit_identical() -> None:
+    """PBE-F07: serial and parallel surrogate computation must be bit-identical."""
+    series = generate_seasonal_periodic(n=240, period=12, seed=42)
+    serial_config = AmiInformationGeometryConfig(
+        n_surrogates=99,
+        max_horizon=12,
+        n_jobs=1,
+    )
+    parallel_config = AmiInformationGeometryConfig(
+        n_surrogates=99,
+        max_horizon=12,
+        n_jobs=2,
+    )
+    serial = compute_ami_information_geometry(series, config=serial_config, random_state=42)
+    parallel = compute_ami_information_geometry(series, config=parallel_config, random_state=42)
+
+    def _extract(geometry: object) -> tuple[list[object], list[object], list[object], list[object]]:
+        curve = geometry.curve  # type: ignore[attr-defined]
+        return (
+            [point.ami_raw for point in curve],
+            [point.ami_corrected for point in curve],
+            [point.tau for point in curve],
+            [point.accepted for point in curve],
+        )
+
+    serial_raw, serial_corr, serial_tau, serial_acc = _extract(serial)
+    parallel_raw, parallel_corr, parallel_tau, parallel_acc = _extract(parallel)
+    assert serial_raw == parallel_raw
+    assert serial_corr == parallel_corr
+    assert serial_tau == parallel_tau
+    assert serial_acc == parallel_acc

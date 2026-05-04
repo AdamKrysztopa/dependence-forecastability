@@ -13,6 +13,7 @@ from __future__ import annotations
 import importlib
 from typing import Literal
 
+import joblib
 import numpy as np
 
 from forecastability.adapters._tigramite_shared import (
@@ -55,6 +56,55 @@ def _compute_auto_threshold(mi_values: list[float]) -> float:
     return max(median_mi * _DEFAULT_THRESHOLD_MULTIPLIER, _DEFAULT_THRESHOLD_FLOOR)
 
 
+def _compute_single_triplet(
+    data: np.ndarray,
+    target_idx: int,
+    source_idx: int,
+    lag: int,
+    var_names: list[str],
+    *,
+    n_timesteps: int,
+    min_pairs: int,
+    n_neighbors: int,
+    random_state: int,
+) -> Phase0MiScore | None:
+    """Compute MI for a single (target, source, lag) triplet.
+
+    Args:
+        data: 2-D array (n_timesteps, n_variables).
+        target_idx: Column index of the target variable.
+        source_idx: Column index of the source variable.
+        lag: Lag to evaluate (>= 1).
+        var_names: Variable names matching columns of *data*.
+        n_timesteps: Total number of timesteps in *data*.
+        min_pairs: Minimum aligned pairs required for MI estimation.
+        n_neighbors: kNN neighbor count for MI estimation.
+        random_state: Deterministic random seed.
+
+    Returns:
+        ``Phase0MiScore`` if enough aligned pairs exist, else ``None``.
+    """
+    effective_len = n_timesteps - lag
+    if effective_len < min_pairs:
+        return None
+    past = data[:effective_len, source_idx]
+    future = data[lag : lag + effective_len, target_idx]
+    mi = compute_conditional_mi_with_backend(
+        past,
+        future,
+        conditioning=None,
+        n_neighbors=n_neighbors,
+        min_pairs=min_pairs,
+        random_state=random_state,
+    )
+    return Phase0MiScore(
+        source=var_names[source_idx],
+        lag=lag,
+        target=var_names[target_idx],
+        mi_value=mi,
+    )
+
+
 def _run_phase0(
     data: np.ndarray,
     var_names: list[str],
@@ -64,6 +114,7 @@ def _run_phase0(
     min_pairs: int,
     random_state: int,
     ami_threshold: float | None,
+    n_jobs: int = 1,
 ) -> tuple[list[Phase0MiScore], float, int, int]:
     """Phase 0: compute unconditional MI for every (source, lag, target) triplet.
 
@@ -75,40 +126,38 @@ def _run_phase0(
         min_pairs: Minimum aligned pairs for MI estimation.
         random_state: Deterministic random seed.
         ami_threshold: If ``None``, auto-compute from noise floor.
+        n_jobs: Number of parallel workers (1 = sequential).
 
     Returns:
         Tuple of (kept scores, threshold, pruned count, kept count).
     """
     n_vars = len(var_names)
     n_timesteps = data.shape[0]
-    all_mi: list[float] = []
-    all_scores: list[Phase0MiScore] = []
 
-    for target_idx in range(n_vars):
-        for source_idx in range(n_vars):
-            for lag in range(1, max_lag + 1):
-                effective_len = n_timesteps - lag
-                if effective_len < min_pairs:
-                    continue
-                past = data[:effective_len, source_idx]
-                future = data[lag : lag + effective_len, target_idx]
-                mi = compute_conditional_mi_with_backend(
-                    past,
-                    future,
-                    conditioning=None,
-                    n_neighbors=n_neighbors,
-                    min_pairs=min_pairs,
-                    random_state=random_state,
-                )
-                all_mi.append(mi)
-                all_scores.append(
-                    Phase0MiScore(
-                        source=var_names[source_idx],
-                        lag=lag,
-                        target=var_names[target_idx],
-                        mi_value=mi,
-                    )
-                )
+    triplets = [
+        (target_idx, source_idx, lag)
+        for target_idx in range(n_vars)
+        for source_idx in range(n_vars)
+        for lag in range(1, max_lag + 1)
+    ]
+
+    raw_results: list[Phase0MiScore | None] = joblib.Parallel(n_jobs=n_jobs, backend="loky")(
+        joblib.delayed(_compute_single_triplet)(
+            data,
+            target_idx,
+            source_idx,
+            lag,
+            var_names,
+            n_timesteps=n_timesteps,
+            min_pairs=min_pairs,
+            n_neighbors=n_neighbors,
+            random_state=random_state,
+        )
+        for target_idx, source_idx, lag in triplets
+    )
+
+    all_scores: list[Phase0MiScore] = [r for r in raw_results if r is not None]
+    all_mi: list[float] = [s.mi_value for s in all_scores]
 
     threshold = ami_threshold if ami_threshold is not None else _compute_auto_threshold(all_mi)
     kept = [s for s in all_scores if s.mi_value > threshold]
@@ -169,6 +218,7 @@ def _run_pcmci_plus(
     alpha: float,
     random_state: int,
     link_assumptions: dict[int, dict[tuple[int, int], str]],
+    verbosity: int = 0,
 ) -> dict[str, object]:
     """Run tigramite PCMCI+ with pre-built link_assumptions.
 
@@ -182,6 +232,7 @@ def _run_pcmci_plus(
         random_state: Deterministic random seed.
         link_assumptions: Pruned link set from Phase 0 in tigramite
             ``link_assumptions`` format.
+        verbosity: Tigramite verbosity level (0 = silent).
 
     Returns:
         Raw tigramite results dict containing 'graph' and 'val_matrix'.
@@ -192,7 +243,7 @@ def _run_pcmci_plus(
 
     np.random.seed(random_state)  # noqa: NPY002
     dataframe = pp.DataFrame(data.astype(float, copy=False), var_names=var_names)
-    pcmci = pcmci_cls(dataframe=dataframe, cond_ind_test=ci_test, verbosity=0)
+    pcmci = pcmci_cls(dataframe=dataframe, cond_ind_test=ci_test, verbosity=verbosity)
     results: dict[str, object] = pcmci.run_pcmciplus(
         tau_min=0,
         tau_max=max_lag,
@@ -337,6 +388,10 @@ class PcmciAmiAdapter:
         1. Run PCMCI+ with ``link_assumptions`` built from the Phase 0 survivors.
         2. Map PCMCI+ output (which already performs skeleton + MCI orientation)
            to ``CausalGraphResult``.
+
+    The ``n_permutations`` argument controls the shuffle-test null size of the
+    ``knn_cmi`` CI test. The default is 199 and the floor is 99; values below
+    99 are rejected at construction time to keep p-values meaningful.
     """
 
     def __init__(
@@ -347,16 +402,28 @@ class PcmciAmiAdapter:
         n_neighbors: int = 8,
         min_pairs: int = 50,
         shuffle_scheme: Literal["iid", "block"] = "iid",
+        n_permutations: int = 199,
+        pcmci_max_lag: int | None = None,
+        verbosity: int = 0,
+        n_jobs_phase0: int = 1,
     ) -> None:
         from forecastability.diagnostics.knn_cmi_ci_test import _validate_shuffle_scheme
 
         _validate_shuffle_scheme(shuffle_scheme)
+        if n_permutations < 99:
+            raise ValueError(
+                f"n_permutations must be >= 99 for significance claims; got {n_permutations}"
+            )
         _check_tigramite_available()
         self._ci_test_name = ci_test
         self._ami_threshold = ami_threshold
         self._n_neighbors = n_neighbors
         self._min_pairs = min_pairs
         self._shuffle_scheme: Literal["iid", "block"] = shuffle_scheme
+        self._n_permutations = n_permutations
+        self._pcmci_max_lag = pcmci_max_lag
+        self._verbosity = verbosity
+        self._n_jobs_phase0 = n_jobs_phase0
 
     def _build_ci_test(self, *, seed: int = 42) -> object:
         """Instantiate the tigramite conditional-independence test."""
@@ -365,7 +432,7 @@ class PcmciAmiAdapter:
 
             return build_knn_cmi_test(
                 n_neighbors=self._n_neighbors,
-                n_permutations=199,
+                n_permutations=self._n_permutations,
                 residual_backend="linear_residual",
                 seed=seed,
                 shuffle_scheme=self._shuffle_scheme,
@@ -435,7 +502,11 @@ class PcmciAmiAdapter:
         """
         _validate_inputs(data, var_names, max_lag=max_lag, alpha=alpha)
 
-        # Phase 0 — AMI triage
+        effective_pcmci_max_lag = (
+            self._pcmci_max_lag if self._pcmci_max_lag is not None else max_lag
+        )
+
+        # Phase 0 — AMI triage (uses original max_lag to score all candidate lags)
         kept_scores, threshold, pruned_count, kept_count = _run_phase0(
             data,
             var_names,
@@ -444,20 +515,24 @@ class PcmciAmiAdapter:
             min_pairs=self._min_pairs,
             random_state=random_state,
             ami_threshold=self._ami_threshold,
+            n_jobs=self._n_jobs_phase0,
         )
 
-        assumptions = _build_link_assumptions(kept_scores, var_names)
+        # Filter Phase 0 survivors to effective_pcmci_max_lag before building assumptions
+        phase1_scores = [s for s in kept_scores if s.lag <= effective_pcmci_max_lag]
+        assumptions = _build_link_assumptions(phase1_scores, var_names)
 
-        # Phases 1+2 — PCMCI+ on pruned candidates
+        # Phases 1+2 — PCMCI+ on pruned candidates using effective_pcmci_max_lag
         results = _run_pcmci_plus(
             data,
             var_names,
             ci_test_name=self._ci_test_name,
             ci_test=self._build_ci_test(seed=random_state),
-            max_lag=max_lag,
+            max_lag=effective_pcmci_max_lag,
             alpha=alpha,
             random_state=random_state,
             link_assumptions=assumptions,
+            verbosity=self._verbosity,
         )
 
         base_metadata: dict[str, str | int | float] = {
@@ -465,6 +540,7 @@ class PcmciAmiAdapter:
             "ci_test": self._ci_test_name,
             "alpha": alpha,
             "max_lag": max_lag,
+            "pcmci_max_lag": effective_pcmci_max_lag,
             "random_state": random_state,
             "n_variables": len(var_names),
             "n_timesteps": data.shape[0],

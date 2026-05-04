@@ -6,7 +6,7 @@ selection into a typed :class:`LaggedExogBundle` output.
 
 from __future__ import annotations
 
-from typing import cast
+from typing import Literal, cast
 
 import numpy as np
 
@@ -44,6 +44,7 @@ def _validate_inputs(
     max_lag: int,
     n_surrogates: int,
     alpha: float,
+    significance_mode: str = "phase",
 ) -> tuple[np.ndarray, dict[str, np.ndarray]]:
     """Validate use-case inputs and return aligned series.
 
@@ -54,6 +55,8 @@ def _validate_inputs(
         max_lag: Maximum lag horizon.
         n_surrogates: Number of surrogates for significance computation.
         alpha: Significance level.
+        significance_mode: ``"phase"`` enforces the n_surrogates floor;
+            ``"none"`` skips significance so the floor is not required.
 
     Returns:
         Tuple of validated target and sorted driver mapping.
@@ -61,7 +64,7 @@ def _validate_inputs(
     Raises:
         ValueError: If any contract condition is violated.
     """
-    if n_surrogates < 99:
+    if significance_mode == "phase" and n_surrogates < 99:
         raise ValueError(f"n_surrogates must be >= 99, got {n_surrogates}")
     if max_lag < 1:
         raise ValueError(f"max_lag must be >= 1, got {max_lag}")
@@ -188,6 +191,8 @@ def run_lagged_exogenous_triage(
     include_zero_lag_diagnostic: bool = True,
     include_cross_correlation: bool = True,
     include_cross_ami: bool = True,
+    n_jobs: int = 1,
+    significance_mode: Literal["phase", "none"] = "phase",
 ) -> LaggedExogBundle:
     """Run fixed-lag exogenous triage and return a typed lagged-exog bundle.
 
@@ -197,6 +202,8 @@ def run_lagged_exogenous_triage(
         target_name: Human-readable target name.
         max_lag: Maximum lag horizon for profile/selection computation.
         n_surrogates: Number of surrogates used for cross-AMI significance bands.
+            Must be >= 99 when ``significance_mode="phase"``; ignored when
+            ``significance_mode="none"``.
         alpha: Significance level metadata recorded in the output bundle.
         random_state: Deterministic random seed.
         selector_config: Sparse lag selector configuration.
@@ -204,6 +211,17 @@ def run_lagged_exogenous_triage(
         include_zero_lag_diagnostic: Whether profile rows should include lag 0.
         include_cross_correlation: Whether to compute signed cross-correlation profile.
         include_cross_ami: Whether to compute cross-AMI profile and surrogate bands.
+        n_jobs: Worker count forwarded to the surrogate-band executor.
+            ``1`` (default) preserves serial behaviour; ``-1`` uses all CPUs.
+            Per-driver iteration order is always deterministic regardless of
+            ``n_jobs`` because parallelism only fans out within each driver's
+            surrogate-band call.
+        significance_mode: Controls phase-surrogate significance computation.
+            ``"phase"`` (default) preserves full behaviour; ``"none"`` skips
+            all surrogate-band computation (faster screening pass) and returns
+            rows with ``significance=None`` and
+            ``significance_source="not_computed"``.  When ``"none"``, the
+            ``n_surrogates >= 99`` floor is not enforced.
 
     Returns:
         Composite :class:`LaggedExogBundle` with profile rows and sparse selections.
@@ -211,6 +229,9 @@ def run_lagged_exogenous_triage(
     Raises:
         ValueError: If inputs are invalid.
     """
+    if n_jobs != -1 and n_jobs < 1:
+        raise ValueError("n_jobs must be -1 or >= 1")
+
     validated_target, validated_drivers = _validate_inputs(
         target=target,
         drivers=drivers,
@@ -218,6 +239,7 @@ def run_lagged_exogenous_triage(
         max_lag=max_lag,
         n_surrogates=n_surrogates,
         alpha=alpha,
+        significance_mode=significance_mode,
     )
 
     known_future_driver_names = _resolve_known_future_driver_names(
@@ -269,7 +291,7 @@ def run_lagged_exogenous_triage(
         )
 
         upper_band: np.ndarray | None = None
-        if include_cross_ami:
+        if include_cross_ami and significance_mode == "phase":
             _, upper_band = compute_significance_bands_generic(
                 validated_target,
                 n_surrogates,
@@ -279,7 +301,7 @@ def run_lagged_exogenous_triage(
                 "raw",
                 exog=driver_series,
                 min_pairs=30,
-                n_jobs=1,
+                n_jobs=n_jobs,
                 lag_range=lag_range,
             )
 
@@ -306,7 +328,9 @@ def run_lagged_exogenous_triage(
                     cross_pami=None,
                     significance=significance,
                     significance_source=(
-                        "phase_surrogate_xami" if include_cross_ami else "not_computed"
+                        "phase_surrogate_xami"
+                        if include_cross_ami and significance_mode == "phase"
+                        else "not_computed"
                     ),
                 )
             )
@@ -339,6 +363,7 @@ def run_lagged_exogenous_triage(
         "include_cross_correlation": int(include_cross_correlation),
         "include_cross_ami": int(include_cross_ami),
         "selector_name": selector_config.selector_name,
+        "significance_mode": significance_mode,
     }
     if known_future_driver_names:
         metadata["known_future_contract_caution"] = _KNOWN_FUTURE_CAUTION

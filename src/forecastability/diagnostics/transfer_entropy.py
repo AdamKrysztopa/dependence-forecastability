@@ -162,6 +162,60 @@ def compute_transfer_entropy(
     )
 
 
+def _compute_transfer_entropy_curve_validated(
+    src: np.ndarray,
+    tgt: np.ndarray,
+    *,
+    max_lag: int,
+    history_mode: Literal["canonical", "fixed"],
+    fixed_history: int | None,
+    backend: CMIBackendName,
+    rf_estimators: int,
+    rf_max_depth: int | None,
+    et_estimators: int,
+    et_max_depth: int | None,
+    n_neighbors: int,
+    min_pairs: int,
+    random_state: int,
+) -> np.ndarray:
+    """Run the per-lag TE curve loop on already-validated equal-length arrays.
+
+    Per-lag responsibilities are preserved: ``_resolve_history`` runs per lag,
+    ``_validate_conditional_te_sample_size`` runs per lag (n_rows depends on
+    lag), and the conditioning matrix is rebuilt per lag.
+    """
+    curve = np.zeros(max_lag, dtype=float)
+    for lag in range(1, max_lag + 1):
+        history = None if history_mode == "canonical" else fixed_history
+        resolved_history = _resolve_history(lag=lag, history=history)
+        _validate_conditional_te_sample_size(
+            n_rows=tgt.size - lag,
+            history=resolved_history,
+            min_pairs=min_pairs,
+        )
+        source_lagged = src[:-lag]
+        target_future = tgt[lag:]
+        conditioning = _build_target_history_matrix(
+            tgt,
+            lag=lag,
+            history=resolved_history,
+        )
+        curve[lag - 1] = compute_conditional_mi_with_backend(
+            source_lagged,
+            target_future,
+            conditioning=conditioning,
+            backend=backend,
+            rf_estimators=rf_estimators,
+            rf_max_depth=rf_max_depth,
+            et_estimators=et_estimators,
+            et_max_depth=et_max_depth,
+            n_neighbors=n_neighbors,
+            min_pairs=min_pairs,
+            random_state=random_state + lag,
+        )
+    return curve
+
+
 def compute_transfer_entropy_curve(
     source: np.ndarray,
     target: np.ndarray,
@@ -203,22 +257,24 @@ def compute_transfer_entropy_curve(
         raise ValueError(f"max_lag must be >= 1; got {max_lag}")
     if history_mode not in {"canonical", "fixed"}:
         raise ValueError("history_mode must be one of {'canonical', 'fixed'}")
-
-    curve = np.zeros(max_lag, dtype=float)
-    for lag in range(1, max_lag + 1):
-        history = None if history_mode == "canonical" else fixed_history
-        curve[lag - 1] = compute_transfer_entropy(
-            source,
-            target,
-            lag=lag,
-            history=history,
-            backend=backend,
-            rf_estimators=rf_estimators,
-            rf_max_depth=rf_max_depth,
-            et_estimators=et_estimators,
-            et_max_depth=et_max_depth,
-            n_neighbors=n_neighbors,
-            min_pairs=min_pairs,
-            random_state=random_state + lag,
-        )
-    return curve
+    src, tgt = _validate_directional_pair(
+        source,
+        target,
+        lag=max_lag,
+        min_pairs=min_pairs,
+    )
+    return _compute_transfer_entropy_curve_validated(
+        src,
+        tgt,
+        max_lag=max_lag,
+        history_mode=history_mode,
+        fixed_history=fixed_history,
+        backend=backend,
+        rf_estimators=rf_estimators,
+        rf_max_depth=rf_max_depth,
+        et_estimators=et_estimators,
+        et_max_depth=et_max_depth,
+        n_neighbors=n_neighbors,
+        min_pairs=min_pairs,
+        random_state=random_state,
+    )

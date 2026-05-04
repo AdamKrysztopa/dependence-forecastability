@@ -94,6 +94,15 @@ def compute_significance_bands(
         raise ValueError("n_surrogates must be >= 99")
     if not 0.0 < alpha < 1.0:
         raise ValueError("alpha must be in (0, 1)")
+    if metric_name not in {"ami", "pami_linear_residual"}:
+        raise ValueError(
+            "metric_name must be 'ami' or 'pami_linear_residual', "
+            f"got {metric_name!r}"
+        )
+    if max_lag < 1:
+        raise ValueError(f"max_lag must be >= 1, got {max_lag}")
+    if n_jobs != -1 and n_jobs < 1:
+        raise ValueError("n_jobs must be -1 or >= 1")
 
     surrogates = phase_surrogates(
         ts,
@@ -106,14 +115,16 @@ def compute_significance_bands(
         for i in range(n_surrogates)
     ]
 
+    result = np.empty((n_surrogates, max_lag), dtype=float)
     if n_jobs == 1:
-        values: list[np.ndarray] = [_eval_surrogate(a) for a in args_list]
+        for i, args in enumerate(args_list):
+            result[i] = _eval_surrogate(args)
     else:
         n_workers = (os.cpu_count() or 1) if n_jobs == -1 else n_jobs
         with ProcessPoolExecutor(max_workers=min(n_workers, n_surrogates)) as pool:
-            values = list(pool.map(_eval_surrogate, args_list))
+            for i, row in enumerate(pool.map(_eval_surrogate, args_list)):
+                result[i] = row
 
-    stacked = np.vstack(values)
-    lower = np.percentile(stacked, 100.0 * alpha / 2.0, axis=0)
-    upper = np.percentile(stacked, 100.0 * (1.0 - alpha / 2.0), axis=0)
+    lower = np.percentile(result, 100.0 * alpha / 2.0, axis=0)
+    upper = np.percentile(result, 100.0 * (1.0 - alpha / 2.0), axis=0)
     return lower, upper

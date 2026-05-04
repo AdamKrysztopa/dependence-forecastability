@@ -19,14 +19,16 @@ __all__ = ["build_pcmci_plus"]
 def build_pcmci_plus(
     *,
     ci_test: Literal["parcorr", "gpdc", "cmiknn"] = "parcorr",
+    verbosity: int = 0,
 ) -> CausalGraphPort:
     """Create a PCMCI+ causal-discovery adapter.
 
     Args:
         ci_test: Conditional-independence test backend.
+        verbosity: Tigramite verbosity level (0 = silent).
 
     Returns:
         A ``CausalGraphPort``-compatible adapter.
     """
     mod = importlib.import_module("forecastability.adapters.tigramite_adapter")
-    return mod.TigramiteAdapter(ci_test=ci_test)
+    return mod.TigramiteAdapter(ci_test=ci_test, verbosity=verbosity)

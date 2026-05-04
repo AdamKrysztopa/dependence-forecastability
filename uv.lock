@@ -542,7 +542,7 @@ wheels = [
 
 [[package]]
 name = "dependence-forecastability"
-version = "0.4.0"
+version = "0.4.1"
 source = { editable = "." }
 dependencies = [
     { name = "matplotlib" },
@@ -554,7 +554,6 @@ dependencies = [
     { name = "scikit-learn" },
     { name = "scipy" },
     { name = "statsmodels" },
-    { name = "yfinance" },
 ]
 
 [package.optional-dependencies]
@@ -566,6 +565,9 @@ calendar = [
 ]
 causal = [
     { name = "tigramite" },
+]
+data = [
+    { name = "yfinance" },
 ]
 transport = [
     { name = "fastapi" },
@@ -603,9 +605,9 @@ requires-dist = [
     { name = "statsmodels", specifier = ">=0.14" },
     { name = "tigramite", marker = "extra == 'causal'", specifier = ">=5.2" },
     { name = "uvicorn", extras = ["standard"], marker = "extra == 'transport'", specifier = ">=0.32" },
-    { name = "yfinance", specifier = ">=0.2" },
+    { name = "yfinance", marker = "extra == 'data'", specifier = ">=0.2" },
 ]
-provides-extras = ["agent", "causal", "transport", "calendar"]
+provides-extras = ["agent", "causal", "data", "transport", "calendar"]
 
 [package.metadata.requires-dev]
 dev = [

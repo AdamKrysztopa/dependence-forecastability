@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import numpy as np
 
-from forecastability.metrics import compute_ami, compute_pami_linear_residual
+from forecastability.metrics import (
+    compute_ami_at_horizon,
+    compute_pami_at_horizon,
+)
 from forecastability.models import (
     forecast_ets,
     forecast_lightgbm_autoreg,
@@ -108,23 +111,25 @@ def run_rolling_origin_evaluation(
                 continue
 
             # Horizon-specific diagnostics are computed on train windows only.
-            ami_curve = compute_ami(
+            # Single-horizon helpers avoid computing the full curve when only
+            # one horizon value is consumed (PBE-F04).
+            ami_val = compute_ami_at_horizon(
                 train,
-                max_lag=horizon,
+                horizon,
                 n_neighbors=8,
                 min_pairs=_AMI_MIN_PAIRS,
                 random_state=random_state + idx,
             )
-            pami_curve = compute_pami_linear_residual(
+            pami_val = compute_pami_at_horizon(
                 train,
-                max_lag=horizon,
+                horizon,
                 n_neighbors=8,
                 min_pairs=_PAMI_MIN_PAIRS,
                 random_state=random_state + idx,
             )
 
-            ami_vals.append(float(ami_curve[horizon - 1]))
-            pami_vals.append(float(pami_curve[horizon - 1]))
+            ami_vals.append(ami_val)
+            pami_vals.append(pami_val)
 
             # Forecast scoring is computed on post-origin holdout only.
             pred_naive = forecast_naive(train, horizon)

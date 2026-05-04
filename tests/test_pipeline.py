@@ -145,61 +145,65 @@ def test_rolling_origin_pipeline_optional_models_run() -> None:
     assert "nbeats" in model_names
 
 
-def test_exogenous_rolling_origin_pipeline_is_train_only_for_diagnostics(monkeypatch) -> None:
-    ts = np.sin(np.linspace(0.0, 20.0, 160))
-    exog = np.cos(np.linspace(0.0, 20.0, 160))
-    seen: list[tuple[int, int]] = []
+def test_exogenous_rolling_origin_pipeline_is_train_only_for_diagnostics() -> None:
+    """Diagnostics must be computed on train windows only.
 
-    class StubAnalyzer:
-        def __init__(self, n_surrogates: int, random_state: int) -> None:
-            assert n_surrogates == 99
-            self.random_state = random_state
+    Uses n_origins=1 so the train/holdout boundary is unambiguous: the single
+    split's train window ends at origin_index, and everything after is holdout.
+    Perturbing only the holdout must leave cross-MI diagnostics unchanged.
+    """
+    n = 200
+    ts_clean = np.sin(np.linspace(0.0, 20.0, n))
+    exog_clean = np.cos(np.linspace(0.0, 20.0, n))
 
-        def compute_raw(
-            self,
-            train_target: np.ndarray,
-            *,
-            max_lag: int,
-            method: str,
-            min_pairs: int,
-            exog: np.ndarray | None = None,
-        ) -> np.ndarray:
-            del method, min_pairs
-            assert exog is not None
-            seen.append((len(train_target), len(exog)))
-            return np.full(max_lag, 0.2)
+    H = 3
+    n_origins = 1
+    horizons = [H]
 
-        def compute_partial(
-            self,
-            train_target: np.ndarray,
-            *,
-            max_lag: int,
-            method: str,
-            min_pairs: int,
-            exog: np.ndarray | None = None,
-        ) -> np.ndarray:
-            del train_target, method, min_pairs, exog
-            return np.full(max_lag, 0.3)
+    splits = build_expanding_window_splits(ts_clean, n_origins=n_origins, horizon=H)
+    holdout_start = splits[0].origin_index
 
-    monkeypatch.setattr(_pipeline_impl, "ForecastabilityAnalyzerExog", StubAnalyzer)
+    # Perturb only the holdout portion (deterministic).
+    ts_perturbed = ts_clean.copy()
+    exog_perturbed = exog_clean.copy()
+    ts_perturbed[holdout_start:] = 1000.0
+    exog_perturbed[holdout_start:] = 1000.0
 
-    result = run_exogenous_rolling_origin_evaluation(
-        ts,
-        exog,
+    result_clean = run_exogenous_rolling_origin_evaluation(
+        ts_clean,
+        exog_clean,
         case_id="demo",
         target_name="target",
         exog_name="driver",
-        horizons=[1, 3],
-        n_origins=4,
+        horizons=horizons,
+        n_origins=n_origins,
+        random_state=42,
+    )
+    result_perturbed = run_exogenous_rolling_origin_evaluation(
+        ts_perturbed,
+        exog_perturbed,
+        case_id="demo",
+        target_name="target",
+        exog_name="driver",
+        horizons=horizons,
+        n_origins=n_origins,
         random_state=42,
     )
 
-    assert result.metadata["train_only_diagnostics"] == 1
-    assert result.metadata["holdout_only_scoring"] == 1
-    assert result.warning_horizons == [1, 3]
-    assert result.raw_cross_mi_by_horizon[1] == 0.2
-    assert result.conditioned_cross_mi_by_horizon[1] == 0.3
-    assert all(train_len == exog_len for train_len, exog_len in seen)
+    # Metadata constants must be set regardless of computation path.
+    assert result_clean.metadata["train_only_diagnostics"] == 1
+    assert result_clean.metadata["holdout_only_scoring"] == 1
+
+    # Train-only diagnostics must be identical: holdout perturbation must not
+    # leak into the MI estimates.
+    assert (
+        result_clean.raw_cross_mi_by_horizon[H]
+        == result_perturbed.raw_cross_mi_by_horizon[H]
+    )
+    assert (
+        result_clean.conditioned_cross_mi_by_horizon[H]
+        == result_perturbed.conditioned_cross_mi_by_horizon[H]
+    )
 
 
 def test_exogenous_rolling_origin_pipeline_requires_matching_shapes() -> None:

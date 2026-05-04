@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import numpy as np
-from sklearn.linear_model import LinearRegression
 
 from forecastability.metrics import _scale_series
+from forecastability.metrics._lag_design import (
+    build_intermediate_design,
+    residualize_with_intercept,
+)
 from forecastability.metrics.scorers import DependenceScorer
 
 
@@ -67,17 +70,31 @@ def _residualize(
     Returns:
         Tuple of ``(residualized_past, residualized_future)``.
     """
+    return _residualize_prescaled(scaled, h, past, future, exog_present=exog is not None)
+
+
+def _residualize_prescaled(
+    scaled: np.ndarray,
+    h: int,
+    past: np.ndarray,
+    future: np.ndarray,
+    *,
+    exog_present: bool,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Residualize past and future using a boolean exog flag.
+
+    Service-internal variant of :func:`_residualize` that takes a boolean
+    flag instead of an array reference, so prescaled callers do not need to
+    keep the original exog array around.
+    """
     if h <= 1:
         return past, future
-    n_rows = scaled.size - h
-    cols = [scaled[offset : offset + n_rows] for offset in range(1, h)]
-    z = np.column_stack(cols)
-    model_future = LinearRegression().fit(z, future)
-    res_future = future - model_future.predict(z)
-    if exog is not None:
+    z = build_intermediate_design(scaled, h)
+    if exog_present:
+        (res_future,) = residualize_with_intercept(z, (future,))
         return past.copy(), res_future
-    model_past = LinearRegression().fit(z, past)
-    return past - model_past.predict(z), res_future
+    res_past, res_future = residualize_with_intercept(z, (past, future))
+    return res_past, res_future
 
 
 def compute_partial_curve(
@@ -114,6 +131,50 @@ def compute_partial_curve(
     """
     scaled = _scale_series(series)
     predictor = _scale_series(exog) if exog is not None else scaled
+    return _compute_partial_curve_prescaled(
+        scaled,
+        predictor,
+        max_lag,
+        scorer,
+        exog_present=exog is not None,
+        min_pairs=min_pairs,
+        random_state=random_state,
+        lag_range=lag_range,
+    )
+
+
+def _compute_partial_curve_prescaled(
+    scaled: np.ndarray,
+    predictor: np.ndarray,
+    max_lag: int,
+    scorer: DependenceScorer,
+    *,
+    exog_present: bool,
+    min_pairs: int,
+    random_state: int,
+    lag_range: tuple[int, int] | None = None,
+) -> np.ndarray:
+    """Inner partial-curve loop on already-scaled inputs.
+
+    Service-internal helper that skips ``_scale_series`` so callers (such as
+    significance bands) can hoist scaling outside per-surrogate loops while
+    keeping behavior bit-identical to :func:`compute_partial_curve`.
+
+    Args:
+        scaled: Pre-scaled target series (output of ``_scale_series``).
+        predictor: Pre-scaled predictor series; equals ``scaled`` for the
+            univariate case or pre-scaled exog otherwise.
+        max_lag: Maximum lag to evaluate.
+        scorer: Callable dependence scorer.
+        exog_present: ``True`` when an exogenous predictor is in use; controls
+            whether *past* is residualized (mirrors :func:`_residualize`).
+        min_pairs: Minimum number of sample pairs required per lag.
+        random_state: Base random seed for the scorer.
+        lag_range: Optional inclusive lag bounds ``(start_lag, end_lag)``.
+
+    Returns:
+        1-D array with one score per evaluated lag.
+    """
     lag_start, lag_end = _resolve_lag_range(max_lag=max_lag, lag_range=lag_range)
 
     if lag_end < lag_start:
@@ -129,6 +190,59 @@ def compute_partial_curve(
         else:
             past = predictor[:-h]
             future = scaled[h:]
-        res_past, res_future = _residualize(scaled, h, past, future, exog=exog)
+        res_past, res_future = _residualize_prescaled(
+            scaled, h, past, future, exog_present=exog_present
+        )
         curve[h - lag_start] = scorer(res_past, res_future, random_state=random_state + h)
     return curve
+
+
+def compute_partial_at_horizon(
+    series: np.ndarray,
+    h: int,
+    scorer: DependenceScorer,
+    *,
+    exog: np.ndarray | None = None,
+    min_pairs: int,
+    random_state: int,
+) -> float:
+    """Compute partial dependence at a single horizon *h* (generic, compute-anyway).
+
+    Returns the same value as
+    ``compute_partial_curve(series, H, scorer, exog=exog, min_pairs=min_pairs,
+    random_state=random_state)[h - 1]``
+    for any ``H >= h`` with the default ``lag_range=None``.
+
+    Unlike the legacy ``compute_pami_at_horizon``, this helper does **not**
+    apply the underdetermined-conditioning break.  It mirrors the generic
+    ``_residualize`` path that always computes (compute-anyway semantics).
+
+    Invariant F: ``_scale_series`` is called once on the full series (and exog)
+    before slicing.  The aligned pair is never independently scaled.
+
+    Args:
+        series: Target univariate time series.
+        h: Horizon index (1-based).
+        scorer: Callable dependence scorer.
+        exog: Optional exogenous series; if provided, only the future target is
+            residualized (past comes from the exogenous predictor).
+        min_pairs: Minimum number of aligned sample pairs.
+        random_state: Base random seed; internally uses ``random_state + h``
+            for the scorer (mirrors the full-curve convention).
+
+    Returns:
+        Scorer value at horizon *h*, or ``0.0`` when the series is too short.
+
+    Raises:
+        ValueError: If ``h < 1``.
+    """
+    if h < 1:
+        raise ValueError("h must be >= 1")
+    scaled = _scale_series(series)
+    predictor = _scale_series(exog) if exog is not None else scaled
+    if scaled.size - h < min_pairs:
+        return 0.0
+    past = predictor[:-h]
+    future = scaled[h:]
+    res_past, res_future = _residualize(scaled, h, past, future, exog=exog)
+    return float(scorer(res_past, res_future, random_state=random_state + h))

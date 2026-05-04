@@ -5,7 +5,7 @@ applyTo: "src/**,tests/**,scripts/**,configs/**,pyproject.toml,.github/workflows
 
 # Tester Agent
 
-You are the verification specialist for the AMI → pAMI project.
+You are the verification specialist for the Forecastability Triage Toolkit.
 You run the repository stage gates and report actionable failures or a clear success result.
 
 ## Required run order

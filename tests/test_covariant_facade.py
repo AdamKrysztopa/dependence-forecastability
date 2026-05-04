@@ -6,6 +6,7 @@ import importlib
 from collections import defaultdict
 from collections.abc import Callable
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -251,6 +252,56 @@ def test_requested_cross_method_only_populates_its_own_summary_column(
         assert "conditioning_scope_disclaimer" not in result.metadata
 
 
+@pytest.mark.parametrize(
+    ("methods", "expected_calls"),
+    [
+        (["cross_ami"], {"raw": 1, "partial": 0, "significance": 1}),
+        (["cross_pami"], {"raw": 0, "partial": 1, "significance": 0}),
+        (["cross_ami", "cross_pami"], {"raw": 1, "partial": 1, "significance": 1}),
+    ],
+)
+def test_cross_method_subset_skips_unrequested_curve_work(
+    monkeypatch: pytest.MonkeyPatch,
+    methods: list[str],
+    expected_calls: dict[str, int],
+) -> None:
+    calls = {"raw": 0, "partial": 0, "significance": 0}
+
+    def _raw_curve(*args: object, **kwargs: object) -> np.ndarray:
+        del args, kwargs
+        calls["raw"] += 1
+        return np.array([0.10, 0.20])
+
+    def _partial_curve(*args: object, **kwargs: object) -> np.ndarray:
+        del args, kwargs
+        calls["partial"] += 1
+        return np.array([0.05, 0.07])
+
+    def _significance_bands(*args: object, **kwargs: object) -> tuple[np.ndarray, np.ndarray]:
+        del args, kwargs
+        calls["significance"] += 1
+        return np.array([0.0, 0.0]), np.array([0.15, 0.25])
+
+    monkeypatch.setattr(covariant_module, "compute_exog_raw_curve", _raw_curve)
+    monkeypatch.setattr(covariant_module, "compute_exog_partial_curve", _partial_curve)
+    monkeypatch.setattr(covariant_module, "compute_significance_bands_generic", _significance_bands)
+
+    target = np.arange(12, dtype=float)
+    drivers = {"driver": target + 1.0}
+
+    result = run_covariant_analysis(
+        target,
+        drivers,
+        max_lag=2,
+        methods=methods,
+        n_surrogates=99,
+        random_state=42,
+    )
+
+    assert calls == expected_calls
+    assert len(result.summary_table) == 2
+
+
 def test_lagged_exog_conditioning_metadata_is_truthful(
     benchmark_df: pd.DataFrame,
     monkeypatch: pytest.MonkeyPatch,
@@ -492,6 +543,74 @@ def test_rank_is_always_populated(benchmark_df: pd.DataFrame) -> None:
     assert sorted(ranks) == list(range(1, len(result.summary_table) + 1))
 
 
+def test_significance_mode_none_skips_bands() -> None:
+    """significance_mode='none' produces rows with significance=None for cross_ami."""
+    rng = np.random.default_rng(42)
+    target = rng.standard_normal(200)
+    drivers = {"d1": rng.standard_normal(200), "d2": rng.standard_normal(200)}
+
+    bundle = run_covariant_analysis(
+        target,
+        drivers,
+        methods=["cross_ami"],
+        max_lag=5,
+        n_surrogates=99,
+        random_state=42,
+        significance_mode="none",
+    )
+
+    assert all(row.significance is None for row in bundle.summary_table)
+
+
+def test_significance_mode_none_vs_phase_ami_values() -> None:
+    """cross_ami values are identical regardless of significance_mode."""
+    rng = np.random.default_rng(42)
+    target = rng.standard_normal(200)
+    drivers = {"d1": rng.standard_normal(200), "d2": rng.standard_normal(200)}
+
+    bundle_none = run_covariant_analysis(
+        target,
+        drivers,
+        methods=["cross_ami"],
+        max_lag=5,
+        n_surrogates=99,
+        random_state=42,
+        significance_mode="none",
+    )
+    bundle_phase = run_covariant_analysis(
+        target,
+        drivers,
+        methods=["cross_ami"],
+        max_lag=5,
+        n_surrogates=99,
+        random_state=42,
+        significance_mode="phase",
+    )
+
+    ami_none = [row.cross_ami for row in bundle_none.summary_table]
+    ami_phase = [row.cross_ami for row in bundle_phase.summary_table]
+    assert ami_none == ami_phase
+
+
+def test_significance_mode_none_in_metadata() -> None:
+    """significance_mode='none' is recorded in bundle metadata."""
+    rng = np.random.default_rng(42)
+    target = rng.standard_normal(200)
+    drivers = {"d1": rng.standard_normal(200)}
+
+    bundle = run_covariant_analysis(
+        target,
+        drivers,
+        methods=["cross_ami"],
+        max_lag=5,
+        n_surrogates=99,
+        random_state=42,
+        significance_mode="none",
+    )
+
+    assert bundle.metadata["significance_mode"] == "none"
+
+
 def test_interpretation_tag_populated_when_cross_ami_requested(
     benchmark_df: pd.DataFrame,
 ) -> None:
@@ -531,3 +650,70 @@ def test_rank_ordering_consistent_with_primary_score(benchmark_df: pd.DataFrame)
     rank1_row = next(r for r in result.summary_table if r.rank == 1)
     best_ami = max(r.cross_ami for r in result.summary_table if r.cross_ami is not None)
     assert rank1_row.cross_ami == best_ami
+
+
+# ---------------------------------------------------------------------------
+# PBE-F25 — new run_covariant_analysis parameter tests
+# ---------------------------------------------------------------------------
+
+
+def test_run_covariant_pcmci_ami_n_permutations_below_floor(
+    benchmark_df: pd.DataFrame,
+) -> None:
+    """run_covariant_analysis raises ValueError when pcmci_ami_n_permutations < 99."""
+    drivers = {"driver_direct": benchmark_df["driver_direct"].to_numpy()}
+    with pytest.raises(ValueError, match="pcmci_ami_n_permutations"):
+        run_covariant_analysis(
+            benchmark_df["target"].to_numpy(),
+            drivers,
+            max_lag=3,
+            methods=["pcmci_ami"],
+            pcmci_ami_n_permutations=98,
+        )
+
+
+def test_run_covariant_pcmci_ami_ci_test_param_accepted(
+    benchmark_df: pd.DataFrame,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """pcmci_ami_ci_test='parcorr' is accepted by run_covariant_analysis without error."""
+
+    class _MinimalPcmciAmiPort:
+        def discover(
+            self, data: object, var_names: list[str], **_: object
+        ) -> CausalGraphResult:
+            parents = {name: [] for name in var_names}
+            link_matrix = [["" for _ in var_names] for _ in var_names]
+            return CausalGraphResult(
+                parents=parents, link_matrix=link_matrix, metadata={"method": "pcmci_ami_hybrid"}
+            )
+
+        def discover_full(
+            self, data: object, var_names: list[str], **_: object
+        ) -> PcmciAmiResult:
+            graph = self.discover(data, var_names)
+            return PcmciAmiResult(
+                causal_graph=graph,
+                phase0_mi_scores=[],
+                phase0_pruned_count=0,
+                phase0_kept_count=0,
+                phase1_skeleton=graph,
+                phase2_final=graph,
+                ami_threshold=0.05,
+                metadata={"method": "pcmci_ami_hybrid"},
+            )
+
+    monkeypatch.setattr(
+        covariant_module, "build_pcmci_ami_hybrid", lambda **_: _MinimalPcmciAmiPort()
+    )
+    drivers = {"driver_direct": benchmark_df["driver_direct"].to_numpy()[:100]}
+    result = run_covariant_analysis(
+        benchmark_df["target"].to_numpy()[:100],
+        drivers,
+        max_lag=2,
+        methods=["pcmci_ami"],
+        pcmci_ami_ci_test="parcorr",
+        n_surrogates=99,
+        random_state=42,
+    )
+    assert result.pcmci_ami_result is not None

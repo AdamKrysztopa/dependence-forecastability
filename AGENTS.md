@@ -2,9 +2,11 @@
 
 ## Repository Identity
 
-A deterministic forecastability triage toolkit with AMI as the paper-aligned foundation and pAMI as a project extension.
+A deterministic forecastability triage toolkit for time series — univariate triage, covariate informativeness, fingerprinting, routing validation, and forecast-prep hand-off.
 
 This repository is a deterministic forecastability triage toolkit for time series. When the task is time-series forecasting, do not jump directly to model fitting. Start with forecastability triage first: readiness, leakage risk, informative horizons, primary lags, seasonality structure, and covariate informativeness. Only then recommend downstream model families or framework-specific settings.
+
+AMI is the core mutual-information estimator. pAMI (partial AMI) is one extension. The toolkit also includes GCMI, transfer entropy, PCMCI-AMI causal screening, spectral predictability, forecastability fingerprinting, and the `ForecastPrepContract` hand-off surface.
 
 Treat downstream forecasting frameworks as hand-off targets after triage, not as the core behavior of this repository.
 
@@ -54,6 +56,9 @@ See [docs/plan/aux_documents/developer_instruction_repo_scope.md](docs/plan/aux_
 - `uv run python scripts/rebuild_diagnostic_regression_fixtures.py`
 - `uv run python scripts/rebuild_covariant_regression_fixtures.py`
 - `uv run python scripts/rebuild_fingerprint_regression_fixtures.py`
+- `uv run python scripts/rebuild_forecast_prep_regression_fixtures.py`
+- `uv run python scripts/rebuild_lagged_exog_regression_fixtures.py`
+- `uv run python scripts/rebuild_routing_validation_fixtures.py`
 - Run the relevant fixture rebuild script when result surfaces or examples change.
 
 ## Common Mistakes to Avoid

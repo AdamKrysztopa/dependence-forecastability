@@ -1,0 +1,145 @@
+metadata:
+  release: "0.4.1"
+  random_state_base: 42
+  repeats: 3
+  output_dir: "outputs/performance"
+  notes: "Synthetic, network-free Phase 1 timing baseline for trend comparison."
+
+cases:
+  - case_id: "small_univariate_triage"
+    size_label: "small"
+    workflow: "run_triage"
+    n_obs: 180
+    max_lag: 8
+    n_surrogates: 99
+    compute_significance: false
+    signal: "ar1"
+    random_state: 101
+
+  - case_id: "medium_univariate_triage"
+    size_label: "medium"
+    workflow: "run_triage"
+    n_obs: 360
+    max_lag: 16
+    n_surrogates: 99
+    compute_significance: true
+    signal: "seasonal_ar1"
+    random_state: 202
+
+  - case_id: "large_univariate_triage"
+    size_label: "large"
+    workflow: "run_triage"
+    n_obs: 720
+    max_lag: 24
+    n_surrogates: 99
+    compute_significance: true
+    signal: "seasonal_ar1"
+    random_state: 303
+
+profile:
+  top_n: 25
+  enabled_targets:
+    - "callable.forecastability.run_triage"
+    - "callable.forecastability.triage.run_batch_triage"
+    - "callable.metrics.compute_ami"
+    - "callable.metrics.compute_pami_linear_residual"
+    - "callable.services.compute_raw_curve"
+    - "callable.services.compute_partial_curve"
+    - "callable.services.compute_significance_bands_generic"
+    - "callable.use_cases.run_covariant_analysis.cross_ami"
+    - "callable.use_cases.run_covariant_analysis.cross_ami.significance_none"
+    - "callable.use_cases.build_forecast_prep_contract"
+    - "callable.pipeline.run_rolling_origin_evaluation"
+  profile_size_labels:
+    - "small"
+    - "medium"
+
+budgets:
+  pbe_f05:
+    notes: "PBE-F05 acceptance budgets vs May 1 2026 Phase 1 medians (forecastability 0.4.0)."
+    medium_run_triage_with_significance:
+      baseline_wall_s: 3.862
+      target_max_wall_s: 3.09
+    medium_run_batch_triage:
+      baseline_wall_s: 8.151
+      target_max_wall_s: 6.52
+    medium_cross_ami:
+      baseline_wall_s: 0.640
+      target_max_wall_s: 0.51
+
+  phase_1_baseline:
+    notes: "May 1 2026 measured medians on Apple M4 Pro, Python 3.11.11, macOS. Source: docs/plan/v0_4_1_performance_bottleneck_elimination_ultimate_plan.md §5."
+    small_univariate_triage_no_significance:
+      median_wall_s: 0.010
+    medium_univariate_triage_with_significance:
+      median_wall_s: 3.862
+    large_univariate_triage_with_significance:
+      median_wall_s: 4.272
+    medium_batch_triage_profile:
+      wall_s: 8.151
+    medium_cross_ami_profile:
+      wall_s: 0.640
+    rolling_origin_smoke:
+      wall_s: 0.189
+
+  regression:
+    notes: "Regression ceilings vs Phase 1 baseline: +20% on median wall, +25% on p95 wall, +15% on peak RSS."
+    small_univariate_triage_no_significance:
+      max_median_wall_s: 0.012
+    medium_univariate_triage_with_significance:
+      max_median_wall_s: 4.634
+      max_p95_wall_s: 4.828
+      max_peak_rss_mb: 237.2
+    large_univariate_triage_with_significance:
+      max_median_wall_s: 5.126
+      max_p95_wall_s: 5.340
+      max_peak_rss_mb: 238.6
+    medium_batch_triage_profile:
+      max_wall_s: 9.781
+    medium_cross_ami_profile:
+      max_wall_s: 0.768
+    rolling_origin_smoke:
+      max_wall_s: 0.227
+
+public_workflows:
+  - name: "import_time"
+    description: "Cold import of the forecastability top-level package"
+    method: "import"
+
+  - name: "covariant_cross_ami_significance_none"
+    description: "run_covariant_analysis with significance_mode='none' (skip phase surrogates)"
+    method: "run_covariant_analysis"
+    significance_mode: "none"
+    methods:
+      - "cross_ami"
+    n_series: 3
+    series_length: 300
+    max_lag: 10
+
+  - name: "covariant_cross_ami_significance_phase"
+    description: "run_covariant_analysis with significance_mode='phase' (full surrogates)"
+    method: "run_covariant_analysis"
+    significance_mode: "phase"
+    methods:
+      - "cross_ami"
+    n_series: 3
+    series_length: 300
+    max_lag: 10
+    n_surrogates: 99
+
+  - name: "lagged_exog_significance_none"
+    description: "run_lagged_exogenous_triage with significance_mode='none'"
+    method: "run_lagged_exogenous_triage"
+    significance_mode: "none"
+    n_series: 2
+    series_length: 300
+    max_lag: 10
+
+  - name: "lagged_exog_significance_phase"
+    description: "run_lagged_exogenous_triage with significance_mode='phase'"
+    method: "run_lagged_exogenous_triage"
+    significance_mode: "phase"
+    n_series: 2
+    series_length: 300
+    max_lag: 10
+    n_surrogates: 99

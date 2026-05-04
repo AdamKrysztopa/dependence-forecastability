@@ -4,60 +4,70 @@ applyTo: "scripts/**,outputs/**,configs/**"
 
 # Analyst Agent
 
-You are the analysis execution agent for the AMI → pAMI Forecastability Analysis project.
-Your role is to run scripts, interpret numerical outputs, and answer the six interpretive
-questions for each canonical example.
+You are the analysis execution agent for the Forecastability Triage Toolkit.
+Your role is to run scripts, interpret numerical outputs, and verify that triage
+results are correctly structured and internally consistent.
 
 ## Execution order
 
-Run scripts strictly in this order — each builds on the previous:
+Run scripts with `MPLBACKEND=Agg` when figures are generated. Match the script to the task:
 
 ```bash
 MPLBACKEND=Agg uv run python scripts/run_canonical_triage.py
 MPLBACKEND=Agg uv run python scripts/run_benchmark_panel.py
+MPLBACKEND=Agg uv run python scripts/run_exog_analysis.py
+MPLBACKEND=Agg uv run python scripts/run_routing_validation_report.py
 MPLBACKEND=Agg uv run python scripts/build_report_artifacts.py
 ```
 
+Fixture rebuild scripts (run after result surfaces change):
+
+```bash
+uv run python scripts/rebuild_diagnostic_regression_fixtures.py
+uv run python scripts/rebuild_covariant_regression_fixtures.py
+uv run python scripts/rebuild_fingerprint_regression_fixtures.py
+uv run python scripts/rebuild_forecast_prep_regression_fixtures.py
+uv run python scripts/rebuild_lagged_exog_regression_fixtures.py
+uv run python scripts/rebuild_routing_validation_fixtures.py
+```
+
 ## Pre-run checklist
-- [ ] Confirm `outputs/figures/canonical/` directory is writable
-- [ ] Confirm `outputs/json/canonical/` directory exists
-- [ ] Confirm `outputs/tables/benchmark/` directory exists
+- [ ] Confirm output directories are writable (`outputs/figures/`, `outputs/json/`, `outputs/tables/`)
 - [ ] Confirm `uv sync` has been run and all dependencies are present
 
 ## Post-run verification
 
-After `run_canonical_triage.py`:
-- [ ] 4 canonical JSON files exist with non-empty `interpretation` and `summary`
-- [ ] Figures exist for each of the 4 examples (canonical, overlay, diff)
-- [ ] `interpretation.forecastability_class` is `'low'` for stock returns
-- [ ] `interpretation.forecastability_class` is `'high'` for sine and air_passengers
+After any triage or analysis script:
+- [ ] Output JSON or CSV files exist and are non-empty
+- [ ] No `WARNING:` lines about missing upstream outputs
+- [ ] Figures (if generated) are non-zero bytes in `outputs/figures/`
+- [ ] Schema fields match expected result model structure
 
-After `run_benchmark_panel.py`:
-- [ ] `horizon_table.csv` has columns: `series_id`, `frequency`, `model_name`, `horizon`, `ami`, `pami`, `smape`
-- [ ] `rank_associations.csv` has Spearman columns `spearman_ami_smape` and `spearman_pami_smape`
-- [ ] Tercile CSVs are non-empty
+After fixture rebuild scripts:
+- [ ] Rebuilt fixture files are modified (`git diff --stat` shows changes)
+- [ ] `uv run pytest` passes with the new fixtures
 
-After `build_report_artifacts.py`:
-- [ ] `ami_to_pami_report.md` exists and contains all four series summaries
-- [ ] `linkedin_post.md` exists and is ≥ 200 words
+## Triage output interpretation
 
-## Six interpretive questions per canonical example
+When asked to interpret triage outputs, answer:
 
-Answer these for each of the four series after outputs are generated:
-
-1. **What does the AMI profile reveal about overall forecastability?**
+1. **What does the AMI profile reveal about forecastability?**
    — Is `forecastability_class` high / medium / low? What is `auc_ami`?
 
-2. **What does pAMI reveal beyond AMI?**
-   — Is `directness_ratio` consistent with mediated or direct dependence?
+2. **Are significant lags present, and which are actionable?**
+   — Report `primary_lags`, `sig_lags`, and whether significance bands are met
 
-3. **Which lags are actionable for model specification?**
-   — Report `primary_lags` from `InterpretationResult`
+3. **What seasonality structure (if any) is detected?**
+   — Check `SpectralPredictabilityResult` and seasonal components in the triage profile
 
-4. **What model class is recommended?**
-   — Cite the `pattern` (A–E) and the `narrative` field
+4. **What model-family routing does the fingerprint recommend?**
+   — Report `ForecastabilityFingerprint` fields and `FamilyRecommendation` from the routing policy
 
-5. **Is there evidence of exploitability mismatch (Pattern E)?**
+5. **Are exogenous drivers informative, contemporaneous, or lagged?** (for covariate triage)
+   — Check `CovariantAnalysisBundle`, `LaggedExogBundle`, `LagRoleLabel` assignments
+
+6. **Does the `ForecastPrepContract` correctly reflect readiness, leakage risk, and lag roles?**
+   — Verify `is_ready`, `leakage_risk`, lag role assignments against triage outputs
    — Compare ETS vs naive sMAPE; flag if AMI is high but ETS does not outperform
 
 6. **How do the surrogate bands contextualise the result?**
@@ -68,10 +78,5 @@ Answer these for each of the four series after outputs are generated:
 - `configs/canonical_examples.yaml` — controls which series run, max_lag, k, n_surrogates
 - `configs/benchmark_panel.yaml` — controls series, n_origins, horizons, models
 - `configs/interpretation_rules.yaml` — threshold constants documented for reference
-
-## Common issues
-
-- Scripts should run with `MPLBACKEND=Agg` by default; if figures are missing, confirm backend override is not forcing an interactive backend.
-- If `rank_associations.csv` shows all NaN, the series panel may have too few rows
-  (add more series to `configs/benchmark_panel.yaml`)
-- If `build_report_artifacts.py` prints `WARNING: canonical JSON not found`, run step 1 first
+- `configs/routing_validation_real_panel.yaml` — real-series sanity panel for routing validation
+- `configs/exogenous_screening_workbench.yaml` — covariate screening configuration

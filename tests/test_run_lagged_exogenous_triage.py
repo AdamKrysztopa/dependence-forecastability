@@ -137,3 +137,86 @@ def test_default_path_computes_cross_ami_significance(lagged_panel: pd.DataFrame
     assert all(row.cross_ami is not None for row in bundle.profile_rows)
     assert all(row.significance in ("above_band", "below_band") for row in bundle.profile_rows)
     assert all(row.significance_source == "phase_surrogate_xami" for row in bundle.profile_rows)
+
+
+def _two_driver_kwargs(panel: pd.DataFrame) -> dict[str, object]:
+    """Return common kwargs for the n_jobs parity tests."""
+    target = panel["target"].to_numpy()
+    drivers = {
+        "direct_lag2": panel["direct_lag2"].to_numpy(),
+        "instant_only": panel["instant_only"].to_numpy(),
+    }
+    return {
+        "target": target,
+        "drivers": drivers,
+        "target_name": "target",
+        "max_lag": 4,
+        "n_surrogates": 99,
+        "random_state": 42,
+    }
+
+
+def test_n_jobs_default_matches_explicit_serial(lagged_panel: pd.DataFrame) -> None:
+    """Default call must equal an explicit ``n_jobs=1`` call (PBE-F08)."""
+    kwargs = _two_driver_kwargs(lagged_panel)
+    bundle_default = run_lagged_exogenous_triage(**kwargs)  # type: ignore[arg-type]
+    bundle_explicit = run_lagged_exogenous_triage(**kwargs, n_jobs=1)  # type: ignore[arg-type]
+
+    assert bundle_default == bundle_explicit
+
+
+def test_n_jobs_parallel_parity_with_serial(lagged_panel: pd.DataFrame) -> None:
+    """``n_jobs=2`` must produce the same bundle as ``n_jobs=1`` (PBE-F08)."""
+    kwargs = _two_driver_kwargs(lagged_panel)
+    bundle_serial = run_lagged_exogenous_triage(**kwargs, n_jobs=1)  # type: ignore[arg-type]
+    bundle_parallel = run_lagged_exogenous_triage(**kwargs, n_jobs=2)  # type: ignore[arg-type]
+
+    assert bundle_serial == bundle_parallel
+
+
+def test_n_jobs_zero_rejected(lagged_panel: pd.DataFrame) -> None:
+    """``n_jobs=0`` must raise a ValueError mentioning ``n_jobs`` (PBE-F08)."""
+    kwargs = _two_driver_kwargs(lagged_panel)
+    with pytest.raises(ValueError, match="n_jobs"):
+        run_lagged_exogenous_triage(**kwargs, n_jobs=0)  # type: ignore[arg-type]
+
+
+def test_significance_mode_none_skips_bands_lagged() -> None:
+    """significance_mode='none' produces significance=None and source='not_computed'."""
+    import numpy as np
+
+    rng = np.random.default_rng(42)
+    target = rng.standard_normal(200)
+    drivers = {"d1": rng.standard_normal(200), "d2": rng.standard_normal(200)}
+
+    bundle = run_lagged_exogenous_triage(
+        target,
+        drivers,
+        target_name="t",
+        max_lag=5,
+        significance_mode="none",
+    )
+
+    assert all(row.significance is None for row in bundle.profile_rows)
+    assert all(row.significance_source == "not_computed" for row in bundle.profile_rows)
+
+
+def test_significance_mode_phase_default_unchanged() -> None:
+    """Default (phase) mode produces significance_source='phase_surrogate_xami'."""
+    import numpy as np
+
+    rng = np.random.default_rng(42)
+    target = rng.standard_normal(200)
+    drivers = {"d1": rng.standard_normal(200)}
+
+    bundle = run_lagged_exogenous_triage(
+        target,
+        drivers,
+        target_name="t",
+        max_lag=3,
+        n_surrogates=99,
+        random_state=42,
+        include_cross_ami=True,
+    )
+
+    assert all(row.significance_source == "phase_surrogate_xami" for row in bundle.profile_rows)

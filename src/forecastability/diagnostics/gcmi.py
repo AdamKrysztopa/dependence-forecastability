@@ -138,6 +138,27 @@ def compute_gcmi_at_lag(
     return _gcmi_bivariate(_rank_normalise(src_lagged), _rank_normalise(tgt_aligned))
 
 
+def _compute_gcmi_curve_validated(
+    src: np.ndarray,
+    tgt: np.ndarray,
+    *,
+    max_lag: int,
+    min_pairs: int,
+) -> np.ndarray:
+    """Run the per-lag GCMI loop on already-validated equal-length arrays.
+
+    Per-lag rank-normalization is preserved inside the loop because each lag
+    yields a different aligned paired sample; rank-copula must reflect that
+    lag-specific sample.
+    """
+    result = np.empty(max_lag, dtype=float)
+    for h in range(1, max_lag + 1):
+        src_lagged = src[: src.size - h]
+        tgt_aligned = tgt[h:]
+        result[h - 1] = _gcmi_bivariate(_rank_normalise(src_lagged), _rank_normalise(tgt_aligned))
+    return result
+
+
 def compute_gcmi_curve(
     source: np.ndarray,
     target: np.ndarray,
@@ -161,7 +182,11 @@ def compute_gcmi_curve(
     """
     if max_lag < 1:
         raise ValueError(f"max_lag must be >= 1; got {max_lag}")
-    result = np.empty(max_lag, dtype=float)
-    for h in range(1, max_lag + 1):
-        result[h - 1] = compute_gcmi_at_lag(source, target, lag=h, min_pairs=min_pairs)
-    return result
+    min_length = max_lag + min_pairs
+    src = validate_time_series(source, min_length=min_length)
+    tgt = validate_time_series(target, min_length=min_length)
+    if src.size != tgt.size:
+        raise ValueError(
+            f"source and target must have identical lengths; got {src.size} and {tgt.size}"
+        )
+    return _compute_gcmi_curve_validated(src, tgt, max_lag=max_lag, min_pairs=min_pairs)

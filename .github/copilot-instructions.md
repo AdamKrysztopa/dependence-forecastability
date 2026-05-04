@@ -2,9 +2,11 @@
 
 # Copilot Instructions
 
-A deterministic forecastability triage toolkit with AMI as the paper-aligned foundation and pAMI as a project extension.
+A deterministic forecastability triage toolkit for time series — univariate triage, covariate informativeness, fingerprinting, routing validation, and forecast-prep hand-off.
 
 This repository is a deterministic forecastability triage toolkit for time series. When the task is time-series forecasting, do not jump directly to model fitting. Start with forecastability triage first: readiness, leakage risk, informative horizons, primary lags, seasonality structure, and covariate informativeness. Only then recommend downstream model families or framework-specific settings.
+
+AMI is the core mutual-information estimator. pAMI (partial AMI) is one extension. The toolkit also includes GCMI, transfer entropy, PCMCI-AMI causal screening, spectral predictability, forecastability fingerprinting, and the `ForecastPrepContract` hand-off surface.
 
 CLI, API, notebooks, MCP, and agents are optional access or narration layers around the same deterministic outputs.
 

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
+
 import numpy as np
 import pytest
 
@@ -72,3 +74,40 @@ def deterministic_triage_result(
 ) -> TriageResult:
     """Return the deterministic triage result for shared parity assertions."""
     return run_triage(deterministic_triage_request)
+
+
+@pytest.fixture(autouse=True)
+def _teardown_loky_executor() -> Generator[None, None, None]:
+    """Shut down any reusable joblib/loky executor after each test.
+
+    pytest-xdist workers may hang at teardown if a joblib ReusableExecutor
+    spawned by a test (via ``n_jobs > 1``) is still alive when the worker
+    exits.  Shutting it down eagerly after every test keeps workers clean.
+    ``wait=True`` ensures loky child processes are fully dead (not just
+    signalled) before the xdist worker proceeds to the next test or exits.
+    """
+    yield
+    try:
+        from joblib.externals.loky import get_reusable_executor
+
+        get_reusable_executor().shutdown(wait=True, kill_workers=True)
+    except Exception:  # noqa: BLE001
+        pass
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _teardown_loky_executor_session() -> Generator[None, None, None]:
+    """Session-level loky cleanup run once at the end of each xdist worker.
+
+    Belt-and-suspenders companion to ``_teardown_loky_executor``: ensures
+    that even if a test creates a fresh executor after the last
+    function-scoped teardown, the session-level fixture still shuts it down
+    before the worker process exits.
+    """
+    yield
+    try:
+        from joblib.externals.loky import get_reusable_executor
+
+        get_reusable_executor().shutdown(wait=True, kill_workers=True)
+    except Exception:  # noqa: BLE001
+        pass

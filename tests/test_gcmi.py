@@ -310,3 +310,32 @@ def test_service_facade_functions_are_callable() -> None:
     assert callable(compute_gcmi)
     assert callable(compute_gcmi_at_lag)
     assert callable(compute_gcmi_curve)
+
+
+# ---------------------------------------------------------------------------
+# 9. PBE-F16: curve hoist parity and validation guards
+# ---------------------------------------------------------------------------
+
+
+def test_compute_gcmi_curve_matches_per_lag_calls() -> None:
+    from forecastability.diagnostics.gcmi import compute_gcmi_at_lag, compute_gcmi_curve
+
+    rng = np.random.default_rng(2026)
+    x = rng.standard_normal(400)
+    y = 0.7 * x + 0.3 * rng.standard_normal(400)
+    curve = compute_gcmi_curve(x, y, max_lag=10, min_pairs=30)
+    expected = np.array(
+        [compute_gcmi_at_lag(x, y, lag=h, min_pairs=30) for h in range(1, 11)],
+        dtype=float,
+    )
+    assert np.array_equal(curve, expected)
+
+
+def test_compute_gcmi_curve_rejects_mismatched_lengths() -> None:
+    from forecastability.diagnostics.gcmi import compute_gcmi_curve
+
+    rng = np.random.default_rng(0)
+    x = rng.standard_normal(300)
+    y = rng.standard_normal(280)
+    with pytest.raises(ValueError, match="identical lengths"):
+        compute_gcmi_curve(x, y, max_lag=5, min_pairs=30)

@@ -179,3 +179,43 @@ class TestConstantArrayReturnsZero:
         scorer = cast(DependenceScorer, registry.get("spearman").scorer)
         score = scorer(past, future, random_state=42)
         assert score == 0.0
+
+
+class TestDistanceScorerBudgetGuard:
+    """PBE-F08: distance-correlation scorer enforces an N x N pair budget."""
+
+    def test_above_threshold_raises_value_error(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from forecastability.metrics import scorers as scorers_module
+
+        monkeypatch.setattr(scorers_module, "_DISTANCE_SCORER_PAIR_BUDGET", 100)
+        rng = np.random.default_rng(0)
+        past = rng.standard_normal(101)
+        future = rng.standard_normal(101)
+        with pytest.raises(ValueError, match="100"):
+            scorers_module._distance_scorer(past, future, random_state=42)
+
+    def test_at_threshold_returns_finite_unit_interval(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from forecastability.metrics import scorers as scorers_module
+
+        monkeypatch.setattr(scorers_module, "_DISTANCE_SCORER_PAIR_BUDGET", 100)
+        rng = np.random.default_rng(1)
+        past = rng.standard_normal(100)
+        future = rng.standard_normal(100)
+        score = scorers_module._distance_scorer(past, future, random_state=42)
+        assert isinstance(score, float)
+        assert np.isfinite(score)
+        assert 0.0 <= score <= 1.0
+
+    def test_in_budget_value_matches_baseline(self) -> None:
+        """Hard-coded baseline confirms the guardrail did not perturb numerics."""
+        from forecastability.metrics.scorers import _distance_scorer
+
+        rng = np.random.default_rng(7)
+        past = rng.standard_normal(64)
+        future = rng.standard_normal(64)
+        score = _distance_scorer(past, future, random_state=42)
+        assert score == pytest.approx(0.19272747906212667, rel=0, abs=1e-15)

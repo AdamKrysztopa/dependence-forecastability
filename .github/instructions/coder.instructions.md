@@ -5,7 +5,7 @@ applyTo: "src/**,tests/**,scripts/**,configs/**,pyproject.toml"
 
 # Coder Agent
 
-You are the implementation agent for the AMI → pAMI Forecastability Analysis project.
+You are the implementation agent for the Forecastability Triage Toolkit.
 Your role is to write, edit, and refactor all Python source code, tests, and configuration
 files according to the engineering rules and repository structure defined in the project plan.
 
@@ -26,44 +26,37 @@ files according to the engineering rules and repository structure defined in the
 
 ```text
 src/forecastability/
-├── __init__.py
-├── config.py          # Pydantic config models
-├── types.py           # Pydantic schema and result models
-├── validation.py      # Input validation helpers
-├── datasets.py        # Canonical series loaders
-├── metrics.py         # compute_ami, compute_pami_linear_residual
-├── surrogates.py      # phase_surrogate, surrogate_bands
-├── rolling_origin.py  # RollingOriginSplit, generate_splits
-├── models.py          # ETS, naive, and seasonal naive wrappers
-├── aggregation.py     # cross-series aggregation and tercile logic
-├── interpretation.py  # InterpretationResult, pattern_classify
-├── plots.py           # all matplotlib figure builders
-├── reporting.py       # report and LinkedIn post generators
-└── pipeline.py        # canonical example end-to-end runner
+├── __init__.py          # top-level facade (stable public API)
+├── triage/              # univariate triage models and result surfaces
+├── use_cases/           # entry-point coordinators (run_triage, run_covariant_analysis, ...)
+├── metrics/             # AMI, pAMI, GCMI, transfer entropy, spectral predictability
+├── diagnostics/         # GCMI and related diagnostics
+├── pipeline/            # analyzer facade
+├── services/            # ForecastPrepContract export and related services
+├── reporting/           # fingerprint and workbench reporting
+├── adapters/            # CSV, CLI, and external-library adapters
+├── ports/               # interfaces required by use cases
+├── models.py            # shared Pydantic result models
+├── extensions.py        # target/baseline curve extensions
+├── utils/               # config, datasets, synthetic generators, types
+└── bootstrap/           # bootstrap and sampling helpers
 
-scripts/
-├── run_canonical_triage.py
-├── run_benchmark_panel.py
-└── build_report_artifacts.py
-
-configs/
-├── canonical_examples.yaml
-├── benchmark_panel.yaml
-└── interpretation_rules.yaml
+scripts/               # one-off and fixture rebuild scripts
+configs/               # YAML config files
 ```
 
 ## Implementation run order
 
-Complete tasks in this order — each builds on the previous:
+Complete tasks in dependency order — each triage surface builds on lower layers:
 
-| Task | Modules |
-|------|---------|
-| 1 | `validation.py`, `config.py`, `types.py` |
-| 2 | `metrics.py`, `surrogates.py` + tests |
-| 3 | `datasets.py`, `pipeline.py`, `plots.py`, `reporting.py` |
-| 4 | `aggregation.py`, `interpretation.py` + canonical scripts |
-| 5 | `rolling_origin.py`, `models.py` + benchmark runner |
-| 6 | `build_report_artifacts.py`, LinkedIn output, finalise tests |
+| Layer | Modules / packages |
+|-------|--------------------|
+| Foundation | `utils/config.py`, `utils/types.py`, `utils/datasets.py`, `utils/synthetic.py` |
+| Core metrics | `metrics/` (AMI, pAMI, GCMI, TE, spectral), `bootstrap/` |
+| Triage surfaces | `triage/` (models, profile, readiness, router) |
+| Use cases | `use_cases/` (run_triage, run_covariant_analysis, run_forecastability_fingerprint, ...) |
+| Services | `services/forecast_prep_export.py`, `reporting/` |
+| Adapters | `adapters/` (CSV, CLI), `pipeline/` (analyzer facade) |
 
 ## Pre-PR version invariant
 
@@ -109,33 +102,27 @@ When adding or moving logic, prefer extraction in this order:
 
 ## Critical implementation rules
 
-### metrics.py
+### metrics (AMI/pAMI)
 - AMI computed **per horizon h separately** using kNN MI estimator with `n_neighbors=8`
 - `min_pairs=30` for `compute_ami`, `min_pairs=50` for `compute_pami_linear_residual`
 - `random_state` must be an `int` — sklearn 1.8 does not accept `numpy.Generator` objects
 - Use `np.trapezoid` for AUC (NOT `np.trapz` — removed in NumPy 2.x)
 
-### surrogates.py
+### surrogates
 - Surrogates are **phase-randomised** (FFT amplitude-preserving) — preserve power spectrum
 - `n_surrogates ≥ 99`; both `lower_band` and `upper_band` must be populated
 - Significance bands: 2.5th and 97.5th percentiles (α = 5%, two-sided)
 
-### rolling_origin.py
+### rolling_origin
 - `split.origin_index == split.train.size` for every split — verify this invariant
 - `split.test.size == horizon` for every split
-- AMI and pAMI must be computed on `split.train` **only** — never on the full series
+- All metrics (AMI, pAMI, GCMI, TE) must be computed on `split.train` **only** — never on the full series
 
-### interpretation.py
-- Patterns A–E must match exactly:
-  - **A**: AMI high + pAMI high → rich structured models justified
-  - **B**: AMI high + pAMI low/medium → mediated dependence → compact models
-  - **C**: AMI medium → uncertain → seasonal or regularised models
-  - **D**: AMI low + pAMI low → both weak → baseline methods
-  - **E**: AMI high but sMAPE ≥ naive → exploitability mismatch → investigate
-
-### config.py
-- All threshold constants (`auc_high_threshold`, `directness_high_threshold`, etc.)
-  must be loaded from `configs/interpretation_rules.yaml` — not hardcoded
+### public API boundary
+- `forecastability` (top-level facade) and `forecastability.triage` are the two stable import roots
+- Do not expose internal submodules as supported public API without explicit re-export
+- `ForecastPrepContract` is a hand-off boundary — no `to_<framework>_spec()` or `fit_<framework>()` helpers ship as supported public API
+- Do not add `darts`, `mlforecast`, `statsforecast`, or `nixtla` as runtime, optional-extra, dev, or CI dependencies
 
 ## Test requirements
 

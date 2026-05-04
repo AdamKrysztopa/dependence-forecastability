@@ -7,7 +7,6 @@ import numpy as np
 from forecastability.diagnostics.cmi import compute_pami_with_backend
 from forecastability.diagnostics.surrogates import compute_significance_bands
 from forecastability.metrics.metrics import compute_ami, compute_pami_linear_residual
-from forecastability.pipeline.analyzer import ForecastabilityAnalyzerExog
 from forecastability.use_cases.run_exogenous_rolling_origin_evaluation import (
     run_exogenous_rolling_origin_evaluation as _impl_exog,
 )
@@ -190,5 +189,4 @@ def run_exogenous_rolling_origin_evaluation(
         min_pairs_partial=min_pairs_partial,
         analysis_scope=analysis_scope,
         project_extension=project_extension,
-        _analyzer_cls=ForecastabilityAnalyzerExog,
     )

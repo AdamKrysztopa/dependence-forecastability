@@ -24,7 +24,14 @@ from urllib.request import (
 
 import numpy as np
 import pandas as pd
-import yfinance as yf
+
+try:
+    import yfinance as yf
+except ImportError as _yf_err:
+    raise ImportError(
+        "yfinance is required for download_data.py. "
+        "Install it with: uv pip install 'dependence-forecastability[data]'"
+    ) from _yf_err
 
 from forecastability.utils.datasets import (
     generate_henon_map,

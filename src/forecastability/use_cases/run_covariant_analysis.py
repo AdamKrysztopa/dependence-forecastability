@@ -7,7 +7,7 @@ without introducing new metric math in the use-case layer.
 
 from __future__ import annotations
 
-from typing import cast
+from typing import Literal, cast
 
 import numpy as np
 
@@ -90,9 +90,13 @@ def _validate_inputs(
     max_lag: int,
     alpha: float,
     n_surrogates: int,
+    significance_mode: str = "phase",
+    pcmci_ami_n_permutations: int = 199,
 ) -> tuple[np.ndarray, dict[str, np.ndarray]]:
-    if n_surrogates < 99:
+    if significance_mode == "phase" and n_surrogates < 99:
         raise ValueError(f"n_surrogates must be >= 99, got {n_surrogates}")
+    if pcmci_ami_n_permutations < 99:
+        raise ValueError(f"pcmci_ami_n_permutations must be >= 99, got {pcmci_ami_n_permutations}")
     if max_lag < 1:
         raise ValueError(f"max_lag must be >= 1, got {max_lag}")
     if not target_name.strip():
@@ -118,17 +122,16 @@ def _validate_inputs(
     return validated_target, validated_drivers
 
 
-def _compute_cross_curves(
+def _compute_cross_ami_curves(
     *,
     target: np.ndarray,
     drivers: dict[str, np.ndarray],
     max_lag: int,
     random_state: int,
-) -> tuple[dict[str, np.ndarray], dict[str, np.ndarray]]:
+) -> dict[str, np.ndarray]:
     registry = default_registry()
     mi_scorer = cast(DependenceScorer, registry.get("mi").scorer)
     cross_ami_curves: dict[str, np.ndarray] = {}
-    cross_pami_curves: dict[str, np.ndarray] = {}
 
     for index, (driver_name, driver_series) in enumerate(drivers.items()):
         seed = random_state + index
@@ -139,6 +142,22 @@ def _compute_cross_curves(
             mi_scorer,
             random_state=seed,
         )
+    return cross_ami_curves
+
+
+def _compute_cross_pami_curves(
+    *,
+    target: np.ndarray,
+    drivers: dict[str, np.ndarray],
+    max_lag: int,
+    random_state: int,
+) -> dict[str, np.ndarray]:
+    registry = default_registry()
+    mi_scorer = cast(DependenceScorer, registry.get("mi").scorer)
+    cross_pami_curves: dict[str, np.ndarray] = {}
+
+    for index, (driver_name, driver_series) in enumerate(drivers.items()):
+        seed = random_state + index
         cross_pami_curves[driver_name] = compute_exog_partial_curve(
             target,
             driver_series,
@@ -146,7 +165,7 @@ def _compute_cross_curves(
             mi_scorer,
             random_state=seed,
         )
-    return cross_ami_curves, cross_pami_curves
+    return cross_pami_curves
 
 
 def _compute_te_curves(
@@ -197,9 +216,10 @@ def _run_pcmci(
     max_lag: int,
     alpha: float,
     random_state: int,
+    verbosity: int = 0,
 ) -> CausalGraphResult | None:
     try:
-        port: CausalGraphPort = build_pcmci_plus(ci_test="parcorr")
+        port: CausalGraphPort = build_pcmci_plus(ci_test="parcorr", verbosity=verbosity)
     except ImportError:
         return None
 
@@ -220,9 +240,21 @@ def _run_pcmci_ami(
     ami_threshold: float,
     alpha: float,
     random_state: int,
+    pcmci_ami_n_permutations: int = 199,
+    pcmci_ami_ci_test: Literal["knn_cmi", "parcorr"] = "knn_cmi",
+    pcmci_ami_max_lag: int | None = None,
+    pcmci_verbosity: int = 0,
+    n_jobs_pcmci_ami_phase0: int = 1,
 ) -> PcmciAmiResult | None:
     try:
-        port = build_pcmci_ami_hybrid(ami_threshold=ami_threshold)
+        port = build_pcmci_ami_hybrid(
+            ami_threshold=ami_threshold,
+            n_permutations=pcmci_ami_n_permutations,
+            ci_test=pcmci_ami_ci_test,
+            pcmci_max_lag=pcmci_ami_max_lag,
+            verbosity=pcmci_verbosity,
+            n_jobs_phase0=n_jobs_pcmci_ami_phase0,
+        )
     except ImportError:
         return None
 
@@ -290,6 +322,7 @@ def _compute_cross_ami_bands(
     max_lag: int,
     n_surrogates: int,
     random_state: int,
+    n_jobs_significance: int = 1,
 ) -> dict[str, tuple[np.ndarray, np.ndarray]]:
     """Compute phase-surrogate significance bands for cross-AMI per driver.
 
@@ -302,6 +335,9 @@ def _compute_cross_ami_bands(
         max_lag: Maximum lag horizon.
         n_surrogates: Number of phase-randomised surrogates (>= 99).
         random_state: Base random seed.
+        n_jobs_significance: Worker count forwarded to
+            ``compute_significance_bands_generic`` for each driver band.
+            ``1`` (default) keeps behaviour unchanged.
 
     Returns:
         Mapping driver_name → (lower_band, upper_band), each of shape (max_lag,).
@@ -319,7 +355,7 @@ def _compute_cross_ami_bands(
             "raw",
             exog=driver_series,
             min_pairs=30,
-            n_jobs=1,
+            n_jobs=n_jobs_significance,
         )
         bands[driver_name] = (lower, upper)
     return bands
@@ -446,6 +482,13 @@ def run_covariant_analysis(
     n_surrogates: int = 99,
     random_state: int = 42,
     include_lagged_exog_triage: bool = False,
+    pcmci_ami_n_permutations: int = 199,
+    pcmci_ami_ci_test: Literal["knn_cmi", "parcorr"] = "knn_cmi",
+    pcmci_ami_max_lag: int | None = None,
+    pcmci_verbosity: int = 0,
+    n_jobs_pcmci_ami_phase0: int = 1,
+    significance_mode: Literal["phase", "none"] = "phase",
+    n_jobs_significance: int = 1,
 ) -> CovariantAnalysisBundle:
     """Run the covariant analysis bundle and assemble a unified summary table.
 
@@ -457,10 +500,33 @@ def run_covariant_analysis(
         methods: Optional subset of method names to run. ``None`` runs all.
         ami_threshold: Phase-0 MI threshold for PCMCI-AMI.
         alpha: Significance threshold for PCMCI-family CI tests.
-        n_surrogates: Reserved bundle-level surrogate contract; must be >= 99.
+        n_surrogates: Reserved bundle-level surrogate contract; must be >= 99
+            when ``significance_mode="phase"``; ignored when
+            ``significance_mode="none"``.
         random_state: Deterministic random seed.
         include_lagged_exog_triage: When ``True``, attach a Phase 2
             lagged-exogenous triage bundle.
+        pcmci_ami_n_permutations: Shuffle-test null size for the PCMCI-AMI
+            kNN-CMI test (floor 99). Reducing from the default 199 to 99 gives
+            roughly 2× speedup with minimal p-value inflation.
+        pcmci_ami_ci_test: CI test backend for PCMCI-AMI.  ``"parcorr"`` is
+            50–200× faster than ``"knn_cmi"`` (linear vs. non-parametric).
+        pcmci_ami_max_lag: Optional maximum lag for PCMCI-AMI Phase 1/2.
+            When set, Phase 0 MI is computed over the full ``max_lag`` range
+            but PCMCI+ only sees candidates up to ``pcmci_ami_max_lag``.
+        pcmci_verbosity: Tigramite verbosity level for both PCMCI and
+            PCMCI-AMI adapters (0 = silent).
+        n_jobs_pcmci_ami_phase0: Parallel workers for PCMCI-AMI Phase 0 MI
+            computation (1 = sequential).
+        significance_mode: Controls phase-surrogate significance computation.
+            ``"phase"`` (default) preserves full behaviour; ``"none"`` skips
+            all surrogate-band computation (faster screening pass) and returns
+            rows with ``significance=None``.  When ``"none"``, the
+            ``n_surrogates >= 99`` floor is not enforced.
+        n_jobs_significance: Worker count forwarded to the significance-band
+            executor for cross-AMI surrogate bands. ``1`` (default, serial)
+            keeps behaviour unchanged; ``-1`` uses all available workers.
+            Only applies when ``significance_mode="phase"``.
 
     Returns:
         CovariantAnalysisBundle with pairwise, directional, and causal results.
@@ -477,6 +543,8 @@ def run_covariant_analysis(
         max_lag=max_lag,
         alpha=alpha,
         n_surrogates=n_surrogates,
+        significance_mode=significance_mode,
+        pcmci_ami_n_permutations=pcmci_ami_n_permutations,
     )
     horizons = list(range(1, max_lag + 1))
     active_methods: set[str] = set()
@@ -492,25 +560,33 @@ def run_covariant_analysis(
     pcmci_ami_result: PcmciAmiResult | None = None
     lagged_exog: LaggedExogBundle | None = None
 
-    if {"cross_ami", "cross_pami"} & requested_method_set:
-        cross_ami_curves, cross_pami_curves = _compute_cross_curves(
+    if "cross_ami" in requested_method_set:
+        cross_ami_curves = _compute_cross_ami_curves(
             target=validated_target,
             drivers=validated_drivers,
             max_lag=max_lag,
             random_state=random_state,
         )
-        if "cross_ami" in requested_method_set:
-            active_methods.add("cross_ami")
+        active_methods.add("cross_ami")
+        if significance_mode == "phase":
             bands = _compute_cross_ami_bands(
                 target=validated_target,
                 drivers=validated_drivers,
                 max_lag=max_lag,
                 n_surrogates=n_surrogates,
                 random_state=random_state,
+                n_jobs_significance=n_jobs_significance,
             )
             cross_ami_upper_bands = {name: upper for name, (lower, upper) in bands.items()}
-        if "cross_pami" in requested_method_set:
-            active_methods.add("cross_pami")
+
+    if "cross_pami" in requested_method_set:
+        cross_pami_curves = _compute_cross_pami_curves(
+            target=validated_target,
+            drivers=validated_drivers,
+            max_lag=max_lag,
+            random_state=random_state,
+        )
+        active_methods.add("cross_pami")
 
     if "te" in requested_method_set:
         te_curves = _compute_te_curves(
@@ -541,6 +617,7 @@ def run_covariant_analysis(
             max_lag=max_lag,
             alpha=alpha,
             random_state=random_state,
+            verbosity=pcmci_verbosity,
         )
         if pcmci_graph is None:
             skipped_optional_methods.add("pcmci")
@@ -555,6 +632,11 @@ def run_covariant_analysis(
             ami_threshold=ami_threshold,
             alpha=alpha,
             random_state=random_state,
+            pcmci_ami_n_permutations=pcmci_ami_n_permutations,
+            pcmci_ami_ci_test=pcmci_ami_ci_test,
+            pcmci_ami_max_lag=pcmci_ami_max_lag,
+            pcmci_verbosity=pcmci_verbosity,
+            n_jobs_pcmci_ami_phase0=n_jobs_pcmci_ami_phase0,
         )
         if pcmci_ami_result is None:
             skipped_optional_methods.add("pcmci_ami")
@@ -680,10 +762,13 @@ def run_covariant_analysis(
         target_name=target_name,
         driver_names=list(validated_drivers.keys()),
         horizons=horizons,
-        metadata=_build_bundle_metadata(
-            requested_methods=requested_methods,
-            active_methods=active_methods,
-            skipped_optional_methods=skipped_optional_methods,
-            n_surrogates=n_surrogates,
-        ),
+        metadata={
+            **_build_bundle_metadata(
+                requested_methods=requested_methods,
+                active_methods=active_methods,
+                skipped_optional_methods=skipped_optional_methods,
+                n_surrogates=n_surrogates,
+            ),
+            "significance_mode": significance_mode,
+        },
     )

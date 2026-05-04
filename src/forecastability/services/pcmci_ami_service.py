@@ -24,6 +24,10 @@ def build_pcmci_ami_hybrid(
     n_neighbors: int = 8,
     min_pairs: int = 50,
     shuffle_scheme: Literal["iid", "block"] = "iid",
+    n_permutations: int = 199,
+    pcmci_max_lag: int | None = None,
+    verbosity: int = 0,
+    n_jobs_phase0: int = 1,
 ) -> CausalGraphFullPort:
     """Create a PCMCI-AMI-Hybrid causal discovery adapter.
 
@@ -36,6 +40,13 @@ def build_pcmci_ami_hybrid(
             ``"iid"`` (default) is fast and appropriate for residualised or
             whitened inputs; ``"block"`` preserves short-range autocorrelation
             (Politis & Romano, 1994) and is recommended on raw AR-like series.
+        n_permutations: Shuffle-test null size for ``knn_cmi`` (floor 99).
+        pcmci_max_lag: Optional maximum lag for Phase 1/2 PCMCI+.  When set,
+            Phase 0 MI is still computed over the full ``max_lag`` range, but
+            only candidates at or below ``pcmci_max_lag`` are passed to PCMCI+.
+            Useful for reducing PCMCI+ runtime on large lag windows.
+        verbosity: Tigramite verbosity level (0 = silent).
+        n_jobs_phase0: Number of parallel workers for Phase 0 MI computation.
 
     Returns:
         A ``CausalGraphPort``-compatible adapter.
@@ -47,4 +58,8 @@ def build_pcmci_ami_hybrid(
         n_neighbors=n_neighbors,
         min_pairs=min_pairs,
         shuffle_scheme=shuffle_scheme,
+        n_permutations=n_permutations,
+        pcmci_max_lag=pcmci_max_lag,
+        verbosity=verbosity,
+        n_jobs_phase0=n_jobs_phase0,
     )

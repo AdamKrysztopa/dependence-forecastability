@@ -200,6 +200,16 @@ bundle = run_covariant_analysis(
 | `pcmci` | PCMCI+ parent graph (optional) | `full_mci` |
 | `pcmci_ami` | PCMCI-AMI-Hybrid result (optional) | `full_mci` |
 
+> [!CAUTION]
+> `pcmci` and `pcmci_ami` are **computationally expensive** optional causal
+> methods — a single run can take several minutes to hours depending on sample
+> size, lag range, and CI-test backend.  They are designed for _confirmatory_
+> causal screening after a fast pairwise pass, not as a default first step.
+> Prefer `methods=["cross_ami", "gcmi"]` for fast initial screening.
+>
+> When causal discovery is required, set `pcmci_ami_ci_test="parcorr"` for a
+> 50–200× speedup over the `"knn_cmi"` default.
+
 > [!IMPORTANT]
 > `n_surrogates` must be at least 99 for covariant runs because the bundle includes phase-surrogate significance semantics for CrossAMI rows.
 
@@ -276,7 +286,7 @@ For the migrated walkthrough notebook, open
 in the sibling `forecastability-examples` repository.
 
 > [!NOTE]
-> Optional causal methods (`pcmci`, `pcmci_ami`) are skipped when causal dependencies are unavailable; the bundle records skipped methods in `metadata`.
+> Optional causal methods (`pcmci`, `pcmci_ami`) are skipped when causal dependencies are unavailable; the bundle records skipped methods in `metadata`.  These methods are confirmatory tools for targeted causal screening — they are not recommended for routine forecastability triage.
 
 ### `forecastability.triage`
 
