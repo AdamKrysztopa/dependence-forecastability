@@ -140,7 +140,7 @@ The release therefore extends the fingerprint around **structure source detectio
 | FSE-F08 | Opt-in `run_triage` integration (F08) | 2 | P1 | Not started |
 | FSE-F09 | CLI / brief output (F09) | 2 | P1 | Not started |
 | FSE-F10 | Documentation pack (F10) | 6 | P0 | Not started |
-| FSE-F11 | Synthetic showcase panel + sibling-repo examples (F11) | 3 | P1 | Core repo showcase artifact-complete with coarse semantic verification over the four-tree artifact bundle; sibling-repo follow-through deferred |
+****| FSE-F11 | Synthetic showcase panel + sibling-repo examples (F11) | 3 | P1 | Core repo showcase artifact-complete with coarse semantic verification over the four-tree artifact bundle; sibling notebooks were authored and manually exercised, and one final sibling rerun is pending after output-path hardening |
 | FSE-F12 | Performance guardrails (F12) | 4 | P1 | Not started |
 
 ### Reviewer acceptance block
@@ -833,10 +833,10 @@ tests/fingerprint/test_extended_profile_router.py
 
 **Sibling repo target:**
 - All narrative examples, notebooks, walkthroughs, and richer showcase scripts belong in the sibling repository: https://github.com/AdamKrysztopa/forecastability-examples
-- README-ready demonstrations and workflow showcases using the expanded fingerprint must be planned and implemented in the sibling repo.
+- README-ready demonstrations and workflow showcases using the expanded fingerprint must be authored and maintained in the sibling repo.
 
 **Acceptance criteria:**
-- Sibling examples are planned and tracked in https://github.com/AdamKrysztopa/forecastability-examples.
+- Sibling examples are authored and tracked in https://github.com/AdamKrysztopa/forecastability-examples.
 - No notebooks are added to the core repo.
 - No downstream forecasting-library fitting helpers are introduced in the core repo.
 
@@ -909,13 +909,13 @@ flowchart LR
 
 **Scope.** Land the synthetic showcase panel and route narrative examples to the sibling repository (FSE-F11).
 
-**Status.** Core-repo Phase 3 showcase implemented in the live repository: `scripts/run_extended_fingerprint_showcase.py` now emits an artifact-complete four-tree JSON/CSV/Markdown/PNG bundle for the deterministic seven-series panel, and its verifier now records coarse per-series AMI-first semantic checks across that bundle rather than claiming dominant-diagnostic enforcement. Sibling-repo narrative examples remain intentionally deferred for a later pass.
+**Status.** Core-repo Phase 3 showcase is implemented in the live repository: `scripts/run_extended_fingerprint_showcase.py` emits an artifact-complete four-tree JSON/CSV/Markdown/PNG bundle for the deterministic seven-series panel, and its verifier records coarse per-series AMI-first semantic checks across that bundle rather than claiming dominant-diagnostic enforcement. The sibling repository now has authored walkthrough notebooks and README indexing for the same Phase 3 surface, and those notebooks were manually exercised. That manual run showed the intended inline figures and tables, but it also exposed a notebook output-path issue; the notebooks have now been hardened to write against the sibling repo root, so one final rerun in the sibling repo remains pending to materialize the saved artifacts under the intended `outputs/notebooks/...` tree.
 
 **Acceptance criteria:**
 
 - Showcase script runs clean in `--smoke` mode on a fresh install.
 - The artifact-complete four-tree bundle is written under `outputs/json/extended_fingerprint/`, `outputs/tables/extended_fingerprint/`, `outputs/reports/extended_fingerprint/`, and `outputs/figures/extended_fingerprint/`.
-- Narrative examples, notebooks, and walkthroughs are planned in `https://github.com/AdamKrysztopa/forecastability-examples`; no notebooks are added to this repo.
+- Narrative examples, notebooks, and walkthrough indexing are authored in `https://github.com/AdamKrysztopa/forecastability-examples`; no notebooks are added to this repo, and one final sibling rerun remains pending after notebook output-path hardening.
 
 ### Phase 4 — Tests, fixtures, and performance guardrails
 
@@ -1381,7 +1381,7 @@ Create a small deterministic panel that demonstrates the new method layer.
 
 **Sibling repo target:**
 - All narrative, notebook, and workflow showcase examples must be implemented in https://github.com/AdamKrysztopa/forecastability-examples.
-- README-ready demonstrations and richer synthetic panels are planned and maintained in the sibling repo.
+- README-ready demonstrations and richer synthetic panels are authored and maintained in the sibling repo.
 
 ### Required synthetic series
 
@@ -1401,7 +1401,7 @@ Create a small deterministic panel that demonstrates the new method layer.
 - [ ] Richer README-ready demonstrations, notebooks, narrative walkthroughs, and workflow showcases belong in https://github.com/AdamKrysztopa/forecastability-examples.
 - [ ] No notebooks and no downstream forecasting-library fitting helpers are added to the core repo.
 - [ ] No heavy notebook dependency is needed in core.
-- [ ] Sibling repo contains narrative and notebook-based showcases, not the core repo.
+- [x] Sibling repo contains authored narrative and notebook-based showcases, not the core repo; manual execution in the sibling repo remains pending.
 
 ---
 
