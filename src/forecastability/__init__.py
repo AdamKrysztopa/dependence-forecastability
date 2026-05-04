@@ -17,6 +17,7 @@ from forecastability.triage.models import (
 from forecastability.use_cases import (
     build_forecast_prep_contract,
     run_covariant_analysis,
+    run_extended_forecastability_analysis,
     run_lagged_exogenous_triage,
     run_triage,
 )
@@ -429,6 +430,7 @@ __all__ = [
     "run_batch_triage",
     "run_batch_forecastability_workbench",
     "run_covariant_analysis",
+    "run_extended_forecastability_analysis",
     "run_lagged_exogenous_triage",
     "run_forecastability_fingerprint",
     "run_routing_validation",

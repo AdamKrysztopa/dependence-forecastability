@@ -1,64 +1,102 @@
 <!-- type: how-to -->
 # Extended Forecastability Fingerprint
 
-Use this page when you want to read the currently implemented AMI-first extended fingerprint surface without assuming the later-phase routing use case already exists.
+Use this page when you want to run the implemented AMI-first extended analysis
+surfaces and read their outputs conservatively.
 
 > [!IMPORTANT]
-> The extended fingerprint is AMI-first. The spectral, ordinal, classical, and memory blocks explain likely sources of forecastability; they do not replace lagged-information analysis and they do not perform model fitting.
+> The extended surface is AMI-first. The spectral, ordinal, classical, and
+> memory blocks add explanatory context around lagged-information evidence;
+> they do not replace AMI geometry and they do not perform model fitting.
 
-## Current Status
+## What Is Shipped Now
 
-The repository now implements the broad Phase 1 fingerprint blocks:
+The live repository now exposes the full Phase 2 public surface:
 
-- F01 spectral forecastability
-- F02 ordinal complexity
-- F03 classical structure
-- F04 memory structure
-- F05 extended fingerprint composition
+- `run_extended_forecastability_analysis(...)` on `forecastability` and `forecastability.triage`
+- additive `run_triage(..., include_extended_fingerprint=True)` with `TriageResult.extended_forecastability_analysis`
+- `forecastability extended` CLI with `json`, `markdown`, and `brief` output
 
-What is still not implemented is the later-phase public routing/use-case layer, including `run_extended_forecastability_analysis(...)`. This page therefore documents how to read the shipped fingerprint surface today, not a later end-to-end public analysis workflow.
+The underlying AMI geometry, spectral, ordinal, classical, and memory blocks
+remain the same additive fingerprint inputs. Phase 2 adds the deterministic
+router, the public use case, and the CLI adapter on top of that fingerprint.
 
 ## Purpose
 
-Use the extended fingerprint when you want one deterministic, explanation-oriented bundle that keeps AMI geometry at the center while adding cheap secondary structure signals around it.
+Use the extended surface when you want one deterministic, explanation-oriented
+bundle that keeps AMI geometry at the center while adding cheap secondary
+structure signals around it.
 
-## Scope
+## Pick The Right Entry Point
 
-- read AMI geometry first, because it remains the primary lagged-information evidence
-- use spectral, ordinal, classical, and memory blocks as explanatory context around that AMI evidence
-- keep the currently implemented reading path at the fingerprint level rather than claiming the routing profile is already populated by a public use case
-- keep any downstream model-family guidance outside this core repository and after triage rather than inside the fingerprint surface
+- Use `run_extended_forecastability_analysis(...)` when you want the direct
+	univariate extended result.
+- Use `run_triage(..., include_extended_fingerprint=True)` when you want the
+	normal triage result plus the additive extended bundle in one object.
+- Use `forecastability extended` when you need adapter-owned CLI output without
+	writing Python glue.
+- Stay on the exogenous surfaces for exogenous requests; the triage opt-in is
+	intentionally suppressed there because this repository does not yet ship an
+	exogenous-aware extended analysis.
 
-## Non-Goals
+## Direct Python Use
 
-- skipping straight to downstream fitting or benchmark comparisons
-- treating the extended fingerprint as a replacement for `run_triage()`
-- treating the unimplemented `run_extended_forecastability_analysis(...)` path as already shipped
-- expecting notebook-first showcase material in this repository
+```python
+from forecastability import generate_ar1, run_extended_forecastability_analysis
 
-## What Is Implemented Now
+series = generate_ar1(n_samples=300, phi=0.8, random_state=42)
+result = run_extended_forecastability_analysis(series, max_lag=24)
 
-- `ExtendedForecastabilityFingerprint` as the composite structure surface
-- AMI-first composition that keeps `information_geometry` when feasible and independently computes `spectral`, `ordinal`, `classical`, and `memory`
-- graceful degradation when AMI geometry is infeasible for short or degenerate inputs
-- `None` preservation for disabled optional blocks inside the composite result
+print(result.profile.predictability_sources)
+print(result.routing_metadata["descriptive_only"])
+```
 
-The stable facade currently exposes the extended result models. The implemented block composition lives below that facade in the service layer; the top-level public use case remains a later phase.
+## Triage Opt-In
 
-## How To Read The Fingerprint Today
+```python
+from forecastability import TriageRequest, generate_ar1, run_triage
 
-1. Start with the existing AMI information geometry and the inherited `ForecastabilityProfile` fields.
-2. Read `spectral`, `ordinal`, `classical`, and `memory` only as additive explanations for why forecastability may exist.
-3. Treat `notes` and categorical labels as part of the result contract, especially for short, constant, sparse, or otherwise conservative outputs.
-4. Hand any downstream modeling work off after triage, not inside this core repository.
+series = generate_ar1(n_samples=300, phi=0.8, random_state=42)
+triage = run_triage(
+		TriageRequest(series=series, max_lag=24, random_state=42),
+		include_extended_fingerprint=True,
+)
 
-## Current Composition Rules
+extended = triage.extended_forecastability_analysis
+```
+
+When the request is blocked or routed as exogenous, `extended` stays `None` and
+the field is omitted from serialized presenter output.
+
+## CLI Use
+
+```bash
+forecastability extended --csv data.csv --col value --max-lag 24 --format brief
+```
+
+> [!NOTE]
+> The current non-JSON CLI renderer is the same executive-style brief for
+> `markdown` and `brief`.
+
+## How To Read The Result
+
+1. Start with `fingerprint.information_geometry` when it is present, because it remains the primary lagged-information evidence.
+2. Read `spectral`, `ordinal`, `classical`, and `memory` as additive explanations for why forecastability may exist.
+3. If `routing_metadata["descriptive_only"]` is `True`, treat the result as intentionally diagnostic-only. That means AMI geometry was disabled or unavailable, so routing-grade family recommendations were withheld.
+4. Use `profile.predictability_sources` and `profile.explanation` as deterministic starting guidance after triage, not as model fitting instructions.
 
 - shared validation requires a finite one-dimensional input series
 - `max_lag` is validated before optional lag-aware blocks run
 - `period` is validated before the classical block runs, even if that block is later disabled
 - `seasonal_strength` is only computed when `period` is supplied
 - disabling a block preserves `None` in the corresponding fingerprint field instead of fabricating a placeholder result
+
+## Non-Goals
+
+- skipping straight to downstream fitting or benchmark comparisons
+- treating the extended surface as a replacement for `run_triage()` or the exogenous workflows
+- pretending the secondary diagnostics alone justify routing-grade family recommendations
+- expecting notebook-first showcase material in this repository
 
 ## Theory Cross-References
 
@@ -67,6 +105,5 @@ The stable facade currently exposes the extended result models. The implemented 
 - [../theory/classical_structure.md](../theory/classical_structure.md)
 - [../theory/memory_structure.md](../theory/memory_structure.md)
 
-## Later Phases
-
-Later phases are expected to populate `ExtendedForecastabilityProfile`, `ExtendedForecastabilityAnalysisResult`, and the public routing/use-case path. When richer examples, walkthroughs, and notebooks are added, they belong in the sibling `forecastability-examples` repository rather than in this core repo.
+Richer walkthroughs and notebooks for this surface belong in the sibling
+`forecastability-examples` repository rather than in this core repo.

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
+from forecastability.adapters.triage_presenter import present_triage_result
 from forecastability.triage.models import AnalysisGoal, TriageRequest
 from forecastability.use_cases.run_triage import run_triage
 
@@ -254,3 +255,73 @@ class TestNarrativeOwnership:
             "run_triage() must not populate narrative — narrative ownership belongs "
             "to the agent adapter layer (AGT-028)."
         )
+
+
+class TestExtendedForecastabilityOptIn:
+    def test_default_and_explicit_false_preserve_serialized_surface(self) -> None:
+        """The default triage surface must stay unchanged when the opt-in is off."""
+        rng = np.random.default_rng(17)
+        series = rng.standard_normal(180)
+        request = TriageRequest(series=series, max_lag=20, random_state=17)
+
+        result_default = run_triage(request)
+        result_explicit_false = run_triage(request, include_extended_fingerprint=False)
+
+        assert (
+            present_triage_result(result_default).model_dump()
+            == present_triage_result(result_explicit_false).model_dump()
+        )
+        assert (
+            "extended_forecastability_analysis"
+            not in present_triage_result(result_default).model_dump()
+        )
+
+    def test_opt_in_attaches_extended_forecastability_analysis(self) -> None:
+        """The opt-in path should attach the additive extended analysis payload."""
+        rng = np.random.default_rng(23)
+        series = rng.standard_normal(180)
+        request = TriageRequest(series=series, max_lag=20, random_state=23)
+
+        result = run_triage(request, include_extended_fingerprint=True)
+
+        assert result.extended_forecastability_analysis is not None
+        assert "extended_forecastability_analysis" in type(result).model_fields
+        assert result.extended_forecastability_analysis.profile.signal_strength in {
+            "low",
+            "medium",
+            "high",
+            "unclear",
+        }
+        assert "extended_forecastability_analysis" in present_triage_result(result).model_dump(
+            mode="json"
+        )
+
+    def test_blocked_opt_in_keeps_extended_analysis_omitted(self) -> None:
+        """Blocked triage should not attach extended analysis even when opted in."""
+        rng = np.random.default_rng(0)
+        request = TriageRequest(series=rng.standard_normal(30), max_lag=40)
+
+        result = run_triage(request, include_extended_fingerprint=True)
+
+        assert result.blocked is True
+        assert result.extended_forecastability_analysis is None
+        assert "extended_forecastability_analysis" not in present_triage_result(result).model_dump()
+
+    def test_exogenous_opt_in_suppresses_extended_analysis(self) -> None:
+        """Exogenous triage should not attach a target-only extended analysis payload."""
+        rng = np.random.default_rng(29)
+        request = TriageRequest(
+            series=rng.standard_normal(180),
+            exog=rng.standard_normal(180),
+            goal=AnalysisGoal.exogenous,
+            max_lag=20,
+            random_state=29,
+        )
+
+        result = run_triage(request, include_extended_fingerprint=True)
+
+        assert result.blocked is False
+        assert result.method_plan is not None
+        assert result.method_plan.route == "exogenous"
+        assert result.extended_forecastability_analysis is None
+        assert "extended_forecastability_analysis" not in present_triage_result(result).model_dump()

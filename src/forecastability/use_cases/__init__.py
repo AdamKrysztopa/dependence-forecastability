@@ -11,6 +11,9 @@ from forecastability.use_cases.run_batch_triage import (
     run_batch_triage_with_details,
 )
 from forecastability.use_cases.run_covariant_analysis import run_covariant_analysis
+from forecastability.use_cases.run_extended_forecastability_analysis import (
+    run_extended_forecastability_analysis,
+)
 from forecastability.use_cases.run_forecastability_fingerprint import (
     run_forecastability_fingerprint,
 )
@@ -30,6 +33,7 @@ __all__ = [
     "run_covariant_analysis",
     "run_lagged_exogenous_triage",
     "run_forecastability_fingerprint",
+    "run_extended_forecastability_analysis",
     "run_routing_validation",
     "RoutingPolicyConfig",
 ]

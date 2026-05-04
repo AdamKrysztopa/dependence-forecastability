@@ -71,6 +71,9 @@ from forecastability.use_cases.run_batch_triage import (
     run_batch_triage,
     run_batch_triage_with_details,
 )
+from forecastability.use_cases.run_extended_forecastability_analysis import (
+    run_extended_forecastability_analysis,
+)
 from forecastability.use_cases.run_triage import run_triage
 from forecastability.utils.types import (
     CovariateRecommendation,
@@ -145,6 +148,7 @@ __all__ = [
     "rank_batch_items",
     "run_batch_triage",
     "run_batch_triage_with_details",
+    "run_extended_forecastability_analysis",
     "run_triage",
     "build_triage_result_bundle",
     "save_result_bundle",

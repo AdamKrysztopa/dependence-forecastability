@@ -5,7 +5,7 @@ A deterministic forecastability triage toolkit with AMI as the paper-aligned fou
 
 This repository is a deterministic forecastability triage toolkit for time series. When the task is time-series forecasting, do not jump directly to model fitting. Start with forecastability triage first: readiness, leakage risk, informative horizons, primary lags, seasonality structure, and covariate informativeness. Only then recommend downstream model families or framework-specific settings.
 
-_Last verified for release 0.4.1 on 2026-05-04._
+_Last verified against the live repository on 2026-05-04._
 
 Use this index to get to the right surface quickly. The live repository is the
 source of truth for package entry points, scripts, recipes, and checked-in
@@ -25,8 +25,8 @@ Start here for the pinned, high-signal entry surfaces that stay at the `docs/` r
 | Document | Why |
 | --- | --- |
 | [../README.md](../README.md) | Package-level overview: install, Python quickstart, CLI, API, scripts, recipes, and artifact surfaces |
-| [quickstart.md](quickstart.md) | Surface-by-surface quickstart for Python, CLI, HTTP API, dashboard, and optional extras |
-| [public_api.md](public_api.md) | Stable imports from `forecastability` and `forecastability.triage` |
+| [quickstart.md](quickstart.md) | Surface-by-surface quickstart for Python, CLI, extended analysis, HTTP API, dashboard, and optional extras |
+| [public_api.md](public_api.md) | Stable imports from `forecastability` and `forecastability.triage`, including the additive extended forecastability surface |
 | [executive_summary.md](executive_summary.md) | One-page overview of the toolkit, evidence shape, and operating posture |
 | [why_use_this.md](why_use_this.md) | Decision-oriented positioning for when deterministic forecastability triage is the right first step |
 
@@ -37,7 +37,7 @@ Use these pages when you need a task-oriented route to a result.
 | Document | Why |
 | --- | --- |
 | [how-to/golden_path.md](how-to/golden_path.md) | Shortest route from install to a trustworthy first result |
-| [how-to/extended_forecastability_fingerprint.md](how-to/extended_forecastability_fingerprint.md) | How to read the current AMI-first extended fingerprint surface and its implemented F01-F05 blocks |
+| [how-to/extended_forecastability_fingerprint.md](how-to/extended_forecastability_fingerprint.md) | How to run and read the implemented AMI-first extended analysis surface across Python, triage opt-in, and CLI |
 | [how-to/use_cases_industrial.md](how-to/use_cases_industrial.md) | Practical industrial usage patterns and deployment-shaped scenarios |
 
 ## Explanations
@@ -47,7 +47,7 @@ Use these pages when you need rationale, caveats, or the conceptual shape of the
 | Document | Why |
 | --- | --- |
 | [explanation/architecture.md](explanation/architecture.md) | Actual layered architecture and dependency direction |
-| [explanation/extended_forecastability_profile.md](explanation/extended_forecastability_profile.md) | Why `ExtendedForecastabilityProfile` additively extends the existing AMI-first profile contract |
+| [explanation/extended_forecastability_profile.md](explanation/extended_forecastability_profile.md) | Why `ExtendedForecastabilityProfile` stays AMI-first and becomes descriptive-only when AMI geometry is disabled or unavailable |
 | [explanation/surface_guide.md](explanation/surface_guide.md) | Which surfaces are stable, beta, or experimental, and what most users can ignore |
 | [explanation/results_summary.md](explanation/results_summary.md) | Evidence-oriented output summary |
 | [explanation/limitations.md](explanation/limitations.md) | Statistical and operational limitations |

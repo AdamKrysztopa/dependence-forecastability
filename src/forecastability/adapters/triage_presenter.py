@@ -9,7 +9,7 @@ or subsets the canonical view as needed.
 from __future__ import annotations
 
 import numpy as np
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from forecastability.triage.models import TriageResult
 
@@ -56,6 +56,10 @@ class TriageResultView(BaseModel):
     method_plan_rationale: str | None = None
     method_plan_assumptions: list[str] | None = None
     pattern_class: str | None = None
+    extended_forecastability_analysis: dict[str, object] | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+    )
 
 
 class TriageAnalyticsView(BaseModel):
@@ -128,6 +132,11 @@ def present_triage_result(result: TriageResult) -> TriageResultView:
         method_plan_rationale=mp.rationale if mp else None,
         method_plan_assumptions=mp.assumptions if mp else None,
         pattern_class=getattr(interp, "pattern_class", None) if interp else None,
+        extended_forecastability_analysis=(
+            result.extended_forecastability_analysis.model_dump(mode="json")
+            if result.extended_forecastability_analysis is not None
+            else None
+        ),
     )
 
 

@@ -10,10 +10,12 @@ import numpy as np
 import pytest
 
 from forecastability.adapters.cli import (
+    _render_extended_markdown,
     _render_markdown,
     _render_scorers_markdown,
     _series_from_json,
     build_parser,
+    cmd_extended,
     cmd_list_scorers,
     cmd_triage,
 )
@@ -63,6 +65,11 @@ class TestBuildParser:
         parser = build_parser()
         args = parser.parse_args(["list-scorers"])
         assert args.command == "list-scorers"
+
+    def test_parser_has_extended_subcommand(self) -> None:
+        parser = build_parser()
+        args = parser.parse_args(["extended", "--series", "[1, 2, 3]"])
+        assert args.command == "extended"
 
     def test_triage_default_format_is_json(self) -> None:
         parser = build_parser()
@@ -237,6 +244,77 @@ class TestCmdTriageCsv:
             cmd_triage(ns)
 
 
+class TestCmdExtended:
+    def test_json_output_contains_profile(self, capsys: pytest.CaptureFixture[str]) -> None:
+        parser = build_parser()
+        args = parser.parse_args(
+            [
+                "extended",
+                "--series",
+                json.dumps(_make_ar1()),
+                "--max-lag",
+                "20",
+                "--format",
+                "json",
+            ]
+        )
+        code = cmd_extended(args)
+        captured = capsys.readouterr()
+        assert code == 0
+        data = json.loads(captured.out)
+        assert "fingerprint" in data
+        assert "profile" in data
+
+    def test_markdown_output_renders_brief_heading(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        parser = build_parser()
+        args = parser.parse_args(
+            [
+                "extended",
+                "--series",
+                json.dumps(_make_ar1()),
+                "--max-lag",
+                "20",
+                "--format",
+                "markdown",
+            ]
+        )
+        code = cmd_extended(args)
+        captured = capsys.readouterr()
+        assert code == 0
+        assert "# Extended Forecastability Brief" in captured.out
+        assert "Suggested families:" in captured.out
+
+    def test_invalid_extended_input_returns_nonzero(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        import argparse
+
+        ns = argparse.Namespace(
+            csv=None,
+            series=json.dumps(_make_ar1()),
+            col=None,
+            name=None,
+            max_lag=20,
+            period=1,
+            ordinal_embedding_dimension=3,
+            ordinal_delay=1,
+            memory_min_scale=None,
+            memory_max_scale=None,
+            include_ami_geometry=True,
+            include_spectral=True,
+            include_ordinal=True,
+            include_classical=True,
+            include_memory=True,
+            format="json",
+        )
+        code = cmd_extended(ns)
+        captured = capsys.readouterr()
+        assert code == 1
+        assert "invalid extended analysis input" in captured.err
+
+
 # ---------------------------------------------------------------------------
 # cmd_list_scorers
 # ---------------------------------------------------------------------------
@@ -336,3 +414,24 @@ class TestRenderScorersMarkdown:
         md = _render_scorers_markdown(scorers)
         assert "mi" in md
         assert "|" in md
+
+
+class TestRenderExtendedMarkdown:
+    def test_brief_contains_sources_families_and_why(self) -> None:
+        data: dict[str, object] = {
+            "profile": {
+                "signal_strength": "medium",
+                "noise_risk": "low",
+                "predictability_sources": ["lag_dependence", "seasonality"],
+                "recommended_model_families": ["arima", "harmonic_regression"],
+                "avoid_model_families": ["tree_on_lags"],
+                "explanation": ["AMI-first view: informative lag structure extends to horizon 8."],
+            }
+        }
+
+        markdown = _render_extended_markdown(data)
+
+        assert "# Extended Forecastability Brief" in markdown
+        assert "Detected sources:" in markdown
+        assert "Suggested families:" in markdown
+        assert "Why:" in markdown

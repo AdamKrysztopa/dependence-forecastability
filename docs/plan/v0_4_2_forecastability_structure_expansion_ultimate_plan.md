@@ -894,16 +894,16 @@ flowchart LR
 
 ### Phase 2 — Exporters and adapters
 
-**Scope.** Land the forecastability profile router (FSE-F06), the `run_extended_forecastability_analysis` use case (FSE-F07), the opt-in `run_triage` integration (FSE-F08), and the CLI brief output (FSE-F09).
+**Scope.** Land the forecastability profile router (FSE-F06), the `run_extended_forecastability_analysis` use case (FSE-F07), the opt-in `run_triage` integration (FSE-F08), and the `forecastability extended` CLI json/markdown/brief output (FSE-F09).
 
-**Status.** Planned. The router, public use-case, `run_triage` opt-in wiring, and CLI output remain unimplemented in `src/`.
+**Status.** Implemented in the live repository for FSE-F06 through FSE-F09. The deterministic router, public use case, additive `run_triage` opt-in, and `forecastability extended` CLI now ship from `src/`.
 
 **Acceptance criteria:**
 
-- `run_extended_forecastability_analysis` and the CLI command are re-exported from the facade.
-- The router emits deterministic explanations for every fired rule.
-- `run_triage` default behavior is unchanged; the extended fingerprint is opt-in only.
-- No exporter or CLI command imports any forecasting framework.
+- [x] `run_extended_forecastability_analysis` and the CLI command are re-exported from the facade.
+- [x] The router emits deterministic explanations for every fired rule and stays descriptive-only when AMI geometry is disabled or unavailable.
+- [x] `run_triage` default behavior is unchanged; `include_extended_fingerprint=True` additively attaches `extended_forecastability_analysis` only for non-exogenous routes.
+- [x] No adapter or CLI command imports any forecasting framework.
 
 ### Phase 3 — Examples and showcase
 

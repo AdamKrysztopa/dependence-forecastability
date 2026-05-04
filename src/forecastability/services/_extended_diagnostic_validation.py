@@ -41,6 +41,19 @@ def validate_embedding_dimension(embedding_dimension: int) -> None:
         raise ValueError("embedding_dimension must be at least 2")
 
 
+def validate_memory_scale_bounds(
+    min_scale: int | None,
+    max_scale: int | None,
+) -> None:
+    """Validate optional DFA scale bounds at the public seam."""
+    if min_scale is not None and min_scale < 4:
+        raise ValueError("memory_min_scale must be at least 4 when provided")
+    if max_scale is not None and max_scale <= 0:
+        raise ValueError("memory_max_scale must be positive when provided")
+    if min_scale is not None and max_scale is not None and max_scale <= min_scale:
+        raise ValueError("memory_max_scale must be greater than memory_min_scale")
+
+
 def validate_spectral_detrend(detrend: object) -> SpectralDetrendMode:
     """Validate the public spectral detrend mode before calling Welch."""
     if detrend not in _SPECTRAL_DETREND_MODES:

@@ -5,7 +5,7 @@ A deterministic forecastability triage toolkit with AMI as the paper-aligned fou
 
 This repository is a deterministic forecastability triage toolkit for time series. When the task is time-series forecasting, do not jump directly to model fitting. Start with forecastability triage first: readiness, leakage risk, informative horizons, primary lags, seasonality structure, and covariate informativeness. Only then recommend downstream model families or framework-specific settings.
 
-_Last verified for the in-repo v0.3.3 routing-validation surface on 2026-04-23._
+_Last verified against the live repository on 2026-05-04._
 
 This page lists the import roots and runtime entry points that are treated as the supported public surface of the live repository.
 
@@ -21,11 +21,13 @@ Use the top-level package for the package facade that most users should depend o
 ```python
 from forecastability import (
     AnalyzeResult,
+    ExtendedForecastabilityAnalysisResult,
     ForecastabilityAnalyzer,
     ForecastabilityAnalyzerExog,
     TriageRequest,
     TriageResult,
     run_batch_triage,
+    run_extended_forecastability_analysis,
     run_triage,
 )
 ```
@@ -33,15 +35,41 @@ from forecastability import (
 | Category | Exports |
 | --- | --- |
 | Triage entry points | `run_triage`, `run_batch_triage`, `TriageRequest`, `TriageResult` |
+| Extended forecastability entry points | `run_extended_forecastability_analysis`, `ExtendedForecastabilityAnalysisResult`, `ExtendedForecastabilityFingerprint`, `ExtendedForecastabilityProfile` |
 | Covariant entry points | `run_covariant_analysis`, `CovariantAnalysisBundle`, `CovariantSummaryRow`, `TransferEntropyResult`, `GcmiResult`, `CausalGraphResult`, `PcmciAmiResult`, `Phase0MiScore`, `LaggedExogBundle`, `LaggedExogProfileRow`, `LaggedExogSelectionRow`, `LagRoleLabel`, `TensorRoleLabel`, `LagSelectorLabel`, `LagSignificanceSource` |
 | Fingerprint entry points | `run_forecastability_fingerprint`, `run_batch_forecastability_workbench`, `run_ami_geometry_csv_batch`, `FingerprintBundle`, `ForecastabilityFingerprint`, `AmiInformationGeometry`, `AmiGeometryCurvePoint`, `BatchForecastabilityWorkbenchResult`, `ForecastingNextStepPlan`, `CsvGeometryBatchItem`, `CsvGeometryBatchResult` |
 | Routing-validation entry points | `run_routing_validation`, `RoutingValidationBundle`, `RoutingValidationCase`, `RoutingPolicyAudit`, `RoutingValidationOutcome`, `RoutingValidationSourceKind`, `RoutingPolicyAuditConfig` |
 | Analyzer facade | `ForecastabilityAnalyzer`, `ForecastabilityAnalyzerExog`, `AnalyzeResult` |
 | Extension helpers | `compute_target_baseline_by_horizon`, `TargetBaselineCurves` |
-| Diagnostic and result models | `ForecastabilityProfile`, `PredictiveInfoLearningCurve`, `SpectralPredictabilityResult`, `InterpretationResult`, `Diagnostics`, `MetricCurve`, `CanonicalExampleResult`, `CanonicalSummary`, `SeriesEvaluationResult`, `ForecastResult`, `BackendComparisonResult`, `ExogenousBenchmarkResult`, `RobustnessStudyResult`, `SampleSizeStressResult` |
+| Diagnostic and result models | `ForecastabilityProfile`, `PredictiveInfoLearningCurve`, `SpectralPredictabilityResult`, `SpectralForecastabilityResult`, `OrdinalComplexityResult`, `ClassicalStructureResult`, `MemoryStructureResult`, `InterpretationResult`, `Diagnostics`, `MetricCurve`, `CanonicalExampleResult`, `CanonicalSummary`, `SeriesEvaluationResult`, `ForecastResult`, `BackendComparisonResult`, `ExogenousBenchmarkResult`, `RobustnessStudyResult`, `SampleSizeStressResult` |
 | Config models | `BenchmarkDataConfig`, `CMIConfig`, `ExogenousBenchmarkConfig`, `MetricConfig`, `ModelConfig`, `OutputConfig`, `RobustnessStudyConfig`, `RollingOriginConfig`, `SensitivityConfig`, `UncertaintyConfig` |
 | Dataset helpers | `generate_ar1`, `generate_white_noise`, `ar1_theoretical_ami`, `generate_lagged_exog_panel`, `generate_known_future_calendar_pair`, `generate_contemporaneous_only_pair` |
 | Registry and validation helpers | `DependenceScorer`, `ScorerInfo`, `ScorerRegistry`, `default_registry`, `validate_time_series` |
+
+## Extended Forecastability Surface
+
+Use `run_extended_forecastability_analysis` when you want the additive AMI-first
+extended fingerprint and deterministic routing profile in one result.
+
+```python
+from forecastability import generate_ar1, run_extended_forecastability_analysis
+
+series = generate_ar1(n_samples=300, phi=0.8, random_state=42)
+result = run_extended_forecastability_analysis(series, max_lag=24)
+```
+
+Key returned objects:
+
+- `result.fingerprint`: AMI geometry plus additive spectral, ordinal, classical, and memory blocks
+- `result.profile`: deterministic `ExtendedForecastabilityProfile` derived from the fingerprint
+- `result.routing_metadata`: JSON-safe execution metadata including whether the output is descriptive-only
+
+Operational notes:
+
+- `include_ami_geometry=False` or infeasible AMI geometry keeps the result descriptive-only. In that mode `recommended_model_families` and `avoid_model_families` stay empty and `result.routing_metadata["descriptive_only"]` is `True`.
+- `run_triage(request, include_extended_fingerprint=True)` additively attaches `extended_forecastability_analysis` to `TriageResult` for non-exogenous routes only. Blocked runs and `goal="exogenous"` keep the additive field omitted from serialized output.
+- CLI equivalent: `forecastability extended --csv data.csv --col value --format json`. Supported formats are `json`, `markdown`, and `brief`; the current non-JSON renderer is the same executive-style brief for `markdown` and `brief`.
+- The profile provides descriptive family direction only. It does not fit models or integrate downstream frameworks.
 
 ## Fingerprint Surface
 
@@ -296,10 +324,12 @@ Use the triage namespace when you need advanced batch, readiness, event, or bund
 from forecastability.triage import (
     BatchTriageRequest,
     BatchTriageResponse,
+    ExtendedForecastabilityAnalysisResult,
     ReadinessReport,
     TriageEvent,
     TriageResultBundle,
     run_batch_triage_with_details,
+    run_extended_forecastability_analysis,
 )
 ```
 
@@ -307,6 +337,7 @@ from forecastability.triage import (
 | --- | --- |
 | Single-run models and helpers | `AnalysisGoal`, `ReadinessStatus`, `ReadinessWarning`, `ReadinessReport`, `MethodPlan`, `TriageRequest`, `TriageResult`, `assess_readiness`, `plan_method`, `run_triage` |
 | Batch triage | `BatchSeriesRequest`, `BatchTriageRequest`, `BatchTriageItemResult`, `BatchSummaryRow`, `BatchFailureRow`, `BatchTriageResponse`, `BatchTriageExecutionItem`, `BatchTriageExecution`, `SUMMARY_TABLE_COLUMNS`, `FAILURE_TABLE_COLUMNS`, `run_batch_triage`, `run_batch_triage_with_details`, `rank_batch_items` |
+| Extended forecastability models and helpers | `ExtendedForecastabilityAnalysisResult`, `ExtendedForecastabilityFingerprint`, `ExtendedForecastabilityProfile`, `ClassicalStructureResult`, `MemoryStructureResult`, `OrdinalComplexityResult`, `SpectralForecastabilityResult`, `run_extended_forecastability_analysis` |
 | Diagnostic result models | `ForecastabilityProfile`, `PredictiveInfoLearningCurve`, `SpectralPredictabilityResult`, `ComplexityBandResult`, `LargestLyapunovExponentResult` |
 | Event contract | `TriageEvent`, `TriageStageStarted`, `TriageStageCompleted`, `TriageError` |
 | Result bundle contract | `TriageBundleWarning`, `TriageInputMetadata`, `TriageConfigSnapshot`, `TriageVersions`, `TriageNumericOutputs`, `TriageBundleProvenance`, `TriageResultBundle`, `build_triage_result_bundle`, `save_result_bundle`, `load_result_bundle`, `save_triage_result_bundle` |
@@ -352,7 +383,7 @@ These are the live repo entry points for non-import surfaces.
 
 | Surface | Entry point | Notes |
 | --- | --- | --- |
-| CLI | `forecastability` | Packaged command wired to `forecastability.adapters.cli:main` |
+| CLI | `forecastability` | Packaged command wired to `forecastability.adapters.cli:main`; includes `triage`, `extended`, `triage-batch`, and `list-scorers` |
 | Dashboard | `forecastability-dashboard` | Packaged command wired to `forecastability.adapters.dashboard:main` |
 | HTTP API | `forecastability.adapters.api:app` | FastAPI application used with Uvicorn |
 | CSV script | `scripts/run_ami_information_geometry_csv.py` | Repo script for one-series-per-column CSV batch geometry runs |

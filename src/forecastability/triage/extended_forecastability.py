@@ -46,6 +46,24 @@ PredictabilitySourceLabel: TypeAlias = Literal[
 PredictabilitySources: TypeAlias = tuple[PredictabilitySourceLabel, ...]
 RoutingMetadataValue: TypeAlias = str | int | float | bool | None
 
+_PREDICTABILITY_SOURCE_ORDER: dict[PredictabilitySourceLabel, int] = {
+    "lag_dependence": 0,
+    "spectral_concentration": 1,
+    "seasonality": 2,
+    "trend": 3,
+    "ordinal_redundancy": 4,
+    "long_memory": 5,
+}
+
+
+def _validate_predictability_source_label(value: object) -> PredictabilitySourceLabel:
+    """Validate one predictability-source label before ordering it."""
+    if not isinstance(value, str):
+        raise ValueError("predictability_sources entries must be PredictabilitySourceLabel strings")
+    if value not in _PREDICTABILITY_SOURCE_ORDER:
+        raise ValueError(f"unknown predictability source: {value!r}")
+    return cast(PredictabilitySourceLabel, value)
+
 
 def _coerce_profile_values(value: object) -> np.ndarray:
     """Coerce JSON-friendly profile values back to the legacy ndarray surface."""
@@ -71,8 +89,11 @@ def _normalize_predictability_sources(value: object) -> PredictabilitySources:
         raise TypeError(
             "predictability_sources must be an iterable of PredictabilitySourceLabel values"
         )
-    labels = tuple(cast(Iterable[PredictabilitySourceLabel], value))
-    return cast(PredictabilitySources, tuple(sorted(set(labels), key=str)))
+    labels = tuple(_validate_predictability_source_label(label) for label in value)
+    return cast(
+        PredictabilitySources,
+        tuple(sorted(set(labels), key=lambda label: _PREDICTABILITY_SOURCE_ORDER[label])),
+    )
 
 
 class SpectralForecastabilityResult(BaseModel):

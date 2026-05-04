@@ -184,6 +184,31 @@ def test_extended_profile_subclasses_forecastability_profile_with_stable_json_su
     assert payload["predictability_sources"] == ["lag_dependence", "seasonality"]
 
 
+def test_extended_profile_rejects_unknown_predictability_sources_with_validation_error() -> None:
+    """Unknown predictability-source labels should surface as normal validation errors."""
+    raw_profile: dict[str, object] = {
+        "horizons": [1, 2, 3],
+        "values": [0.3, 0.2, 0.1],
+        "epsilon": 0.1,
+        "informative_horizons": [1, 2],
+        "peak_horizon": 1,
+        "is_non_monotone": False,
+        "summary": "Lag dependence decays quickly after the first horizon.",
+        "model_now": "HIGH",
+        "review_horizons": [1, 2],
+        "avoid_horizons": [3],
+        "signal_strength": "medium",
+        "predictability_sources": ["lag_dependence", "mystery_source"],
+        "noise_risk": "low",
+        "recommended_model_families": ["ARIMA", "ETS"],
+        "avoid_model_families": ["pure_mlp"],
+        "explanation": ["Lag dependence and seasonality are both present."],
+    }
+
+    with pytest.raises(ValidationError, match="unknown predictability source"):
+        ExtendedForecastabilityProfile.model_validate(raw_profile)
+
+
 def test_extended_analysis_result_round_trips_with_existing_geometry_type() -> None:
     """The extended fingerprint should reuse the existing AMI geometry result model."""
     result = ExtendedForecastabilityAnalysisResult(
