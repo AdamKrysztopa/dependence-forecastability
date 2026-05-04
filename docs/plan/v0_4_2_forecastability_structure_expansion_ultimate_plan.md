@@ -1,10 +1,11 @@
+<!-- type: reference -->
 # v0.4.2 — Forecastability Structure Expansion: Ultimate Release Plan
 
 **Plan type:** Actionable release plan — method-layer expansion for deterministic forecastability triage  
 **Audience:** Maintainer, reviewer, statistician reviewer, documentation writer, Jr. developer  
 **Target release:** `0.4.2`  
-**Current released version:** `0.4.1` after performance-hardening / benchmark-hygiene release  
-**Branch:** `feat/v0.4.2-forecastability-structure-expansion`  
+**Current released version:** `0.4.1`  
+**Branch:** `feat/v0_4_2_forecastability_structure_expansion`  
 **Status:** Draft — ready for implementation  
 **Last reviewed:** 2026-05-04
 
@@ -18,6 +19,8 @@
 > 5. an extended fingerprint and updated model-family routing.
 >
 > It does **not** ship PCMCI acceleration, Rust/native kernels, matrix-profile motif discovery in core, EDM/S-map forecast evaluation, full RQA, Lyapunov estimation, or downstream forecasting-library fitting helpers.
+>
+> Driver document: [aux_documents/developer_instruction_repo_scope.md](../plan/aux_documents/developer_instruction_repo_scope.md).
 
 > [!NOTE]
 > **Cross-release ordering.** This release intentionally lands before the next deep performance-improvement release. The goal is to create a more impressive and useful method layer first, while keeping every new diagnostic cheap enough to avoid worsening the known 0.4.1 bottleneck profile.
@@ -46,9 +49,6 @@
   - https://cran.r-project.org/web/packages/rEDM/rEDM.pdf
 - RQA background, research-only:
   - https://www.sciencedirect.com/science/article/pii/S0370157306004066
-- catch22 background, inspiration only:
-  - https://arxiv.org/abs/1901.10200
-  - https://github.com/DynamicsAndNeuralSystems/catch22
 
 **Builds on:**
 
@@ -102,6 +102,147 @@ The release therefore extends the fingerprint around **structure source detectio
 - DFA tells whether memory persists across scale.
 - Routing converts those diagnostics into transparent model-family recommendations.
 
+### Planning principles
+
+| Principle | Implication |
+| --- | --- |
+| AMI-first identity | New diagnostics surround the AMI/pAMI fingerprint and never replace it. The triage namespace remains the authoritative entry point. |
+| Hexagonal + SOLID | Each new diagnostic ships as a service under `src/forecastability/services/` consumed by a single use case under `src/forecastability/use_cases/`; no cross-service imports. |
+| Additive only | Existing public symbols and frozen Pydantic field shapes are preserved. New result models are added; existing ones are not mutated. |
+| Honest semantics | Every diagnostic distinguishes evidence from forecast accuracy; degenerate and short-series inputs return explicit notes, not silent zeros. |
+| Determinism | Every new metric is deterministic for the same inputs; no surrogate significance is triggered by default. |
+| Cheap by default | Each diagnostic must run within the F12 timing budgets on `n=1_000`; heavy methods stay deferred. |
+| Framework-agnostic | No `darts`, `mlforecast`, `statsforecast`, or `nixtla` imports at runtime, optional extras, dev, or CI. |
+| Documentation as code | Every new method ships with a theory page, API reference, interpretation table, and acceptance tests in the same release. |
+
+### Architecture rules
+
+- The core package remains **framework-agnostic**: no downstream forecasting-library imports at any tier.
+- All new result models are **frozen Pydantic models** with closed `Literal` label fields and explicit `Field(...)` descriptions.
+- New public symbols are **additively re-exported** from `forecastability` and/or `forecastability.triage`; existing re-exports are not removed.
+- New services belong in `src/forecastability/services/`; new use cases in `src/forecastability/use_cases/`; the extended fingerprint lives under `src/forecastability/fingerprint/`.
+- No new notebook is committed in this release; narrative examples ship in the sibling repository `https://github.com/AdamKrysztopa/forecastability-examples`.
+- No PCMCI acceleration, causal-discovery expansion, Matrix Profile, EDM/S-map, RQA, Lyapunov estimation, or Rust/native kernels in this release.
+
+### Feature inventory
+
+| ID | Feature | Phase | Priority | Status |
+| --- | --- | --- | --- | --- |
+| FSE-F00 | Typed result models (`SpectralForecastabilityResult`, `OrdinalComplexityResult`, `ClassicalStructureResult`, `MemoryStructureResult`, `ExtendedForecastabilityFingerprint`, `ForecastabilityProfile`, `ExtendedForecastabilityAnalysisResult`) | 0 | P0 | Not started |
+| FSE-F01 | Spectral forecastability service (F01) | 1 | P0 | Not started |
+| FSE-F02 | Ordinal complexity service (F02) | 1 | P0 | Not started |
+| FSE-F03 | Classical structure service (F03) | 1 | P0 | Not started |
+| FSE-F04 | DFA / Hurst memory service (F04) | 1 | P1 | Not started |
+| FSE-F05 | Extended fingerprint composition service (F05) | 1 | P0 | Not started |
+| FSE-F06 | Forecastability profile router (F06) | 2 | P0 | Not started |
+| FSE-F07 | `run_extended_forecastability_analysis` use case (F07) | 2 | P0 | Not started |
+| FSE-F08 | Opt-in `run_triage` integration (F08) | 2 | P1 | Not started |
+| FSE-F09 | CLI / brief output (F09) | 2 | P1 | Not started |
+| FSE-F10 | Documentation pack (F10) | 6 | P0 | Not started |
+| FSE-F11 | Synthetic showcase panel + sibling-repo examples (F11) | 3 | P1 | Not started |
+| FSE-F12 | Performance guardrails (F12) | 4 | P1 | Not started |
+
+### Reviewer acceptance block
+
+`0.4.2` is successful only if all of the following are visible together:
+
+1. **Typed surface**
+   - All seven result models exist as frozen Pydantic models with closed `Literal` label fields and explicit `Field(...)` descriptions.
+   - `from forecastability import run_extended_forecastability_analysis, ExtendedForecastabilityAnalysisResult` resolves; the same symbols also resolve from `forecastability.triage`.
+   - Field validators reject invalid embedding dimensions, non-positive periods, and out-of-range scale bounds.
+
+2. **Builder / use case**
+   - `run_extended_forecastability_analysis(...)` returns `ExtendedForecastabilityAnalysisResult` and accepts the documented signature.
+   - Constant, too-short, and degenerate inputs return result objects with explicit notes rather than raising silently.
+   - The use case never imports any forecasting framework and never triggers surrogate significance by default.
+
+3. **Regression discipline**
+   - Synthetic showcase results for the F11 panel are stored under `docs/fixtures/extended_fingerprint/` with a rebuild script in `scripts/`.
+   - A fixture diff appears whenever any new diagnostic changes; output flips without diffs are treated as a regression.
+   - All rebuild scripts run clean before tagging.
+
+4. **Showcase script**
+   - `scripts/run_extended_fingerprint_showcase.py` (or equivalent) runs clean in `--smoke` mode on a fresh install with no optional extras required.
+   - Output artifacts are written to `outputs/reports/extended_fingerprint/` as JSON and Markdown.
+   - The brief Markdown is suitable for a README snippet.
+
+5. **Documentation**
+   - Theory pages exist under `docs/theory/` for spectral, ordinal, classical, and memory diagnostics.
+   - `docs/how-to/extended_forecastability_fingerprint.md` and `docs/explanation/extended_forecastability_profile.md` exist.
+   - README and `docs/quickstart.md` mention the extended fingerprint with the AMI-first framing preserved.
+   - The CHANGELOG entry is honest about what the release does not do (no model fitting, no causal discovery).
+
+6. **Release engineering**
+   - Version bumped in `pyproject.toml`, `__version__`, `CHANGELOG.md`, `CITATION.cff`, and `docs/releases/v0.4.2.md`.
+   - Plan files under `docs/plan/*.md` keep `**Current released version:** ` in sync with the released version.
+   - All fixture rebuild scripts re-run and committed.
+   - Git tag `v0.4.2` created and pushed after PR merge.
+
+7. **Repository scope**
+   - No `darts`, `mlforecast`, `statsforecast`, or `nixtla` import appears anywhere under `src/`.
+   - No notebook is added to this repository.
+   - Narrative examples and walkthroughs are planned in `https://github.com/AdamKrysztopa/forecastability-examples`.
+
+8. **Performance**
+   - Each new diagnostic respects the F12 timing budget on `n=1_000`.
+   - Top-level import latency does not materially regress relative to `0.4.1`.
+   - No new heavy default dependency is introduced.
+
+9. **Backward compatibility**
+   - Existing `run_triage` default behavior is unchanged.
+   - Existing serialized result outputs are unchanged unless `include_extended_fingerprint=True` is set.
+   - Existing public re-exports are not removed or renamed.
+
+10. **PCMCI defocus preserved**
+    - PCMCI / PCMCI-AMI remain documented as confirmatory tools, not as routine triage.
+    - No new diagnostic is wired into PCMCI by default.
+
+---
+
+## 1.bis Theory-to-code map
+
+> [!IMPORTANT]
+> Every junior developer MUST read this section before writing any code. This release is broad in surface area but each new diagnostic has a narrow semantic claim: it explains *one* possible source of forecastability and never claims forecast accuracy.
+
+### 1.bis.1 Notation
+
+- $H_s$ — Shannon entropy of the normalized spectral density $P(f)$; maps to `SpectralForecastabilityResult.spectral_entropy` after normalization by $\log K$.
+- $S_p \equiv 1 - H_s / \log K$ — spectral predictability; maps to `SpectralForecastabilityResult.spectral_predictability`.
+- $H_\pi(m, \tau)$ — normalized permutation entropy at embedding dimension $m$ and delay $\tau$; maps to `OrdinalComplexityResult.permutation_entropy`.
+- $H_\pi^{w}$ — weighted permutation entropy; maps to `OrdinalComplexityResult.weighted_permutation_entropy`.
+- $R_\pi \equiv 1 - H_\pi$ — ordinal redundancy; maps to `OrdinalComplexityResult.ordinal_redundancy`.
+- $\rho_1$ — first-order autocorrelation; maps to `ClassicalStructureResult.acf1`.
+- $T_s, S_s$ — trend strength and seasonality strength from a deterministic decomposition; map to `ClassicalStructureResult.trend_strength` and `seasonal_strength`.
+- $\alpha$ — DFA scaling exponent; maps to `MemoryStructureResult.dfa_alpha`. Anti-persistent: $\alpha < 0.5$; short memory: $\alpha \approx 0.5$; persistent: $0.5 < \alpha < 1.0$; nonstationary warning: $\alpha > 1.0$.
+
+### 1.bis.2 Core algorithm
+
+For each enabled diagnostic, the use case runs the corresponding service on the input series and packages the result into `ExtendedForecastabilityFingerprint`. The router then maps the fingerprint to a `ForecastabilityProfile` via deterministic, documented heuristics:
+
+1. Validate inputs (`max_lag`, `period`, ordinal `m, τ`, memory scale bounds).
+2. Run AMI information geometry (existing) when enabled.
+3. Run spectral, ordinal, classical, memory services in any order; each is independent and side-effect-free.
+4. Compose results into `ExtendedForecastabilityFingerprint`.
+5. Apply routing rules (F06) to derive `ForecastabilityProfile.predictability_sources`, `recommended_model_families`, `avoid_model_families`, and `explanation`.
+6. Return `ExtendedForecastabilityAnalysisResult`.
+
+### 1.bis.3 Mathematical invariants
+
+> [!IMPORTANT]
+> Invariant 1 — Spectral entropy is normalized: $0 \le H_s / \log K \le 1$ and $S_p = 1 - H_s / \log K$. Enforced by service-level field validator and acceptance test on white noise vs sine wave.
+
+> [!IMPORTANT]
+> Invariant 2 — Ordinal redundancy is bounded: $R_\pi \in [0, 1]$. Constant series produce `complexity_class="degenerate"` rather than $R_\pi = 1$.
+
+> [!IMPORTANT]
+> Invariant 3 — DFA exponents above $1.0$ trigger a nonstationarity note; values are not silently clipped.
+
+> [!IMPORTANT]
+> Invariant 4 — `seasonal_strength` is `None` when no `period` is supplied; never `0.0`.
+
+> [!IMPORTANT]
+> Invariant 5 — Disabled diagnostics serialize as `None`, not as missing fields. The fingerprint is shape-stable across all enable flags.
+
 ---
 
 ## 2. Non-negotiable invariants
@@ -136,7 +277,7 @@ No PCMCI, CCM, Granger, or causal graph claims are added in this release.
 
 ### Invariant E — Optional-heavy methods remain out of core
 
-Matrix Profile, EDM/S-map, RQA, Lyapunov estimation, and catch22 direct dependency are not part of the core `0.4.2` release.
+Matrix Profile, EDM/S-map, RQA, and Lyapunov estimation are not part of the core `0.4.2` release.
 
 ### Invariant F — Documentation is implementation-critical
 
@@ -162,7 +303,6 @@ Every new method must ship with:
 | 5 | Matrix Profile repetition / motif score | Deferred optional extra | Valuable but requires window policy and may add heavier dependencies. |
 | 6 | Simplex / S-map EDM | Deferred experimental | Powerful but too close to model-based forecast evaluation. |
 | 7 | Lyapunov / FNN / RQA | Research-only | Fragile on short/noisy data; too many knobs for core triage. |
-| 8 | catch22 | Inspiration only | Useful design pattern; avoid direct dependency/licensing/scope risk. |
 
 ---
 
@@ -680,16 +820,117 @@ tests/use_cases/test_run_extended_forecastability_analysis.py
 tests/fingerprint/test_extended_profile_router.py
 ```
 
+
 ### Examples
 
-```text
-examples/extended_fingerprint/
-    white_noise_vs_sine.py
-    seasonal_vs_nonlinear.py
-    industrial_like_persistent_signal.py
+**Core repo target:**
+- Only minimal smoke/example scripts in `examples/extended_fingerprint/` if needed for public API sanity (e.g., `white_noise_vs_sine.py`, `seasonal_vs_nonlinear.py`, `industrial_like_persistent_signal.py`).
+- No notebooks, no narrative walkthroughs, no downstream forecasting-library fitting helpers.
+
+**Sibling repo target:**
+- All narrative examples, notebooks, walkthroughs, and richer showcase scripts belong in the sibling repository: https://github.com/AdamKrysztopa/forecastability-examples
+- README-ready demonstrations and workflow showcases using the expanded fingerprint must be planned and implemented in the sibling repo.
+
+**Acceptance criteria:**
+- Sibling examples are planned and tracked in https://github.com/AdamKrysztopa/forecastability-examples.
+- No notebooks are added to the core repo.
+- No downstream forecasting-library fitting helpers are introduced in the core repo.
+
+---
+
+## 7.bis Phased delivery overview
+
+This overview maps the FSE feature inventory to the template's phased-delivery model. Detailed per-feature acceptance criteria live in section 8 (F01–F12).
+
+### Phase 0 — Domain contracts
+
+**Scope.** Land the seven typed result models (FSE-F00) and their re-exports.
+
+**Acceptance criteria:**
+
+- All result models exist as frozen Pydantic models with closed `Literal` label fields.
+- `from forecastability import ExtendedForecastabilityAnalysisResult` and `ExtendedForecastabilityFingerprint` resolve from both the facade and the `forecastability.triage` namespace.
+- The docs-contract `--imports` check passes.
+- No framework runtime import is introduced anywhere under `src/`.
+
+### Phase 1 — Build logic
+
+**Scope.** Land the spectral, ordinal, classical, memory, and composition services (FSE-F01..F05).
+
+```mermaid
+flowchart LR
+    Series["univariate series"] --> Spec["spectral_forecastability_service"]
+    Series --> Ord["ordinal_complexity_service"]
+    Series --> Cls["classical_structure_service"]
+    Series --> Mem["memory_structure_service"]
+    Series --> Ami["ami_information_geometry (existing)"]
+    Spec --> Comp["build_extended_forecastability_fingerprint"]
+    Ord --> Comp
+    Cls --> Comp
+    Mem --> Comp
+    Ami --> Comp
+    Comp --> Fp["ExtendedForecastabilityFingerprint"]
 ```
 
-If examples have moved to the sibling repo, create only minimal smoke examples in core and put narrative examples into `forecastability-examples`.
+**Acceptance criteria:**
+
+- Each service exposes the documented signature and returns its frozen result model.
+- Constant, too-short, and degenerate inputs are handled with explicit notes.
+- No service imports any forecasting framework.
+- Unit tests cover the happy path and the degenerate path for each service.
+
+### Phase 2 — Exporters and adapters
+
+**Scope.** Land the forecastability profile router (FSE-F06), the `run_extended_forecastability_analysis` use case (FSE-F07), the opt-in `run_triage` integration (FSE-F08), and the CLI brief output (FSE-F09).
+
+**Acceptance criteria:**
+
+- `run_extended_forecastability_analysis` and the CLI command are re-exported from the facade.
+- The router emits deterministic explanations for every fired rule.
+- `run_triage` default behavior is unchanged; the extended fingerprint is opt-in only.
+- No exporter or CLI command imports any forecasting framework.
+
+### Phase 3 — Examples and showcase
+
+**Scope.** Land the synthetic showcase panel and route narrative examples to the sibling repository (FSE-F11).
+
+**Acceptance criteria:**
+
+- Showcase script runs clean in `--smoke` mode on a fresh install.
+- Output artifacts are written to `outputs/reports/extended_fingerprint/`.
+- Narrative examples, notebooks, and walkthroughs are planned in `https://github.com/AdamKrysztopa/forecastability-examples`; no notebooks are added to this repo.
+
+### Phase 4 — Tests, fixtures, and performance guardrails
+
+**Scope.** Land the regression fixture rebuild script and the F12 timing guardrails.
+
+**Acceptance criteria:**
+
+- Fixtures live under `docs/fixtures/extended_fingerprint/` with a `scripts/rebuild_*` script.
+- Each new diagnostic respects the F12 timing budget on `n=1_000`.
+- Top-level import latency does not materially regress relative to `0.4.1`.
+
+### Phase 5 — CI
+
+**Scope.** Wire the new fixture rebuild script and any new doctest paths into existing CI without adding heavy dependencies.
+
+**Acceptance criteria:**
+
+- CI runs the new tests on Python 3.11 and 3.12.
+- No new optional extras are added to default CI installs.
+- Repo contract check still passes.
+
+### Phase 6 — Documentation and release
+
+**Scope.** Ship the documentation pack (FSE-F10) and the release artifacts.
+
+**Acceptance criteria:**
+
+- Theory pages, how-to, and explanation pages exist and are linked from the docs index.
+- README and `docs/quickstart.md` mention the extended fingerprint with AMI-first framing preserved.
+- Version bumped in `pyproject.toml`, `__version__`, `CHANGELOG.md`, `CITATION.cff`, and `docs/releases/v0.4.2.md`.
+- Plan files under `docs/plan/*.md` keep `**Current released version:**` in sync.
+- Git tag `v0.4.2` created and pushed after merge.
 
 ---
 
@@ -1110,11 +1351,20 @@ Ship theory and practical docs with the implementation, not after it.
 
 ---
 
+
 ## F11 — Synthetic benchmark / showcase panel
 
 ### Goal
 
 Create a small deterministic panel that demonstrates the new method layer.
+
+**Core repo target:**
+- Only minimal smoke/example scripts for API sanity, if justified.
+- No notebooks or narrative walkthroughs.
+
+**Sibling repo target:**
+- All narrative, notebook, and workflow showcase examples must be implemented in https://github.com/AdamKrysztopa/forecastability-examples.
+- README-ready demonstrations and richer synthetic panels are planned and maintained in the sibling repo.
 
 ### Required synthetic series
 
@@ -1130,8 +1380,11 @@ Create a small deterministic panel that demonstrates the new method layer.
 
 - [ ] Each synthetic series has expected dominant diagnostics.
 - [ ] Showcase table is deterministic.
-- [ ] The example can be copied into README or sibling examples repo.
+- [ ] The core repo may keep only a minimal deterministic smoke/showcase table if needed for API sanity.
+- [ ] Richer README-ready demonstrations, notebooks, narrative walkthroughs, and workflow showcases belong in https://github.com/AdamKrysztopa/forecastability-examples.
+- [ ] No notebooks and no downstream forecasting-library fitting helpers are added to the core repo.
 - [ ] No heavy notebook dependency is needed in core.
+- [ ] Sibling repo contains narrative and notebook-based showcases, not the core repo.
 
 ---
 
@@ -1259,14 +1512,6 @@ Reason:
 - many knobs,
 - too easy to misuse.
 
-### catch22
-
-Use as inspiration, not dependency.
-
-Reason:
-
-- direct dependency/licensing/scope concerns,
-- package should keep a compact local feature block instead of inheriting a broad feature-extraction dependency.
 
 ### Rust/native acceleration
 
@@ -1473,4 +1718,14 @@ search begins.
 `0.4.2` is done when the following statement is true:
 
 > A user can run one public function on a univariate time series and receive a deterministic, documented, JSON-serializable extended fingerprint explaining whether forecastability appears to come from lagged information, spectral concentration, seasonality, trend, ordinal redundancy, or long-memory behavior — with conservative model-family routing and no heavy default dependencies.
+
+---
+
+## 17. Open questions
+
+1. Should `run_triage(..., include_extended_fingerprint=True)` ever flip its default to `True` in a future release, or stay opt-in indefinitely to protect downstream serialized outputs? Decision needed before Phase 2.
+2. What is the correct fallback for `period` in `run_extended_forecastability_analysis` when the user does not supply one — always `None` (no seasonality computed) or run a cheap spectral peak-pick to suggest a candidate period without committing to it? Decision needed before Phase 1 (Classical block).
+3. What memory-scale defaults are safe across short and long industrial series? The current plan defers to F04 service defaults; we need empirical evidence from the F11 synthetic panel before locking the values.
+4. Where should the `ForecastabilityProfile.recommended_model_families` vocabulary live — as a closed `Literal`, an open `str` list with documented canonical values, or a separate registry? Decision affects router stability across releases.
+5. Should the showcase script produce a deterministic regression fixture (under `docs/fixtures/extended_fingerprint/`) or only human-readable artifacts? Decision affects what counts as a "silent output flip" in section 1's Reviewer acceptance block, item 3.
 
