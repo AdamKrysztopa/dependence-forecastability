@@ -10,11 +10,13 @@ non-bit-stable kNN MI estimator downstream.
 
 from __future__ import annotations
 
+from typing import cast
+
 import numpy as np
 import pytest
 
 from forecastability.metrics.metrics import compute_pami_linear_residual
-from forecastability.metrics.scorers import default_registry
+from forecastability.metrics.scorers import DependenceScorer, default_registry
 from forecastability.services.partial_curve_service import compute_partial_curve
 
 _RTOL = 1e-7
@@ -223,7 +225,7 @@ def test_compute_partial_curve_no_exog_matches_pre_change(name: str, max_lag: in
     """Generic partial-curve (no exog, mi scorer) matches the pre-F06 path."""
     ts = SERIES_BUILDERS[name]()
     expected = np.asarray(PRE_PARTIAL_NO_EXOG[(name, max_lag)], dtype=float)
-    mi = default_registry().get("mi").scorer
+    mi = cast(DependenceScorer, default_registry().get("mi").scorer)
 
     actual = compute_partial_curve(
         ts,
@@ -242,7 +244,7 @@ def test_compute_partial_curve_with_exog_matches_pre_change(name: str, max_lag: 
     ts = SERIES_BUILDERS[name]()
     exog = np.roll(ts, 1)
     expected = np.asarray(PRE_PARTIAL_EXOG[(name, max_lag)], dtype=float)
-    mi = default_registry().get("mi").scorer
+    mi = cast(DependenceScorer, default_registry().get("mi").scorer)
 
     actual = compute_partial_curve(
         ts,

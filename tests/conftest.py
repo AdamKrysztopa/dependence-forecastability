@@ -88,7 +88,7 @@ def _teardown_loky_executor() -> Generator[None, None, None]:
     """
     yield
     try:
-        from joblib.externals.loky import get_reusable_executor  # type: ignore[import-untyped]
+        from joblib.externals.loky import get_reusable_executor
 
         get_reusable_executor().shutdown(wait=True, kill_workers=True)
     except Exception:  # noqa: BLE001
@@ -106,7 +106,7 @@ def _teardown_loky_executor_session() -> Generator[None, None, None]:
     """
     yield
     try:
-        from joblib.externals.loky import get_reusable_executor  # type: ignore[import-untyped]
+        from joblib.externals.loky import get_reusable_executor
 
         get_reusable_executor().shutdown(wait=True, kill_workers=True)
     except Exception:  # noqa: BLE001

@@ -4,7 +4,7 @@
 **Plan type:** Actionable release plan — benchmark-first performance hardening for deterministic AMI/pAMI triage  
 **Audience:** Maintainer, reviewer, statistician reviewer, performance implementer, Jr. developer  
 **Target release:** `0.4.1` — ships after the `0.4.0` examples-repo split  
-**Current released version:** `0.4.0`  
+**Current released version:** `0.4.1`  
 **Branch:** `feat/performance-improvement`  
 **Status:** Draft  
 **Last reviewed:** 2026-05-03
