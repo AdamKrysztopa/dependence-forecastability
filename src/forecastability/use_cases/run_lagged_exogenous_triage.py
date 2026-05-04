@@ -44,6 +44,7 @@ def _validate_inputs(
     max_lag: int,
     n_surrogates: int,
     alpha: float,
+    significance_mode: str = "phase",
 ) -> tuple[np.ndarray, dict[str, np.ndarray]]:
     """Validate use-case inputs and return aligned series.
 
@@ -54,6 +55,8 @@ def _validate_inputs(
         max_lag: Maximum lag horizon.
         n_surrogates: Number of surrogates for significance computation.
         alpha: Significance level.
+        significance_mode: ``"phase"`` enforces the n_surrogates floor;
+            ``"none"`` skips significance so the floor is not required.
 
     Returns:
         Tuple of validated target and sorted driver mapping.
@@ -61,7 +64,7 @@ def _validate_inputs(
     Raises:
         ValueError: If any contract condition is violated.
     """
-    if n_surrogates < 99:
+    if significance_mode == "phase" and n_surrogates < 99:
         raise ValueError(f"n_surrogates must be >= 99, got {n_surrogates}")
     if max_lag < 1:
         raise ValueError(f"max_lag must be >= 1, got {max_lag}")
@@ -199,6 +202,8 @@ def run_lagged_exogenous_triage(
         target_name: Human-readable target name.
         max_lag: Maximum lag horizon for profile/selection computation.
         n_surrogates: Number of surrogates used for cross-AMI significance bands.
+            Must be >= 99 when ``significance_mode="phase"``; ignored when
+            ``significance_mode="none"``.
         alpha: Significance level metadata recorded in the output bundle.
         random_state: Deterministic random seed.
         selector_config: Sparse lag selector configuration.
@@ -213,8 +218,10 @@ def run_lagged_exogenous_triage(
             surrogate-band call.
         significance_mode: Controls phase-surrogate significance computation.
             ``"phase"`` (default) preserves full behaviour; ``"none"`` skips
-            all surrogate-band computation and returns rows with
-            ``significance=None`` and ``significance_source="not_computed"``.
+            all surrogate-band computation (faster screening pass) and returns
+            rows with ``significance=None`` and
+            ``significance_source="not_computed"``.  When ``"none"``, the
+            ``n_surrogates >= 99`` floor is not enforced.
 
     Returns:
         Composite :class:`LaggedExogBundle` with profile rows and sparse selections.
@@ -232,6 +239,7 @@ def run_lagged_exogenous_triage(
         max_lag=max_lag,
         n_surrogates=n_surrogates,
         alpha=alpha,
+        significance_mode=significance_mode,
     )
 
     known_future_driver_names = _resolve_known_future_driver_names(

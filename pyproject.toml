@@ -1,6 +1,6 @@
 [project]
 name = "dependence-forecastability"
-version = "0.4.0"
+version = "0.4.1"
 description = "Forecastability triage for time series using AMI, pAMI, and covariate-aware dependence diagnostics before expensive model search."
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -35,7 +35,6 @@ dependencies = [
   "scipy>=1.13",
   "statsmodels>=0.14",
   "pyyaml>=6.0",
-  "yfinance>=0.2",
   "pydantic>=2.12,<3",
   "pydantic-settings>=2.7,<3",
 ]
@@ -55,6 +54,9 @@ agent = [
 ]
 causal = [
   "tigramite>=5.2",
+]
+data = [
+  "yfinance>=0.2",
 ]
 transport = [
   "fastapi>=0.115",

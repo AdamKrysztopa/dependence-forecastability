@@ -90,9 +90,10 @@ def _validate_inputs(
     max_lag: int,
     alpha: float,
     n_surrogates: int,
+    significance_mode: str = "phase",
     pcmci_ami_n_permutations: int = 199,
 ) -> tuple[np.ndarray, dict[str, np.ndarray]]:
-    if n_surrogates < 99:
+    if significance_mode == "phase" and n_surrogates < 99:
         raise ValueError(f"n_surrogates must be >= 99, got {n_surrogates}")
     if pcmci_ami_n_permutations < 99:
         raise ValueError(f"pcmci_ami_n_permutations must be >= 99, got {pcmci_ami_n_permutations}")
@@ -321,6 +322,7 @@ def _compute_cross_ami_bands(
     max_lag: int,
     n_surrogates: int,
     random_state: int,
+    n_jobs_significance: int = 1,
 ) -> dict[str, tuple[np.ndarray, np.ndarray]]:
     """Compute phase-surrogate significance bands for cross-AMI per driver.
 
@@ -333,6 +335,9 @@ def _compute_cross_ami_bands(
         max_lag: Maximum lag horizon.
         n_surrogates: Number of phase-randomised surrogates (>= 99).
         random_state: Base random seed.
+        n_jobs_significance: Worker count forwarded to
+            ``compute_significance_bands_generic`` for each driver band.
+            ``1`` (default) keeps behaviour unchanged.
 
     Returns:
         Mapping driver_name → (lower_band, upper_band), each of shape (max_lag,).
@@ -350,7 +355,7 @@ def _compute_cross_ami_bands(
             "raw",
             exog=driver_series,
             min_pairs=30,
-            n_jobs=1,
+            n_jobs=n_jobs_significance,
         )
         bands[driver_name] = (lower, upper)
     return bands
@@ -483,6 +488,7 @@ def run_covariant_analysis(
     pcmci_verbosity: int = 0,
     n_jobs_pcmci_ami_phase0: int = 1,
     significance_mode: Literal["phase", "none"] = "phase",
+    n_jobs_significance: int = 1,
 ) -> CovariantAnalysisBundle:
     """Run the covariant analysis bundle and assemble a unified summary table.
 
@@ -494,7 +500,9 @@ def run_covariant_analysis(
         methods: Optional subset of method names to run. ``None`` runs all.
         ami_threshold: Phase-0 MI threshold for PCMCI-AMI.
         alpha: Significance threshold for PCMCI-family CI tests.
-        n_surrogates: Reserved bundle-level surrogate contract; must be >= 99.
+        n_surrogates: Reserved bundle-level surrogate contract; must be >= 99
+            when ``significance_mode="phase"``; ignored when
+            ``significance_mode="none"``.
         random_state: Deterministic random seed.
         include_lagged_exog_triage: When ``True``, attach a Phase 2
             lagged-exogenous triage bundle.
@@ -512,8 +520,13 @@ def run_covariant_analysis(
             computation (1 = sequential).
         significance_mode: Controls phase-surrogate significance computation.
             ``"phase"`` (default) preserves full behaviour; ``"none"`` skips
-            all surrogate-band computation (faster) and returns rows with
-            ``significance=None``.
+            all surrogate-band computation (faster screening pass) and returns
+            rows with ``significance=None``.  When ``"none"``, the
+            ``n_surrogates >= 99`` floor is not enforced.
+        n_jobs_significance: Worker count forwarded to the significance-band
+            executor for cross-AMI surrogate bands. ``1`` (default, serial)
+            keeps behaviour unchanged; ``-1`` uses all available workers.
+            Only applies when ``significance_mode="phase"``.
 
     Returns:
         CovariantAnalysisBundle with pairwise, directional, and causal results.
@@ -530,6 +543,7 @@ def run_covariant_analysis(
         max_lag=max_lag,
         alpha=alpha,
         n_surrogates=n_surrogates,
+        significance_mode=significance_mode,
         pcmci_ami_n_permutations=pcmci_ami_n_permutations,
     )
     horizons = list(range(1, max_lag + 1))
@@ -561,6 +575,7 @@ def run_covariant_analysis(
                 max_lag=max_lag,
                 n_surrogates=n_surrogates,
                 random_state=random_state,
+                n_jobs_significance=n_jobs_significance,
             )
             cross_ami_upper_bands = {name: upper for name, (lower, upper) in bands.items()}
 

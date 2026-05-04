@@ -9,6 +9,42 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-05-03
+
+> **Performance hardening, benchmark visibility, and fast-screening controls.**
+> This release ships measurement infrastructure, correctness guards for significance services,
+> work-avoidance for explicit method subsets, validation/scaling hygiene, a reduced eager import
+> surface, and user-visible significance controls.  It does not yet eliminate the dominant
+> surrogate/significance bottlenecks; those are identified and scoped for the next cycle.
+>
+> PCMCI and PCMCI-AMI remain supported but are explicitly defocused as confirmatory tools
+> due to prohibitive runtime in practice.  Prefer `methods=["cross_ami", "gcmi"]` for
+> fast initial screening; use `pcmci_ami_ci_test="parcorr"` when causal discovery is needed.
+
+### Added
+
+- `n_jobs_significance: int = 1` parameter on `run_covariant_analysis` — passes through to
+  `compute_significance_bands_generic` so callers can opt into parallel surrogate evaluation.
+- `yfinance` optional extra `[data]` — move `yfinance>=0.2` out of core dependencies into
+  `pip install "dependence-forecastability[data]"` to reduce mandatory install weight.
+- PCMCI/PCMCI-AMI defocus note in `docs/quickstart.md` and `docs/public_api.md` — explicitly
+  documents confirmatory role, expense, and `parcorr` fast-path recommendation.
+
+### Changed
+
+- `n_surrogates` floor check in `run_covariant_analysis` and `run_lagged_exogenous_triage` now
+  only enforces ≥ 99 when `significance_mode="phase"`; `significance_mode="none"` silently
+  skips the check.
+- `src/forecastability/__init__.py` reduced eager import surface: only the canonical core
+  symbols (`run_triage`, `run_covariant_analysis`, `run_lagged_exogenous_triage`,
+  `build_forecast_prep_contract`, primary request/result types, and `generate_ar1` /
+  `generate_white_noise`) are imported at load time.  All other `__all__` symbols resolve
+  lazily via `__getattr__`.
+- Release title renamed from "Performance Bottleneck Elimination" to "Performance hardening,
+  benchmark visibility, and fast-screening controls" to accurately reflect the delivered scope.
+- Plan branch reference corrected from `feat/v0.4.1-performance-bottleneck-elimination` to
+  `feat/performance-improvement`.
+
 ## [0.4.0] - 2026-04-29
 
 > **Library-first slim release.** This release migrates all walkthrough and tutorial notebooks

@@ -298,8 +298,18 @@ Expected output shape:
 
 > [!NOTE]
 > Valid covariant method tokens are `cross_ami`, `cross_pami`, `te`, `gcmi`, `pcmci`, and `pcmci_ami`.
+
 > [!IMPORTANT]
-> `pcmci` and `pcmci_ami` are optional causal methods. Install the causal extra when needed:
+> `pcmci` and `pcmci_ami` are optional causal methods and are **computationally
+> expensive** — a single run can take several minutes to hours depending on
+> sample size, lag range, and CI test backend.  They are designed for
+> *confirmatory* causal screening after a fast pairwise pass, not as a default
+> first step.  Prefer `methods=["cross_ami", "gcmi"]` for fast initial
+> screening.
+>
+> When causal discovery is needed, use `pcmci_ami_ci_test="parcorr"` for a
+> 50–200× speedup over the default `"knn_cmi"` backend.  Install the causal
+> extra when needed:
 >
 > ```bash
 > pip install "dependence-forecastability[causal]"

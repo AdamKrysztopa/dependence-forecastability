@@ -1,11 +1,11 @@
 <!-- type: reference -->
-# v0.4.1 — Performance Bottleneck Elimination: Ultimate Release Plan
+# v0.4.1 — Performance Hardening, Benchmark Visibility, and Fast-Screening Controls: Ultimate Release Plan
 
 **Plan type:** Actionable release plan — benchmark-first performance hardening for deterministic AMI/pAMI triage  
 **Audience:** Maintainer, reviewer, statistician reviewer, performance implementer, Jr. developer  
 **Target release:** `0.4.1` — ships after the `0.4.0` examples-repo split  
 **Current released version:** `0.4.0`  
-**Branch:** `feat/v0.4.1-performance-bottleneck-elimination`  
+**Branch:** `feat/performance-improvement`  
 **Status:** Draft  
 **Last reviewed:** 2026-05-03
 
@@ -138,7 +138,7 @@ Ordered by execution sequence (matches the PR plan in §7). The numeric ID suffi
 | 7 | PBE-F13 | Shared lag-design scaffolding utility (prerequisite for F04, F06, and F14) | 3 | P1 | Done |
 | 8 | PBE-F04 | Single-horizon rolling-origin compute path | 2 | P0 | Done |
 | 9 | PBE-F06 | pAMI lag-design/residualization optimization | 3 | P1 | Done |
-| 10 | PBE-F14 | PCMCI-AMI hybrid `knn_cmi` profiling and fast-path hardening | 3 | P0 | Done (hygiene only — wall-time budget unmet; see [aux_documents/pbe_f14_pcmci_microbench.md](aux_documents/pbe_f14_pcmci_microbench.md)) |
+| 10 | PBE-F14 | PCMCI-AMI hybrid `knn_cmi` profiling and fast-path hardening | 3 | P0 | Done (hygiene only — wall-time budget unmet; **PCMCI defocused** — see note below) |
 | 11 | PBE-F08 | Lagged-exog surrogate parallelism and distance-scorer guardrails | 3 | P1 | Done |
 | 12 | PBE-F07 | Fingerprint geometry parallel/preset optimization | 3 | P1 | Done |
 | 13 | PBE-F12 | Batch workbench per-series parallelism with deterministic ordering | 3 | P1 | Done |
@@ -223,6 +223,17 @@ Ordered by execution sequence (matches the PR plan in §7). The numeric ID suffi
     - `uv run ruff check .`
     - `uv run ty check`
     - Relevant fixture rebuild scripts run when result surfaces or examples change.
+
+11. **PCMCI defocus (added by reviewer)**
+    - `pcmci` and `pcmci_ami` are confirmatory causal screening methods — expensive by design.
+    - Evidence from the sibling `forecastability-examples` repo confirms that PCMCI runs can take several hours without yielding actionable results in practice.
+    - These methods remain supported in the API and are NOT removed.
+    - Documentation now explicitly positions PCMCI/PCMCI-AMI as confirmatory tools,
+      not recommended for routine triage.  Fast screening should use
+      `methods=["cross_ami", "gcmi"]` with `pcmci_ami_ci_test="parcorr"` when
+      causal discovery is required.
+    - PBE-F14 through PBE-F27 shipped hygiene and profiling improvements only;
+      the wall-time budgets for PCMCI remain unmet and are **not blocking** this release.
 
 ---
 
