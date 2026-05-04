@@ -1,15 +1,21 @@
-# v0.4.3 — Lag-Aware Catt-Scored ModMRMR: Ultimate Release Plan
+<!-- type: reference -->
+
+# v0.4.3 — Covariate Informativeness Investigation with Lag-Aware Catt-Scored ModMRMR
 
 Plan type: Actionable release plan — method pivot  
 Audience: Maintainer, reviewer, statistician reviewer, Jr. developer  
-Target release: `0.4.3` — Current released version: `0.4.1`  
-Branch: `feat/v0.4.3-lag-aware-mod-mrmr`  
-Status: Draft — template-aligned revision after correctness review  
+Target release: `0.4.3` — Current released version: `0.4.2`<br>
+Branch: `feat/time-aware-mod-mrmr`<br>
+Status: Draft — correctness-review revision, not final implementation<br>
 Last reviewed: 2026-05-04
 
 > [!IMPORTANT]
 > **Scope (binding).** This release ships **Lag-Aware ModMRMR** as a forecast-safe sparse covariate-lag selector, with **Catt-style AMI / kNN mutual-information scoring as the scientific native mode** and method-agnostic scorer backends as the extension mechanism.  
 > It does **not** ship a generic sklearn-first feature-selection package, downstream framework adapters, Darts/Nixtla imports, model-training benchmarks, broad causal-discovery expansion, or a notebook-first implementation.
+>
+> Binding driver document: [docs/plan/aux_documents/developer_instruction_repo_scope.md](aux_documents/developer_instruction_repo_scope.md).
+
+This plan improves deterministic covariate informativeness triage: it helps decide which covariate-lag signals are forecast-safe and non-duplicative before downstream hand-off, not generic forecasting or model fitting.
 
 > [!NOTE]
 > **Cross-release ordering.**
@@ -82,8 +88,7 @@ raw y(t), raw x_j(t)
 - New services belong in `src/forecastability/services/`.
 - New use cases belong in `src/forecastability/use_cases/`.
 - No new top-level package is introduced without an explicit follow-up plan.
-- The core method is callable without sklearn estimator semantics.
-- A sklearn-compatible wrapper is allowed only as a secondary adapter, not as the canonical public API.
+- No sklearn estimator or sklearn-first API ships in this release.
 - Relevance, redundancy, and target-history scorers are injected via protocols or small callable objects, not hardwired into the selector.
 - Forecast-safety rules are implemented before scoring; illegal lags never enter the greedy selection pool.
 - The examples repository receives matching notebooks and executed outputs for the new method.
@@ -102,9 +107,27 @@ raw y(t), raw x_j(t)
 | LAM-F07 | ForecastPrepContract export adapter | 2 | P0 | Not started |
 | LAM-F08 | Regression fixtures and deterministic synthetic panels | 2 | P0 | Not started |
 | LAM-F09 | Core showcase scripts | 3 | P0 | Not started |
-| LAM-F10 | Sibling repo walkthrough notebooks, including synthetic + CausalRivers notebook 09 | 3 | P0 | Not started |
+| LAM-F10 | Sibling repo walkthrough notebooks, including synthetic + CausalRivers notebook 10 | 3 | P0 | Not started |
 | LAM-F11 | Documentation and theory page | 3 | P1 | Not started |
-| LAM-F12 | Optional sklearn wrapper | 4 | P2 | Not started |
+| LAM-F12 | Docs hardening and release prep | 4 | P0 | Not started |
+
+### Proposed implementation map
+
+Additive file targets for `0.4.3`:
+
+| Surface | Proposed target | Additive or breaking | Acceptance |
+| --- | --- | --- | --- |
+| Domain models | `src/forecastability/models/lag_aware_mod_mrmr.py` | Additive | Frozen Pydantic models cover config, legal candidates, blocked candidates, selected rows, rejected rows, scorer diagnostics, and result payload. |
+| Lag-domain builder | `src/forecastability/services/lag_aware_mod_mrmr_domain.py` | Additive | Builds forecast-safe lag candidates before scoring and records block reasons for illegal lags. |
+| Scorer adapters and normalizers | `src/forecastability/services/lag_aware_mod_mrmr_scorers.py` | Additive | Wraps existing scorer seams where possible and does not create a parallel incompatible registry. |
+| Selector service | `src/forecastability/services/lag_aware_mod_mrmr_selector.py` | Additive | Implements deterministic greedy ModMRMR with maximum suppression against already-selected candidates only. |
+| Use case | `src/forecastability/use_cases/lag_aware_mod_mrmr.py` | Additive | Exposes `run_lag_aware_mod_mrmr()` and delegates to services without framework imports. |
+| Forecast-prep mapper/exporter | `src/forecastability/services/forecast_prep_lagged_covariates.py` | Additive | Preserves real `(covariate, lag)` selected-lag details in contract-oriented exports. |
+| CLI/reporting/showcase | `scripts/run_showcase_lag_aware_mod_mrmr.py`, `scripts/run_showcase_lag_aware_catt_mod_mrmr.py` | Additive | Smoke mode writes deterministic JSON and Markdown under `outputs/` without notebook-only logic. |
+| Tests | `tests/test_lag_aware_mod_mrmr.py`, `tests/test_lag_aware_mod_mrmr_regression.py`, `tests/test_forecast_prep_lagged_covariates.py` | Additive | Covers forecast-safety, scorer diagnostics, deterministic greedy selection, regression fixtures, and hand-off rows. |
+| Fixtures | `docs/fixtures/lag_aware_mod_mrmr/` | Additive | Stores frozen expected JSON/Markdown outputs for synthetic and showcase smoke cases. |
+| Fixture rebuild | `scripts/rebuild_lag_aware_mod_mrmr_regression_fixtures.py` | Additive | Rebuilds fixture artifacts explicitly and is listed in release validation notes. |
+| Public facade | `src/forecastability/__init__.py`, `src/forecastability/triage/__init__.py`, `docs/public_api.md` | Additive | Stable facade and `forecastability.triage` re-exports are additive; no public symbol is removed or renamed. |
 
 ### Reviewer acceptance block
 
@@ -176,24 +199,27 @@ raw y(t), raw x_j(t)
    - public API page update
    - examples index update
    - ForecastPrepContract recipe update
+   - README update
+   - CHANGELOG entry
+   - RELEASES entry and release notes
    - near-verbatim ModMRMR attribution wording included
 
 9. Sibling repo
-
-   - new notebook: `walkthroughs/08_lag_aware_mod_mrmr_showcase.ipynb`
-   - new notebook: `walkthroughs/09_lag_aware_catt_scored_mod_mrmr.ipynb`
-   - notebook 09 contains both a controlled synthetic benchmark and a CausalRivers applied walkthrough
+   - new notebook: `walkthroughs/09_lag_aware_mod_mrmr_showcase.ipynb`
+   - new notebook: `walkthroughs/10_lag_aware_catt_scored_mod_mrmr.ipynb`
+   - notebook 10 contains both a controlled synthetic benchmark and a CausalRivers applied walkthrough
    - new notebook or recipe: `recipes/lag_aware_mod_mrmr_to_forecast_prep_contract.ipynb`
    - README notebook index updated
    - notebook CI includes the new notebooks
 
-10. Release engineering
+10. Release engineering and docs hardening
 
-   - additive re-exports only
-   - no downstream framework imports
-   - no sklearn estimator as canonical API
-   - changelog entry included
-   - release notes mention ModMRMR attribution and contribution boundary
+    - additive re-exports only
+    - no downstream framework imports
+    - changelog and release notes include ModMRMR attribution and contribution boundary
+    - documentation confirms no downstream framework adapter or model-training API enters the core package
+    - PR/main, smoke, release-tag, and PyPI gates match `.github/workflows/` expectations
+    - repo-contract checks cover the new public symbols, docs surfaces, and no-framework-import boundary
 
 ---
 
@@ -228,19 +254,39 @@ Forecast-safe eligibility for ordinary measured covariates:
 k >= h + m
 ```
 
+Derivation from forecast origin:
+
+```text
+target y(t) is forecast at origin t - h
+ordinary measured covariate value x_j(t-k) is usable only if it is known by origin t - h
+availability margin m requires x_j(t-k) <= t - h - m
+therefore: t - k <= t - h - m
+therefore: k >= h + m
+```
+
+Required off-by-one tests:
+
+| Case | Expected ordinary measured-covariate legality |
+| --- | --- |
+| `h=1, m=0` | `k=0` is illegal; `k=1` is the first legal lag. |
+| `h=1, m=1` | `k=1` is illegal; `k=2` is the first legal lag. |
+| `h>1` | `k=h+m-1` is illegal and `k=h+m` is legal for ordinary measured covariates. |
+
 Known-future exception:
 
 ```text
 x_j may bypass the ordinary lag cutoff only when declared known_future=True
+and the value is known at forecast creation time
 ```
 
 Examples of known-future covariates:
 
-- calendar flags;
-- planned production;
-- scheduled maintenance;
-- contractual setpoints;
-- exogenous forecasts, when explicitly treated as forecasted inputs.
+- calendar flags with `known_future_provenance="calendar"`;
+- planned production or scheduled maintenance with `known_future_provenance="schedule"`;
+- contractual setpoints with `known_future_provenance="contractual"`;
+- exogenous forecasts with `known_future_provenance="forecasted_input"`.
+
+Realized future observations are never a valid known-future bypass. Forecasted inputs must be labelled as forecasted inputs and must not be confused with measured values observed after the forecast origin.
 
 ### 2.2. Core algorithm
 
@@ -261,6 +307,8 @@ The project-specific contribution introduced and named here is **ModMRMR**:
 ModMRMR = Adam Krysztopa's modified mRMR-style greedy selection rule
           with multiplicative maximum-redundancy suppression.
 ```
+
+Radović et al. and the cited PDF motivate temporal mRMR-style handling of time-indexed features. They do not define this release's forecast-horizon lag-domain construction, availability filters, known-future bypass, target-history novelty suppression, or Adam's ModMRMR maximum-suppression rule.
 
 Public documentation must explicitly attribute the idea as follows:
 
@@ -330,6 +378,14 @@ Where:
 target_history_redundancy(z, Y_hist) = max similarity(z, y(t-l)), l in target_lags
 ```
 
+Target-history novelty lags must also be forecast-safe:
+
+```text
+l >= forecast_horizon + target_availability_margin
+```
+
+Target-history proxies below that cutoff are blocked before scoring for the same reason ordinary measured covariates are blocked.
+
 Purpose:
 
 - prevent the selector from choosing covariates that are only proxies for target autoregression;
@@ -370,7 +426,7 @@ Design rule:
 Catt-style AMI is a scorer backend, not a replacement for the selector.
 ```
 
-#### 2.2.4. Normalization requirement
+#### 2.2.4. Normalization and fit-scope requirement
 
 Because MI / AMI values are not naturally bounded to `[0, 1]`, every scorer used inside a penalty term must expose a normalized similarity value.
 
@@ -391,6 +447,14 @@ Supported normalization strategies:
 | `nmi_min_entropy` | Optional | `MI / min(Hx, Hy)` when entropy estimates are available. |
 | `nmi_mean_entropy` | Optional | `2MI / (Hx + Hy)` when entropy estimates are available. |
 
+`ScoreNormalizer` requirements:
+
+- expose `normalization`, `fit_scope_id`, and the reference pool used to fit or rank scores;
+- fit only on the intended comparison pool, such as one target/horizon/run, and persist enough metadata for deterministic replay;
+- make `rank_percentile` deterministic but explicitly pool-relative;
+- prefer surrogate-effect or entropy-normalized scores for scientific comparisons across datasets, horizons, or scorer families;
+- apply identical fitted normalizer state when comparing candidate relevance, redundancy, or target-history penalties within the same selection run.
+
 Recommended modes:
 
 ```text
@@ -409,17 +473,17 @@ scientific mode:
 Significance handling:
 
 ```text
-if relevance_p_value > alpha:
-    relevance = 0
+if upper_tail_mi_surrogate_p_value > alpha:
+    normalized_relevance = 0
 else:
-    relevance = normalized_effect_size
+    normalized_relevance = normalized_effect_size
 ```
 
-Redundancy remains a similarity penalty and does not need a hard significance gate by default.
+When significance is enabled, the default relevance test is an upper-tail MI surrogate test with `n_surrogates >= 99`. Diagnostics must include unadjusted and adjusted p-values. Selection reports either control false discovery through BH/FDR adjustment or label the run as exploratory and unadjusted. Redundancy remains a similarity penalty and does not need a hard significance gate by default.
 
-#### 2.2.5. Scorer protocol
+#### 2.2.5. Scorer diagnostics contract
 
-Recommended scorer protocol:
+The scorer API must return structured diagnostics, not only a scalar float:
 
 ```python
 class PairwiseDependenceScorer(Protocol):
@@ -429,9 +493,25 @@ class PairwiseDependenceScorer(Protocol):
         self,
         x: np.ndarray,
         y: np.ndarray,
-    ) -> float:
+    ) -> ScorerDiagnostics:
         ...
 ```
+
+`ScorerDiagnostics` must include:
+
+| Field | Requirement |
+| --- | --- |
+| `raw_value` | Original scorer output before normalization or clipping. |
+| `normalized_value` | Value used by the selector for relevance or similarity. |
+| `p_value` | Optional unadjusted p-value when significance is enabled. |
+| `adjusted_p_value` | Optional adjusted p-value when multiplicity control is enabled. |
+| `n_pairs` | Number of aligned non-missing sample pairs scored. |
+| `estimator_settings` | JSON-serializable estimator settings, including kNN/surrogate parameters where applicable. |
+| `normalization` | Strategy name and fitted normalizer metadata. |
+| `significance_method` | `none`, `upper_tail_mi_surrogate`, or another explicit method label. |
+| `bands` / `warnings` | Optional reliability bands, clipping notes, low-sample warnings, or estimator warnings. |
+
+Implementation should reuse or wrap the existing scorer seams for `cross_ami`, `cross_pami`, `te`, `gcmi`, and related covariant diagnostics. It must not introduce a parallel incompatible registry that future triage code cannot share.
 
 The same scorer can be used for relevance and redundancy, but the API must allow different scorers when scale/calibration differs.
 
@@ -462,6 +542,12 @@ Supported scorer backends for v0.4.3:
 | `cross_ami_score` | Yes | Optional | Experimental | Useful for lag relevance; requires normalization for redundancy. |
 | `gcmi` | Yes | Yes | Experimental | Gaussian-copula nonlinear proxy. |
 
+Greedy selection must use deterministic tie-breaking and cache-key semantics:
+
+- pairwise scorer cache keys include scorer name, estimator settings, normalization fit scope, candidate identity, target identity, aligned index window, missing-data policy, and seed/surrogate configuration;
+- equal final scores are ordered by higher normalized relevance, lower maximum redundancy, lower target-history redundancy, covariate name, lag, and stable candidate id;
+- selected, rejected, and blocked rows preserve the tie-break fields used for replay.
+
 ### 2.3. Mathematical invariants
 
 - Illegal lags never reach the scoring matrix.
@@ -473,7 +559,8 @@ Supported scorer backends for v0.4.3:
 - If `relevance <= relevance_floor`, final score is `0`.
 - Final score is clipped at `0` if numerical noise creates a negative value.
 - A covariate marked `known_future=True` is labelled as known-future in the result.
-- Known-future bypass is explicit; no implicit lag-0 allowance exists.
+- Known-future bypass is explicit, includes provenance, and is limited to values known at forecast creation time; no implicit lag-0 allowance exists.
+- Realized future observations are blocked even if they are labelled as covariates.
 - Result rows preserve `(covariate, lag, feature_name, legality_reason)`.
 - ModMRMR documentation attribution to Adam Krysztopa appears in theory docs, API docs, README release note snippet, and changelog.
 
@@ -502,9 +589,12 @@ Acceptance criteria:
 
 - Models are frozen Pydantic models.
 - Config distinguishes `forecast_horizon`, `availability_margin`, `candidate_lags`, `known_future_covariates`, `target_lags`, `max_selected_features`, `relevance_floor`, and scorer settings.
+- Known-future config records provenance as one of `calendar`, `schedule`, `contractual`, or `forecasted_input` and rejects realized future observations.
 - Selected rows include relevance, maximum redundancy, target-history redundancy, final score, scorer names, normalization strategy, and legality reason.
+- Scorer rows include raw value, normalized value, p-value, adjusted p-value, `n_pairs`, estimator settings, normalization metadata, significance method, and warnings or bands where applicable.
 - Rejected and blocked candidates are traceable.
 - Public exports are additive only.
+- Stable facade and `forecastability.triage` re-exports are additive and documented in `docs/public_api.md`.
 - Documentation contains the required ModMRMR attribution sentence.
 
 ### Phase 1 — Build logic
@@ -523,7 +613,10 @@ flowchart LR
 Acceptance criteria:
 
 - `lag >= forecast_horizon + availability_margin` is enforced before scoring.
+- Off-by-one tests cover `h=1,m=0`, `h=1,m=1`, and `h>1` legality boundaries.
 - `known_future_covariates` bypass is explicit and labelled.
+- Known-future bypass is limited to values known at forecast creation time and records provenance.
+- Target-history novelty lags satisfy `lag >= forecast_horizon + target_availability_margin`.
 - `max_redundancy` uses selected features only.
 - `score = relevance * (1 - max_redundancy)` works.
 - `score = relevance * (1 - max_redundancy) * (1 - target_history_redundancy)` works.
@@ -531,17 +624,21 @@ Acceptance criteria:
 - Catt-style AMI scoring can be used for relevance, selected-lag redundancy, and target-history redundancy after normalization.
 - All similarity penalties are clipped to `[0, 1]`.
 - All selected and rejected candidates preserve diagnostics.
+- Greedy selection is deterministic under fixed seeds, including tie-breaking and scorer cache keys.
 
 ### Phase 2 — Exporters and adapters
 
 Acceptance criteria:
 
 - ForecastPrepContract can consume selected lag candidates.
-- Output includes lagged feature names suitable for external modeling libraries.
+- Current contract/exporter preserves real `(covariate, lag)` selected lag details and never collapses past covariates to names alone or default `lag=1`.
+- Additive typed rows or fields describe lagged covariate recommendations for ordinary measured covariates, known-future covariates, and target-history novelty context.
+- Output includes lagged feature names suitable for downstream hand-off.
 - Exported structure distinguishes ordinary measured covariates from known-future covariates.
 - Markdown exporter prints a compact selected-lag table.
 - JSON exporter preserves diagnostics needed for regression tests.
 - No external forecasting framework dependency enters the core package.
+- ForecastPrepContract remains a hand-off boundary; no `to_<framework>_spec()` or `fit_<framework>()` adapter ships as supported public API.
 
 ### Phase 3 — Examples and showcase
 
@@ -552,25 +649,30 @@ Core repo deliverables:
 - `docs/theory/lag_aware_mod_mrmr.md`
 - `docs/code/lag_aware_mod_mrmr.md`
 - `docs/examples_index.md` update
+- `docs/public_api.md` update
+- `docs/recipes/forecast_prep_to_external_frameworks.md` update
+- `README.md` update
 - changelog entry
+- `RELEASES.md` update
+- release notes mention ModMRMR attribution and contribution boundary
 
 Sibling repo deliverables:
 
-- `walkthroughs/08_lag_aware_mod_mrmr_showcase.ipynb`
-- `walkthroughs/09_lag_aware_catt_scored_mod_mrmr.ipynb`
+- `walkthroughs/09_lag_aware_mod_mrmr_showcase.ipynb`
+- `walkthroughs/10_lag_aware_catt_scored_mod_mrmr.ipynb`
 - `recipes/lag_aware_mod_mrmr_to_forecast_prep_contract.ipynb`
 - optional update to `walkthroughs/07_causal_rivers_lag_and_feature_selection.ipynb`
 - README notebook index update
 - notebook CI smoke execution
 
-Notebook `09_lag_aware_catt_scored_mod_mrmr.ipynb` is binding and must be two-part:
+Notebook `10_lag_aware_catt_scored_mod_mrmr.ipynb` is binding and must be two-part:
 
 ```text
 Part A — Synthetic controlled benchmark
 Part B — CausalRivers applied walkthrough
 ```
 
-Part A proves the method on a known-answer panel:
+Part A validates expected behavior on a controlled panel:
 
 - generate `y(t)` from known nonlinear lagged drivers, for example `x_driver_1(t-forecast_horizon)` and `x_driver_2(t-2*forecast_horizon)`;
 - include near-duplicate sensors, smoothed duplicates, lag-neighbour duplicates, and pure noise covariates;
@@ -580,8 +682,8 @@ Part A proves the method on a known-answer panel:
 
 Part B demonstrates realistic interpretation on the existing CausalRivers storyline:
 
-- treat one downstream river/node as `y(t)`;
-- treat upstream rivers/drivers as covariates;
+- treat one named downstream river/node as `y(t)`, or add an explicit placeholder requiring the target to be chosen before implementation;
+- treat named upstream rivers/drivers as covariates, or add an explicit placeholder requiring the upstream series to be chosen before implementation;
 - run fast mode and Catt-scored scientific mode;
 - compare selected covariate-lag sets;
 - explicitly state that CausalRivers is used as an applied plausibility walkthrough, not as a hard recovery benchmark;
@@ -595,25 +697,48 @@ Acceptance criteria:
 - Showcase demonstrates same nonlinear scorer for relevance and redundancy.
 - Showcase demonstrates Catt-style AMI scoring mode and compares it with fast MI/Spearman mode.
 - Showcase includes the required ablation: relevance-only, aggregate classic-style redundancy, mean-similarity multiplicative suppression, maximum-similarity ModMRMR suppression, and full Lag-Aware ModMRMR.
-- Notebook 09 includes both synthetic known-answer recovery and CausalRivers applied interpretation.
+- Showcase and notebooks use fixed seeds, write outputs under sibling `outputs/`, and include bounded smoke mode for CI.
+- Notebook CI executes the new notebooks in smoke mode.
+- Controlled-panel metrics include zero illegal selections, true-driver family within top K, bounded duplicate-family count, and stable fixed-seed selected rows.
+- CausalRivers metrics are labelled as applied plausibility summaries, not hard recovery claims.
+- Notebook 10 includes both controlled-panel expected-behavior validation and CausalRivers applied interpretation.
 - ForecastPrepContract hand-off is demonstrated.
+- Forecastability fingerprint integration is explicitly non-integrated for `0.4.3`; docs may add only a companion cross-reference explaining how selected covariate lags can be read beside fingerprint summaries.
 
-### Phase 4 — Optional sklearn wrapper
+### Phase 4 — Docs hardening and release prep
 
-Scope. Add only if useful after the domain method is stable.
+Scope. Align release documentation, public API surfaces, examples hand-off notes, and local validation with the gates enforced by `.github/workflows/`.
 
 Acceptance criteria:
 
-- Wrapper delegates to `run_lag_aware_mod_mrmr()`.
-- Wrapper is not the canonical public API.
-- Wrapper does not introduce sklearn as a hard new architectural dependency if not already acceptable.
-- Wrapper documentation states that the domain use case is the recommended API.
+- PR/main CI parity is documented and locally reproducible where tools are available:
+    `uv run python scripts/check_repo_contract.py`,
+    `uv run python scripts/check_markdown_links.py`,
+    `uv run python scripts/check_readme_surface.py`,
+    `uv run ruff check .`,
+    `npx --yes markdownlint-cli2 "docs/**/*.md" README.md CHANGELOG.md llms.txt`,
+    `uv run ty check`,
+    `uv run pytest -q -ra -n auto`,
+    `uv run python scripts/check_docs_contract.py --import-contract`,
+    `uv run python scripts/check_docs_contract.py --version-coherence`,
+    `uv run python scripts/check_docs_contract.py --terminology`,
+    `uv run python scripts/check_docs_contract.py --plan-lifecycle`,
+    `uv run python scripts/check_docs_contract.py --no-framework-imports`,
+    `uv run python scripts/check_docs_contract.py --root-path-pinned`,
+    `uv run python scripts/check_docs_contract.py --version-consistent`,
+    `uv build`, and lychee offline link checking.
+- Local release notes state that lychee offline may remain CI-only when the lychee action/runtime is unavailable locally.
+- Push-to-main smoke parity includes the showcase commands from `.github/workflows/smoke.yml`: univariate, covariant fast, fingerprint smoke, lagged-exogenous smoke, routing validation smoke, CSV geometry help, and forecast-prep smoke.
+- New lag-aware showcase smoke commands are added to the smoke checklist once `scripts/run_showcase_lag_aware_mod_mrmr.py` and `scripts/run_showcase_lag_aware_catt_mod_mrmr.py` exist.
+- Release-tag parity covers tag/version/release-notes matching, `uv run python scripts/check_repo_contract.py --release-tag v0.4.3`, `uv build`, `uv run twine check dist/*`, and covariant import smoke.
+- Publish-PyPI parity covers `uv run ruff check .`, `uv run ty check`, `uv run pytest -q -ra -n auto`, `uv build`, `uv run twine check dist/*`, isolated wheel smoke, and `uv run python scripts/check_published_release.py` after publish.
+- Sibling dispatch is documented as a `repository_dispatch` to `forecastability-examples`; sibling notebook execution is verified in that repository, not in the core repo.
 
 ---
 
 ## 4. Out of scope
 
-- Generic sklearn-first feature-selection framework.
+- No sklearn estimator or sklearn-first API ships in this release.
 - Claiming novelty for mRMR itself.
 - Claiming novelty for the general concept of temporal, time-series, or lag-aware mRMR-style feature selection.
 - Darts, MLForecast, StatsForecast, Nixtla, or downstream forecasting framework adapters in the core package.
@@ -631,7 +756,7 @@ Acceptance criteria:
 
 1. Should `rank_percentile` or `surrogate_effect_clip` be the default normalization for scientific Catt-style AMI mode?
 2. Should target-history novelty be enabled by default or remain opt-in for the first release?
-3. Should the optional sklearn wrapper ship in `0.4.3`, or be deferred until the canonical use case has stabilized?
-4. Should the first public examples prefer Spearman/MI fast mode for speed, or Catt-style AMI mode for scientific alignment?
-5. Should `known_future_covariates` support per-horizon availability metadata in `0.4.3`, or only a boolean bypass with explicit labels?
+3. Should `known_future_covariates` support per-horizon availability metadata in `0.4.3`, or only a boolean bypass with explicit labels?
+4. Which sibling notebook targets are required for release acceptance versus optional examples-repo follow-up?
+5. Does docs hardening require extra repo-contract checks for new public re-exports, ModMRMR attribution wording, or no-framework-import boundaries?
 
