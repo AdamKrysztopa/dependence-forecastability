@@ -43,6 +43,21 @@ from forecastability.triage.extended_forecastability import (
     SpectralForecastabilityResult,
 )
 from forecastability.triage.forecastability_profile import ForecastabilityProfile
+from forecastability.triage.lag_aware_mod_mrmr import (
+    BlockedLagAwareFeature,
+    ForecastSafeLagCandidate,
+    KnownFutureProvenance,
+    LagAwareModMRMRConfig,
+    LagAwareModMRMRResult,
+    LagLegalityLabel,
+    NormalizationStrategy,
+    PairwiseScorerSpec,
+    RejectedLagAwareFeature,
+    RejectionReason,
+    ScorerDiagnostics,
+    SelectedLagAwareFeature,
+    SignificanceMethod,
+)
 from forecastability.triage.lyapunov import LargestLyapunovExponentResult
 from forecastability.triage.models import (
     AnalysisGoal,
@@ -92,6 +107,10 @@ _LAZY_EXPORT_MAP: dict[str, tuple[str, str | None]] = {
     "run_extended_forecastability_analysis": (
         "forecastability.use_cases",
         "_run_extended_forecastability_analysis_public",
+    ),
+    "run_lag_aware_mod_mrmr": (
+        "forecastability.use_cases.lag_aware_mod_mrmr",
+        None,
     ),
 }
 
@@ -160,6 +179,20 @@ __all__ = [
     "SpectralForecastabilityResult",
     "SpectralPredictabilityResult",
     "TheoreticalLimitDiagnostics",
+    # Lag-Aware ModMRMR domain contracts (v0.4.3)
+    "BlockedLagAwareFeature",
+    "ForecastSafeLagCandidate",
+    "KnownFutureProvenance",
+    "LagAwareModMRMRConfig",
+    "LagAwareModMRMRResult",
+    "LagLegalityLabel",
+    "NormalizationStrategy",
+    "PairwiseScorerSpec",
+    "RejectedLagAwareFeature",
+    "RejectionReason",
+    "ScorerDiagnostics",
+    "SelectedLagAwareFeature",
+    "SignificanceMethod",
     "assess_readiness",
     "plan_method",
     "build_forecast_prep_contract",
@@ -169,6 +202,7 @@ __all__ = [
     "run_batch_triage",
     "run_batch_triage_with_details",
     "run_extended_forecastability_analysis",
+    "run_lag_aware_mod_mrmr",
     "run_triage",
     "build_triage_result_bundle",
     "save_result_bundle",

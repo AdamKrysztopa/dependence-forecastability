@@ -1,241 +1,150 @@
 <!-- type: how-to -->
-<!-- Last verified for release 0.3.0 -->
+<!-- Last verified against current workflows: 2026-05-05 -->
 
 # Automated Release Pipeline
 
-This repository uses three GitHub Actions workflows that together form the full release
-pipeline. [ci.yml](.github/workflows/ci.yml) runs on every push and PR to `main`.
-[release.yml](.github/workflows/release.yml) and
-[publish-pypi.yml](.github/workflows/publish-pypi.yml) both trigger on a version tag push
-(`v*`) and run in parallel — one creates the GitHub release with attached distribution
-artifacts, the other publishes to PyPI via OIDC trusted publishing.
+This repository uses four GitHub Actions workflows for validation and release:
 
----
+- [ci.yml](../../.github/workflows/ci.yml) validates pushes and pull requests to `main`.
+- [smoke.yml](../../.github/workflows/smoke.yml) runs showcase smoke checks on pushes to `main`.
+- [release.yml](../../.github/workflows/release.yml) validates a release tag and publishes the GitHub release.
+- [publish-pypi.yml](../../.github/workflows/publish-pypi.yml) publishes to PyPI and verifies the published package.
 
-## CI Workflow ([ci.yml](.github/workflows/ci.yml))
+## CI workflow
 
-**Trigger:** `push` or `pull_request` targeting `main`.
+Trigger: `push` and `pull_request` on `main`.
 
-**Concurrency:** group `ci-<workflow>-<ref>` with `cancel-in-progress: true`. A new push
-cancels any in-progress run for the same branch or PR.
+| Job | Runtime | Current gate |
+| --- | --- | --- |
+| `repo-contract` | Python 3.12 | `scripts/check_repo_contract.py`, `scripts/check_markdown_links.py`, `scripts/check_readme_surface.py` |
+| `quality` | Python 3.11 and 3.12 | `ruff`, `markdownlint-cli2`, `ty`, `pytest -q -ra -n auto`, `uv build` |
+| `docs-contract` | Python 3.12 | `check_docs_contract.py` subcommands for import contract, version coherence, terminology, plan lifecycle, no-framework-imports, root-path-pinned, and version-consistent |
+| `docs-links` | GitHub Action | `lychee-action` in offline mode over docs, README, CHANGELOG, and `llms.txt` |
 
-**Permissions:** `contents: read` only.
-
-**Single job — `quality`** runs on `ubuntu-latest`, Python 3.11:
+Local parity commands:
 
 ```bash
-uv sync --dev --all-extras   # install all development and optional dependencies
-uv run ruff check .          # lint
-uv run ty check              # type check (Astral ty)
-uv run pytest -q -ra         # full test suite
-uv build                     # verify the package builds cleanly
+uv sync --dev
+uv run python scripts/check_repo_contract.py
+uv run python scripts/check_markdown_links.py
+uv run python scripts/check_readme_surface.py
+
+uv sync --dev --all-extras
+uv run ruff check .
+npx --yes markdownlint-cli2 "docs/**/*.md" README.md CHANGELOG.md llms.txt
+uv run ty check
+uv run pytest -q -ra -n auto
+uv run python scripts/check_docs_contract.py --import-contract
+uv run python scripts/check_docs_contract.py --version-coherence
+uv run python scripts/check_docs_contract.py --terminology
+uv run python scripts/check_docs_contract.py --plan-lifecycle
+uv run python scripts/check_docs_contract.py --no-framework-imports
+uv run python scripts/check_docs_contract.py --root-path-pinned
+uv run python scripts/check_docs_contract.py --version-consistent
+uv build
 ```
 
-All four steps must pass for the job to succeed. There are no separate jobs — the entire
-quality gate is serialised within one runner.
+> [!NOTE]
+> `docs-links` runs lychee offline in CI. If the local lychee runtime is unavailable,
+> treat that check as CI-only and rely on the GitHub Actions job for parity.
 
----
+## Smoke workflow
 
-## Release Workflow ([release.yml](.github/workflows/release.yml))
+Trigger: `push` on `main`.
 
-**Trigger:** `push: tags: v*`.
-
-**Concurrency:** group `release-<ref>` with `cancel-in-progress: false` (never interrupt
-a running release).
-
-### Job `build-dist`
-
-Checks out the repo, installs deps (`uv sync --dev --all-extras`), builds artifacts
-(`uv build`), validates them (`uv run twine check dist/*`), and uploads them as the
-`dist-artifacts` GitHub Actions artifact.
-
-**Permissions:** `contents: read`.
-
-### Job `publish-release`
-
-Runs after `build-dist`. Downloads `dist-artifacts`, then:
-
-- **If the tag already has a GitHub release** — edits the release notes from
-  `docs/releases/<tag>.md` (if the file exists) and uploads the dist files.
-- **If no GitHub release exists yet** — creates one. Uses `docs/releases/<tag>.md` as
-  the release notes body if the file is present; otherwise falls back to
-  `--generate-notes` (auto-generated from merged PRs).
-
-**Permissions:** `contents: write` (required to create/edit releases and upload assets).
-
-### `docs/releases/vX.Y.Z.md` convention
-
-Create this file before pushing the tag. The workflow looks for it at the exact path
-`docs/releases/${TAG_NAME}.md` where `TAG_NAME` is the full tag string (e.g. `v0.2.0`).
-The file content becomes the GitHub release body verbatim. If the file is absent,
-GitHub auto-generates notes from PR titles merged since the previous tag.
-
----
-
-## Publish to PyPI Workflow ([publish-pypi.yml](.github/workflows/publish-pypi.yml))
-
-**Trigger:** `push: tags: v*` — starts in parallel with `release.yml`.
-
-**Concurrency:** group `publish-pypi-<ref>` with `cancel-in-progress: false`.
-
-### Job `build-dist`
-
-Runs the full quality gate again independently of `release.yml`:
+Current smoke parity from [smoke.yml](../../.github/workflows/smoke.yml):
 
 ```bash
 uv sync --dev --all-extras
-uv run ruff check .
-uv run ty check
-uv run pytest -q -ra
-uv build
-uv run twine check dist/*
+uv run scripts/run_showcase.py --no-rolling --no-bands
+uv run scripts/run_showcase_covariant.py --fast
+uv run scripts/run_showcase_fingerprint.py --smoke --quiet
+uv run scripts/run_showcase_lagged_exogenous.py --smoke --quiet
+uv run python scripts/run_routing_validation_report.py --smoke --no-real-panel
+uv run scripts/run_ami_information_geometry_csv.py --help
+uv run scripts/run_showcase_forecast_prep.py --smoke --quiet
+uv run scripts/run_showcase_lag_aware_mod_mrmr.py --smoke --quiet
+uv run scripts/run_showcase_lag_aware_catt_mod_mrmr.py --smoke --quiet
 ```
 
-Artifacts are uploaded as `pypi-dist-artifacts`. Building independently in each workflow
-ensures PyPI never receives artifacts that bypassed the quality gate, even if the two
-workflows diverge.
+## Release tag workflow
 
-### Job `publish-pypi`
+Trigger: `push` on tags matching `v*`.
 
-Runs after `build-dist`. Downloads `pypi-dist-artifacts` and publishes using
-`pypa/gh-action-pypi-publish@release/v1`.
+Current release-tag parity from [release.yml](../../.github/workflows/release.yml):
 
-**Trusted publishing (OIDC)** — no long-lived `PYPI_API_TOKEN` secret is stored. GitHub
-exchanges a short-lived OIDC token for a PyPI upload credential at runtime. The
-`id-token: write` permission enables this exchange.
+- The tag must match the package version in `pyproject.toml`.
+- The release notes file `docs/releases/vX.Y.Z.md` must exist for the pushed tag.
+- The workflow runs a covariant import sanity check before packaging.
+- The workflow runs `scripts/check_repo_contract.py --release-tag ...`.
+- The workflow builds artifacts with `uv build` and validates them with `uv run twine check dist/*`.
+- The workflow smoke-installs the built wheel with the `[causal]` extra, imports the stable facade, checks that the older covariant entry point remains callable, and exercises the lag-aware public surface through `forecastability.triage` configs.
 
-**Protected environment:** the job runs in the `pypi` GitHub environment. Any branch
-protection rules or required reviewer gates configured on that environment apply before
-the publish step executes.
-
----
-
-## Pre-commit Hooks ([.pre-commit-config.yaml](.pre-commit-config.yaml))
-
-Install once locally:
+Local parity commands for the workflow, plus the lag-aware regression fixture verification used in release prep:
 
 ```bash
-pre-commit install
+TAG="vX.Y.Z"
+PACKAGE_VERSION="$(awk -F'"' '/^version = "/ { print $2; exit }' pyproject.toml)"
+test "${TAG}" = "v${PACKAGE_VERSION}"
+test -f "docs/releases/${TAG}.md"
+
+uv sync --dev --all-extras
+uv run python -c "from forecastability.use_cases.run_covariant_analysis import run_covariant_analysis; print('covariant import OK')"
+uv run python scripts/check_repo_contract.py --release-tag "${TAG}"
+uv run python scripts/rebuild_lag_aware_mod_mrmr_regression_fixtures.py --verify
+uv build
+uv run twine check dist/*
+
+wheel_path="$(ls dist/*.whl | head -1)"
+python -m venv /tmp/release-wheel-smoke
+/tmp/release-wheel-smoke/bin/pip install --quiet "${wheel_path}[causal]"
+/tmp/release-wheel-smoke/bin/python - <<'PY'
+import numpy as np
+
+from forecastability import run_covariant_analysis, run_lag_aware_mod_mrmr
+from forecastability.triage import LagAwareModMRMRConfig, PairwiseScorerSpec
+
+target = np.tile(np.array([0.0, 1.0]), 16)
+covariate = np.concatenate([target[1:], target[-1:]])
+spec = PairwiseScorerSpec(
+	name="pearson_abs",
+	backend="scipy",
+	normalization="none",
+	significance_method="none",
+)
+config = LagAwareModMRMRConfig(
+	forecast_horizon=1,
+	availability_margin=0,
+	candidate_lags=[1],
+	relevance_scorer=spec,
+	redundancy_scorer=spec,
+	max_selected_features=1,
+)
+result = run_lag_aware_mod_mrmr(
+	target=target,
+	covariates={"driver": covariate},
+	config=config,
+)
+
+assert callable(run_covariant_analysis)
+assert len(result.selected) == 1
+assert result.selected[0].feature_name == "x_driver_lag1"
+print("wheel smoke test: stable facades OK")
+PY
 ```
 
-Hooks that run automatically on `git commit`:
+After `build-dist`, the `publish-release` job creates or updates the GitHub release from the tag and uploads the built distribution artifacts.
 
-| Hook | Source | What it does |
-|---|---|---|
-| `check-toml` | `pre-commit-hooks` v6.0.0 | Validates `pyproject.toml` syntax |
-| `end-of-file-fixer` | `pre-commit-hooks` v6.0.0 | Ensures files end with a newline |
-| `trailing-whitespace` | `pre-commit-hooks` v6.0.0 | Strips trailing whitespace |
-| `ruff` | `ruff-pre-commit` v0.11.0 | Lint with auto-fix |
-| `ruff-format` | `ruff-pre-commit` v0.11.0 | Format (Black-compatible) |
+## PyPI publication workflow
 
-> [!TIP]
-> Run `pre-commit run --all-files` to apply all hooks to the entire repo without making
-> a commit.
+Trigger: `push` on tags matching `v*`. This workflow runs in parallel with `release.yml`.
 
----
+Current publish parity from [publish-pypi.yml](../../.github/workflows/publish-pypi.yml):
 
-## Dependabot ([.github/dependabot.yml](.github/dependabot.yml))
+- `build-dist` reruns `ruff`, `ty`, `pytest -q -ra -n auto`, `uv build`, and `uv run twine check dist/*`.
+- `build-dist` smoke-installs the built wheel with the `[causal]` extra, imports the stable facade, checks that the older covariant entry point remains callable, and exercises the lag-aware public surface through `forecastability.triage` configs.
+- `publish-pypi` uses trusted publishing in the `pypi` environment.
+- `verify-published-release` runs `scripts/check_published_release.py --skip-github-release`.
+- `notify-sibling` sends a `repository_dispatch` event to `forecastability-examples` after publish verification.
 
-| Ecosystem | Schedule | Labels | Commit prefix |
-|---|---|---|---|
-| `github-actions` | Weekly | `dependencies`, `github-actions` | `ci` |
-| `pip` | Weekly | `dependencies`, `python` | `deps` |
-
-Dependabot PRs appear with titles like `ci: bump actions/checkout from 4.1.0 to 4.2.0`
-and `deps: bump ruff from 0.11.0 to 0.11.1`. Merge them routinely — CI runs on each PR.
-
----
-
-## How to Do a Release
-
-1. **Confirm CI is green on `main`** — check the Actions tab before proceeding.
-
-2. **Bump the version** in `pyproject.toml` and `src/forecastability/__init__.py`:
-   ```bash
-   # edit pyproject.toml: version = "X.Y.Z"
-   # edit src/forecastability/__init__.py: __version__ = "X.Y.Z"
-   ```
-
-3. **Update `CHANGELOG.md`** — add a `## [X.Y.Z]` section with release highlights.
-
-4. **Create release notes** at `docs/releases/vX.Y.Z.md`. This file becomes the body
-   of the GitHub release. If absent, notes are auto-generated from PR titles.
-
-5. **Run a local smoke check:**
-   ```bash
-   uv build
-   uv run twine check dist/*
-   ```
-
-6. **Commit and push to `main`, then wait for CI green:**
-   ```bash
-   git add pyproject.toml src/forecastability/__init__.py CHANGELOG.md \
-           docs/releases/vX.Y.Z.md
-   git commit -m "chore: release vX.Y.Z"
-   git push
-   ```
-
-7. **Tag and push:**
-   ```bash
-   git tag vX.Y.Z
-   git push --tags
-   ```
-
-8. **`release.yml` and `publish-pypi.yml` trigger in parallel.** Each builds
-   independently, then:
-   - `release.yml` creates the GitHub release with the dist assets attached.
-   - `publish-pypi.yml` publishes the wheel and sdist to PyPI.
-
-9. **Verify:**
-   - GitHub: `https://github.com/AdamKrysztopa/dependence-forecastability/releases/tag/vX.Y.Z`
-   - PyPI: `https://pypi.org/project/dependence-forecastability/X.Y.Z/`
-   - Quick install check: `pip install dependence-forecastability==X.Y.Z`
-
----
-
-## One-Time Setup: PyPI Trusted Publishing
-
-These steps are required once per repository and are prerequisites for
-`publish-pypi.yml` to succeed. Full details in [pypi_publication.md](pypi_publication.md).
-
-1. **Claim the project on PyPI** — create or verify ownership of
-   `dependence-forecastability` at `https://pypi.org`.
-
-2. **Add a Trusted Publisher entry on PyPI** with these exact values:
-
-   | Field | Value |
-   |---|---|
-   | Owner | `AdamKrysztopa` |
-   | Repository | `dependence-forecastability` |
-   | Workflow | `publish-pypi.yml` |
-   | Environment | `pypi` |
-
-3. **Create the `pypi` protected environment on GitHub** — go to
-   *Settings → Environments → New environment*, name it `pypi`, and add any required
-   reviewer rules.
-
----
-
-## GitHub UI Actions (Manual)
-
-These cannot be expressed in workflow files and must be configured via the GitHub web UI:
-
-| Action | Location |
-|---|---|
-| Branch protection on `main` (require CI, no force-push) | *Settings → Branches* |
-| Repository topics / description | *About* section on the repo home page |
-| `pypi` environment protection rules (required reviewers, wait timer) | *Settings → Environments → pypi* |
-
----
-
-## Troubleshooting Quick Reference
-
-| Symptom | Where to look |
-|---|---|
-| Lint or type-check fails in CI | [ci.yml](.github/workflows/ci.yml) run logs → `Lint with ruff` / `Type check with ty` step |
-| Tests fail in CI | ci.yml logs → `Run test suite` step; reproduce locally with `uv run pytest -q -ra` |
-| PyPI publish fails (403 / OIDC error) | Check Trusted Publisher config on PyPI matches `publish-pypi.yml` exactly (owner, repo, workflow file name, environment name) |
-| PyPI publish fails (artifact validation) | ci.yml / publish-pypi.yml logs → `Validate artifacts`; reproduce with `uv run twine check dist/*` |
-| GitHub release not created | release.yml logs → `publish-release` job; confirm `docs/releases/vX.Y.Z.md` path matches the tag exactly |
-| Dependabot PR fails CI | Check if the version bump introduced a breaking change; review the specific failing step in ci.yml |
-| Pre-commit blocks commit | Run `pre-commit run --all-files` to see all failures; ruff auto-fixes lint issues |
+See [pypi_publication.md](pypi_publication.md) for the publish-specific setup and local wheel smoke commands, and see [release_checklist.md](release_checklist.md) for the full pre-tag sequence.

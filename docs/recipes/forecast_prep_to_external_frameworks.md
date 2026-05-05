@@ -37,6 +37,43 @@ All fields referenced in the snippets (`contract.recommended_target_lags`,
 
 ---
 
+## Preserve Lag-Aware Sparse Covariate Rows
+
+When `build_forecast_prep_contract(..., lag_aware_result=lag_result)` is used,
+the bundle and contract keep the actual selected `(covariate, lag)` rows for
+downstream hand-off instead of collapsing them to generic covariate names.
+
+```python
+bundle = build_forecast_prep_contract(
+    triage_result,
+    lag_aware_result=lag_result,
+    horizon=12,
+    target_frequency="MS",
+)
+contract = bundle.contract
+
+for row in contract.covariate_rows:
+    print(row.role, row.name, row.selected_lags, row.known_future_provenance)
+```
+
+What is preserved:
+
+- ordinary measured covariates stay as `role="past"` rows with their real
+  sparse `selected_lags` and `lagged_feature_names`
+- known-future covariates stay as `role="future"` rows and preserve
+  `known_future_provenance`; low lags can remain present because they were
+  admitted through the known-future bypass rather than the measured-covariate
+  cutoff
+- `bundle.covariate_rows`, `contract.covariate_rows`, and the export surfaces
+  such as `forecast_prep_contract_to_lag_table(contract)` preserve the same
+  sparse hand-off information
+
+This is the hand-off contract for downstream recipes. The core package preserves
+the selected rows; framework-specific code decides how to translate those rows
+into its own lag or feature configuration.
+
+---
+
 ## Map a contract to MLForecast
 
 > [!NOTE]

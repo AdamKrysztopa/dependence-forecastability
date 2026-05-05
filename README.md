@@ -342,7 +342,41 @@ Relevant files:
 
 ---
 
-### 5. Covariant / exogenous analysis
+### 5. Lag-Aware ModMRMR sparse covariate-lag selection
+
+Use this when you need a forecast-safe sparse covariate-lag selector before the
+framework-neutral `ForecastPrepContract` hand-off.
+
+`run_lag_aware_mod_mrmr()` blocks illegal measured lags, preserves declared
+known-future covariates with provenance, and returns selected, rejected, and
+blocked rows with scorer diagnostics.
+
+```python
+from forecastability import (
+  LagAwareModMRMRConfig,
+  PairwiseScorerSpec,
+  run_lag_aware_mod_mrmr,
+)
+```
+
+Run the smoke showcases:
+
+```bash
+MPLBACKEND=Agg uv run scripts/run_showcase_lag_aware_mod_mrmr.py --smoke
+MPLBACKEND=Agg uv run scripts/run_showcase_lag_aware_catt_mod_mrmr.py --smoke
+```
+
+Relevant files:
+
+- [`scripts/run_showcase_lag_aware_mod_mrmr.py`](scripts/run_showcase_lag_aware_mod_mrmr.py)
+- [`scripts/run_showcase_lag_aware_catt_mod_mrmr.py`](scripts/run_showcase_lag_aware_catt_mod_mrmr.py)
+- [`docs/theory/lag_aware_mod_mrmr.md`](docs/theory/lag_aware_mod_mrmr.md)
+- [`docs/code/lag_aware_mod_mrmr.md`](docs/code/lag_aware_mod_mrmr.md)
+- [`docs/recipes/forecast_prep_to_external_frameworks.md`](docs/recipes/forecast_prep_to_external_frameworks.md)
+
+---
+
+### 6. Covariant / exogenous analysis
 
 Use this when you want to screen whether another series contains information
 about the target.
@@ -368,7 +402,7 @@ pip install "dependence-forecastability[causal]"
 
 ---
 
-### 6. Routing validation
+### 7. Routing validation
 
 Routing validation audits deterministic routing against controlled archetypes
 and sanity panels.

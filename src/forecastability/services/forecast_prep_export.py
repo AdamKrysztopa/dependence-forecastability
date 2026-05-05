@@ -8,6 +8,10 @@ No pandas, numpy, or forecasting-framework imports are used.
 
 from __future__ import annotations
 
+from forecastability.services.forecast_prep_lagged_covariates import (
+    contract_covariate_lag_rows,
+    contract_covariate_markdown_table,
+)
 from forecastability.utils.types import ForecastPrepContract
 
 
@@ -81,6 +85,9 @@ def forecast_prep_contract_to_markdown(contract: ForecastPrepContract) -> str:
     lines.append("**past_covariates:**")
     lines.append(_bullet_list(list(contract.past_covariates)))
     lines.append("")
+    lines.append("**selected_covariate_lags:**")
+    lines.append(contract_covariate_markdown_table(contract))
+    lines.append("")
     lines.append("**covariate_notes:**")
     lines.append(_bullet_list(list(contract.covariate_notes)))
     lines.append("")
@@ -95,6 +102,25 @@ def forecast_prep_contract_to_markdown(contract: ForecastPrepContract) -> str:
     lines.append("**rejected_covariates:**")
     lines.append(_bullet_list(list(contract.rejected_covariates)))
     lines.append("")
+    if contract.target_history_context is not None:
+        lines.append("**target_history_context:**")
+        lines.append(f"- enabled: {contract.target_history_context.enabled}")
+        lines.append(f"- target_lags: {list(contract.target_history_context.target_lags)}")
+        lines.append(f"- scorer_name: {contract.target_history_context.scorer_name}")
+        lines.append(
+            f"- normalization_strategy: {contract.target_history_context.normalization_strategy}"
+        )
+        lines.append(
+            "- penalized_selected_features: "
+            f"{contract.target_history_context.penalized_selected_features}"
+        )
+        lines.append(
+            f"- max_selected_redundancy: {contract.target_history_context.max_selected_redundancy}"
+        )
+        if contract.target_history_context.notes:
+            lines.append("- notes:")
+            lines.append(_bullet_list(list(contract.target_history_context.notes)))
+        lines.append("")
 
     # --- Notes ---
     lines.append("## Notes")
@@ -179,31 +205,7 @@ def forecast_prep_contract_to_lag_table(
             }
         )
 
-    # Past covariates — lag=1 conservative default
-    for name in contract.past_covariates:
-        rows.append(
-            {
-                "driver": name,
-                "axis": "past",
-                "role": "past",
-                "lag": 1,
-                "selected_for_handoff": True,
-                "rationale": "",
-            }
-        )
-
-    # Future covariates — lag=0
-    for name in contract.future_covariates:
-        rows.append(
-            {
-                "driver": name,
-                "axis": "future",
-                "role": "future",
-                "lag": 0,
-                "selected_for_handoff": True,
-                "rationale": "",
-            }
-        )
+    rows.extend(contract_covariate_lag_rows(contract))
 
     rows.sort(
         key=lambda r: (

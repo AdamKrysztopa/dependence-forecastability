@@ -1056,3 +1056,159 @@ def generate_routing_validation_archetypes(
             seed=seed + 9,
         ),
     }
+
+
+# ---------------------------------------------------------------------------
+# v0.4.3 Lag-Aware ModMRMR synthetic panel
+# ---------------------------------------------------------------------------
+
+
+class LagAwareModMRMRPanel(BaseModel):
+    """Synthetic multi-covariate panel for Lag-Aware ModMRMR showcase.
+
+    All covariate arrays are raw time series (not pre-lagged). The domain
+    builder applies lagging internally at the specified ``true_driver_lag``.
+    """
+
+    model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
+
+    target: np.ndarray = Field(description="Synthetic target series of shape (n,).")
+    covariates: dict[str, np.ndarray] = Field(
+        description="Covariate name → raw time series (not pre-lagged).",
+    )
+    true_driver_name: str = Field(
+        description="Name of the covariate with a true causal relationship to the target.",
+    )
+    true_driver_lag: int = Field(
+        description="Lag at which the true driver best predicts the target.",
+    )
+    known_future_covariates: dict[str, str] = Field(
+        description="Covariate name → provenance string for known-future features.",
+    )
+    duplicate_sensor_pair: frozenset[str] = Field(
+        description=(
+            "Two covariate names that are near-duplicates; only one should survive "
+            "ModMRMR redundancy suppression."
+        ),
+    )
+
+    @field_validator("target", mode="before")
+    @classmethod
+    def _coerce_target(cls, value: object) -> np.ndarray:
+        """Coerce target to a 1-D float64 ndarray."""
+        if isinstance(value, str | bytes):
+            raise TypeError("target must be a numeric array or array-like sequence")
+        array = np.asarray(value, dtype=float)
+        if array.ndim != 1:
+            raise ValueError("target must be one-dimensional")
+        return array
+
+    @field_validator("covariates", mode="before")
+    @classmethod
+    def _coerce_covariates(cls, value: object) -> dict[str, np.ndarray]:
+        """Coerce each covariate value to a 1-D float64 ndarray."""
+        if not isinstance(value, dict):
+            raise TypeError("covariates must be a dict mapping str to array-like")
+        result: dict[str, np.ndarray] = {}
+        for key, arr in value.items():
+            name: str = str(key)
+            if isinstance(arr, str | bytes):
+                raise TypeError(f"covariates[{name!r}] must be a numeric array or array-like")
+            coerced = np.asarray(arr, dtype=float)
+            if coerced.ndim != 1:
+                raise ValueError(f"covariates[{name!r}] must be one-dimensional")
+            result[name] = coerced
+        return result
+
+    @field_serializer("target", when_used="json")
+    def _serialize_target(self, value: np.ndarray) -> list[float]:
+        """Serialize target as a JSON-friendly list."""
+        return value.tolist()
+
+    @field_serializer("covariates", when_used="json")
+    def _serialize_covariates(self, value: dict[str, np.ndarray]) -> dict[str, list[float]]:
+        """Serialize covariate arrays as JSON-friendly lists."""
+        return {k: v.tolist() for k, v in value.items()}
+
+
+def generate_lag_aware_mod_mrmr_panel(
+    n: int = 1000,
+    *,
+    seed: int = 42,
+) -> LagAwareModMRMRPanel:
+    """Generate a multi-covariate synthetic panel for Lag-Aware ModMRMR showcase.
+
+    Panel structure:
+        - ``driver_direct``: AR(1) causal driver; target depends on it at lag 3.
+        - ``smoothed_driver``: 5-point causal moving average of ``driver_direct``;
+          near-duplicate in information content.
+        - ``sensor_near_dup``: noisy rescaling of ``driver_direct``; should be
+          suppressed by ModMRMR redundancy suppression.
+        - ``noise_pure``: independent Gaussian noise; rejected by relevance floor.
+        - ``seasonal_proxy``: tracks ``target[t-12]``; penalised by target-lag history.
+        - ``calendar_flag``: deterministic known-future calendar feature.
+
+    Args:
+        n: Number of time steps. Must be >= 200.
+        seed: Random seed for reproducibility. Must be int, not np.Generator.
+
+    Returns:
+        ``LagAwareModMRMRPanel`` with all arrays of shape ``(n,)`` and dtype float64.
+    """
+    if n < 200:
+        raise ValueError(f"n must be >= 200, got {n}")
+
+    rng = np.random.default_rng(seed)
+
+    # Step 1: AR(1) driver — phi=0.72, iid N(0,1) innovations.
+    driver_direct = np.zeros(n, dtype=float)
+    for t in range(1, n):
+        driver_direct[t] = 0.72 * driver_direct[t - 1] + rng.normal(0.0, 1.0)
+
+    # Step 2: pure noise covariate (generated before target loop to preserve RNG order).
+    noise_pure = rng.normal(0.0, 1.0, size=n)
+
+    # Step 3: target — causal lag-3 link to driver_direct, 12-step seasonal, weak AR(1).
+    t_idx = np.arange(n, dtype=float)
+    seasonal_component = np.sin(2.0 * np.pi * t_idx / 12.0)
+    target = np.zeros(n, dtype=float)
+    for t in range(3, n):
+        target[t] = (
+            0.40 * driver_direct[t - 3]
+            + 0.30 * seasonal_component[t]
+            + 0.35 * target[t - 1]
+            + rng.normal(0.0, 1.0)
+        )
+
+    # Step 4: seasonal_proxy — tracks target[t-12].
+    target_lagged_12 = np.zeros(n, dtype=float)
+    target_lagged_12[12:] = target[:n - 12]
+    seasonal_proxy = 0.9 * target_lagged_12 + rng.normal(0.0, 0.1, size=n)
+
+    # Step 5: derived covariates.
+    # 5a. smoothed_driver — 5-point causal moving average; zero-pad for t < 4.
+    smoothed_driver = np.zeros(n, dtype=float)
+    for t in range(4, n):
+        smoothed_driver[t] = np.mean(driver_direct[t - 4 : t + 1])
+
+    # 5b. sensor_near_dup — noisy rescaling of driver_direct.
+    sensor_near_dup = 1.2 * driver_direct + rng.normal(0.0, 0.15, size=n)
+
+    # 5c. calendar_flag — deterministic sinusoidal known-future feature.
+    calendar_flag = np.sin(2.0 * np.pi * t_idx / 12.0) + 0.5 * np.cos(2.0 * np.pi * t_idx / 12.0)
+
+    return LagAwareModMRMRPanel(
+        target=target,
+        covariates={
+            "driver_direct": driver_direct,
+            "smoothed_driver": smoothed_driver,
+            "sensor_near_dup": sensor_near_dup,
+            "noise_pure": noise_pure,
+            "seasonal_proxy": seasonal_proxy,
+            "calendar_flag": calendar_flag,
+        },
+        true_driver_name="driver_direct",
+        true_driver_lag=3,
+        known_future_covariates={"calendar_flag": "calendar"},
+        duplicate_sensor_pair=frozenset({"driver_direct", "sensor_near_dup"}),
+    )

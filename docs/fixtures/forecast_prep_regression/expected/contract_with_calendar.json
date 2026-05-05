@@ -68,6 +68,10 @@
     {
       "axis": "future",
       "driver": "_calendar__dayofweek",
+      "feature_name": "x__calendar__dayofweek_lag0",
+      "future_known_required": true,
+      "kind": "known_future",
+      "known_future_provenance": null,
       "lag": 0,
       "rationale": "",
       "role": "future",
@@ -76,6 +80,10 @@
     {
       "axis": "future",
       "driver": "_calendar__is_business_day",
+      "feature_name": "x__calendar__is_business_day_lag0",
+      "future_known_required": true,
+      "kind": "known_future",
+      "known_future_provenance": null,
       "lag": 0,
       "rationale": "",
       "role": "future",
@@ -84,6 +92,10 @@
     {
       "axis": "future",
       "driver": "_calendar__is_weekend",
+      "feature_name": "x__calendar__is_weekend_lag0",
+      "future_known_required": true,
+      "kind": "known_future",
+      "known_future_provenance": null,
       "lag": 0,
       "rationale": "",
       "role": "future",
@@ -92,6 +104,10 @@
     {
       "axis": "future",
       "driver": "_calendar__month",
+      "feature_name": "x__calendar__month_lag0",
+      "future_known_required": true,
+      "kind": "known_future",
+      "known_future_provenance": null,
       "lag": 0,
       "rationale": "",
       "role": "future",
@@ -100,11 +116,15 @@
     {
       "axis": "future",
       "driver": "_calendar__quarter",
+      "feature_name": "x__calendar__quarter_lag0",
+      "future_known_required": true,
+      "kind": "known_future",
+      "known_future_provenance": null,
       "lag": 0,
       "rationale": "",
       "role": "future",
       "selected_for_handoff": true
     }
   ],
-  "markdown_length": 1096
+  "markdown_length": 1632
 }

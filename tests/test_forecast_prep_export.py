@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pathlib
 
-from forecastability.utils.types import ForecastPrepContract
+from forecastability.utils.types import CovariateRecommendation, ForecastPrepContract
 
 # ---------------------------------------------------------------------------
 # Shared fixtures
@@ -90,6 +90,18 @@ def test_markdown_is_stable() -> None:
     )
 
 
+def test_markdown_uses_covariate_fallback_rows_when_typed_rows_are_absent() -> None:
+    from forecastability.services.forecast_prep_export import (
+        forecast_prep_contract_to_markdown,
+    )
+
+    md = forecast_prep_contract_to_markdown(_rich_contract())
+
+    assert "| past | measured | humidity | 1 | x_humidity_lag1 |" in md
+    assert "| past | measured | temp | 1 | x_temp_lag1 |" in md
+    assert "| future | known_future | day_of_week | 0 | x_day_of_week_lag0 |" in md
+
+
 # ---------------------------------------------------------------------------
 # Lag table tests
 # ---------------------------------------------------------------------------
@@ -155,6 +167,48 @@ def test_lag_table_future_lags_are_nonneg() -> None:
     assert future_rows, "Expected future rows in rich contract"
     for row in future_rows:
         assert int(row["lag"]) >= 0, f"Future lag must be >= 0, got {row['lag']}"  # type: ignore[arg-type]
+
+
+def test_lag_table_ignores_static_and_rejected_covariate_rows() -> None:
+    from forecastability.services.forecast_prep_export import (
+        forecast_prep_contract_to_lag_table,
+        forecast_prep_contract_to_markdown,
+    )
+
+    contract = ForecastPrepContract(
+        source_goal="covariant",
+        blocked=False,
+        readiness_status="ok",
+        static_features=["store_id"],
+        rejected_covariates=["noise_driver"],
+        covariate_rows=[
+            CovariateRecommendation(
+                name="store_id",
+                role="static",
+                confidence="low",
+                informative=False,
+                future_known_required=False,
+                selected_lags=[1],
+                rationale="static metadata row",
+            ),
+            CovariateRecommendation(
+                name="noise_driver",
+                role="rejected",
+                confidence="low",
+                informative=False,
+                future_known_required=False,
+                selected_lags=[1],
+                rationale="screened out row",
+            ),
+        ],
+    )
+
+    rows = forecast_prep_contract_to_lag_table(contract)
+    markdown = forecast_prep_contract_to_markdown(contract)
+
+    assert rows == []
+    assert "| static |" not in markdown
+    assert "| rejected |" not in markdown
 
 
 def test_no_framework_imports_in_forecast_prep_export() -> None:
