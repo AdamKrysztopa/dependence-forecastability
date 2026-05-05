@@ -803,7 +803,38 @@ class CovariateRecommendation(BaseModel):
             "For role='future': horizon-relative lags (>= 0)."
         ),
     )
+    lagged_feature_names: list[str] = Field(
+        default_factory=list,
+        exclude_if=lambda value: len(value) == 0,
+        description=(
+            "Deterministic lagged feature identifiers aligned 1:1 with "
+            "selected_lags when available."
+        ),
+    )
+    known_future_provenance: str | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description=(
+            "Known-future provenance label when role='future' is backed by an "
+            "explicit contractual or calendar guarantee."
+        ),
+    )
     rationale: str
+
+    @model_validator(mode="after")
+    def _validate_role_consistency(self) -> CovariateRecommendation:
+        if self.future_known_required and self.role != "future":
+            raise ValueError("future_known_required must be False unless role='future'")
+        if self.role == "future":
+            if any(lag < 0 for lag in self.selected_lags):
+                raise ValueError("Future covariate selected_lags must all be >= 0")
+        elif any(lag < 1 for lag in self.selected_lags):
+            raise ValueError("Non-future covariate selected_lags must all be >= 1")
+        if self.known_future_provenance is not None and self.role != "future":
+            raise ValueError("known_future_provenance requires role='future'")
+        if self.lagged_feature_names and len(self.lagged_feature_names) != len(self.selected_lags):
+            raise ValueError("lagged_feature_names must align 1:1 with selected_lags when provided")
+        return self
 
 
 class FamilyRecommendation(BaseModel):
@@ -814,6 +845,20 @@ class FamilyRecommendation(BaseModel):
     family: str
     tier: ForecastPrepFamilyTier
     rationale: str
+
+
+class ForecastPrepTargetHistoryContext(BaseModel):
+    """Target-history novelty context attached to a ForecastPrepContract."""
+
+    model_config = ConfigDict(frozen=True)
+
+    enabled: bool
+    target_lags: list[int] = Field(default_factory=list)
+    scorer_name: str | None = None
+    normalization_strategy: str | None = None
+    penalized_selected_features: int = Field(default=0, ge=0)
+    max_selected_redundancy: float | None = Field(default=None, ge=0.0, le=1.0)
+    notes: list[str] = Field(default_factory=list)
 
 
 class ForecastPrepContract(BaseModel):
@@ -849,6 +894,14 @@ class ForecastPrepContract(BaseModel):
     static_features: list[str] = Field(default_factory=list)
     rejected_covariates: list[str] = Field(default_factory=list)
     covariate_notes: list[str] = Field(default_factory=list)
+    covariate_rows: list[CovariateRecommendation] = Field(
+        default_factory=list,
+        exclude_if=lambda value: len(value) == 0,
+        description=(
+            "Typed covariate rows used when sparse lag detail is available from "
+            "lagged-exogenous or lag-aware covariate selection."
+        ),
+    )
     transformation_hints: list[str] = Field(default_factory=list)
     caution_flags: list[str] = Field(default_factory=list)
     downstream_notes: list[str] = Field(default_factory=list)
@@ -860,6 +913,14 @@ class ForecastPrepContract(BaseModel):
         ),
     )
     calendar_locale: str | None = None
+    target_history_context: ForecastPrepTargetHistoryContext | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description=(
+            "Optional lag-aware target-history novelty context when the contract "
+            "was built from Lag-Aware ModMRMR selections."
+        ),
+    )
     metadata: dict[str, str | int | float] = Field(default_factory=dict)
 
     @field_validator("recommended_target_lags", "excluded_target_lags")
@@ -878,6 +939,30 @@ class ForecastPrepContract(BaseModel):
                     f"Calendar feature {feature_name!r} must start with '_calendar__'."
                 )
         return value
+
+    @model_validator(mode="after")
+    def _validate_covariate_row_name_consistency(self) -> ForecastPrepContract:
+        if not self.covariate_rows:
+            return self
+
+        past_covariates = sorted({row.name for row in self.covariate_rows if row.role == "past"})
+        future_covariates = sorted(
+            {row.name for row in self.covariate_rows if row.role == "future"}
+        )
+        static_features = sorted({row.name for row in self.covariate_rows if row.role == "static"})
+        rejected_covariates = sorted(
+            {row.name for row in self.covariate_rows if row.role == "rejected"}
+        )
+
+        if past_covariates != sorted(self.past_covariates):
+            raise ValueError("covariate_rows are inconsistent with past_covariates")
+        if future_covariates != sorted(self.future_covariates):
+            raise ValueError("covariate_rows are inconsistent with future_covariates")
+        if static_features != sorted(self.static_features):
+            raise ValueError("covariate_rows are inconsistent with static_features")
+        if rejected_covariates != sorted(self.rejected_covariates):
+            raise ValueError("covariate_rows are inconsistent with rejected_covariates")
+        return self
 
 
 class ForecastPrepBundle(BaseModel):

@@ -8,6 +8,9 @@ import pandas as pd
 
 from forecastability.services import calendar_feature_service
 from forecastability.services.calendar_feature_service import generate_calendar_features
+from forecastability.services.forecast_prep_lagged_covariates import (
+    map_lag_aware_covariate_recommendations,
+)
 from forecastability.services.forecast_prep_mapper import (
     derive_contract_confidence,
     map_covariate_recommendations,
@@ -24,6 +27,7 @@ from forecastability.utils.types import (
 )
 
 if TYPE_CHECKING:
+    from forecastability.triage.lag_aware_mod_mrmr import LagAwareModMRMRResult
     from forecastability.triage.models import TriageResult
 
 
@@ -65,9 +69,10 @@ def _resolve_source_goal(
     *,
     triage_result: TriageResult,
     lagged_exog_bundle: LaggedExogBundle | None,
+    lag_aware_result: LagAwareModMRMRResult | None,
 ) -> Literal["univariate", "covariant", "lagged_exogenous"]:
     """Resolve source-goal label for ForecastPrepContract."""
-    if lagged_exog_bundle is not None:
+    if lagged_exog_bundle is not None or lag_aware_result is not None:
         return "lagged_exogenous"
     goal_value = str(getattr(triage_result.request.goal, "value", triage_result.request.goal))
     if goal_value == "exogenous":
@@ -86,6 +91,27 @@ def _resolve_routing_recommendation(
     if fingerprint_bundle is None:
         return None
     return fingerprint_bundle.recommendation
+
+
+def _validate_covariate_source_inputs(
+    *,
+    lagged_exog_bundle: LaggedExogBundle | None,
+    lag_aware_result: LagAwareModMRMRResult | None,
+) -> None:
+    """Reject ambiguous covariate-source combinations.
+
+    Args:
+        lagged_exog_bundle: Optional lagged-exogenous screening output.
+        lag_aware_result: Optional lag-aware ModMRMR selection output.
+
+    Raises:
+        ValueError: If both covariate sources are provided at once.
+    """
+    if lagged_exog_bundle is not None and lag_aware_result is not None:
+        raise ValueError(
+            "Provide at most one covariate source: lagged_exog_bundle or "
+            "lag_aware_result. Passing both is ambiguous."
+        )
 
 
 def _calendar_covariate_rows(
@@ -135,6 +161,7 @@ def build_forecast_prep_contract(
     horizon: int | None = None,
     target_frequency: str | None = None,
     lagged_exog_bundle: LaggedExogBundle | None = None,
+    lag_aware_result: LagAwareModMRMRResult | None = None,
     fingerprint_bundle: FingerprintBundle | None = None,
     routing_recommendation: RoutingRecommendation | None = None,
     known_future_drivers: dict[str, bool] | None = None,
@@ -150,6 +177,7 @@ def build_forecast_prep_contract(
         horizon: Forecast horizon in samples.
         target_frequency: Pandas-compatible target frequency string.
         lagged_exog_bundle: Optional output of ``run_lagged_exogenous_triage()``.
+        lag_aware_result: Optional output of ``run_lag_aware_mod_mrmr()``.
         fingerprint_bundle: Optional output of ``run_forecastability_fingerprint()``.
         routing_recommendation: Optional explicit routing recommendation.
         known_future_drivers: Optional mapping ``{column_name: bool}``.
@@ -159,9 +187,18 @@ def build_forecast_prep_contract(
 
     Returns:
         Frozen ForecastPrepContract.
+
+    Raises:
+        ValueError: If ``horizon`` is invalid or both covariate sources are
+            provided.
     """
     if horizon is not None and horizon < 1:
         raise ValueError(f"horizon must be >= 1 when provided, got {horizon}")
+
+    _validate_covariate_source_inputs(
+        lagged_exog_bundle=lagged_exog_bundle,
+        lag_aware_result=lag_aware_result,
+    )
 
     resolved_routing = _resolve_routing_recommendation(
         routing_recommendation=routing_recommendation,
@@ -187,10 +224,12 @@ def build_forecast_prep_contract(
         candidate_periods: list[int] = []
         lag_rationale: list[str] = []
         covariate_rows: list[CovariateRecommendation] = []
+        contract_covariate_rows: list[CovariateRecommendation] = []
         covariate_notes: list[str] = []
         calendar_rows: list[CovariateRecommendation] = []
         calendar_features: list[str] = []
         calendar_cautions: list[str] = []
+        target_history_context = None
     else:
         primary_lags = (
             list(triage_result.interpretation.primary_lags)
@@ -204,17 +243,29 @@ def build_forecast_prep_contract(
                 contract_confidence=contract_confidence,
             )
         )
-        covariate_rows, covariate_notes = map_covariate_recommendations(
-            lagged_exog_bundle=lagged_exog_bundle,
-            known_future_driver_names=known_future_driver_names,
-            contract_confidence=contract_confidence,
-        )
+        if lag_aware_result is not None:
+            covariate_rows, covariate_notes, target_history_context = (
+                map_lag_aware_covariate_recommendations(
+                    lag_aware_result=lag_aware_result,
+                    contract_confidence=contract_confidence,
+                )
+            )
+        else:
+            covariate_rows, covariate_notes = map_covariate_recommendations(
+                lagged_exog_bundle=lagged_exog_bundle,
+                known_future_driver_names=known_future_driver_names,
+                contract_confidence=contract_confidence,
+            )
+            target_history_context = None
         calendar_rows, calendar_features, calendar_cautions = _calendar_covariate_rows(
             add_calendar_features=add_calendar_features,
             datetime_index=datetime_index,
             calendar_locale=calendar_locale,
         )
         covariate_rows.extend(calendar_rows)
+        contract_covariate_rows = []
+        if lag_aware_result is not None or lagged_exog_bundle is not None:
+            contract_covariate_rows = [*covariate_rows]
         allowed_zero_future_names = set(calendar_features) | known_future_driver_names
         validate_covariate_recommendations(
             covariate_rows=covariate_rows,
@@ -251,6 +302,7 @@ def build_forecast_prep_contract(
         source_goal=_resolve_source_goal(
             triage_result=triage_result,
             lagged_exog_bundle=lagged_exog_bundle,
+            lag_aware_result=lag_aware_result,
         ),
         blocked=triage_result.blocked,
         readiness_status=triage_result.readiness.status.value,
@@ -274,10 +326,12 @@ def build_forecast_prep_contract(
         static_features=static_features,
         rejected_covariates=rejected_covariates,
         covariate_notes=covariate_notes,
+        covariate_rows=contract_covariate_rows,
         caution_flags=_dedupe_preserve_order(caution_flags),
         downstream_notes=(resolved_routing.rationale if resolved_routing is not None else []),
         calendar_features=sorted(calendar_features if not triage_result.blocked else []),
         calendar_locale=calendar_locale,
+        target_history_context=target_history_context,
         metadata={
             "lag_rows": len(lag_rows),
             "covariate_rows": len(covariate_rows),

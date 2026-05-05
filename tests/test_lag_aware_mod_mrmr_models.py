@@ -204,7 +204,7 @@ class TestScorerDiagnostics:
     def test_immutable(self) -> None:
         diag = _minimal_diagnostics()
         with pytest.raises((ValidationError, TypeError)):
-            diag.raw_value = 99.9  # type: ignore[misc]
+            diag.raw_value = 99.9
 
     @pytest.mark.parametrize(
         "strategy",
@@ -286,7 +286,7 @@ class TestPairwiseScorerSpec:
     def test_immutable(self) -> None:
         spec = _minimal_scorer_spec()
         with pytest.raises((ValidationError, TypeError)):
-            spec.name = "other"  # type: ignore[misc]
+            spec.name = "other"
 
 
 # ---------------------------------------------------------------------------
@@ -374,7 +374,7 @@ class TestLagAwareModMRMRConfig:
     def test_immutable(self) -> None:
         cfg = _minimal_config()
         with pytest.raises((ValidationError, TypeError)):
-            cfg.forecast_horizon = 99  # type: ignore[misc]
+            cfg.forecast_horizon = 99
 
 
 # ---------------------------------------------------------------------------
@@ -487,7 +487,7 @@ class TestBlockedLagAwareFeature:
     def test_immutable(self) -> None:
         b = _minimal_blocked()
         with pytest.raises((ValidationError, TypeError)):
-            b.block_reason = "other"  # type: ignore[misc]
+            b.block_reason = "other"
 
 
 # ---------------------------------------------------------------------------
@@ -603,7 +603,7 @@ class TestSelectedLagAwareFeature:
     def test_immutable(self) -> None:
         f = _minimal_selected()
         with pytest.raises((ValidationError, TypeError)):
-            f.selection_rank = 99  # type: ignore[misc]
+            f.selection_rank = 99
 
 
 # ---------------------------------------------------------------------------
@@ -770,6 +770,21 @@ class TestLagAwareModMRMRResult:
                 redundancy_scorer_spec=spec,
             )
 
+    def test_n_candidates_evaluated_too_high_raises(self) -> None:
+        config = _minimal_config()
+        spec = _minimal_scorer_spec()
+        with pytest.raises(ValidationError):
+            LagAwareModMRMRResult(
+                config=config,
+                selected=[_minimal_selected(selection_rank=1)],
+                rejected=[_minimal_rejected()],
+                blocked=[],
+                n_candidates_evaluated=3,
+                n_candidates_blocked=0,
+                relevance_scorer_spec=spec,
+                redundancy_scorer_spec=spec,
+            )
+
     def test_target_history_spec_present_config_absent_raises(self) -> None:
         spec = _minimal_scorer_spec()
         config = _minimal_config(with_target_history=False)
@@ -817,4 +832,4 @@ class TestLagAwareModMRMRResult:
     def test_immutable(self) -> None:
         result = _minimal_result()
         with pytest.raises((ValidationError, TypeError)):
-            result.n_candidates_evaluated = 999  # type: ignore[misc]
+            result.n_candidates_evaluated = 999

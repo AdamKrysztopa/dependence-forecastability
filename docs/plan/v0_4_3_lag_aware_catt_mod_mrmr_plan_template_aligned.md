@@ -98,14 +98,14 @@ raw y(t), raw x_j(t)
 | ID | Feature | Phase | Priority | Status |
 | --- | --- | --- | --- | --- |
 | LAM-F00 | Frozen Pydantic domain contracts | 0 | P0 | Complete |
-| LAM-F01 | Forecast-safe lag-domain builder | 1 | P0 | Not started |
-| LAM-F02 | Pairwise scorer protocol, scorer registry, and built-in scorers | 1 | P0 | Not started |
-| LAM-F03 | Catt-style AMI / kNN MI relevance and similarity scorer adapters | 1 | P0 | Not started |
-| LAM-F04 | AMI/MI normalization strategies for penalty terms | 1 | P0 | Not started |
-| LAM-F05 | Lag-Aware ModMRMR greedy selector | 1 | P0 | Not started |
-| LAM-F06 | Target-history novelty penalty | 1 | P0 | Not started |
-| LAM-F07 | ForecastPrepContract export adapter | 2 | P0 | Not started |
-| LAM-F08 | Regression fixtures and deterministic synthetic panels | 2 | P0 | Not started |
+| LAM-F01 | Forecast-safe lag-domain builder | 1 | P0 | Complete |
+| LAM-F02 | Pairwise scorer protocol, scorer registry, and built-in scorers | 1 | P0 | Complete |
+| LAM-F03 | Catt-style AMI / kNN MI relevance and similarity scorer adapters | 1 | P0 | Complete |
+| LAM-F04 | AMI/MI normalization strategies for penalty terms | 1 | P0 | Complete |
+| LAM-F05 | Lag-Aware ModMRMR greedy selector | 1 | P0 | Complete |
+| LAM-F06 | Target-history novelty penalty | 1 | P0 | Complete |
+| LAM-F07 | ForecastPrepContract export adapter | 2 | P0 | Complete |
+| LAM-F08 | Regression fixtures and deterministic synthetic panels | 2 | P0 | Complete |
 | LAM-F09 | Core showcase scripts | 3 | P0 | Not started |
 | LAM-F10 | Sibling repo walkthrough notebooks, including synthetic + CausalRivers notebook 10 | 3 | P0 | Not started |
 | LAM-F11 | Documentation and theory page | 3 | P1 | Not started |

@@ -67,9 +67,7 @@ def run_lag_aware_mod_mrmr(
         TypeError: If ``random_state`` is not an ``int``.
     """
     if not isinstance(random_state, int):
-        raise TypeError(
-            f"random_state must be an int, got {type(random_state).__name__!r}"
-        )
+        raise TypeError(f"random_state must be an int, got {type(random_state).__name__!r}")
 
     # Step 1: Build forecast-safe lag domain.
     legal_candidates, blocked = build_forecast_safe_lag_domain(
@@ -90,6 +88,12 @@ def run_lag_aware_mod_mrmr(
 
     # Step 3: Assemble result.
     n_evaluated = len(selected) + len(rejected)
+    if n_evaluated != len(legal_candidates):
+        raise RuntimeError(
+            "Lag-Aware ModMRMR selector must account for every legal candidate exactly once. "
+            f"Expected {len(legal_candidates)} legal candidates, got {n_evaluated} "
+            "selected+rejected entries."
+        )
 
     th_spec = config.target_history_scorer
 
@@ -133,9 +137,7 @@ def _build_notes(
         )
 
     if config.target_history_scorer is None:
-        notes.append(
-            "Target-history novelty penalty is disabled (target_lags not set)."
-        )
+        notes.append("Target-history novelty penalty is disabled (target_lags not set).")
 
     notes.append(
         "ModMRMR is a project-defined mRMR variant proposed by Adam Krysztopa. "

@@ -46,6 +46,8 @@ from forecastability.triage.lag_aware_mod_mrmr import (
     SelectedLagAwareFeature,
 )
 
+_ZERO_SCORE_TOLERANCE = 1e-12
+
 # ---------------------------------------------------------------------------
 # Internal working state
 # ---------------------------------------------------------------------------
@@ -310,9 +312,7 @@ def _score_target_history(
                 continue
 
             seed = random_state + i * len(valid_target_lags) + j
-            raw = th_scorer.score_pair(
-                z_aligned[:min_len], y_aligned[:min_len], random_state=seed
-            )
+            raw = th_scorer.score_pair(z_aligned[:min_len], y_aligned[:min_len], random_state=seed)
             st.raw_target_history[th_lag] = raw
 
 
@@ -470,9 +470,7 @@ def run_greedy_selection(
         return [], floor_rejected
 
     # Step 4: pairwise redundancy.
-    _score_pairwise_redundancy(
-        eligible, red_scorer, random_state=random_state + 10000
-    )
+    _score_pairwise_redundancy(eligible, red_scorer, random_state=random_state + 10000)
     _normalize_redundancy(eligible, config, run_id=run_id)
 
     # Step 5: target-history novelty penalty.
@@ -516,7 +514,7 @@ def run_greedy_selection(
 
         best_score, best_max_red, best_th_red, best_st = scored[0]
 
-        if best_score <= 0.0:
+        if best_score <= _ZERO_SCORE_TOLERANCE:
             # All remaining candidates have zero score; reject them.
             for _sc, mr, tr, st in scored:
                 rejected_features.append(
@@ -528,6 +526,7 @@ def run_greedy_selection(
                         rejection_reason="zero_final_score",
                     )
                 )
+            remaining = []
             break
 
         # Select best candidate.

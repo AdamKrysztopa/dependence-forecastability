@@ -139,9 +139,7 @@ class ScorerDiagnostics(BaseModel):
     )
     adjusted_p_value: float | None = Field(
         default=None,
-        description=(
-            "BH-adjusted p-value; None unless significance_method='bh_fdr_adjustment'."
-        ),
+        description=("BH-adjusted p-value; None unless significance_method='bh_fdr_adjustment'."),
     )
     n_pairs: int = Field(ge=1, description="Number of aligned non-missing sample pairs scored.")
     estimator_settings: dict[str, Any] = Field(
@@ -276,8 +274,7 @@ class LagAwareModMRMRConfig(BaseModel):
     candidate_lags: list[int] | None = Field(
         default=None,
         description=(
-            "Explicit candidate lags per covariate. "
-            "None means use range(1, max_lag + 1)."
+            "Explicit candidate lags per covariate. None means use range(1, max_lag + 1)."
         ),
     )
     max_lag: int = Field(
@@ -361,13 +358,9 @@ class LagAwareModMRMRConfig(BaseModel):
         has_lags = self.target_lags is not None
         has_scorer = self.target_history_scorer is not None
         if has_lags and not has_scorer:
-            raise ValueError(
-                "target_history_scorer must be provided when target_lags is set"
-            )
+            raise ValueError("target_history_scorer must be provided when target_lags is set")
         if has_scorer and not has_lags:
-            raise ValueError(
-                "target_lags must be provided when target_history_scorer is set"
-            )
+            raise ValueError("target_lags must be provided when target_history_scorer is set")
         return self
 
 
@@ -414,13 +407,9 @@ class ForecastSafeLagCandidate(BaseModel):
     def _validate_known_future_consistency(self) -> ForecastSafeLagCandidate:
         """Require provenance when is_known_future=True and vice-versa."""
         if self.is_known_future and self.known_future_provenance is None:
-            raise ValueError(
-                "known_future_provenance must be set when is_known_future=True"
-            )
+            raise ValueError("known_future_provenance must be set when is_known_future=True")
         if not self.is_known_future and self.known_future_provenance is not None:
-            raise ValueError(
-                "known_future_provenance must be None when is_known_future=False"
-            )
+            raise ValueError("known_future_provenance must be None when is_known_future=False")
         return self
 
 
@@ -531,9 +520,7 @@ class SelectedLagAwareFeature(BaseModel):
     max_redundancy: float = Field(
         ge=0.0,
         le=1.0,
-        description=(
-            "Maximum normalized similarity against already-selected features; in [0, 1]."
-        ),
+        description=("Maximum normalized similarity against already-selected features; in [0, 1]."),
     )
     target_history_redundancy: float = Field(
         ge=0.0,
@@ -559,8 +546,7 @@ class SelectedLagAwareFeature(BaseModel):
     target_history_scorer_name: str | None = Field(
         default=None,
         description=(
-            "Name of the scorer used for target-history novelty; "
-            "None when the penalty is disabled."
+            "Name of the scorer used for target-history novelty; None when the penalty is disabled."
         ),
     )
     normalization_strategy: NormalizationStrategy = Field(
@@ -599,13 +585,9 @@ class SelectedLagAwareFeature(BaseModel):
     def _validate_known_future_consistency(self) -> SelectedLagAwareFeature:
         """Require provenance when is_known_future=True and vice-versa."""
         if self.is_known_future and self.known_future_provenance is None:
-            raise ValueError(
-                "known_future_provenance must be set when is_known_future=True"
-            )
+            raise ValueError("known_future_provenance must be set when is_known_future=True")
         if not self.is_known_future and self.known_future_provenance is not None:
-            raise ValueError(
-                "known_future_provenance must be None when is_known_future=False"
-            )
+            raise ValueError("known_future_provenance must be None when is_known_future=False")
         return self
 
 
@@ -687,13 +669,9 @@ class RejectedLagAwareFeature(BaseModel):
     def _validate_known_future_consistency(self) -> RejectedLagAwareFeature:
         """Require provenance when is_known_future=True and vice-versa."""
         if self.is_known_future and self.known_future_provenance is None:
-            raise ValueError(
-                "known_future_provenance must be set when is_known_future=True"
-            )
+            raise ValueError("known_future_provenance must be set when is_known_future=True")
         if not self.is_known_future and self.known_future_provenance is not None:
-            raise ValueError(
-                "known_future_provenance must be None when is_known_future=False"
-            )
+            raise ValueError("known_future_provenance must be None when is_known_future=False")
         return self
 
 
@@ -778,8 +756,7 @@ class LagAwareModMRMRResult(BaseModel):
         for i, feature in enumerate(self.selected):
             if feature.selection_rank != i + 1:
                 raise ValueError(
-                    f"selected[{i}].selection_rank must be {i + 1}, "
-                    f"got {feature.selection_rank}"
+                    f"selected[{i}].selection_rank must be {i + 1}, got {feature.selection_rank}"
                 )
         return self
 
@@ -787,9 +764,9 @@ class LagAwareModMRMRResult(BaseModel):
     def _validate_counts_consistent(self) -> LagAwareModMRMRResult:
         """Require n_candidates_evaluated and n_candidates_blocked to be consistent."""
         actual_evaluated = len(self.selected) + len(self.rejected)
-        if self.n_candidates_evaluated < actual_evaluated:
+        if self.n_candidates_evaluated != actual_evaluated:
             raise ValueError(
-                f"n_candidates_evaluated ({self.n_candidates_evaluated}) must be >= "
+                f"n_candidates_evaluated ({self.n_candidates_evaluated}) must equal "
                 f"len(selected) + len(rejected) ({actual_evaluated})"
             )
         if self.n_candidates_blocked != len(self.blocked):
