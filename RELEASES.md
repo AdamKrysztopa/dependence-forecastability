@@ -1,13 +1,13 @@
 # Release Index
 
-This file cross-references **core** and **sibling** release tags so the full
-v0.4.0+ product history is visible in one place.
+This file cross-references **core** releases and **sibling** follow-up status
+so the full v0.4.0+ product history is visible in one place.
 
 > **Two repos, one product.** The [`dependence-forecastability`][core] package
 > ships the deterministic triage toolkit. The [`forecastability-examples`][sibling]
-> sibling hosts all tutorials, walkthroughs, and framework-integration
-> notebooks. Each core release has a paired sibling release that pins the exact
-> core version; both are listed here.
+> sibling hosts tutorials, walkthroughs, and framework-integration notebooks.
+> Core releases remain authoritative for the framework-agnostic package. When a
+> sibling follow-up is not yet tagged, the table marks that side as planned.
 
 [core]: https://github.com/AdamKrysztopa/dependence-forecastability
 [sibling]: https://github.com/AdamKrysztopa/forecastability-examples
@@ -18,7 +18,8 @@ v0.4.0+ product history is visible in one place.
 
 | Core tag | Sibling tag | Core highlights | Sibling highlights |
 | --- | --- | --- | --- |
-| *(upcoming)* `v0.4.2` | *(planned)* `v0.4.2` | AMI-first forecastability structure expansion; extended fingerprint, extended routing, and spectral/ordinal/classical/memory diagnostics | Extended walkthrough refresh and showcase updates for the expanded fingerprint |
+| *(upcoming)* `v0.4.3` | *(planned)* `v0.4.3` | Lag-Aware ModMRMR sparse covariate-lag selection; `run_lag_aware_mod_mrmr()`, fast and Catt showcase scripts, theory/code/public API/recipe/README updates, and release-surface hardening | Richer walkthrough notebooks remain a sibling-repo follow-up in `forecastability-examples`; no core notebook additions are required for this release |
+| `v0.4.2` | *(planned)* `v0.4.2` | AMI-first forecastability structure expansion; extended fingerprint, extended routing, and spectral/ordinal/classical/memory diagnostics | Extended walkthrough refresh and showcase updates for the expanded fingerprint remain a sibling-repo follow-up |
 | `v0.4.1` | — | Performance hardening, benchmark visibility, and fast-screening controls | — |
 | `v0.4.0` | `v0.4.0` | Library-first slim release; `notebooks/` removed; causal-rivers extensions promoted | Notebook migration complete; 12 walkthroughs, 6 triage walkthroughs, 1 recipe notebook; EX-NB-01–05 |
 | `v0.3.6` | — | Release-truth and docs-integrity automation | — |

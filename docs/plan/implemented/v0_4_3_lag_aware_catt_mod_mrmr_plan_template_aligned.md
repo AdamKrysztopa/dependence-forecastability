@@ -6,14 +6,14 @@ Plan type: Actionable release plan — method pivot
 Audience: Maintainer, reviewer, statistician reviewer, Jr. developer  
 Target release: `0.4.3` — Current released version: `0.4.2`<br>
 Branch: `feat/time-aware-mod-mrmr`<br>
-Status: Draft — correctness-review revision, not final implementation<br>
-Last reviewed: 2026-05-04
+Status: Implemented in core repo; sibling-repo notebook follow-up remains<br>
+Last reviewed: 2026-05-05
 
 > [!IMPORTANT]
 > **Scope (binding).** This release ships **Lag-Aware ModMRMR** as a forecast-safe sparse covariate-lag selector, with **Catt-style AMI / kNN mutual-information scoring as the scientific native mode** and method-agnostic scorer backends as the extension mechanism.  
 > It does **not** ship a generic sklearn-first feature-selection package, downstream framework adapters, Darts/Nixtla imports, model-training benchmarks, broad causal-discovery expansion, or a notebook-first implementation.
 >
-> Binding driver document: [docs/plan/aux_documents/developer_instruction_repo_scope.md](aux_documents/developer_instruction_repo_scope.md).
+> Binding driver document: [docs/plan/aux_documents/developer_instruction_repo_scope.md](../aux_documents/developer_instruction_repo_scope.md).
 
 This plan improves deterministic covariate informativeness triage: it helps decide which covariate-lag signals are forecast-safe and non-duplicative before downstream hand-off, not generic forecasting or model fitting.
 
@@ -107,9 +107,9 @@ raw y(t), raw x_j(t)
 | LAM-F07 | ForecastPrepContract export adapter | 2 | P0 | Complete |
 | LAM-F08 | Regression fixtures and deterministic synthetic panels | 2 | P0 | Complete |
 | LAM-F09 | Core showcase scripts | 3 | P0 | Complete |
-| LAM-F10 | Sibling repo walkthrough notebooks, including synthetic + CausalRivers notebook 10 | 3 | P0 | Waiting for release |
-| LAM-F11 | Documentation and theory page | 3 | P1 | Not started |
-| LAM-F12 | Docs hardening and release prep | 4 | P0 | Not started |
+| LAM-F10 | Sibling repo walkthrough notebooks, including synthetic + CausalRivers notebook 10 | 3 | P0 | Pending sibling repo |
+| LAM-F11 | Documentation and theory page | 3 | P1 | Complete |
+| LAM-F12 | Docs hardening and release prep | 4 | P0 | Core repo complete |
 
 ### Proposed implementation map
 
@@ -759,4 +759,3 @@ Acceptance criteria:
 3. Should `known_future_covariates` support per-horizon availability metadata in `0.4.3`, or only a boolean bypass with explicit labels?
 4. Which sibling notebook targets are required for release acceptance versus optional examples-repo follow-up?
 5. Does docs hardening require extra repo-contract checks for new public re-exports, ModMRMR attribution wording, or no-framework-import boundaries?
-

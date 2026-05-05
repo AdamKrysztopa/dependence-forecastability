@@ -1,125 +1,118 @@
 <!-- type: how-to -->
+<!-- Last verified against current workflows: 2026-05-05 -->
+
 # PyPI Publication Flow
 
-## Decision
+This repository publishes to PyPI through [publish-pypi.yml](../../.github/workflows/publish-pypi.yml) using GitHub OIDC trusted publishing. Long-lived PyPI API tokens are not part of the release path.
 
-As of 2026-04-12, this repository will publish package releases to PyPI using GitHub OIDC trusted publishing.
-PyPI API token secrets are intentionally not used.
-
-## Workflow
-
-- Workflow file: `.github/workflows/publish-pypi.yml`
-- Trigger: `push: tags: v*` (version tags starting with `v`)
-- Build output: wheel and sdist via `uv build`
-- Publish action: `pypa/gh-action-pypi-publish@release/v1` with `id-token: write`
-
-## One-Time Maintainer Setup
+## One-time maintainer setup
 
 1. Create or claim the `dependence-forecastability` project on PyPI.
-2. Add a Trusted Publisher in PyPI with these values:
-   - Owner: `AdamKrysztopa`
-   - Repository: `dependence-forecastability`
-   - Workflow: `publish-pypi.yml`
-   - Environment: `pypi`
-3. Protect the `pypi` environment in GitHub with required reviewers.
+2. Add a Trusted Publisher on PyPI for the GitHub repository that owns `publish-pypi.yml`.
+3. Set the workflow file to `publish-pypi.yml` and the environment to `pypi`.
+4. Protect the `pypi` environment in GitHub as needed for your release process.
 
-## TestPyPI Dry Run (R8)
+## What the workflow does on a tag push
 
-Before the first production release, rehearse on TestPyPI. Requires a TestPyPI API token
-stored as `TWINE_API_KEY` (or in `~/.pypirc`).
+Trigger: `push` on tags matching `v*`.
+
+### `build-dist`
+
+The workflow syncs development dependencies with extras and runs:
 
 ```bash
-# 1. Build fresh artifacts
-rm -rf dist/ build/
+uv run ruff check .
+uv run ty check
+uv run pytest -q -ra -n auto
 uv build
 uv run twine check dist/*
-
-# 2. Upload to TestPyPI
-uv run twine upload --repository testpypi dist/*
-
-# 3. Install from TestPyPI in a clean environment
-python3.11 -m venv .venv-testpypi
-source .venv-testpypi/bin/activate
-pip install \
-  --index-url https://test.pypi.org/simple/ \
-  --extra-index-url https://pypi.org/simple/ \
-  dependence-forecastability
-
-# 4. Validate import and CLI entry point
-python -c "import forecastability; print('import ok')"
-forecastability --help
-
-# 5. Clean up
-deactivate
-rm -rf .venv-testpypi
 ```
 
-Inspect the project page at `https://test.pypi.org/project/dependence-forecastability/`
-and confirm README renders, metadata is correct, and entry points are listed.
+It then smoke-installs the built wheel with the `[causal]` extra, imports the stable facade, checks that the older covariant entry point remains callable, and exercises the lag-aware public surface through `forecastability.triage` configs in the isolated environment.
 
-## Release-Time Flow
+### `publish-pypi`
 
-1. Bump package version in `pyproject.toml`.
-2. Add release notes in `docs/releases/vX.Y.Z.md`.
-3. Push tag `vX.Y.Z` — both `release.yml` and `publish-pypi.yml` trigger in parallel.
-4. `release.yml` builds artifacts and creates the GitHub release with dist assets attached.
-5. `publish-pypi.yml` builds artifacts independently and publishes them to PyPI via trusted publishing.
-6. `publish-pypi.yml` verifies PyPI visibility before notifying the sibling
-   examples repository. GitHub release presence is verified by the release
-   workflow path, because the two tag workflows can complete in either order.
+The publish job downloads the built artifacts and runs `pypa/gh-action-pypi-publish@release/v1` in the `pypi` environment with `id-token: write`.
 
-## Hotfix Process
+### `verify-published-release`
 
-A hotfix release follows the same publication flow as a normal release, but uses a
-patch-version increment and a short targeted branch.
+After publishing, the workflow runs:
 
-### When to issue a hotfix
+```bash
+uv run python scripts/check_published_release.py \
+  --repository "OWNER/REPO" \
+  --tag "vX.Y.Z" \
+  --skip-github-release
+```
 
-- Installation fails from PyPI (import error, missing files, broken entry points)
-- Critical bug in the deterministic core that produces wrong results silently
-- Security issue identified post-release
+`--skip-github-release` is intentional: GitHub release creation is validated by [release.yml](../../.github/workflows/release.yml), and the two tag workflows run independently.
 
-### Hotfix steps
+### `notify-sibling`
 
-1. **Create a hotfix branch** from the affected release tag:
-   ```bash
-   git checkout -b hotfix/vX.Y.Z vX.Y.Z
-   ```
-2. **Apply the minimal fix.** Do not bundle unrelated changes.
-3. **Bump the patch version** in `pyproject.toml` (e.g. `0.1.0` → `0.1.1`).
-4. **Add a `[X.Y.Z]` CHANGELOG section** with a brief "Fixed" entry.
-5. **Add release notes** in `docs/releases/vX.Y.Z.md`.
-6. **Run the full local pipeline** (see `docs/releases/release_checklist.md`):
-   ```bash
-   uv run pytest -q -ra
-   uv run ruff check .
-   uv run ty check
-   uv build
-   uv run twine check dist/*
-   ```
-7. **Create a pull request** to `main` and merge after review.
-8. **Push the hotfix tag** from `main`:
-   ```bash
-   git tag vX.Y.Z
-   git push origin vX.Y.Z
-   ```
-9. The `Release` workflow creates the GitHub Release and the `Publish to PyPI` workflow
-   publishes the hotfix to PyPI.
+After publish verification, the workflow sends a `repository_dispatch` event named `core_release` to `forecastability-examples`. The payload carries the released version, the tag, and the PyPI project URL. If `EXAMPLES_DISPATCH_TOKEN` is not configured, the workflow logs a skip and exits cleanly.
 
-> [!WARNING]
-> Never push a hotfix tag from a feature or development branch. Always tag from `main`
-> after the hotfix PR has been merged and verified.
+## Local parity before pushing the tag
 
-### Post-hotfix checks
+Use these commands to match the publish workflow locally and include the lag-aware regression fixture verification used in release prep:
 
-- [ ] `pip install dependence-forecastability==X.Y.Z` installs cleanly in a fresh venv
-- [ ] `python -c "import forecastability; print(forecastability.__version__)"` returns `X.Y.Z`
-- [ ] `forecastability --help` succeeds
-- [ ] Close any related packaging bug issues on GitHub
-- [ ] Update badges in `README.md` if the latest stable version changed
+```bash
+uv sync --dev --all-extras
+uv run ruff check .
+uv run ty check
+uv run pytest -q -ra -n auto
+uv build
+uv run twine check dist/*
+uv run python scripts/rebuild_lag_aware_mod_mrmr_regression_fixtures.py --verify
+```
 
-## Security Notes
+Local wheel smoke parity:
 
-- No long-lived `PYPI_API_TOKEN` is stored in repository secrets.
-- Publishing is constrained to signed GitHub OIDC identity plus environment protections.
-- Restricting to tag pushes only (not every branch push) reduces accidental package pushes from branch builds.
+```bash
+wheel_path="$(ls dist/*.whl | head -1)"
+python -m venv /tmp/smoke-venv
+/tmp/smoke-venv/bin/pip install --quiet "${wheel_path}[causal]"
+/tmp/smoke-venv/bin/python - <<'PY'
+import numpy as np
+
+from forecastability import run_covariant_analysis, run_lag_aware_mod_mrmr
+from forecastability.triage import LagAwareModMRMRConfig, PairwiseScorerSpec
+
+target = np.tile(np.array([0.0, 1.0]), 16)
+covariate = np.concatenate([target[1:], target[-1:]])
+spec = PairwiseScorerSpec(
+  name="pearson_abs",
+  backend="scipy",
+  normalization="none",
+  significance_method="none",
+)
+config = LagAwareModMRMRConfig(
+  forecast_horizon=1,
+  availability_margin=0,
+  candidate_lags=[1],
+  relevance_scorer=spec,
+  redundancy_scorer=spec,
+  max_selected_features=1,
+)
+result = run_lag_aware_mod_mrmr(
+  target=target,
+  covariates={"driver": covariate},
+  config=config,
+)
+
+assert callable(run_covariant_analysis)
+assert len(result.selected) == 1
+assert result.selected[0].feature_name == "x_driver_lag1"
+print("wheel smoke test: stable facades OK")
+PY
+```
+
+Post-publish parity:
+
+```bash
+uv run python scripts/check_published_release.py \
+  --repository "OWNER/REPO" \
+  --tag "vX.Y.Z" \
+  --skip-github-release
+```
+
+For the full pre-tag sequence, including repo-contract, docs-contract, markdownlint, and smoke parity, use [release_checklist.md](release_checklist.md).

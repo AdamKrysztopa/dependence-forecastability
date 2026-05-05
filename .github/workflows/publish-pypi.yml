@@ -50,7 +50,7 @@ jobs:
       - name: Validate artifacts
         run: uv run twine check dist/*
 
-      - name: Wheel smoke test (install from wheel)
+      - name: Wheel smoke test (stable facades)
         shell: bash
         run: |
           set -euo pipefail
@@ -58,11 +58,37 @@ jobs:
           python -m venv /tmp/smoke-venv
           /tmp/smoke-venv/bin/pip install --quiet "${wheel_path}[causal]"
           /tmp/smoke-venv/bin/python - <<'PY'
-          from forecastability.use_cases.run_covariant_analysis import run_covariant_analysis
-          from forecastability.utils.synthetic import generate_covariant_benchmark
-          import pandas as pd
-          df = generate_covariant_benchmark(n=200, seed=42)
-          print('wheel smoke test: OK')
+          import numpy as np
+
+          from forecastability import run_covariant_analysis, run_lag_aware_mod_mrmr
+          from forecastability.triage import LagAwareModMRMRConfig, PairwiseScorerSpec
+
+          target = np.tile(np.array([0.0, 1.0]), 16)
+          covariate = np.concatenate([target[1:], target[-1:]])
+          spec = PairwiseScorerSpec(
+            name="pearson_abs",
+            backend="scipy",
+            normalization="none",
+            significance_method="none",
+          )
+          config = LagAwareModMRMRConfig(
+            forecast_horizon=1,
+            availability_margin=0,
+            candidate_lags=[1],
+            relevance_scorer=spec,
+            redundancy_scorer=spec,
+            max_selected_features=1,
+          )
+          result = run_lag_aware_mod_mrmr(
+            target=target,
+            covariates={"driver": covariate},
+            config=config,
+          )
+
+          assert callable(run_covariant_analysis)
+          assert len(result.selected) == 1
+          assert result.selected[0].feature_name == "x_driver_lag1"
+          print("wheel smoke test: stable facades OK")
           PY
 
       - name: Upload dist artifacts

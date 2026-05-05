@@ -13,6 +13,18 @@ link to the source file on GitHub.
 > `python scripts/download_causal_rivers.py` (CausalRivers) in the sibling
 > repo before executing those notebooks locally.
 
+## Core-Repo Lag-Aware Showcase Scripts
+
+The core repo keeps the canonical Lag-Aware ModMRMR smoke paths as scripts.
+Richer walkthrough notebooks for this surface belong in the sibling
+`forecastability-examples` repository and are intentionally not listed here
+until those files exist.
+
+| Script | Description |
+| --- | --- |
+| [../scripts/run_showcase_lag_aware_mod_mrmr.py](../scripts/run_showcase_lag_aware_mod_mrmr.py) | Fast-scorer Lag-Aware ModMRMR showcase; writes deterministic JSON, tables, figures, and markdown, and supports `--smoke`. |
+| [../scripts/run_showcase_lag_aware_catt_mod_mrmr.py](../scripts/run_showcase_lag_aware_catt_mod_mrmr.py) | Catt-style KSG Lag-Aware ModMRMR showcase; same artifact contract with the native nonlinear scorer path and `--smoke`. |
+
 ## Walkthroughs
 
 End-to-end capability demonstrations covering every major triage method.

@@ -9,6 +9,59 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [0.4.3] - Planned
+
+> **Lag-Aware ModMRMR sparse covariate-lag selection and release-surface hardening.**
+> This planned release packages the now-landed lag-aware selector surface for
+> forecast-safe covariate-lag triage ahead of the framework-neutral
+> `ForecastPrepContract` hand-off. It remains a deterministic core-repo
+> release: no model fitting, no downstream framework adapters, and no
+> notebook-first implementation are added here.
+
+### Added
+
+- `run_lag_aware_mod_mrmr(...)` as the public lag-aware sparse selector on the
+  stable `forecastability` facade and `forecastability.triage`, together with
+  the frozen typed surface (`LagAwareModMRMRConfig`,
+  `LagAwareModMRMRResult`, `ForecastSafeLagCandidate`,
+  `SelectedLagAwareFeature`, `RejectedLagAwareFeature`,
+  `BlockedLagAwareFeature`, `PairwiseScorerSpec`, and
+  `ScorerDiagnostics`).
+- Deterministic core showcase scripts
+  `scripts/run_showcase_lag_aware_mod_mrmr.py` and
+  `scripts/run_showcase_lag_aware_catt_mod_mrmr.py`, each writing JSON,
+  tables, figures, and markdown summaries with bounded `--smoke` mode.
+- Dedicated theory and code-map docs for the lag-aware selector surface in
+  `docs/theory/lag_aware_mod_mrmr.md` and `docs/code/lag_aware_mod_mrmr.md`.
+
+### Changed
+
+- `README.md`, `docs/public_api.md`, `docs/examples_index.md`, and
+  `docs/recipes/forecast_prep_to_external_frameworks.md` now document the
+  lag-aware selector as a forecast-safe sparse covariate-lag step before the
+  framework-neutral `ForecastPrepContract` hand-off.
+- Smoke parity now includes both lag-aware showcase commands in
+  `.github/workflows/smoke.yml`, keeping the fast-scorer and Catt-style
+  selector paths aligned with the existing showcase smoke surface.
+- Release-doc hardening now carries the lag-aware showcase commands through
+  `docs/releases/release_checklist.md`, keeps lychee-offline checking explicit
+  as CI-only when unavailable locally, and aligns the versioned release-prep
+  surfaces for `0.4.3`.
+
+### Notes
+
+- mRMR and lag-aware / temporal mRMR-style selection are established.
+  ModMRMR is a project-defined mRMR variant proposed by Adam Krysztopa. In
+  this project, the variant is the forecast-safe lag-domain construction plus
+  multiplicative maximum-similarity suppression against already-selected
+  features.
+- The core package remains framework-agnostic. This release does not add
+  `darts`, `mlforecast`, `statsforecast`, `nixtla`, or any supported
+  `to_<framework>_spec()` / `fit_<framework>()` helper.
+- Rich walkthrough notebooks for this surface remain maintained as sibling-repo
+  follow-up in `forecastability-examples`; no new core-repo notebook files are
+  claimed here.
+
 ## [0.4.2] - 2026-05-04
 
 > **AMI-first forecastability structure expansion.**

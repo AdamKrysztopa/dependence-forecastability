@@ -41,7 +41,7 @@ from forecastability import (
 | Routing-validation entry points | `run_routing_validation`, `RoutingValidationBundle`, `RoutingValidationCase`, `RoutingPolicyAudit`, `RoutingValidationOutcome`, `RoutingValidationSourceKind`, `RoutingPolicyAuditConfig` |
 | Analyzer facade | `ForecastabilityAnalyzer`, `ForecastabilityAnalyzerExog`, `AnalyzeResult` |
 | Extension helpers | `compute_target_baseline_by_horizon`, `TargetBaselineCurves` |
-| Lag-Aware ModMRMR domain contracts | `LagAwareModMRMRConfig`, `LagAwareModMRMRResult`, `ForecastSafeLagCandidate`, `SelectedLagAwareFeature`, `RejectedLagAwareFeature`, `BlockedLagAwareFeature`, `PairwiseScorerSpec`, `ScorerDiagnostics`, `KnownFutureProvenance`, `LagLegalityLabel`, `NormalizationStrategy`, `SignificanceMethod`, `RejectionReason` |
+| Lag-Aware ModMRMR surface | `run_lag_aware_mod_mrmr`, `LagAwareModMRMRConfig`, `LagAwareModMRMRResult`, `ForecastSafeLagCandidate`, `SelectedLagAwareFeature`, `RejectedLagAwareFeature`, `BlockedLagAwareFeature`, `PairwiseScorerSpec`, `ScorerDiagnostics`, `KnownFutureProvenance`, `LagLegalityLabel`, `NormalizationStrategy`, `SignificanceMethod`, `RejectionReason` |
 | Diagnostic and result models | `ForecastabilityProfile`, `PredictiveInfoLearningCurve`, `SpectralPredictabilityResult`, `SpectralForecastabilityResult`, `OrdinalComplexityResult`, `ClassicalStructureResult`, `MemoryStructureResult`, `InterpretationResult`, `Diagnostics`, `MetricCurve`, `CanonicalExampleResult`, `CanonicalSummary`, `SeriesEvaluationResult`, `ForecastResult`, `BackendComparisonResult`, `ExogenousBenchmarkResult`, `RobustnessStudyResult`, `SampleSizeStressResult` |
 | Config models | `BenchmarkDataConfig`, `CMIConfig`, `ExogenousBenchmarkConfig`, `MetricConfig`, `ModelConfig`, `OutputConfig`, `RobustnessStudyConfig`, `RollingOriginConfig`, `SensitivityConfig`, `UncertaintyConfig` |
 | Dataset helpers | `generate_ar1`, `generate_white_noise`, `ar1_theoretical_ami`, `generate_lagged_exog_panel`, `generate_known_future_calendar_pair`, `generate_contemporaneous_only_pair` |
@@ -72,27 +72,38 @@ Operational notes:
 - CLI equivalent: `forecastability extended --csv data.csv --col value --format json`. Supported formats are `json`, `markdown`, and `brief`; the current non-JSON renderer is the same executive-style brief for `markdown` and `brief`.
 - The profile provides descriptive family direction only. It does not fit models or integrate downstream frameworks.
 
-## Lag-Aware ModMRMR Domain Contracts (v0.4.3+)
+## Lag-Aware ModMRMR Surface
 
 > [!NOTE]
 > ModMRMR is a project-defined mRMR variant proposed by Adam Krysztopa.
 > It modifies the redundancy part of mRMR-style greedy selection by using
 > multiplicative maximum-similarity suppression against already-selected features.
 
-The domain contracts below are the **frozen Pydantic result models** for the
-Lag-Aware ModMRMR sparse covariate-lag selector. The `run_lag_aware_mod_mrmr()`
-use case (shipping in a later v0.4.3 phase) will return `LagAwareModMRMRResult`.
+Use `run_lag_aware_mod_mrmr()` when you need forecast-safe sparse
+covariate-lag selection before the `ForecastPrepContract` hand-off.
 
 ```python
 from forecastability import (
     LagAwareModMRMRConfig,
     LagAwareModMRMRResult,
     PairwiseScorerSpec,
+    run_lag_aware_mod_mrmr,
 )
 ```
 
+The same entry point and frozen models are also re-exported from
+`forecastability.triage`.
+
+`run_lag_aware_mod_mrmr()` is the live public use case. It orchestrates the
+forecast-safe lag-domain builder and the deterministic greedy selector, then
+returns `LagAwareModMRMRResult`.
+
+The models below are the **frozen Pydantic result contracts** that define the
+typed input and output surface for that use case.
+
 | Model | Purpose |
 | --- | --- |
+| `run_lag_aware_mod_mrmr` | Public use case for the lag-aware sparse selector; returns `LagAwareModMRMRResult`. |
 | `LagAwareModMRMRConfig` | Configuration: horizon, margin, candidate lags, scorer specs, relevance floor. |
 | `ForecastSafeLagCandidate` | Single lagged covariate after legality assessment (legal or blocked). |
 | `SelectedLagAwareFeature` | Selected candidate with relevance, max redundancy, final score, and diagnostics. |
@@ -119,6 +130,22 @@ k >= forecast_horizon + availability_margin
 Known-future covariates bypass this filter only when declared with valid provenance
 (`calendar`, `schedule`, `contractual`, or `forecasted_input`). Realized future
 observations are never a valid bypass and must not be entered as known-future.
+
+Operational notes:
+
+- `LagAwareModMRMRResult.selected`, `rejected`, and `blocked` preserve the full
+    decision surface rather than only the winners.
+- `LagAwareModMRMRConfig.target_history_scorer` enables the optional
+    target-history novelty penalty; if omitted, the selector uses the two-term
+    `relevance * (1 - max_redundancy)` score.
+- When a lag-aware result is passed into `build_forecast_prep_contract`, the
+    hand-off surface preserves sparse lag rows in `ForecastPrepContract.covariate_rows`.
+
+Related docs:
+
+- [theory/lag_aware_mod_mrmr.md](theory/lag_aware_mod_mrmr.md)
+- [code/lag_aware_mod_mrmr.md](code/lag_aware_mod_mrmr.md)
+- [recipes/forecast_prep_to_external_frameworks.md](recipes/forecast_prep_to_external_frameworks.md)
 
 ## Fingerprint Surface
 
