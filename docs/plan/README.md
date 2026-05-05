@@ -18,8 +18,8 @@ Baseline framing, invariants, and mathematical definitions still live in the mai
 | **[v0_3_5_documentation_quality_improvement_revision_2026_04_24.md](implemented/v0_3_5_documentation_quality_improvement_revision_2026_04_24.md)** | **v0.3.5 — docs hygiene + reorganization: Invariant E, notebook transition banner, `docs/` Diátaxis bucketing, markdownlint + lychee CI** | **Shipped (v0.3.5)** |
 | **[v0_4_0_examples_repo_split_ultimate_plan.md](implemented/v0_4_0_examples_repo_split_ultimate_plan.md)** | **v0.4.0 — library-first slim release: notebook migration to sibling examples repo, cross-repo CI handshake, sprint-showcase notebooks** | **Shipped (v0.4.0)** |
 | **[v0_4_1_performance_bottleneck_elimination_ultimate_plan.md](implemented/v0_4_1_performance_bottleneck_elimination_ultimate_plan.md)** | **v0.4.1 — performance hardening, benchmark visibility, and fast-screening controls** | **Shipped (v0.4.1)** |
-| **[v0_4_2_forecastability_structure_expansion_ultimate_plan.md](implemented/v0_4_2_forecastability_structure_expansion_ultimate_plan.md)** | **v0.4.2 — AMI-first forecastability structure expansion: spectral, ordinal, classical, and memory diagnostics with extended routing** | **Shipped (v0.4.2, current released version)** |
-| **[v0_4_3_lag_aware_catt_mod_mrmr_plan_template_aligned.md](implemented/v0_4_3_lag_aware_catt_mod_mrmr_plan_template_aligned.md)** | **v0.4.3 — Lag-Aware ModMRMR sparse covariate-lag selection with Catt-style scoring and release-surface hardening** | **Implemented in core repo; next planned release is v0.4.3; sibling-repo notebook follow-up remains** |
+| **[v0_4_2_forecastability_structure_expansion_ultimate_plan.md](implemented/v0_4_2_forecastability_structure_expansion_ultimate_plan.md)** | **v0.4.2 — AMI-first forecastability structure expansion: spectral, ordinal, classical, and memory diagnostics with extended routing** | **Shipped (v0.4.2)** |
+| **[v0_4_3_lag_aware_catt_mod_mrmr_plan_template_aligned.md](implemented/v0_4_3_lag_aware_catt_mod_mrmr_plan_template_aligned.md)** | **v0.4.3 — Lag-Aware ModMRMR sparse covariate-lag selection with Catt-style scoring and release-surface hardening** | **Shipped (v0.4.3, current released version); sibling-repo notebook follow-up remains** |
 | [aux_documents/developer_instruction_repo_scope.md](../plan/aux_documents/developer_instruction_repo_scope.md) | Reviewer scope directive (driver document for v0.3.4 revision, v0.3.5 revision, v0.4.0) | Reference |
 
 ## Completed — triage extension epic
@@ -45,8 +45,8 @@ The math-grounded feature backlog that fed the development plan:
 
 ## Planning policy
 
-- The triage extension epic is **complete**; the current released version is **v0.4.2**.
-- The next planned release is **v0.4.3**.
+- The triage extension epic is **complete**; the current released version is **v0.4.3**.
+- A `v0.4.4` implemented plan is not recorded yet.
 - The [cleaning plan](implemented/v0_2_x_cleaning_hexagonal_realignment_plan.md) tracks hexagonal realignment and type-checker compliance (complete).
 - The [PyPI release plan](implemented/v0_2_x_pypi_publication_plan.md) tracks naming, metadata, artifact validation, and Trusted Publishing (complete).
 - The [v0.4.3 Lag-Aware ModMRMR plan](implemented/v0_4_3_lag_aware_catt_mod_mrmr_plan_template_aligned.md) now lives under `implemented/` because the core-repo selector, showcase, API, and release-surface work landed here; sibling-repo notebooks remain a follow-up outside this repo.
