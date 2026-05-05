@@ -43,7 +43,7 @@ jobs:
           uv run python scripts/sync_repo_contract.py --write
 
       - name: Create pull request for autofix changes
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           title: "chore: sync repository contract and documentation links"
           body: |
