@@ -106,7 +106,7 @@ raw y(t), raw x_j(t)
 | LAM-F06 | Target-history novelty penalty | 1 | P0 | Complete |
 | LAM-F07 | ForecastPrepContract export adapter | 2 | P0 | Complete |
 | LAM-F08 | Regression fixtures and deterministic synthetic panels | 2 | P0 | Complete |
-| LAM-F09 | Core showcase scripts | 3 | P0 | Not started |
+| LAM-F09 | Core showcase scripts | 3 | P0 | Complete |
 | LAM-F10 | Sibling repo walkthrough notebooks, including synthetic + CausalRivers notebook 10 | 3 | P0 | Not started |
 | LAM-F11 | Documentation and theory page | 3 | P1 | Not started |
 | LAM-F12 | Docs hardening and release prep | 4 | P0 | Not started |

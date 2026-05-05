@@ -63,6 +63,12 @@ jobs:
       - name: Run forecast prep contract showcase (smoke)
         run: uv run scripts/run_showcase_forecast_prep.py --smoke --quiet
 
+      - name: Run lag-aware ModMRMR showcase (smoke)
+        run: uv run scripts/run_showcase_lag_aware_mod_mrmr.py --smoke --quiet
+
+      - name: Run Catt-scored lag-aware ModMRMR showcase (smoke)
+        run: uv run scripts/run_showcase_lag_aware_catt_mod_mrmr.py --smoke --quiet
+
       - name: Upload showcase artifacts
         uses: actions/upload-artifact@v7
         with:
