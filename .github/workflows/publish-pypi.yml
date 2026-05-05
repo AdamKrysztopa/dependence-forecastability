@@ -116,6 +116,8 @@ jobs:
 
       - name: Publish distribution artifacts to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true
 
   verify-published-release:
     name: Verify published release

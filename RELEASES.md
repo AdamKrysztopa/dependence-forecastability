@@ -18,7 +18,7 @@ so the full v0.4.0+ product history is visible in one place.
 
 | Core tag | Sibling tag | Core highlights | Sibling highlights |
 | --- | --- | --- | --- |
-| *(upcoming)* `v0.4.3` | *(planned)* `v0.4.3` | Lag-Aware ModMRMR sparse covariate-lag selection; `run_lag_aware_mod_mrmr()`, fast and Catt showcase scripts, theory/code/public API/recipe/README updates, and release-surface hardening | Richer walkthrough notebooks remain a sibling-repo follow-up in `forecastability-examples`; no core notebook additions are required for this release |
+| `v0.4.3` | *(planned)* `v0.4.3` | Lag-Aware ModMRMR sparse covariate-lag selection; `run_lag_aware_mod_mrmr()`, fast and Catt showcase scripts, theory/code/public API/recipe/README updates, and release-surface hardening | Richer walkthrough notebooks remain a sibling-repo follow-up in `forecastability-examples`; no core notebook additions are required for this release |
 | `v0.4.2` | *(planned)* `v0.4.2` | AMI-first forecastability structure expansion; extended fingerprint, extended routing, and spectral/ordinal/classical/memory diagnostics | Extended walkthrough refresh and showcase updates for the expanded fingerprint remain a sibling-repo follow-up |
 | `v0.4.1` | — | Performance hardening, benchmark visibility, and fast-screening controls | — |
 | `v0.4.0` | `v0.4.0` | Library-first slim release; `notebooks/` removed; causal-rivers extensions promoted | Notebook migration complete; 12 walkthroughs, 6 triage walkthroughs, 1 recipe notebook; EX-NB-01–05 |

@@ -222,8 +222,8 @@ def _implemented_plan_candidates(version: str) -> list[Path]:
     return matches
 
 
-def _load_next_planned_version() -> str:
-    """Load next_planned_version from the repository contract."""
+def _load_current_released_version() -> str:
+    """Load current_released_version from the repository contract."""
     script_dir = Path(__file__).resolve().parent
     script_dir_str = str(script_dir)
     if script_dir_str not in sys.path:
@@ -235,29 +235,29 @@ def _load_next_planned_version() -> str:
         contract = load_repo_contract()
     except RepoContractError as exc:
         raise RuntimeError(str(exc)) from exc
-    return contract.next_planned_version
+    return contract.current_released_version
 
 
 def check_plan_lifecycle() -> bool:
-    """Verify next_planned_version resolves to exactly one implemented release plan."""
+    """Verify current_released_version resolves to exactly one implemented release plan."""
     print("plan-lifecycle:")
     try:
-        planned_version = _load_next_planned_version()
+        released_version = _load_current_released_version()
     except RuntimeError as exc:
         _report(f"repo_contract.yaml parsed for plan lifecycle: {exc}", ok=False)
         return False
 
-    _report(f"repo_contract.yaml next_planned_version parsed: {planned_version}", ok=True)
+    _report(f"repo_contract.yaml current_released_version parsed: {released_version}", ok=True)
 
-    matches = _implemented_plan_candidates(planned_version)
+    matches = _implemented_plan_candidates(released_version)
     if len(matches) != 1:
-        normalized_version = planned_version.replace(".", "_")
+        normalized_version = released_version.replace(".", "_")
         for path in matches:
             rel_path = path.relative_to(REPO_ROOT).as_posix()
             print(f"  candidate: {rel_path}")
         _report(
-            "Exactly one implemented plan exists for the next planned release "
-            f"{planned_version} (pattern: docs/plan/implemented/v{normalized_version}_*.md)",
+            "Exactly one implemented plan exists for the current released version "
+            f"{released_version} (pattern: docs/plan/implemented/v{normalized_version}_*.md)",
             ok=False,
         )
         return False
@@ -265,7 +265,7 @@ def check_plan_lifecycle() -> bool:
     plan_path = matches[0]
     rel_path = plan_path.relative_to(REPO_ROOT).as_posix()
     exists = _report(
-        f"Implemented plan exists for next planned release {planned_version}: {rel_path}",
+        f"Implemented plan exists for current released version {released_version}: {rel_path}",
         ok=True,
     )
     not_stub = _report(

@@ -145,14 +145,16 @@ jobs:
 
           if gh release view "${TAG_NAME}" >/dev/null 2>&1; then
             if [ -f "${notes_file}" ]; then
-              gh release edit "${TAG_NAME}" --notes-file "${notes_file}"
+              gh release edit "${TAG_NAME}" --notes-file "${notes_file}" --draft=false --prerelease=false --latest
+            else
+              gh release edit "${TAG_NAME}" --draft=false --prerelease=false --latest
             fi
             gh release upload "${TAG_NAME}" dist/* --clobber
             exit 0
           fi
 
           if [ -f "${notes_file}" ]; then
-            gh release create "${TAG_NAME}" dist/* --title "${TAG_NAME}" --notes-file "${notes_file}"
+            gh release create "${TAG_NAME}" dist/* --title "${TAG_NAME}" --notes-file "${notes_file}" --draft=false --prerelease=false --latest
           else
-            gh release create "${TAG_NAME}" dist/* --title "${TAG_NAME}" --generate-notes
+            gh release create "${TAG_NAME}" dist/* --title "${TAG_NAME}" --generate-notes --draft=false --prerelease=false --latest
           fi

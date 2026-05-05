@@ -9,10 +9,10 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
-## [0.4.3] - Planned
+## [0.4.3] - 2026-05-05
 
 > **Lag-Aware ModMRMR sparse covariate-lag selection and release-surface hardening.**
-> This planned release packages the now-landed lag-aware selector surface for
+> This release packages the now-landed lag-aware selector surface for
 > forecast-safe covariate-lag triage ahead of the framework-neutral
 > `ForecastPrepContract` hand-off. It remains a deterministic core-repo
 > release: no model fitting, no downstream framework adapters, and no

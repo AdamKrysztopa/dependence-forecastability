@@ -110,7 +110,7 @@ def _write_lag_table_csv(path: Path, contract: object) -> None:
     assert isinstance(contract, ForecastPrepContract)
     rows = forecast_prep_contract_to_lag_table(contract)
     if rows:
-        fieldnames = list(rows[0].keys())
+        fieldnames = list(dict.fromkeys(key for row in rows for key in row))
         with path.open("w", newline="", encoding="utf-8") as handle:
             writer = csv.DictWriter(handle, fieldnames=fieldnames)
             writer.writeheader()
