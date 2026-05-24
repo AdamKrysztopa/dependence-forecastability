@@ -12,21 +12,26 @@ from forecastability.utils.validation import validate_time_series
 
 
 def _eval_surrogate(
-    args: tuple[np.ndarray, str, int, int, int],
+    args: tuple[np.ndarray, str, int, int, int, str],
 ) -> np.ndarray:
     """Evaluate one surrogate curve (top-level so it is picklable).
 
     Args:
-        args: Tuple of ``(surrogate, metric_name, max_lag, n_neighbors, seed)``.
+        args: Tuple of
+            ``(surrogate, metric_name, max_lag, n_neighbors, seed, estimator)``.
 
     Returns:
         1-D dependence curve for this surrogate.
     """
-    surrogate, metric_name, max_lag, n_neighbors, seed = args
+    surrogate, metric_name, max_lag, n_neighbors, seed, estimator = args
     if metric_name == "ami":
-        return compute_ami(surrogate, max_lag, n_neighbors=n_neighbors, random_state=seed)
+        return compute_ami(
+            surrogate, max_lag, n_neighbors=n_neighbors, random_state=seed,
+            estimator=estimator,  # type: ignore[arg-type]
+        )
     return compute_pami_linear_residual(
-        surrogate, max_lag, n_neighbors=n_neighbors, random_state=seed
+        surrogate, max_lag, n_neighbors=n_neighbors, random_state=seed,
+        estimator=estimator,  # type: ignore[arg-type]
     )
 
 
@@ -73,6 +78,7 @@ def compute_significance_bands(
     n_neighbors: int = 8,
     random_state: int = 42,
     n_jobs: int = 1,
+    estimator: str = "ksg2",
 ) -> tuple[np.ndarray, np.ndarray]:
     """Compute surrogate lower/upper significance bands.
 
@@ -86,6 +92,8 @@ def compute_significance_bands(
         random_state: Base random seed.
         n_jobs: Number of parallel workers.  ``1`` = serial (default).
             ``-1`` = all CPUs.  Parallelism uses :class:`ProcessPoolExecutor`.
+        estimator: MI estimator to use. ``"ksg2"`` (default) uses the v0.5.0
+            KSG-II Chebyshev kernel. ``"ksg1_sklearn"`` reproduces v0.4.3 numerics.
 
     Returns:
         ``(lower_band, upper_band)`` arrays of shape ``(max_lag,)``.
@@ -111,7 +119,7 @@ def compute_significance_bands(
     )
 
     args_list = [
-        (surrogates[i], metric_name, max_lag, n_neighbors, random_state + i + 1)
+        (surrogates[i], metric_name, max_lag, n_neighbors, random_state + i + 1, estimator)
         for i in range(n_surrogates)
     ]
 

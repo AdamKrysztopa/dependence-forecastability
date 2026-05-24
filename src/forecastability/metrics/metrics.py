@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 import numpy as np
 from sklearn.feature_selection import mutual_info_regression
 from sklearn.preprocessing import StandardScaler
 
+from forecastability.kernels.ksg2_curve_kernel import KSG2CurveKernel
 from forecastability.metrics._lag_design import (
     build_intermediate_design,
     residualize_with_intercept,
@@ -25,30 +28,52 @@ def compute_ami(
     n_neighbors: int = 8,
     min_pairs: int = 30,
     random_state: int = 42,
+    estimator: Literal["ksg2", "ksg1_sklearn"] = "ksg2",
 ) -> np.ndarray:
-    """Compute horizon-specific average mutual information."""
+    """Compute horizon-specific average mutual information.
+
+    Parameters
+    ----------
+    ts: Univariate time series.
+    max_lag: Number of lags to evaluate.
+    n_neighbors: kNN neighbours (used only when estimator='ksg1_sklearn').
+    min_pairs: Minimum number of aligned sample pairs required per horizon.
+    random_state: Base random seed.
+    estimator: "ksg2" (default, v0.5.0) uses KSG-II with Chebyshev cKDTree +
+        median over k in {3,5,8}. "ksg1_sklearn" reproduces v0.4.3 KSG-I numerics
+        via sklearn.mutual_info_regression (single k=n_neighbors).
+    """
     if max_lag < 1:
         raise ValueError("max_lag must be >= 1")
 
-    arr = validate_time_series(ts, min_length=max_lag + min_pairs + 1)
-    arr = _scale_series(arr)
+    if estimator == "ksg2":
+        arr = validate_time_series(ts, min_length=max_lag + min_pairs + 1)
+        kernel = KSG2CurveKernel(min_pairs=min_pairs)
+        curve_2d = kernel.estimate_curve(arr, max_lag, random_state=random_state)
+        # Median across k axis, clip to 0
+        return np.maximum(np.nanmedian(curve_2d, axis=1), 0.0)
+    elif estimator == "ksg1_sklearn":
+        arr = validate_time_series(ts, min_length=max_lag + min_pairs + 1)
+        arr = _scale_series(arr)
 
-    ami = np.zeros(max_lag, dtype=float)
-    for horizon in range(1, max_lag + 1):
-        if arr.size - horizon < min_pairs:
-            break
+        ami = np.zeros(max_lag, dtype=float)
+        for horizon in range(1, max_lag + 1):
+            if arr.size - horizon < min_pairs:
+                break
 
-        x = arr[:-horizon].reshape(-1, 1)
-        y = arr[horizon:]
-        value = mutual_info_regression(
-            x,
-            y,
-            n_neighbors=n_neighbors,
-            random_state=random_state + horizon,
-        )[0]
-        ami[horizon - 1] = max(float(value), 0.0)
+            x = arr[:-horizon].reshape(-1, 1)
+            y = arr[horizon:]
+            value = mutual_info_regression(
+                x,
+                y,
+                n_neighbors=n_neighbors,
+                random_state=random_state + horizon,
+            )[0]
+            ami[horizon - 1] = max(float(value), 0.0)
 
-    return ami
+        return ami
+    else:
+        raise ValueError(f"estimator must be 'ksg2' or 'ksg1_sklearn', got {estimator!r}")
 
 
 def _build_conditioning_matrix(ts: np.ndarray, lag: int) -> np.ndarray:
@@ -63,8 +88,17 @@ def compute_pami_linear_residual(
     n_neighbors: int = 8,
     min_pairs: int = 50,
     random_state: int = 42,
+    estimator: Literal["ksg2", "ksg1_sklearn"] = "ksg2",
 ) -> np.ndarray:
-    """Compute pAMI via linear residualization + nonlinear MI."""
+    """Compute pAMI via linear residualization + nonlinear MI.
+
+    Parameters
+    ----------
+    estimator: "ksg2" (default) routes the residualized-pair MI through
+        KSG2CurveKernel._estimate_horizon (single-horizon call with k in {3,5,8},
+        median aggregation). "ksg1_sklearn" reproduces v0.4.3 numerics via
+        sklearn.mutual_info_regression.
+    """
     if max_lag < 1:
         raise ValueError("max_lag must be >= 1")
 
@@ -72,31 +106,63 @@ def compute_pami_linear_residual(
     arr = _scale_series(arr)
 
     pami = np.zeros(max_lag, dtype=float)
-    for horizon in range(1, max_lag + 1):
-        if arr.size - horizon < min_pairs:
-            break
 
-        z = _build_conditioning_matrix(arr, horizon)
-        past = arr[:-horizon]
-        future = arr[horizon:]
+    if estimator == "ksg2":
+        kernel = KSG2CurveKernel(min_pairs=min_pairs)
+        k_list = kernel.k_list
+        k_max = max(k_list)
+        for horizon in range(1, max_lag + 1):
+            if arr.size - horizon < min_pairs:
+                break
 
-        # Guard: skip underdetermined conditioning regression
-        if z.shape[1] > 0 and z.shape[0] <= z.shape[1]:
-            break
+            z = _build_conditioning_matrix(arr, horizon)
+            past = arr[:-horizon]
+            future = arr[horizon:]
 
-        if z.shape[1] == 0:
-            res_past = past
-            res_future = future
-        else:
-            res_past, res_future = residualize_with_intercept(z, (past, future))
+            # Guard: skip underdetermined conditioning regression
+            if z.shape[1] > 0 and z.shape[0] <= z.shape[1]:
+                break
 
-        value = mutual_info_regression(
-            res_past.reshape(-1, 1),
-            res_future,
-            n_neighbors=n_neighbors,
-            random_state=random_state + horizon,
-        )[0]
-        pami[horizon - 1] = max(float(value), 0.0)
+            if z.shape[1] == 0:
+                res_past = past
+                res_future = future
+            else:
+                res_past, res_future = residualize_with_intercept(z, (past, future))
+
+            values = kernel._estimate_horizon(
+                res_past, res_future, k_list=k_list, k_max=k_max
+            )
+            pami[horizon - 1] = max(float(np.nanmedian(values)), 0.0)
+
+    elif estimator == "ksg1_sklearn":
+        for horizon in range(1, max_lag + 1):
+            if arr.size - horizon < min_pairs:
+                break
+
+            z = _build_conditioning_matrix(arr, horizon)
+            past = arr[:-horizon]
+            future = arr[horizon:]
+
+            # Guard: skip underdetermined conditioning regression
+            if z.shape[1] > 0 and z.shape[0] <= z.shape[1]:
+                break
+
+            if z.shape[1] == 0:
+                res_past = past
+                res_future = future
+            else:
+                res_past, res_future = residualize_with_intercept(z, (past, future))
+
+            value = mutual_info_regression(
+                res_past.reshape(-1, 1),
+                res_future,
+                n_neighbors=n_neighbors,
+                random_state=random_state + horizon,
+            )[0]
+            pami[horizon - 1] = max(float(value), 0.0)
+
+    else:
+        raise ValueError(f"estimator must be 'ksg2' or 'ksg1_sklearn', got {estimator!r}")
 
     return pami
 
@@ -113,6 +179,7 @@ def compute_ami_at_horizon(
     n_neighbors: int = 8,
     min_pairs: int = 30,
     random_state: int = 42,
+    estimator: Literal["ksg2", "ksg1_sklearn"] = "ksg2",
 ) -> float:
     """Compute AMI at a single horizon *h*.
 
@@ -122,15 +189,17 @@ def compute_ami_at_horizon(
     the ``max_lag=H`` minimum-length requirement.
 
     Invariant F: ``_scale_series`` is applied once to the full series before
-    slicing.  The aligned pair is never independently scaled.
+    slicing (ksg1_sklearn path only).  The aligned pair is never independently
+    scaled.
 
     Args:
         ts: Univariate time series.
         h: Horizon index (1-based).
-        n_neighbors: kNN neighbours for MI estimation.
+        n_neighbors: kNN neighbours for MI estimation (ksg1_sklearn only).
         min_pairs: Minimum number of aligned sample pairs.
         random_state: Base random seed; internally uses ``random_state + h``
-            for the MI estimator (mirrors the full-curve convention).
+            for the MI estimator on the ksg1_sklearn path.
+        estimator: "ksg2" (default) or "ksg1_sklearn".
 
     Returns:
         Non-negative scalar MI value at horizon *h*, or ``0.0`` when the
@@ -142,18 +211,29 @@ def compute_ami_at_horizon(
     if h < 1:
         raise ValueError("h must be >= 1")
     arr = validate_time_series(ts, min_length=h + min_pairs + 1)
-    arr = _scale_series(arr)
     if arr.size - h < min_pairs:
         return 0.0
-    x = arr[:-h].reshape(-1, 1)
-    y = arr[h:]
-    value = mutual_info_regression(
-        x,
-        y,
-        n_neighbors=n_neighbors,
-        random_state=random_state + h,
-    )[0]
-    return max(float(value), 0.0)
+    if estimator == "ksg2":
+        kernel = KSG2CurveKernel(min_pairs=min_pairs)
+        k_list = kernel.k_list
+        k_max = max(k_list)
+        from forecastability.kernels.ksg2_curve_kernel import _apply_jitter
+        jittered = _apply_jitter(arr, jitter_scale=kernel._jitter_scale, random_state=random_state)
+        x = jittered[:-h]
+        y = jittered[h:]
+        values = kernel._estimate_horizon(x, y, k_list=k_list, k_max=k_max)
+        return max(float(np.nanmedian(values)), 0.0)
+    else:
+        arr = _scale_series(arr)
+        x = arr[:-h].reshape(-1, 1)
+        y = arr[h:]
+        value = mutual_info_regression(
+            x,
+            y,
+            n_neighbors=n_neighbors,
+            random_state=random_state + h,
+        )[0]
+        return max(float(value), 0.0)
 
 
 def compute_pami_at_horizon(
@@ -163,6 +243,7 @@ def compute_pami_at_horizon(
     n_neighbors: int = 8,
     min_pairs: int = 50,
     random_state: int = 42,
+    estimator: Literal["ksg2", "ksg1_sklearn"] = "ksg2",
 ) -> float:
     """Compute pAMI at a single horizon *h* (legacy break-then-zero semantics).
 
@@ -178,10 +259,11 @@ def compute_pami_at_horizon(
     Args:
         ts: Univariate time series.
         h: Horizon index (1-based).
-        n_neighbors: kNN neighbours for MI estimation.
+        n_neighbors: kNN neighbours for MI estimation (ksg1_sklearn only).
         min_pairs: Minimum number of aligned sample pairs.
         random_state: Base random seed; internally uses ``random_state + h``
-            for the MI estimator (mirrors the full-curve convention).
+            for the MI estimator (ksg1_sklearn path).
+        estimator: "ksg2" (default) or "ksg1_sklearn".
 
     Returns:
         Non-negative scalar pAMI value at horizon *h*, or ``0.0`` when the
@@ -207,10 +289,17 @@ def compute_pami_at_horizon(
         res_future = future
     else:
         res_past, res_future = residualize_with_intercept(z, (past, future))
-    value = mutual_info_regression(
-        res_past.reshape(-1, 1),
-        res_future,
-        n_neighbors=n_neighbors,
-        random_state=random_state + h,
-    )[0]
-    return max(float(value), 0.0)
+    if estimator == "ksg2":
+        kernel = KSG2CurveKernel(min_pairs=min_pairs)
+        k_list = kernel.k_list
+        k_max = max(k_list)
+        values = kernel._estimate_horizon(res_past, res_future, k_list=k_list, k_max=k_max)
+        return max(float(np.nanmedian(values)), 0.0)
+    else:
+        value = mutual_info_regression(
+            res_past.reshape(-1, 1),
+            res_future,
+            n_neighbors=n_neighbors,
+            random_state=random_state + h,
+        )[0]
+        return max(float(value), 0.0)

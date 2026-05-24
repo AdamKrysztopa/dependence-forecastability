@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import warnings
+
 import numpy as np
 from sklearn.feature_selection import mutual_info_regression
 
-from forecastability.kernels.batched_knn_mi import PurePythonBatchedKnnMiKernel
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore", DeprecationWarning)
+    from forecastability.kernels.ksg1_sklearn_kernel import PurePythonBatchedKnnMiKernel
 from forecastability.ports.kernels import BatchedKnnMiKernel
 
 # ---------------------------------------------------------------------------
@@ -44,13 +48,17 @@ def _scalar_mi(
 
 def test_batched_knn_mi_protocol_conformance() -> None:
     """PurePythonBatchedKnnMiKernel must satisfy the BatchedKnnMiKernel Protocol."""
-    assert isinstance(PurePythonBatchedKnnMiKernel(), BatchedKnnMiKernel)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        assert isinstance(PurePythonBatchedKnnMiKernel(), BatchedKnnMiKernel)
 
 
 def test_batched_knn_mi_parity_single_pair() -> None:
     """Batch result for a single pair must match the scalar MI path within atol=1e-9."""
     past, future = _make_pair(300, seed=1)
-    kernel = PurePythonBatchedKnnMiKernel()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        kernel = PurePythonBatchedKnnMiKernel()
 
     batch_result = kernel.batched_knn_mi([(past, future)], n_neighbors=8, random_state=42)[0]
     scalar_result = _scalar_mi(past, future, n_neighbors=8, random_state=42)
@@ -63,7 +71,9 @@ def test_batched_knn_mi_parity_single_pair() -> None:
 def test_batched_knn_mi_parity_multiple_pairs() -> None:
     """Batch result for 5 pairs must equal loop-applied scalar MI element-wise (atol=1e-9)."""
     pairs = [_make_pair(200, seed=i) for i in range(5)]
-    kernel = PurePythonBatchedKnnMiKernel()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        kernel = PurePythonBatchedKnnMiKernel()
 
     batch_results = kernel.batched_knn_mi(pairs, n_neighbors=8, random_state=7)
     scalar_results = np.array(
@@ -78,7 +88,9 @@ def test_batched_knn_mi_non_negative() -> None:
     """All returned MI estimates must be >= 0, even for independent noise."""
     rng = np.random.default_rng(99)
     pairs = [(rng.standard_normal(150), rng.standard_normal(150)) for _ in range(10)]
-    kernel = PurePythonBatchedKnnMiKernel()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        kernel = PurePythonBatchedKnnMiKernel()
 
     results = kernel.batched_knn_mi(pairs, n_neighbors=8, random_state=0)
     assert results.dtype == np.float64
@@ -87,7 +99,9 @@ def test_batched_knn_mi_non_negative() -> None:
 
 def test_batched_knn_mi_empty_input() -> None:
     """Empty input must return an empty float64 array without error."""
-    kernel = PurePythonBatchedKnnMiKernel()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        kernel = PurePythonBatchedKnnMiKernel()
     result = kernel.batched_knn_mi([], n_neighbors=8, random_state=0)
 
     assert isinstance(result, np.ndarray)
@@ -98,7 +112,9 @@ def test_batched_knn_mi_empty_input() -> None:
 def test_batched_knn_mi_deterministic() -> None:
     """Two calls with the same random_state must return identical results."""
     pairs = [_make_pair(250, seed=i) for i in range(4)]
-    kernel = PurePythonBatchedKnnMiKernel()
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", DeprecationWarning)
+        kernel = PurePythonBatchedKnnMiKernel()
 
     result_a = kernel.batched_knn_mi(pairs, n_neighbors=8, random_state=42)
     result_b = kernel.batched_knn_mi(pairs, n_neighbors=8, random_state=42)

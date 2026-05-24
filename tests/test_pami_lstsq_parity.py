@@ -215,7 +215,8 @@ def test_compute_pami_linear_residual_matches_pre_change(name: str, max_lag: int
     ts = SERIES_BUILDERS[name]()
     expected = np.asarray(PRE_PAMI[(name, max_lag)], dtype=float)
 
-    actual = compute_pami_linear_residual(ts, max_lag=max_lag, min_pairs=50, random_state=42)
+    # v0.4.x baseline — use ksg1_sklearn to reproduce v0.4.3 numerics
+    actual = compute_pami_linear_residual(ts, max_lag=max_lag, min_pairs=50, random_state=42, estimator="ksg1_sklearn")
 
     assert np.allclose(actual, expected, atol=_ATOL, rtol=_RTOL)
 
