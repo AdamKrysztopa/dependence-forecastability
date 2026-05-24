@@ -1,8 +1,9 @@
-"""Routing-confidence calibration script (RVH-F08).
+"""Routing-confidence precision measurement script (RVH-F08).
 
 Runs the 10-archetype synthetic suite across ≥ 100 noise replicates per
-archetype to fit routing-confidence thresholds that achieve a stated precision
-target.  Emits a :class:`RoutingConfidenceCalibrationAudit` JSON artifact to
+archetype to *measure* the achieved precision of the hand-picked
+routing-confidence thresholds.  Emits a
+:class:`RoutingConfidenceCalibrationAudit` JSON artifact to
 ``docs/calibration/v0_5_0_routing_confidence_audit.json``.
 
 Usage::
@@ -20,18 +21,19 @@ triage recommendation string (``HIGH``, ``MEDIUM``, ``LOW``).  For each label,
 we define precision as the fraction of runs labelled with that confidence that
 have the *correct* model family as determined by the ground-truth archetype.
 
-Threshold fitting
-~~~~~~~~~~~~~~~~~
-For the ``HIGH`` label, we sweep the ``high_threshold`` in the
-``_TRIAGE_THRESHOLDS`` dict from 0.01 to 0.60 in steps of 0.005 and select
-the smallest threshold at which precision ≥ ``TARGET_PRECISION`` on the held-in
-calibration set.  The same procedure is applied to ``MEDIUM``.
+Threshold measurement
+~~~~~~~~~~~~~~~~~~~~~
+This script measures the achieved precision of the *current* hand-picked
+threshold values from ``_TRIAGE_THRESHOLDS`` against the 10-archetype ×
+100-replicate synthetic suite.  It does **not** fit or optimise thresholds:
+the raw AMI peak per run is not stored, so no sweep over threshold candidates
+is possible.  Threshold fitting is a future deliverable planned for v0.5.1.
 
-This is an in-sample calibration (all data used for both fitting and reporting).
-A hold-out split would require a much larger archetype suite; the current
-10-archetype × 100-replicate design prioritises interpretability over
-generalization guarantees.  See ``docs/calibration/v0_5_0_routing_confidence.md``
-for the methodological limitations.
+This is an in-sample measurement (all data used for evaluation).  A hold-out
+split would require a much larger archetype suite; the current design
+prioritises interpretability over generalization guarantees.  See
+``docs/calibration/v0_5_0_routing_confidence.md`` for the methodological
+limitations.
 """
 
 from __future__ import annotations
@@ -60,7 +62,7 @@ TARGET_PRECISION_HIGH: float = 0.90
 # Target precision for the MEDIUM confidence label.
 TARGET_PRECISION_MEDIUM: float = 0.75
 
-# Threshold sweep range and step.
+# Reserved for future threshold sweep — not used in this measurement-only script.
 THRESHOLD_LOW: float = 0.01
 THRESHOLD_HIGH_MAX: float = 0.60
 THRESHOLD_STEP: float = 0.005
@@ -303,23 +305,22 @@ def _count_samples_at_label(results: dict[str, list[str]], *, label: str) -> int
     return sum(1 for preds in results.values() for p in preds if p == label)
 
 
-def _fit_threshold(
+def _measure_threshold_precision(
     *,
     target_precision: float,
     label: str,
     results: dict[str, list[str]],
 ) -> tuple[float, float]:
-    """Return (best_threshold, achieved_precision) for *label*.
+    """Return (current_threshold, achieved_precision) for *label*.
 
-    Since we don't re-run triage for each threshold candidate (the raw curves
-    are not stored), we document the achieved precision at the *current*
-    hand-picked threshold value and report the target.  A full threshold-sweep
-    calibration would require storing the raw AMI peak per run; that is left
-    as a future improvement in v0.5.1.
+    Measures the achieved precision of the *current* hand-picked threshold
+    from ``_TRIAGE_THRESHOLDS`` against the synthetic calibration suite.
+    This function does not fit or optimise a threshold: the raw AMI peak per
+    run is not stored, so no sweep over threshold candidates is possible.
+    Threshold fitting is planned for v0.5.1.
 
-    This function reports the observed precision at the current threshold and
-    notes where the precision gap lies, giving the maintainer a concrete target
-    for manual threshold adjustment.
+    The ``target_precision`` parameter is accepted for interface symmetry and
+    used by the caller to report whether the current threshold meets the target.
     """
     achieved = _compute_precision(results, label=label)
     # The threshold that was used is the current hand-picked value from
@@ -345,12 +346,12 @@ def main() -> None:
 
     results = run_calibration()
 
-    high_threshold, high_precision = _fit_threshold(
+    high_threshold, high_precision = _measure_threshold_precision(
         target_precision=TARGET_PRECISION_HIGH,
         label="HIGH",
         results=results,
     )
-    medium_threshold, medium_precision = _fit_threshold(
+    medium_threshold, medium_precision = _measure_threshold_precision(
         target_precision=TARGET_PRECISION_MEDIUM,
         label="MEDIUM",
         results=results,
