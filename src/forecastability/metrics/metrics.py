@@ -2,17 +2,31 @@
 
 from __future__ import annotations
 
+import warnings
 from typing import Literal
 
 import numpy as np
 from sklearn.feature_selection import mutual_info_regression
 
+from forecastability.diagnostics.gcmi import compute_gcmi_at_lag
 from forecastability.kernels.ksg2_curve_kernel import KSG2CurveKernel
 from forecastability.metrics._lag_design import (
     build_intermediate_design,
     residualize_with_qr,
 )
 from forecastability.utils.validation import validate_time_series
+
+# RVH-F07: cardinality threshold below which the raw AMI path routes to GCMI.
+# Heavy-tie discrete input (unique / N < 0.1) causes KSG-II jitter to produce
+# unreliable MI estimates; GCMI's rank-copula normalization is more robust in
+# this regime.  This threshold applies to the raw AMI path only — the pAMI
+# linear-residualization path already operates under a Gaussian approximation
+# and GCMI routing does not reduce the approximation further.
+_GCMI_CARDINALITY_THRESHOLD: float = 0.1
+
+# RVH-F07: discrete-alphabet warning threshold.  When unique values < 20,
+# emit a UserWarning recommending a discrete-MI estimator.
+_DISCRETE_ALPHABET_WARNING_THRESHOLD: int = 20
 
 
 def _scale_series(ts: np.ndarray) -> np.ndarray:
@@ -47,9 +61,46 @@ def compute_ami(
     estimator: "ksg2" (default, v0.5.0) uses KSG-II with Chebyshev cKDTree +
         median over k in {3,5,8}. "ksg1_sklearn" reproduces v0.4.3 KSG-I numerics
         via sklearn.mutual_info_regression (single k=n_neighbors).
+
+    Notes
+    -----
+    Heavy-tie discrete inputs (``unique / N < _GCMI_CARDINALITY_THRESHOLD``) are
+    automatically routed to GCMI (Gaussian Copula MI, Ince et al. 2017) regardless
+    of the ``estimator`` argument.  KSG-II jitter degrades on heavily discrete
+    marginals; GCMI's rank-copula normalization is more reliable in this regime
+    (RVH-F07).  This routing applies to the raw AMI path only; the pAMI
+    linear-residualization path is unaffected.
+
+    When the number of unique values is below ``_DISCRETE_ALPHABET_WARNING_THRESHOLD``
+    a :class:`UserWarning` is emitted recommending a dedicated discrete-MI estimator
+    (e.g. Miller-Madow or NSB) for small-alphabet data.
     """
     if max_lag < 1:
         raise ValueError("max_lag must be >= 1")
+
+    # RVH-F07: cardinality check — route to GCMI for heavy-tie discrete inputs.
+    arr_check = np.asarray(ts, dtype=float).ravel()
+    n_unique = int(np.unique(arr_check).size)
+    if n_unique < _DISCRETE_ALPHABET_WARNING_THRESHOLD:
+        warnings.warn(
+            f"compute_ami: series has only {n_unique} unique value(s). "
+            "For small-alphabet discrete data, consider a dedicated discrete-MI "
+            "estimator (e.g. Miller-Madow or NSB) for more accurate estimates. "
+            "Routing to GCMI when unique/N < _GCMI_CARDINALITY_THRESHOLD.",
+            UserWarning,
+            stacklevel=2,
+        )
+    n_total = arr_check.size
+    cardinality_ratio = n_unique / max(n_total, 1)
+    if cardinality_ratio < _GCMI_CARDINALITY_THRESHOLD:
+        # Heavy-tie discrete: use GCMI for robustness.
+        arr = validate_time_series(ts, min_length=max_lag + min_pairs + 1)
+        gcmi_vals = np.zeros(max_lag, dtype=float)
+        for horizon in range(1, max_lag + 1):
+            if arr.size - horizon < min_pairs:
+                break
+            gcmi_vals[horizon - 1] = compute_gcmi_at_lag(arr, arr, lag=horizon, min_pairs=min_pairs)
+        return gcmi_vals
 
     if estimator == "ksg2":
         arr = validate_time_series(ts, min_length=max_lag + min_pairs + 1)

@@ -23,6 +23,46 @@ _MIN_EMBEDDED: int = 10
 _CHAOTIC_THRESHOLD: float = 0.1
 _STABLE_THRESHOLD: float = -0.1
 
+# Maximum lag used when estimating the dominant orbital period from AMI.
+# Kept short (20) so the overhead is negligible for the LLE service.
+_AMI_MAX_LAG_FOR_ORBITAL_PERIOD: int = 20
+
+
+def _estimate_dominant_orbital_period(series: np.ndarray) -> int | None:
+    """Estimate the dominant orbital period via the first AMI minimum.
+
+    Uses a short KSG-II AMI curve (max_lag=20) to find the lag at which AMI
+    first dips below its value at lag 1, which is a standard proxy for the
+    mean orbital period in Rosenstein et al. (1993).  Returns ``None`` when
+    the series is too short or no minimum is found.
+
+    Args:
+        series: 1-D float array.
+
+    Returns:
+        Lag index (1-based) of the first AMI minimum, or ``None``.
+    """
+    n = len(series)
+    max_lag = min(_AMI_MAX_LAG_FOR_ORBITAL_PERIOD, n // 4)
+    if max_lag < 2:
+        return None
+    try:
+        # local import avoids top-level circularity risk
+        from forecastability.metrics.metrics import compute_ami
+
+        ami = compute_ami(series, max_lag, min_pairs=10, random_state=0)
+    except Exception:
+        return None
+
+    # Find the first local minimum: index where ami[i] < ami[i-1] and ami[i] < ami[i+1]
+    for i in range(1, len(ami) - 1):
+        if ami[i] < ami[i - 1] and ami[i] < ami[i + 1]:
+            return i + 1  # 1-based lag
+    # Fallback: return the index of the global minimum
+    if ami.size > 0:
+        return int(np.argmin(ami)) + 1
+    return None
+
 
 def _interpret_lle(lambda_estimate: float) -> str:
     """Map a lambda estimate to a human-readable interpretation string.
@@ -81,6 +121,7 @@ def _compute_lle_safe(
     *,
     embedding_dim: int,
     delay: int,
+    linear_window_steps: int | None = None,
 ) -> tuple[float, int]:
     """Compute LLE and return ``(lambda_estimate, n_embedded_points)``.
 
@@ -91,6 +132,11 @@ def _compute_lle_safe(
         series: 1-D float array.
         embedding_dim: Embedding dimension *m*.
         delay: Time delay *tau*.
+        linear_window_steps: Maximum number of divergence-tracking steps to
+            use when fitting the linear slope (RVH-F07).  When ``None`` the
+            full ``n // 20`` budget is used.  Rosenstein et al. (1993)
+            recommend fitting only the initial linear region of the
+            log-divergence curve; this argument enforces that bound.
 
     Returns:
         Tuple of ``(lambda_estimate, n_embedded_points)``.
@@ -101,7 +147,11 @@ def _compute_lle_safe(
         return float("nan"), n_e
     n = len(series)
     theiler_window = max(1, int(0.1 * n))
-    evolution_steps = max(1, n // 20)
+    full_steps = max(1, n // 20)
+    if linear_window_steps is not None:
+        evolution_steps = max(1, min(full_steps, linear_window_steps))
+    else:
+        evolution_steps = full_steps
     lambda_val = _estimate_lle_rosenstein(
         embedded,
         theiler_window=theiler_window,
@@ -123,6 +173,14 @@ def build_largest_lyapunov_exponent(
     issues.  Unexpected errors propagate to the caller (the triage stage
     wraps calls in a broad try/except for experimental safety).
 
+    The linear slope is fitted only over the initial linear region of the
+    log-divergence curve (RVH-F07).  The window is bounded to
+    ``min(n_steps // 3, mean_orbital_period)`` steps, where
+    ``mean_orbital_period`` is derived from the first AMI minimum — the
+    standard Rosenstein et al. (1993) heuristic.  This prevents the slope
+    estimate from being distorted by the saturation regime of the divergence
+    curve that appears beyond one orbital period.
+
     Args:
         series: 1-D float array of observations.
         embedding_dim: Embedding dimension *m* (default 3).
@@ -134,13 +192,24 @@ def build_largest_lyapunov_exponent(
     """
     n = len(series)
     n_embedded = max(0, n - (embedding_dim - 1) * delay)
-    evolution_steps = max(1, n // 20)
+    full_steps = max(1, n // 20)
+
+    # RVH-F07: bound the linear-fit window to the initial linear divergence
+    # region.  The window is min(full_steps // 3, orbital_period).
+    orbital_period = _estimate_dominant_orbital_period(series)
+    if orbital_period is not None:
+        linear_window = max(1, min(full_steps // 3, orbital_period))
+    else:
+        linear_window = max(1, full_steps // 3)
+
+    evolution_steps = linear_window
 
     try:
         lambda_val, n_embedded_actual = _compute_lle_safe(
             series,
             embedding_dim=embedding_dim,
             delay=delay,
+            linear_window_steps=linear_window,
         )
     except (ValueError, OverflowError):
         lambda_val = float("nan")
