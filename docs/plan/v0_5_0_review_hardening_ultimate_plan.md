@@ -101,10 +101,10 @@ ID prefix: **RVH** (Review-driven hardening).
 
 | ID | Feature | Phase | Priority | Status |
 | --- | --- | --- | --- | --- |
-| RVH-F00 | Typed contracts: new kernel protocols, KSG-CMI result, calibration audit, perf-budget report | 0 | P0 | Not started |
-| RVH-F01 | Unified Chebyshev KSG-II curve kernel (canonical implementation of `KSG2ProfileKernel`) | 1 | P0 | Not started |
-| RVH-F02 | Frenzel-Pompe KSG-CMI estimator and renamed TE surfaces (`compute_transfer_entropy_ksg`, `compute_predictive_information_gain`) | 1 | P0 | Not started |
-| RVH-F03 | Romano-Wolf step-down significance correction; `significance_correction_service` | 1 | P0 | Not started |
+| RVH-F00 | Typed contracts: new kernel protocols, KSG-CMI result, calibration audit, perf-budget report | 0 | P0 | ✅ Done |
+| RVH-F01 | Unified Chebyshev KSG-II curve kernel (canonical implementation of `KSG2ProfileKernel`) | 1 | P0 | ✅ Done |
+| RVH-F02 | Frenzel-Pompe KSG-CMI estimator, renamed TE surfaces, CMI as public surface, quality_warning, PIG asymmetry docstring | 1 | P0 | In progress |
+| RVH-F03 | Romano-Wolf + BH + Benjamini-Yekutieli significance correction; `significance_correction_service` | 1 | P0 | Not started |
 | RVH-F04 | Vectorized hot loops: phase-randomization batching, ordinal pattern indexing, Theiler-window filter, DFA fluctuation | 1 | P0 | Not started |
 | RVH-F05 | Incremental QR partial-curve residualization (`metrics/_lag_design.py` rewrite) | 1 | P1 | Not started |
 | RVH-F06 | Request-scoped memoization in `run_triage` (`_scale_series`, Welch PSD, AMI curve) | 1 | P1 | Not started |
@@ -325,16 +325,19 @@ flowchart LR
 - `tests/test_kernel_parity.py` and `tests/test_kernel_routing.py` pass.
 
 **RVH-F02 — KSG-CMI and TE rename.**
-- `compute_conditional_mutual_information_ksg(X, Y, Z, lag, k) -> float` in `src/forecastability/diagnostics/cmi_ksg.py` implements Frenzel-Pompe via joint `(X_t, Y_{t-L}, Z)` Chebyshev neighbour radius + `searchsorted` marginal counts. Returns NaN when conditioning dimension exceeds the sample-size rule `N < k^(d+2)`.
-- `compute_transfer_entropy_ksg(X, Y, lag, history_depth=lag-1) -> TransferEntropyKsgResult` in the same module, layered on top.
-- `compute_predictive_information_gain(...) -> PredictiveInformationGainResult` at `src/forecastability/diagnostics/predictive_information_gain.py` — code is the v0.4.3 `compute_transfer_entropy` body, only renamed.
+- `compute_conditional_mutual_information_ksg(X, Y, Z, lag, k) -> float` in `src/forecastability/diagnostics/cmi_ksg.py` implements Frenzel-Pompe via joint `(X_t, Y_{t-L}, Z)` Chebyshev neighbour radius + `searchsorted` marginal counts. Returns NaN when conditioning dimension exceeds the sample-size rule `N < k^(d+2)`. **This function is a documented public surface** — CMI has genuine use outside TE (mediation analysis, partial dependence, conditional independence testing); expose it in `forecastability.api`.
+- **Conditioning-dimension cliff**: the bias of KSG-CMI grows roughly with `d * log(d)` for fixed N, badly degrading well before the hard `N < k^(d+2)` cutoff. `TransferEntropyKsgResult.quality_warning` surfaces `"ok" / "marginal" / "unreliable"` based on `N / k^(d+2)` (thresholds: ok ≥ 10, marginal ≥ 2, unreliable < 2). Users get an interpretable warning at history_depth ≥ 3 with N < 5000 without silently receiving noisy values.
+- `compute_transfer_entropy_ksg(X, Y, lag, history_depth=lag-1) -> TransferEntropyKsgResult` in the same module, layered on top. `TransferEntropyKsgResult.status` uses the richer Literal: `"computed" | "blocked_sample_size" | "blocked_low_cardinality" | "blocked_constant_input"` (updated in RVH-F00 patch).
+- `compute_predictive_information_gain(...) -> PredictiveInformationGainResult` at `src/forecastability/diagnostics/predictive_information_gain.py` — code is the v0.4.3 `compute_transfer_entropy` body, only renamed. **Asymmetry docstring required**: "PIG is computed with target=X, source=Y. It is NOT generally equal to PIG(target=Y, source=X) — the asymmetry arises from which series is residualized on which history, not from directional information flow."
 - The umbrella `compute_transfer_entropy` is **removed**: a module-level `__getattr__` in `forecastability.diagnostics` raises `ImportError` with the message "compute_transfer_entropy was split in v0.5.0; use compute_transfer_entropy_ksg for Schreiber TE or compute_predictive_information_gain for residual-MI. See docs/migration/v0.4.x_to_v0.5.0.md."
-- `tests/test_te_ksg_golden.py` and `tests/test_predictive_information_gain_rename.py` pass.
+- `tests/test_te_ksg_golden.py` and `tests/test_predictive_information_gain_rename.py` pass. In `test_te_ksg_golden.py`, write the VAR(1) analytical TE formula explicitly in a comment: `# Analytical TE: 0.5 * log((σ_x² + β²σ_y²) / σ_x²)` with parameterization defined so future maintainers do not re-derive it.
 
 **RVH-F03 — Romano-Wolf significance correction.**
-- `SignificanceCorrectionService` at `src/forecastability/services/significance_correction_service.py` implements three modes: `"romano_wolf"` (step-down using max-statistic null), `"bh"` (Benjamini-Hochberg over lags), `"none"` (per-lag raw).
+- `SignificanceCorrectionService` at `src/forecastability/services/significance_correction_service.py` implements four modes: `"romano_wolf"` (step-down using max-statistic null, FWER control), `"bh"` (Benjamini-Hochberg, FDR control assuming positive regression dependence), `"by"` (Benjamini-Yekutieli, FDR control under arbitrary dependence — appropriate for autocorrelated lag-wise tests), `"none"` (per-lag raw, backward-compat).
+- **Correction choice guidance** (add to docstring): Romano-Wolf is correct for FWER but may overpower for geometry-style "find the structure" queries where FDR control is more appropriate. Benjamini-Yekutieli (`"by"`) handles arbitrary dependence (suitable for autocorrelated lags) at the cost of conservatism; BH (`"bh"`) is less conservative but assumes positive regression dependence. The default `"romano_wolf"` is the statistically honest choice for formal significance.
 - The service consumes the surrogate matrix already produced by the kernel; no recomputation.
 - `compute_significance_bands_generic` and `compute_ami_information_geometry` route their per-lag thresholds through the service with default `correction="romano_wolf"`.
+- `SignificanceCorrectionResult.correction` field already has the `"by"` option in its Literal (added in RVH-F00).
 - The fingerprint / routing / complexity-band consumers see only the corrected mask; no API change.
 - `tests/test_significance_correction.py::test_romano_wolf_controls_fwer` passes (Monte-Carlo $10^4$ null replicates; observed FWER within ±2σ of nominal α).
 
@@ -358,7 +361,7 @@ flowchart LR
 **RVH-F07 — Welch nperseg, Lyapunov window, cardinality-aware MI.**
 - `services/spectral_forecastability_service.py:135-139` changes `nperseg=arr.size` to `nperseg = max(64, arr.size // 8)` and `noverlap = nperseg // 2`.
 - `services/lyapunov_service.py` Rosenstein fit restricted to the linear-divergence region. Window heuristic: fit the first `min(n_steps // 3, mean_orbital_period)` steps where `mean_orbital_period` comes from the dominant AMI minimum. Document the change; existing chaotic-threshold defaults preserved.
-- `compute_ami` and `compute_pami_linear_residual` detect low-cardinality input (`unique / N < 0.5`) and route to GCMI via `forecastability.diagnostics.gcmi.gcmi_cc` instead of KSG with jitter.
+- `compute_ami` and `compute_pami_linear_residual` detect **heavy-tie discrete input** (`unique / N < 0.1`, documented as `_GCMI_CARDINALITY_THRESHOLD = 0.1` module constant) and route to GCMI via `forecastability.diagnostics.gcmi.gcmi_cc`. KSG-II with jitter handles light-to-moderate ties fine; the failure mode is heavy ties (genuinely ordinal/categorical data), not moderate ones. The `0.5` threshold is too lax and routes discretized continuous series incorrectly. When `unique(X) < 20` an additional `UserWarning` is emitted suggesting a discrete-MI estimator (Miller-Madow or NSB) for small-alphabet data. GCMI fallback applies to **raw AMI path only** (not partial-curve path — the linear residualization in pAMI is itself a Gaussian approximation, so GCMI routing does not reduce the approximation further).
 
 **RVH-F08 — Routing-confidence calibration.**
 - `scripts/run_routing_confidence_calibration.py` runs the 10-archetype suite × ≥ 100 noise replicates; computes routing recommendation; scores against ground-truth model family.
@@ -458,16 +461,16 @@ MOVE orchestrators into use_cases/"]
 
 - `examples/univariate/` and `examples/covariant_informative/` re-run clean.
 - Any committed `outputs/` JSON or markdown whose numerics changed has been re-committed under `outputs/` with the new values; the diff is reviewed and acknowledged in the PR description.
-- `docs/migration/v0.4.x_to_v0.5.0.md` is filled in with at least one runnable code snippet per breaking change.
+- `docs/migration/v0.4.x_to_v0.5.0.md` is filled in with at least one runnable code snippet per breaking change. **Also include a "What did NOT change" section** listing things users might assume changed but didn't (e.g., "`forecastability_profile` numeric output is unchanged when input is continuous and `correction='none'`", "`n_surrogates` default raised from 99 to 999 — existing code with explicit `n_surrogates=99` is unaffected"). Explicit non-drift statements reduce migration anxiety and are cheap insurance against the "silent numerical drift" high/high risk in the risk register.
 - `tests/test_migration_guide_snippets.py` exercises every snippet.
 
 ### Phase 4 — Tests and regression fixtures
 
 **RVH-F14 — Numerical golden tests.**
 
-- `tests/test_gaussian_mi_golden.py`: for `ρ ∈ {0.2, 0.5, 0.8}`, `N = 5000`, assert `KSG2CurveKernel.estimate_curve(...)` recovers `-0.5 * np.log(1 - ρ**2)` within 5%. Same series is also tested against `Ksg1SklearnKernel` to document the known KSG-I bias.
-- `tests/test_te_ksg_golden.py`: VAR(1) with known cross-coefficient; `compute_transfer_entropy_ksg(...)` recovers the analytical CMI within 5%.
-- `tests/test_v0_5_0_regression_fixtures.py`: rebuilds and diffs every fixture under `docs/fixtures/v0_5_0_regression/`. Fixtures cover at minimum AR(1), white noise, sine + AR(1), Lorenz first coordinate, M4 hourly slice.
+- `tests/test_gaussian_mi_golden.py`: for `ρ ∈ {0.2, 0.5, 0.8}`, `N = 5000`, assert `KSG2CurveKernel.estimate_curve(...)` recovers `-0.5 * np.log(1 - ρ**2)` within 5%. Same series also tested against `Ksg1SklearnKernel` to document the known KSG-I bias. **Also include an anisotropic case** where marginal variances differ by 10× (e.g., `X ~ N(0,1)`, `Y ~ N(0,100)` with known correlation). This is the regime where KSG-II earns its advantage over KSG-I; a test that passes for both estimators is not validating the upgrade. Assert that KSG-II error is < 5% and that KSG-I error is measurably larger (> 10% preferred) on the anisotropic case.
+- `tests/test_te_ksg_golden.py`: VAR(1) with known cross-coefficient; `compute_transfer_entropy_ksg(...)` recovers the analytical CMI within 5%. Comment in the test must write the analytical formula explicitly with parameterization: `# VAR(1): X_t = a*X_{t-1} + e_x, Y_t = b*Y_{t-1} + β*X_{t-L} + e_y; TE(X→Y,L) = 0.5*log((σ_y² + β²*σ_x²) / σ_y²)` (or equivalent depending on parameterization used — write it out so future maintainers do not re-derive it).
+- `tests/test_v0_5_0_regression_fixtures.py`: rebuilds and diffs every fixture under `docs/fixtures/v0_5_0_regression/`. Fixtures cover at minimum: AR(1), white noise, sine + AR(1), Lorenz first coordinate, M4 hourly slice. **Also include one known-disagreement fixture**: a strongly-coupled bivariate process with anisotropic marginals (e.g., AR(1) with `σ_x/σ_y = 10`). This fixture is where v0.4.3 KSG-I and v0.5.0 KSG-II should disagree by > 10%. A regression suite where all fixtures agree to within a few percent is not validating that KSG-II is doing its job.
 
 **RVH-F15 — Performance budget tests.**
 
@@ -549,7 +552,7 @@ MOVE orchestrators into use_cases/"]
 > [!NOTE]
 > Each item must be resolved before the corresponding phase begins. A non-empty list at release time is a blocker.
 
-1. **Default `n_surrogates` for the geometry threshold under Romano-Wolf.** Davison-Hinkley `(B+1)`-corrected ranks suggest `B = 999` is the honest floor for family-wise control across `H ≈ 30` lags at α = 0.05. The library currently defaults to `B = 99` (the minimum the readiness gate accepts). Decision needed in Phase 0: do we (a) raise the default to 999 in v0.5.0 (perf-hostile but statistically honest), (b) keep 99 default but emit a `UserWarning` when `correction="romano_wolf"` is requested with `B < 999`, or (c) make the kernel autoscale `B` from a user-supplied target FWER. *Recommendation pending Phase 0 review:* option (b).
+1. **Default `n_surrogates` for the geometry threshold under Romano-Wolf.** Davison-Hinkley `(B+1)`-corrected ranks suggest `B = 999` is the honest floor for family-wise control across `H ≈ 30` lags at α = 0.05. The library currently defaults to `B = 99` (the minimum the readiness gate accepts). Options: (a) raise the default to 999, (b) keep 99 but emit `UserWarning`, or (c) autoscale. *Decision: option (a) — raise default to 999.* With the batched FFT vectorisation from RVH-F04, the 10× surrogate count is closer to 3-4× wall-clock cost; the honest floor outweighs the perf cost. Benchmark in RVH-F04 to confirm. Note: phase-randomization preserves the power spectrum, so the surrogate null distribution is only approximately exchangeable with the observed statistic (higher-order moments destroyed); acknowledge this in the methods docstring without changing the implementation.
 2. **Migration recipe for `compute_pami_linear_residual` under low cardinality.** RVH-F07 routes low-cardinality inputs to GCMI, but `compute_pami_linear_residual` already uses linear residualisation that is itself a Gaussian approximation. Should the GCMI fallback be the default for the partial-curve path too, or only for the raw AMI path? Decision needed before RVH-F07.
 3. **Whether to move `triage/` modules wholesale into `domain/`.** The current `triage/` directory contains both domain models (`triage/models.py`) and use-case orchestrators (`triage/router.py`, `triage/forecastability_profile.py`). RVH-F09 moves the domain models. Should it also rename `triage/` to `triage_orchestration/` for clarity, or leave the directory name unchanged to minimize import-site churn? Decision needed before RVH-F09 starts.
 4. **Whether `_legacy/` module should ship at all.** The deprecation-warning surface for `_legacy/` adds ~50 names. If v0.5.0 is a true major release, dropping every legacy name and forcing migration may be cleaner. Decision needed before RVH-F12.

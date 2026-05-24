@@ -15,11 +15,21 @@ class SignificanceCorrectionResult(BaseModel):
 
     model_config = ConfigDict(frozen=True, arbitrary_types_allowed=True)
 
-    correction: Literal["romano_wolf", "bh", "none"] = Field(
-        description="Correction method applied."
+    correction: Literal["romano_wolf", "bh", "by", "none"] = Field(
+        description=(
+            "Correction method applied. "
+            "'romano_wolf': step-down FWER control (max-statistic null). "
+            "'bh': Benjamini-Hochberg FDR, assumes positive regression dependence. "
+            "'by': Benjamini-Yekutieli FDR, valid under arbitrary dependence "
+            "(recommended for autocorrelated lags). "
+            "'none': per-lag raw p-values, no correction."
+        )
     )
     family_wise_alpha: float = Field(
-        description="Nominal family-wise error rate (FWER) target. Applies only to romano_wolf."
+        description=(
+            "Nominal error rate target. For romano_wolf: FWER. "
+            "For bh/by: FDR. For none: per-lag alpha."
+        )
     )
     corrected_mask: np.ndarray = Field(
         description="Boolean array shape (H,). True = lag is significant after correction."
