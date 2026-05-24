@@ -49,6 +49,12 @@ DOMAIN_MODULE_PATHS = [
     "src/forecastability/triage/theoretical_limit_diagnostics.py",
     "src/forecastability/triage/predictive_info_learning_curve.py",
     # C15: TODO — comparison_report.py imports matplotlib; excluded until fixed
+    # RVH-F00: new domain/results/ models — structural check added in Phase 2 RVH-F09
+    "src/forecastability/domain/results/transfer_entropy_ksg.py",
+    "src/forecastability/domain/results/predictive_information_gain.py",
+    "src/forecastability/domain/results/significance_correction.py",
+    "src/forecastability/domain/results/calibration_audit.py",
+    "src/forecastability/domain/results/perf_budget.py",
 ]
 
 _DOMAIN_FORBIDDEN = frozenset(
