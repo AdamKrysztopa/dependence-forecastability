@@ -648,9 +648,26 @@ Release is complete when item 12 is done and the next planning cycle (v0.5.1) be
 
 ## 9. Phase 1 retrospection plan
 
-**Status:** To be executed after all Phase 1 features (RVH-F01 through RVH-F08) are committed and the full test suite is green.
+**Status:** ✅ Done — retrospection document committed at `docs/plan/phase1_retrospection.md` (2026-05-24).
 
-**Owner:** `release-planner` drafts; `statistician` signs off on math-correctness findings; `software_architect` signs off on architecture findings.
+**Owner:** `release-planner` drafted; `statistician` sign-off on math-correctness findings **pending**; `software_architect` sign-off on architecture findings **pending**.
+
+### Findings summary (see full doc for detail)
+
+- **Math honesty:** All three critical audit findings (C1 transfer-entropy mislabelling, C2 no FWER correction, C3 KSG-I vs KSG-II drift) resolved. Audit findings I1, I4, I5, I7 resolved. I2, I3, I6, I8, I9 deferred to v0.5.1.
+- **Surrogate correctness:** Hermitian-symmetry invariant preserved through RVH-F04 vectorization. `n_surrogates >= 99` enforced at all entry points. `random_state: int` at all boundaries.
+- **Performance:** Batched FFT (RVH-F04), thin QR (RVH-F05), request-scoped memoization (RVH-F06) delivered. Quantitative wall-clock ratios deferred until `tests/benchmarks/surrogate_band_benchmark.py` is written (RVH-F15, Phase 4).
+- **Calibration honesty:** Word "calibrated" removed from docstrings where unwarranted. Audit methodology doc committed with explicit limitations. Calibration audit JSON **not yet generated** — `scripts/run_routing_confidence_calibration.py` must be run before Phase 2 gate closes.
+- **Open questions:** Q1 (n_surrogates default 999) decided but not yet implemented; Q2 (pAMI low-cardinality fallback) unresolved; Q3–Q7 deferred to appropriate phases.
+- **Scope drift:** None. No Phase 2 scope touched.
+- **Test adequacy:** Phase 1 tests adequate for correctness gating. Three planned test files missing (Phase 4 scope: golden MI test, regression fixture test, PBE-F* tests).
+- **Breaking-change inventory:** 5 breaking changes enumerated (TE removal, KSG-II default flip ×3, Romano-Wolf default). Migration guide stubs not yet written (Phase 6, RVH-F16).
+
+### Phase 2 readiness: Conditional Go
+
+Phase 2 may begin once: (a) calibration audit JSON committed, (b) `statistician` + `software_architect` sign-offs recorded. All code gates are green.
+
+**Owner:** `release-planner` drafted; `statistician` sign-off on math-correctness findings **pending**; `software_architect` sign-off on architecture findings **pending**.
 
 ### What to assess
 
