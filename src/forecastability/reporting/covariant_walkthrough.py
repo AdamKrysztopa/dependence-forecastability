@@ -13,7 +13,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from forecastability.diagnostics.transfer_entropy import compute_transfer_entropy_curve
+from forecastability.diagnostics.predictive_information_gain import (
+    compute_predictive_information_gain_curve,
+)
 from forecastability.utils.types import (
     CausalGraphResult,
     CovariantAnalysisBundle,
@@ -212,14 +214,14 @@ def save_directionality_plot(
     target_name: str = "target",
 ) -> pd.DataFrame:
     """Plot forward and reverse transfer-entropy curves for one directional pair."""
-    forward = compute_transfer_entropy_curve(
+    forward = compute_predictive_information_gain_curve(
         source,
         target,
         max_lag=max_lag,
         min_pairs=min_pairs,
         random_state=random_state,
     )
-    reverse = compute_transfer_entropy_curve(
+    reverse = compute_predictive_information_gain_curve(
         target,
         source,
         max_lag=max_lag,

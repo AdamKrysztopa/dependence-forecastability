@@ -61,6 +61,8 @@ _LAZY_EXPORT_MAP: dict[str, tuple[str, str | None]] = {
     "run_ami_geometry_csv_batch": ("forecastability.adapters.csv", None),
     # Diagnostics
     "compute_gcmi": ("forecastability.diagnostics.gcmi", None),
+    "compute_conditional_mutual_information_ksg": ("forecastability.diagnostics.cmi_ksg", None),
+    "compute_transfer_entropy_ksg": ("forecastability.diagnostics.cmi_ksg", None),
     # Extensions
     "TargetBaselineCurves": ("forecastability.extensions", None),
     "compute_target_baseline_by_horizon": ("forecastability.extensions", None),

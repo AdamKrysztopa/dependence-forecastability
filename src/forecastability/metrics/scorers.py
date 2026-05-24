@@ -14,8 +14,10 @@ from scipy.stats import kendalltau, spearmanr
 from sklearn.feature_selection import mutual_info_regression
 
 from forecastability.diagnostics.gcmi import compute_gcmi_at_lag
+from forecastability.diagnostics.predictive_information_gain import (
+    compute_predictive_information_gain,
+)
 from forecastability.diagnostics.spectral_utils import compute_normalised_psd, spectral_entropy
-from forecastability.diagnostics.transfer_entropy import compute_transfer_entropy
 
 
 @runtime_checkable
@@ -264,7 +266,7 @@ def te_scorer(
         *,
         random_state: int = 42,
     ) -> float:
-        return compute_transfer_entropy(
+        result = compute_predictive_information_gain(
             past,
             future,
             lag=lag,
@@ -274,6 +276,7 @@ def te_scorer(
             min_pairs=min_pairs,
             random_state=random_state,
         )
+        return result.value
 
     return _te
 

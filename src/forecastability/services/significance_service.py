@@ -8,8 +8,10 @@ from typing import cast
 
 import numpy as np
 
+from forecastability.diagnostics.predictive_information_gain import (
+    compute_predictive_information_gain_curve,
+)
 from forecastability.diagnostics.surrogates import phase_surrogates
-from forecastability.diagnostics.transfer_entropy import compute_transfer_entropy_curve
 from forecastability.metrics import _scale_series
 from forecastability.metrics.scorers import DependenceScorer, ScorerInfo
 from forecastability.services.partial_curve_service import (
@@ -184,7 +186,7 @@ def compute_significance_bands_transfer_entropy(
         seed = random_state + idx + 1
         surrogate_target = surr[idx]
         surrogate_source = source if source is not None else surrogate_target
-        return compute_transfer_entropy_curve(
+        return compute_predictive_information_gain_curve(
             surrogate_source,
             surrogate_target,
             max_lag=max_lag,

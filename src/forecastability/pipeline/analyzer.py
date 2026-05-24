@@ -12,8 +12,10 @@ from typing import Any, Literal, cast
 
 import numpy as np
 
+from forecastability.diagnostics.predictive_information_gain import (
+    compute_predictive_information_gain_curve,
+)
 from forecastability.diagnostics.surrogates import compute_significance_bands
-from forecastability.diagnostics.transfer_entropy import compute_transfer_entropy_curve
 from forecastability.metrics.metrics import (
     compute_ami,
     compute_pami_linear_residual,
@@ -216,7 +218,7 @@ class ForecastabilityAnalyzer:
             self._registry.get(method)
             effective_min_pairs = max(min_pairs, _TE_MIN_PAIRS)
             arr = validate_time_series(ts, min_length=max_lag + effective_min_pairs + 1)
-            raw = compute_transfer_entropy_curve(
+            raw = compute_predictive_information_gain_curve(
                 arr,
                 arr,
                 max_lag=max_lag,
@@ -668,7 +670,7 @@ class ForecastabilityAnalyzerExog(ForecastabilityAnalyzer):
             arr = validate_time_series(ts, min_length=max_lag + effective_min_pairs + 1)
             validated_exog = _validate_exog_for_target(exog, target=arr)
             source = validated_exog if validated_exog is not None else arr
-            raw = compute_transfer_entropy_curve(
+            raw = compute_predictive_information_gain_curve(
                 source,
                 arr,
                 max_lag=max_lag,

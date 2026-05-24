@@ -4,7 +4,7 @@ from __future__ import annotations
 import warnings
 
 import numpy as np
-from scipy.spatial import cKDTree
+from scipy.spatial import cKDTree  # type: ignore[attr-defined]
 from scipy.special import digamma
 
 _DEFAULT_K_LIST = (3, 5, 8)
