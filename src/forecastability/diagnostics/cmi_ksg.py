@@ -141,6 +141,9 @@ def compute_transfer_entropy_ksg(
     # Resolve k / n_neighbors
     k_eff = k if n_neighbors is None else n_neighbors
 
+    if history_depth is not None and history_depth < 0:
+        raise ValueError(f"history_depth must be >= 0, got {history_depth}")
+
     # Resolve history_depth
     d = max(1, lag - 1) if history_depth is None else history_depth
     resolved_history_depth = d

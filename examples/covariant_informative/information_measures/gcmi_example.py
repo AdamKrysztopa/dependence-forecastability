@@ -20,7 +20,9 @@ from forecastability.diagnostics.gcmi import (
     compute_gcmi_at_lag,
     compute_gcmi_curve,
 )
-from forecastability.diagnostics.transfer_entropy import compute_transfer_entropy_curve
+from forecastability.diagnostics.predictive_information_gain import (
+    compute_predictive_information_gain_curve as compute_transfer_entropy_curve,
+)
 
 
 def _pearson(x: np.ndarray, y: np.ndarray) -> float:
