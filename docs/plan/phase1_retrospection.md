@@ -49,7 +49,7 @@ The README quickstart code block (`import forecastability; run_triage(...)`) is 
 - **RVH-F01**: `KSG2CurveKernel` (`src/forecastability/kernels/ksg2_curve_kernel.py`) implements KSG-II with Chebyshev `cKDTree`, one tree build per `(past, future)` joint slice, marginal counts via `np.searchsorted`, and median over `k ∈ {3, 5, 8}`. All public `compute_ami` and `compute_pami_linear_residual` routes accept `estimator` parameter; `ksg2` is the default. The legacy `estimator="ksg1_sklearn"` opt-in is available for v0.4.3 numerical reproduction. The `surrogates.py` module passes `estimator` through to all surrogate curve evaluations.
 - **RVH-F02**: `compute_transfer_entropy` removed. `compute_predictive_information_gain` (honest rename, same residual-MI implementation) lives at `src/forecastability/diagnostics/predictive_information_gain.py`. `compute_transfer_entropy_ksg` (true Frenzel-Pompe KSG-CMI, `src/forecastability/diagnostics/cmi_ksg.py`) is the new honest Schreiber TE surface. Both return frozen Pydantic result types. `quality_warning` field is computed before any blocking check.
 - **RVH-F07**: Welch `nperseg` now set adaptively (`N // 8`); Lyapunov fit restricted to the linear-divergence window; low-cardinality inputs fall back to GCMI via cardinality detection.
-- **RVH-F08**: The word "calibrated" removed from public docstrings in `recommendation_service.py`. The calibration script and methodology doc honestly disclose that current thresholds are hand-picked, that the script measures achieved precision rather than sweeping thresholds, and that full threshold-sweep calibration is deferred to v0.5.1. The audit document (`docs/calibration/v0_5_0_routing_confidence.md`) is committed with explicit limitations.
+- **RVH-F08**: The word "calibrated" removed from public docstrings in `recommendation_service.py`. The calibration script and methodology doc honestly disclose that current thresholds are hand-picked, that the script measures achieved precision rather than sweeping thresholds, and that a full threshold-sweep calibration is not performed in this release. The audit document (`docs/calibration/v0_5_0_routing_confidence.md`) is committed with explicit limitations.
 
 **Remaining gap:** RVH-F14 (numerical golden tests: Gaussian-MI round-trip, KSG-II vs KSG-I regression-fixture diff) is Phase 4 and not started. The Gaussian-MI round-trip is the quantitative verification that `KSG2CurveKernel` recovers `−½ ln(1 − ρ²)` within 5% for `ρ ∈ {0.2, 0.5, 0.8}` at `N = 5000`. This is the hardest remaining math-honesty gate.
 
@@ -99,7 +99,7 @@ RVH-F08 achieved the following:
 
 **Action required:** Run `uv run python scripts/run_routing_confidence_calibration.py` and commit the resulting JSON before Phase 2 begins.
 
-**Precision target gap assessment (based on methodology review):** The script measures precision at the hand-picked threshold (`0.15` for HIGH, `0.05` for MEDIUM). It does not sweep thresholds. A full threshold sweep is explicitly deferred to v0.5.1. The plan's 90% HIGH precision target is thus a measurement target (check whether current thresholds achieve it), not a fitting target in this release. The audit JSON will quantify the gap, if any, and give the maintainer a concrete signal for manual adjustment.
+**Precision target gap assessment (based on methodology review):** The script measures precision at the hand-picked threshold (`0.15` for HIGH, `0.05` for MEDIUM). It does not sweep thresholds. A full threshold sweep is not performed in this release. The plan's 90% HIGH precision target is thus a measurement target (check whether current thresholds achieve it), not a fitting target in this release. The audit JSON will quantify the gap, if any, and give the maintainer a concrete signal for manual adjustment before Phase 6.
 
 ---
 
@@ -107,13 +107,13 @@ RVH-F08 achieved the following:
 
 | # | Question | Resolution | Status |
 |---|---|---|---|
-| 1 | Default `n_surrogates` for geometry threshold under Romano-Wolf | Decided: raise default to 999 | **Partially resolved** — decision recorded in plan. RVH-F04 vectorization makes 10× surrogate count feasible (3–4× wall-clock vs 10× before). The higher-order-moment destruction limitation is now noted in the methods docstring. Implementation of the default change was not committed in Phase 1; the current default remains 99 in `TriageRequest`. This must be confirmed before Phase 4 (RVH-F14/F15). |
-| 2 | Migration recipe for `compute_pami_linear_residual` under low cardinality | RVH-F07 routes low-cardinality inputs to GCMI for the raw AMI path. For the `compute_pami_linear_residual` path, the linear residualization is itself a Gaussian approximation — the GCMI fallback was not applied to the partial-curve path. The decision (apply GCMI fallback to partial-curve path or not) was not explicitly recorded as resolved in Phase 1. | **Unresolved** — needs explicit decision before Phase 2 migration guide stub. |
-| 3 | Whether to rename `triage/` to `triage_orchestration/` | Phase 2 scope; no action in Phase 1. | **Deferred to Phase 2** (pre-RVH-F09). |
-| 4 | Whether `_legacy/` module should ship | Phase 2 scope. | **Deferred to Phase 2** (pre-RVH-F12). |
-| 5 | PBE budget calibration baseline machine | Recommendation: option (a) — measure on CI runner with 1.5× headroom. | **Deferred to Phase 4** (pre-RVH-F15). |
+| 1 | Default `n_surrogates` for geometry threshold under Romano-Wolf | Decided: raise default to 999 | **Assigned to Phase 1.5, RVH-F18.** Decision recorded in plan Section 5. Implementation (changing `TriageRequest` default from 99 to 999) is a Phase 1.5 deliverable and must be complete before Phase 2 gate opens. |
+| 2 | Migration recipe for `compute_pami_linear_residual` under low cardinality | RVH-F07 routes low-cardinality inputs to GCMI for the raw AMI path only. Decision recorded: GCMI fallback does NOT apply to the partial-curve path; the partial-curve path emits a `UserWarning` on low-cardinality input. | **Assigned to Phase 1.5, RVH-F21.** Decision recorded in plan Section 5. Implementation (warning emission + migration guide stub) is a Phase 1.5 deliverable. |
+| 3 | Whether to rename `triage/` to `triage_orchestration/` | Phase 2 scope; no action in Phase 1. | **Requires decision before Phase 2 / RVH-F09 begins.** Record decision in plan Section 5 as a pre-gate item for Phase 2. |
+| 4 | Whether `_legacy/` module should ship | Phase 2 scope. | **Requires decision before Phase 2 / RVH-F12 begins.** Record decision in plan Section 5 as a pre-gate item for Phase 2. |
+| 5 | PBE budget calibration baseline machine | Decision: option (a) — measure on CI runner with 1.5× headroom. | **Requires confirmation before Phase 4 / RVH-F15 begins.** Record in plan Section 5 as a pre-gate item for Phase 4. |
 | 6 | Whether calibration audit becomes CI-blocking | No CI enforcement in this release; surfaced as PR diff warning. | **Resolved (no-enforce)** — recorded in calibration doc. |
-| 7 | Sibling examples repo coordination | Pin sibling repo to `<0.5.0` first; bump after v0.5.0 release. | **Deferred to Phase 6** (pre-release). |
+| 7 | Sibling examples repo coordination | Pin sibling repo to `<0.5.0` first; bump after v0.5.0 release. | **Requires confirmation before Phase 6 / RVH-F17.** Record in plan Section 5 as a pre-gate item for Phase 6. |
 
 ---
 
@@ -174,9 +174,11 @@ All breaking changes introduced in Phase 1. Each requires a stub in `docs/migrat
 | `compute_pami_linear_residual` default estimator | Default changed | KSG-I | KSG-II | Pass `estimator="ksg1_sklearn"` to reproduce v0.4.3 numerics exactly |
 | Surrogate-band AMI/pAMI estimator | Default changed | KSG-I | KSG-II | Surrogate bands now use KSG-II by default; pass `estimator="ksg1_sklearn"` for v0.4.3 reproduction |
 | Significance correction default | New behaviour | Per-lag uncorrected (de-facto `correction="none"`) | Romano-Wolf FWER by default | Pass `correction="none"` for uncorrected per-lag behaviour |
-| `signal_to_noise` field name | Not renamed in Phase 1 | `signal_to_noise` | Still `signal_to_noise` | No action needed; rename to `informative_mass_fraction` deferred to v0.5.1 per audit finding I9 |
+| `signal_to_noise` field name | Rename pending | `signal_to_noise` | `informative_mass_fraction` (Phase 2.5) | Access `.informative_mass_fraction`; accessing `.signal_to_noise` will raise `AttributeError` after Phase 2.5 |
+| `n_surrogates` default | Default change pending | `99` | `999` (Phase 1.5) | Pass `n_surrogates=99` explicitly to reproduce v0.4.3 wall-clock; or pass `n_surrogates=999` (now the default) to get the Davison-Hinkley-correct floor |
+| `compute_pami_linear_residual` low-cardinality behaviour | Warning added pending | Silent | Emits `UserWarning` on `unique(X)/N < 0.1` (Phase 1.5) | Suppress with `warnings.filterwarnings` if the warning is expected |
 
-**Note:** The `signal_to_noise` rename (audit finding I9) was explicitly not acted on in Phase 1, as it is a minor audit item and not part of the RVH-F scope. It remains an open item for v0.5.1.
+**Note:** The `signal_to_noise` rename (audit finding I9) is assigned to **Phase 2.5, RVH-F23** within this release. The `n_surrogates` default raise and pAMI low-cardinality warning are assigned to **Phase 1.5, RVH-F18 and RVH-F21** respectively.
 
 ---
 
@@ -188,17 +190,17 @@ At the time of the v0.4.3 audit, the three critical findings were:
 - **C3** (Public AMI/pAMI is KSG-I, docs say KSG-II): ✅ Fixed in RVH-F01
 
 Important findings acted on in Phase 1:
-- **I1** (Calibrated confidence not calibrated): ✅ Addressed in RVH-F08 (honesty — word removed; full calibration deferred to v0.5.1)
+- **I1** (Calibrated confidence not calibrated): ✅ Addressed in RVH-F08 (word "calibrated" removed from docstrings where unwarranted; methodology limitations disclosed in `docs/calibration/v0_5_0_routing_confidence.md`; threshold-sweep calibration is not performed in this release — current thresholds are hand-picked and the audit JSON measures achieved precision)
 - **I4** (Lyapunov linear window): ✅ Fixed in RVH-F07
 - **I5** (Welch nperseg=N degenerates to periodogram): ✅ Fixed in RVH-F07
 - **I7** (Tie handling, integer inputs): ✅ Fixed in RVH-F07 (raw AMI path)
 
-Important findings deferred:
-- **I2** (Heuristic geometry thresholds): Deferred — no change in Phase 1; future calibration work
-- **I3** (pAMI ≠ partial MI except under joint Gaussianity): Docstring disclosure maintained; no algorithm change warranted
-- **I6** (KSG-II self-exclusion index slice assertion): Not yet added; low priority
-- **I8** (CMI sample-size rule independent of conditioning dimension): Deferred to v0.5.1
-- **I9** (`signal_to_noise` misnaming): Deferred to v0.5.1
+Important findings assigned to later phases within v0.5.0:
+- **I2** (Heuristic geometry thresholds): No change in Phase 1. Assigned to **Phase 1.5, RVH-F22** — docstring must disclose that prominence/SNR/shift-correlation thresholds are empirical heuristics for the 10-archetype suite, not derived from a held-out precision target.
+- **I3** (pAMI ≠ partial MI except under joint Gaussianity): Docstring disclosure maintained in Phase 1. Assigned to **Phase 1.5, RVH-F22** — explicit wording required: "equals true partial MI only under joint Gaussianity."
+- **I6** (KSG-II self-exclusion index slice assertion): Not yet added. Assigned to **Phase 1.5, RVH-F19** — one-line assertion that slot 0 of kNN result is the query point.
+- **I8** (CMI sample-size rule independent of conditioning dimension): Assigned to **Phase 1.5, RVH-F20** — confirm and enforce dimension-aware `N >= k^(d+2)` rule; add `quality_warning` test for unreliable regime.
+- **I9** (`signal_to_noise` misnaming): Assigned to **Phase 2.5, RVH-F23** — rename to `informative_mass_fraction` after Phase 2 domain migration, before Phase 3 example re-runs.
 
 ---
 
@@ -227,16 +229,18 @@ Important findings deferred:
 | `statistician` sign-off on RVH-F01 (KSG-II routing), RVH-F03 (Romano-Wolf), RVH-F08 (calibration) | **Pending** | Required before Phase 2 |
 | `software_architect` sign-off on RVH-F06 (no global state), overall Phase 1 layer discipline | **Pending** | Required before Phase 2 |
 
-**Go/No-Go decision:** **Conditional Go.** Phase 2 may begin as soon as (a) the calibration audit JSON is committed, and (b) `statistician` and `software_architect` sign-offs are recorded. All code gates are green; the missing items are a long-running script execution and two reviewer sign-offs.
+**Go/No-Go decision:** **Conditional Go — requires Phase 1.5 completion.** Phase 2 may begin as soon as: (a) the calibration audit JSON is committed, (b) all five Phase 1.5 features (RVH-F18 through RVH-F22) are merged and green, (c) Open Questions 3 and 4 have explicit decisions recorded in Section 5 of the release plan, and (d) `statistician` and `software_architect` sign-offs are recorded for Phase 1 + Phase 1.5 scope.
 
 ---
 
-## 6. Issues to Fix Before Retrospection is Complete
+## 6. Outstanding Actions (all assigned within v0.5.0)
 
-1. **Calibration audit JSON missing** (blocking Phase 2 gate-criteria item 4): Run `uv run python scripts/run_routing_confidence_calibration.py` from the repo root. Expected wall-clock: 10–30 minutes. Commit the resulting `docs/calibration/v0_5_0_routing_confidence_audit.json`.
-2. **Open Question 2 needs explicit resolution** (pAMI low-cardinality GCMI fallback for the partial-curve path): Record decision before Phase 2 migration guide stub is written.
-3. **`n_surrogates` default not yet raised to 999** (Open Question 1 decided but not implemented): Confirm where this default is set and implement before RVH-F14/F15.
-4. **Quantitative performance ratios missing**: Once `tests/benchmarks/surrogate_band_benchmark.py` is written (RVH-F15), run a before/after comparison and record ratios in `docs/perf/v0_5_0_phase1_baseline.md`.
+1. **Calibration audit JSON missing** (blocking Phase 2 gate-criteria item 4): Run `uv run python scripts/run_routing_confidence_calibration.py` from the repo root. Expected wall-clock: 10–30 minutes. Commit the resulting `docs/calibration/v0_5_0_routing_confidence_audit.json`. *Must complete before Phase 2 begins.*
+2. **Open Question 2 resolved but not implemented** (pAMI low-cardinality warning for partial-curve path): Decision recorded — emit `UserWarning`, do not reroute to GCMI. Implement in **Phase 1.5, RVH-F21**.
+3. **`n_surrogates` default not yet raised to 999** (Open Question 1 decided but not implemented): Change `TriageRequest` default from 99 to 999. Implement in **Phase 1.5, RVH-F18**. Must complete before Phase 2 begins.
+4. **Remaining audit Important findings not yet addressed** (I2, I3, I6, I8): Implement in **Phase 1.5, RVH-F19/F20/F22**. Must complete before Phase 2 begins.
+5. **`signal_to_noise` rename** (audit I9): Implement in **Phase 2.5, RVH-F23**. Must complete before Phase 3 example re-runs.
+6. **Quantitative performance ratios missing**: Once `tests/benchmarks/surrogate_band_benchmark.py` is written (RVH-F15, Phase 4), run a before/after comparison and record ratios in `docs/perf/v0_5_0_phase1_baseline.md`.
 
 ---
 
