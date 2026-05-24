@@ -1,8 +1,17 @@
-"""Invariant B: KSG2CurveKernel.estimate_curve matches _ksg2_median_profile_value reference."""
+"""Invariant B: KSG2CurveKernel.estimate_curve matches _ksg2_median_profile_value reference.
+
+Also contains RVH-F19 self-exclusion slot-zero assertion tests
+(plan targets tests/test_ksg2_curve_kernel.py; test_self_exclusion_slot_zero lives here
+because Edit cannot create new files and test_kernel_parity.py is the natural home for
+KSG2CurveKernel unit tests).
+"""
 from __future__ import annotations
+
+import warnings
 
 import numpy as np
 import pytest
+from scipy.spatial import cKDTree  # type: ignore[attr-defined]
 
 from forecastability.kernels.ksg2_curve_kernel import KSG2CurveKernel, _apply_jitter
 from forecastability.services.ami_information_geometry_service import (
@@ -62,3 +71,85 @@ def test_kernel_jitter_matches_reference_jitter(ar1_series: np.ndarray) -> None:
         ar1_series, jitter_scale=config.jitter_scale, random_state=42
     )
     np.testing.assert_array_equal(kernel_jittered, ref_jittered)
+
+
+# ---------------------------------------------------------------------------
+# RVH-F19 — Self-exclusion slot-zero assertion (audit finding I6)
+# ---------------------------------------------------------------------------
+
+
+def test_self_exclusion_slot_zero_non_degenerate() -> None:
+    """RVH-F19 / audit I6: cKDTree slot 0 is the query point for non-degenerate data.
+
+    KSG2CurveKernel._estimate_horizon slices indices[:, 1:k+1] assuming slot 0
+    is always the query point itself.  This test constructs a joint matrix with
+    no duplicate rows and verifies that scipy.spatial.cKDTree.query returns the
+    query index at position 0 of the neighbor list, confirming the slice is safe.
+
+    If this test fails, the KSG-II estimator silently includes the query point
+    in the k-NN set, biasing MI estimates downward.
+    """
+    rng = np.random.default_rng(7)
+    n = 200
+    # Strictly distinct rows (continuous distribution → P(duplicate) ≈ 0)
+    x = rng.standard_normal(n)
+    y = rng.standard_normal(n)
+    joint = np.column_stack((x, y))
+
+    tree = cKDTree(joint, leafsize=16)
+    _, indices = tree.query(joint, k=9, workers=1, p=np.inf)  # k=8 + 1 for self
+
+    # Slot 0 must be the self-index for every point
+    assert np.all(indices[:, 0] == np.arange(n)), (
+        "cKDTree slot 0 is NOT the query point for all rows. "
+        "The self-exclusion invariant is violated — duplicate rows or "
+        "unexpected neighbor ordering detected."
+    )
+
+
+def test_self_exclusion_slot_zero_with_jitter(ar1_series: np.ndarray) -> None:
+    """RVH-F19: self-exclusion holds after one-shot jitter is applied.
+
+    The production path applies _apply_jitter before building the joint matrix.
+    This test verifies that jittered AR(1) data still satisfies slot-0 self-exclusion
+    (i.e., jitter makes duplicates negligibly unlikely).
+    """
+    config = AmiInformationGeometryConfig()
+    jittered = _apply_jitter(ar1_series, jitter_scale=config.jitter_scale, random_state=42)
+    h = 3
+    x = jittered[:-h]
+    y = jittered[h:]
+    joint = np.column_stack((x, y))
+
+    tree = cKDTree(joint, leafsize=16)
+    k_max = max(config.k_list)
+    _, indices = tree.query(joint, k=k_max + 1, workers=1, p=np.inf)
+
+    assert np.all(indices[:, 0] == np.arange(len(joint))), (
+        "Slot-0 self-exclusion violated after jitter — "
+        "jitter_scale may be insufficient to break ties."
+    )
+
+
+def test_estimate_curve_no_self_exclusion_warning_on_continuous_data(
+    ar1_series: np.ndarray,
+) -> None:
+    """RVH-F19: KSG2CurveKernel.estimate_curve emits no self-exclusion warning for continuous data.
+
+    The AR(1) fixture has ~300 unique float values so it is non-degenerate after
+    jitter.  The self-exclusion warning in _estimate_horizon must not fire.
+    """
+    kernel = KSG2CurveKernel()
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        kernel.estimate_curve(ar1_series, lag_range=5, random_state=42)
+
+    self_exclusion_warnings = [
+        w for w in caught
+        if issubclass(w.category, UserWarning)
+        and ("self-exclusion" in str(w.message) or "slot 0" in str(w.message))
+    ]
+    assert not self_exclusion_warnings, (
+        f"Unexpected self-exclusion warning(s) on continuous AR(1) data: "
+        f"{[str(w.message) for w in self_exclusion_warnings]}"
+    )

@@ -1,7 +1,7 @@
 """AMI Information Geometry service for v0.3.1.
 
-This module is the deterministic geometry engine that sits beneath the
-forecastability fingerprint and routing layers. It owns:
+This module is the reproducible (seed-controlled) geometry engine that sits
+beneath the forecastability fingerprint and routing layers. It owns:
 
 * horizon-wise KSG-II AMI estimation,
 * shuffle-surrogate bias correction,
@@ -37,7 +37,20 @@ _DEFAULT_BORDERLINE_MARGIN = 0.01
 
 
 class AmiInformationGeometryConfig(BaseModel):
-    """Versioned threshold and estimator settings for geometry semantics."""
+    """Versioned threshold and estimator settings for geometry semantics.
+
+    .. note::
+        **Heuristic threshold disclosure (RVH-F22 / audit finding I2).**
+        The threshold parameters ``peak_prominence_abs``,
+        ``signal_to_noise_none_threshold``, and ``horizon_multiplier_threshold``
+        are empirically chosen heuristics calibrated against the 10-archetype
+        synthetic suite in ``scripts/run_routing_confidence_calibration.py``.
+        They are **not** derived from a held-out precision target; they reflect
+        the maintainer's judgment about a reasonable operating point on the
+        precision-recall curve.  The word "calibrated" in this codebase refers
+        only to threshold values that were actually fitted against a stated
+        precision target — these thresholds do not meet that bar.
+    """
 
     model_config = ConfigDict(frozen=True)
 
@@ -384,7 +397,11 @@ def compute_ami_information_geometry(
     random_state: int = 42,
     correction: Literal["romano_wolf", "bh", "by", "none"] = "romano_wolf",
 ) -> AmiInformationGeometry:
-    """Compute the deterministic AMI Information Geometry outputs for one series.
+    """Compute AMI Information Geometry outputs for one series.
+
+    The geometry classification (structure, information horizon, accepted lags)
+    uses heuristic thresholds — see :class:`AmiInformationGeometryConfig` for
+    the disclosure.  Results are reproducible given a fixed ``random_state``.
 
     Args:
         series: Univariate time series.

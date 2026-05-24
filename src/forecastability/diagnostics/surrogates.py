@@ -45,7 +45,17 @@ def phase_surrogates(
     n_surrogates: int,
     random_state: int = 42,
 ) -> np.ndarray:
-    """Generate phase-randomized surrogates preserving amplitude spectrum."""
+    """Generate phase-randomized surrogates preserving amplitude spectrum.
+
+    .. note::
+        Phase-randomization preserves the power spectrum (amplitude spectrum)
+        but destroys higher-order moments (skewness, kurtosis, nonlinear
+        structure).  The resulting surrogate null distribution is therefore
+        only *approximately* exchangeable with the observed test statistic —
+        it is the null for *linear* structure, not arbitrary dependence.
+        This is acknowledged in the RVH-F18 methods note and the migration
+        guide for v0.5.0.
+    """
     if n_surrogates < 1:
         raise ValueError("n_surrogates must be >= 1")
 

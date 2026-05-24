@@ -56,7 +56,17 @@ class TriageRequest(BaseModel):
     exog: np.ndarray | None = None
     goal: AnalysisGoal = AnalysisGoal.univariate
     max_lag: int = 40
-    n_surrogates: int = Field(default=99, ge=99)
+    n_surrogates: int = Field(
+        default=999,
+        ge=99,
+        description=(
+            "Number of phase-randomised surrogates for significance estimation. "
+            "Default raised to 999 in v0.5.0 (was 99 in v0.4.3); the ge=99 floor "
+            "is unchanged. Note: phase-randomization preserves the power spectrum "
+            "but destroys higher-order moments; the surrogate null distribution is "
+            "only approximately exchangeable with the observed statistic."
+        ),
+    )
     random_state: int = 42
 
 

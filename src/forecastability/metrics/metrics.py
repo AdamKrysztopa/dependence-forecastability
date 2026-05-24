@@ -154,9 +154,41 @@ def compute_pami_linear_residual(
         KSG2CurveKernel._estimate_horizon (single-horizon call with k in {3,5,8},
         median aggregation). "ksg1_sklearn" reproduces v0.4.3 numerics via
         sklearn.mutual_info_regression.
+
+    Notes
+    -----
+    **Linear approximation disclosure (RVH-F22 / audit finding I3).**
+    This function computes a **linear approximation** to conditional mutual
+    information.  It equals the true partial MI only under joint Gaussianity.
+    For non-Gaussian processes it measures the MI between linear residuals,
+    not the CMI ``I(X_t; X_{t-h} | X_{t-1}, ..., X_{t-h+1})``.
+
+    **Low-cardinality behaviour (RVH-F21).**
+    When ``unique(X) / N < _GCMI_CARDINALITY_THRESHOLD`` (default 0.1) a
+    :class:`UserWarning` is emitted.  The computation continues without
+    rerouting — routing to GCMI would not reduce the approximation error
+    already introduced by linear residualization on a discrete series.
+    To suppress: ``warnings.filterwarnings("ignore", message=".*low cardinality.*")``.
     """
     if max_lag < 1:
         raise ValueError("max_lag must be >= 1")
+
+    # RVH-F21: cardinality check — warn on heavy-tie discrete inputs.
+    # Do NOT reroute: the linear-residualization step is already a Gaussian
+    # approximation, so switching to GCMI on the residualized path would not
+    # reduce the approximation error further.  Warn once before the loop.
+    _ts_check = np.asarray(ts, dtype=float).ravel()
+    _n_unique_pami = int(np.unique(_ts_check).size)
+    if _n_unique_pami / max(_ts_check.size, 1) < _GCMI_CARDINALITY_THRESHOLD:
+        warnings.warn(
+            f"compute_pami_linear_residual: input has low cardinality "
+            f"({_n_unique_pami} unique / {_ts_check.size} samples = "
+            f"{_n_unique_pami / max(_ts_check.size, 1):.3f} < "
+            f"{_GCMI_CARDINALITY_THRESHOLD}); the linear-residual approximation "
+            "is unreliable for discrete series — consider a discrete-MI estimator.",
+            UserWarning,
+            stacklevel=2,
+        )
 
     arr = validate_time_series(ts, min_length=max_lag + min_pairs + 1)
     arr = _scale_series(arr)

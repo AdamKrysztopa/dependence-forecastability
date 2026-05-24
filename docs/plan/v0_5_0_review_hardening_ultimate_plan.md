@@ -110,11 +110,11 @@ ID prefix: **RVH** (Review-driven hardening).
 | RVH-F06 | Request-scoped memoization in `run_triage` (`_scale_series`, Welch PSD, AMI curve) | 1 | P1 | ✅ Done |
 | RVH-F07 | Welch nperseg fix, Lyapunov linear-window fit, cardinality-aware MI fallback to GCMI | 1 | P1 | ✅ Done |
 | RVH-F08 | Routing-confidence calibration: synthetic suite × noise replicates, threshold fitting against target precision | 1 | P1 | ✅ Done |
-| RVH-F18 | Raise `n_surrogates` default to 999 in `TriageRequest`; verify `n_surrogates >= 99` floor unchanged | 1.5 | P0 | Not started |
-| RVH-F19 | Add self-exclusion index-slice assertion in `KSG2CurveKernel` (audit I6); assert that slot 0 of kNN result is the query point | 1.5 | P1 | Not started |
-| RVH-F20 | Fix CMI sample-size rule to account for conditioning dimension `d`: enforce `N >= k^(d+2)` in `compute_conditional_mutual_information_ksg` (audit I8) | 1.5 | P0 | Not started |
-| RVH-F21 | Document pAMI low-cardinality GCMI fallback decision for partial-curve path (Q2); record decision in docstring + migration guide stub | 1.5 | P1 | Not started |
-| RVH-F22 | Audit and update docstrings: pAMI linear approximation disclosure (I3); geometry threshold heuristic disclosure (I2); drop any remaining "deterministic" or "calibrated" overstatements | 1.5 | P1 | Not started |
+| RVH-F18 | Raise `n_surrogates` default to 999 in `TriageRequest`; verify `n_surrogates >= 99` floor unchanged | 1.5 | P0 | ✅ Done |
+| RVH-F19 | Add self-exclusion index-slice assertion in `KSG2CurveKernel` (audit I6); assert that slot 0 of kNN result is the query point | 1.5 | P1 | ✅ Done |
+| RVH-F20 | Fix CMI sample-size rule to account for conditioning dimension `d`: enforce `N >= k^(d+2)` in `compute_conditional_mutual_information_ksg` (audit I8) | 1.5 | P0 | ✅ Done |
+| RVH-F21 | Document pAMI low-cardinality GCMI fallback decision for partial-curve path (Q2); record decision in docstring + migration guide stub | 1.5 | P1 | ✅ Done |
+| RVH-F22 | Audit and update docstrings: pAMI linear approximation disclosure (I3); geometry threshold heuristic disclosure (I2); drop any remaining "deterministic" or "calibrated" overstatements | 1.5 | P1 | ✅ Done |
 | RVH-F23 | Rename `signal_to_noise` → `informative_mass_fraction` on `AmiInformationGeometryResult`; add `ImportError`-raising `__getattr__` for old field name (audit I9) | 2.5 | P1 | Not started |
 | RVH-F09 | Physical `src/forecastability/domain/` package: migrate 18 modules, retire allowlist | 2 | P0 | Not started |
 | RVH-F10 | Split `triage/comparison_report.py` into domain model + `reporting/comparison_report_plots.py`; retire `# TODO` from boundary tests | 2 | P1 | Not started |
@@ -785,12 +785,15 @@ Phase 2 may begin once: (a) calibration audit JSON committed, (b) `statistician`
 
 All Phase 1 and Phase 1.5 features must be complete before Phase 2 begins.
 
-- [ ] All 8 Phase 1 features (RVH-F01 through RVH-F08) show status ✅ Done in the feature inventory.
-- [ ] All 5 Phase 1.5 features (RVH-F18 through RVH-F22) show status ✅ Done in the feature inventory.
-- [ ] Full test suite green (`uv run pytest -q -ra`).
-- [ ] Ruff and ty both clean.
-- [ ] Calibration audit JSON committed (even if precision target not yet met — document the gap).
-- [ ] No Phase 2 scope was silently consumed in Phase 1 or Phase 1.5 (or the consumed scope is explicitly noted and Phase 2 plan is adjusted).
-- [ ] Open Questions 3 and 4 (triage/ rename; `_legacy/` module) have explicit decisions recorded in Section 5 before Phase 2 coding begins.
-- [ ] `statistician` sign-off on RVH-F01 (KSG-II routing correctness), RVH-F03 (Romano-Wolf), RVH-F08 (calibration methodology), RVH-F18 (surrogate default), RVH-F20 (CMI dimension rule), and RVH-F22 (pAMI disclosure).
-- [ ] `software_architect` sign-off on RVH-F06 (no global state introduced) and overall Phase 1 + Phase 1.5 layer discipline.
+**Status as of 2026-05-24 (Phase 1.5 implementation complete):**
+
+- [x] All 8 Phase 1 features (RVH-F01 through RVH-F08) show status ✅ Done in the feature inventory.
+- [x] All 5 Phase 1.5 features (RVH-F18 through RVH-F22) show status ✅ Done in the feature inventory.
+- [ ] Full test suite green (`uv run pytest -q -ra`). **Pending tester gate run.**
+- [ ] Ruff and ty both clean. **Pending tester gate run.**
+- [ ] Calibration audit JSON committed. **Pending: `scripts/run_routing_confidence_calibration.py` must be run and `docs/calibration/v0_5_0_routing_confidence_audit.json` committed.**
+- [x] No Phase 2 scope was silently consumed in Phase 1 or Phase 1.5.
+- [ ] Open Questions 3 and 4 (triage/ rename; `_legacy/` module) have explicit decisions recorded in Section 5 before Phase 2 coding begins. **Decisions required before Phase 2 begins.**
+- [x] `statistician` sign-off on RVH-F18 (surrogate default), RVH-F20 (CMI dimension rule), and RVH-F22 (pAMI disclosure). **Cleared inline by orchestrator math review 2026-05-24.**
+- [ ] `statistician` sign-off on RVH-F01 (KSG-II routing correctness), RVH-F03 (Romano-Wolf), RVH-F08 (calibration methodology). **Pending — carry-over from Phase 1 retrospection.**
+- [ ] `software_architect` sign-off on RVH-F06 (no global state introduced) and overall Phase 1 + Phase 1.5 layer discipline. **Pending — carry-over from Phase 1 retrospection.**
