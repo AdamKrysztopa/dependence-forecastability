@@ -6,7 +6,6 @@ from typing import Literal
 
 import numpy as np
 from sklearn.feature_selection import mutual_info_regression
-from sklearn.preprocessing import StandardScaler
 
 from forecastability.kernels.ksg2_curve_kernel import KSG2CurveKernel
 from forecastability.metrics._lag_design import (
@@ -17,8 +16,14 @@ from forecastability.utils.validation import validate_time_series
 
 
 def _scale_series(ts: np.ndarray) -> np.ndarray:
-    """Standardize a univariate series."""
-    return StandardScaler().fit_transform(ts.reshape(-1, 1)).ravel()
+    """Standardize a univariate series to zero mean and unit variance.
+
+    Replaces ``StandardScaler().fit_transform(...)`` with a direct NumPy
+    computation, eliminating the sklearn object construction and reshape
+    round-trip on every call (RVH-F04).
+    """
+    std = ts.std()
+    return (ts - ts.mean()) / (std if std > 0.0 else 1.0)
 
 
 def compute_ami(

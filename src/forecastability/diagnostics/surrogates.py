@@ -55,20 +55,27 @@ def phase_surrogates(
     spectrum = np.fft.rfft(arr)
     n_freq = spectrum.size
 
-    surrogates = np.empty((n_surrogates, arr.size), dtype=float)
-    for idx in range(n_surrogates):
-        phase = np.ones(n_freq, dtype=complex)
-        if arr.size % 2 == 0:
-            random_count = max(n_freq - 2, 0)
-            if random_count > 0:
-                phase[1:-1] = np.exp(1j * rng.uniform(0.0, 2.0 * np.pi, random_count))
-        else:
-            random_count = max(n_freq - 1, 0)
-            if random_count > 0:
-                phase[1:] = np.exp(1j * rng.uniform(0.0, 2.0 * np.pi, random_count))
+    # Batched phase matrix — one rng.uniform call for all surrogates.
+    # DC bin (index 0) and Nyquist bin (index -1, even-length only) keep phase
+    # 1+0j to preserve Hermitian symmetry (Invariant H).
+    phase = np.ones((n_surrogates, n_freq), dtype=complex)
+    if arr.size % 2 == 0:
+        # Even-length: interior bins are indices 1 .. n_freq-2
+        n_interior = max(n_freq - 2, 0)
+        if n_interior > 0:
+            phase[:, 1:-1] = np.exp(
+                1j * rng.uniform(0.0, 2.0 * np.pi, (n_surrogates, n_interior))
+            )
+    else:
+        # Odd-length: all bins after DC are interior
+        n_interior = max(n_freq - 1, 0)
+        if n_interior > 0:
+            phase[:, 1:] = np.exp(
+                1j * rng.uniform(0.0, 2.0 * np.pi, (n_surrogates, n_interior))
+            )
 
-        surrogates[idx] = np.fft.irfft(spectrum * phase, n=arr.size)
-
+    # Single batched irfft: shape (n_surrogates, arr.size)
+    surrogates = np.fft.irfft(spectrum[None, :] * phase, n=arr.size, axis=1)
     return surrogates
 
 
