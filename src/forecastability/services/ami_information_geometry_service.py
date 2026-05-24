@@ -14,6 +14,7 @@ No plotting, file I/O, agent orchestration, or routing logic belongs here.
 from __future__ import annotations
 
 import math
+from typing import Literal
 
 import numpy as np
 from joblib import Parallel, delayed
@@ -381,8 +382,29 @@ def compute_ami_information_geometry(
     *,
     config: AmiInformationGeometryConfig | None = None,
     random_state: int = 42,
+    correction: Literal["romano_wolf", "bh", "by", "none"] = "romano_wolf",
 ) -> AmiInformationGeometry:
-    """Compute the deterministic AMI Information Geometry outputs for one series."""
+    """Compute the deterministic AMI Information Geometry outputs for one series.
+
+    Args:
+        series: Univariate time series.
+        config: Optional geometry configuration.  Defaults to
+            :class:`AmiInformationGeometryConfig` with all defaults.
+        random_state: Integer seed for reproducibility.
+        correction: Significance correction applied to the per-lag acceptance
+            test.  Choices:
+
+            - ``"romano_wolf"`` *(default)*: step-down FWER control using the
+              max-statistic null derived from the shuffle-surrogate matrix.
+              The statistically honest default for formal significance.
+            - ``"bh"``: Benjamini-Hochberg FDR, assumes positive regression
+              dependence.  Less conservative than BY.
+            - ``"by"``: Benjamini-Yekutieli FDR, valid under arbitrary
+              dependence including autocorrelated lags.  More conservative.
+            - ``"none"``: raw per-lag threshold (legacy behaviour — lag is
+              accepted iff ``corrected > horizon_multiplier_threshold * tau``).
+              Provided for backward compatibility.
+    """
     resolved_config = config if config is not None else AmiInformationGeometryConfig()
     values = validate_time_series(series, min_length=resolved_config.min_n)
 
@@ -403,12 +425,32 @@ def compute_ami_information_geometry(
     bias = np.nanmean(shuffle_matrix, axis=0)
     tau = np.nanpercentile(shuffle_matrix, 90.0, axis=0)
     corrected = np.where(valid_mask, np.maximum(raw - bias, 0.0), np.nan)
-    accepted = (
-        valid_mask
-        & np.isfinite(corrected)
-        & np.isfinite(tau)
-        & (corrected > resolved_config.horizon_multiplier_threshold * tau)
-    )
+
+    if correction == "none":
+        accepted = (
+            valid_mask
+            & np.isfinite(corrected)
+            & np.isfinite(tau)
+            & (corrected > resolved_config.horizon_multiplier_threshold * tau)
+        )
+    else:
+        # Route per-lag acceptance through SignificanceCorrectionService.
+        # The surrogate matrix for the service is the shuffle matrix; the
+        # observed values are the bias-corrected profile.  NaN entries (invalid
+        # horizons) are handled by the service's NaN-safe p-value computation.
+        from forecastability.services.significance_correction_service import (
+            SignificanceCorrectionService,
+        )
+
+        svc = SignificanceCorrectionService(
+            correction=correction,
+            alpha=0.05,
+        )
+        # Use bias-corrected values as test statistics; shuffle matrix as null.
+        # Replace NaN in corrected with 0 for the service (NaN obs → not rejected).
+        obs_for_correction = np.where(valid_mask & np.isfinite(corrected), corrected, np.nan)
+        corr_result = svc.correct(shuffle_matrix, obs_for_correction)
+        accepted = valid_mask & corr_result.corrected_mask
 
     signal_numerator = np.nansum(np.maximum(corrected - tau, 0.0))
     signal_denominator = np.nansum(corrected)

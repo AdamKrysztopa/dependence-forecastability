@@ -193,6 +193,7 @@ def test_acceptance_mask_uses_strict_multiplier_rule(monkeypatch: pytest.MonkeyP
             horizon_multiplier_threshold=2.0,
         ),
         random_state=7,
+        correction="none",
     )
 
     # threshold = 2 * tau = [0.25, 0.20, 0.25], strict '>' only accepts h=2

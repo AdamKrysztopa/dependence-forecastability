@@ -76,6 +76,7 @@ def test_horizon_acceptance_uses_strictly_greater_than_three_tau(
             horizon_multiplier_threshold=3.0,
         ),
         random_state=42,
+        correction="none",
     )
 
     assert geometry.informative_horizons == [2]

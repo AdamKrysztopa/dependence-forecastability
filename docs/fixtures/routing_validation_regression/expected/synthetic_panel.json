@@ -55,7 +55,7 @@
     "case_name": "weak_seasonal_near_threshold",
     "source_kind": "synthetic",
     "outcome": "downgrade",
-    "confidence_label": "low",
+    "confidence_label": "medium",
     "expected_primary_families": [
       "harmonic_regression",
       "seasonal_naive",
@@ -66,7 +66,7 @@
       "seasonal_naive",
       "tbats"
     ],
-    "threshold_margin": 0.01744446263295199,
+    "threshold_margin": 0.021000368335919742,
     "rule_stability": 1.0,
     "fingerprint_penalty_count": 0
   },
@@ -84,9 +84,9 @@
       "ets",
       "linear_state_space"
     ],
-    "threshold_margin": 0.004884737118468499,
+    "threshold_margin": 0.012548839880787699,
     "rule_stability": 0.6,
-    "fingerprint_penalty_count": 1
+    "fingerprint_penalty_count": 0
   },
   {
     "case_name": "structural_break",
@@ -174,7 +174,7 @@
       "ets",
       "linear_state_space"
     ],
-    "threshold_margin": 0.013869797661194373,
+    "threshold_margin": 0.017675555288674566,
     "rule_stability": 0.6,
     "fingerprint_penalty_count": 1
   }

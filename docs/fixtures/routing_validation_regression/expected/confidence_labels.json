@@ -7,6 +7,6 @@
   "nonlinear_mixed": "low",
   "seasonal": "high",
   "structural_break": "medium",
-  "weak_seasonal_near_threshold": "low",
+  "weak_seasonal_near_threshold": "medium",
   "white_noise": "abstain"
 }
