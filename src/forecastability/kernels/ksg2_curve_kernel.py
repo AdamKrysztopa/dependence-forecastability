@@ -1,4 +1,5 @@
 """KSG2CurveKernel — concrete unified Chebyshev KSG-II curve estimator (RVH-F01)."""
+
 from __future__ import annotations
 
 import warnings
@@ -45,7 +46,8 @@ def _ksg2_single_k_vectorized(
     )
     nx = np.maximum(nx, 1)
     ny = np.maximum(ny, 1)
-    return float(digamma(k) - 1.0 / k + digamma(len(x)) - np.mean(digamma(nx) + digamma(ny)))
+    marginal_digamma = np.mean(digamma(nx) + digamma(ny))
+    return float(digamma(k) - 1.0 / k + digamma(len(x)) - marginal_digamma)
 
 
 class KSG2CurveKernel:
@@ -139,6 +141,14 @@ class KSG2CurveKernel:
         xy = np.column_stack((x, y))
         tree = cKDTree(xy, leafsize=16)
         _, indices = tree.query(xy, k=k_max + 1, workers=1, p=np.inf)
+        if not np.all(indices[:, 0] == np.arange(len(xy))):
+            warnings.warn(
+                "cKDTree slot 0 is not the query point for all rows — "
+                "self-exclusion invariant may be violated (duplicate rows in joint space). "
+                "Consider adding jitter to the input series before calling estimate_curve.",
+                UserWarning,
+                stacklevel=2,
+            )
 
         x_sorted = np.sort(x)
         y_sorted = np.sort(y)

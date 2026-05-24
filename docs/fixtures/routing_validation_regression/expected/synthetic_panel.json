@@ -66,7 +66,7 @@
       "seasonal_naive",
       "tbats"
     ],
-    "threshold_margin": 0.021000368335919742,
+    "threshold_margin": 0.030168114483800135,
     "rule_stability": 1.0,
     "fingerprint_penalty_count": 0
   },
@@ -174,7 +174,7 @@
       "ets",
       "linear_state_space"
     ],
-    "threshold_margin": 0.017675555288674566,
+    "threshold_margin": 0.020781519087204194,
     "rule_stability": 0.6,
     "fingerprint_penalty_count": 1
   }

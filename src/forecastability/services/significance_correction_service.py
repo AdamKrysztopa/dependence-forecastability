@@ -32,22 +32,25 @@ appropriate (geometry-style queries where false negatives are costly).
 
 Romano-Wolf implementation note
 --------------------------------
-The step-down algorithm here uses the *surrogate-max* null distribution:
-for each surrogate replicate s, the max test statistic across all lags
-is recorded.  Observed statistics are compared against this max-null
-distribution stepwise, starting from the most significant lag.
+The step-down algorithm follows Romano & Wolf (2005) Algorithm 4.1.  At
+step j (testing the j-th most-significant hypothesis, hypotheses sorted by
+ascending raw p-value / descending observed statistic), the max-statistic
+null is the maximum over the *remaining untested subset* ``{j, j+1, ..., m}``
+of surrogate columns.  This subset-max null is strictly more powerful than
+the Westfall-Young single-step procedure, which pools the full-set maximum
+for every hypothesis.
 
-This is valid because phase surrogates are exchangeable under H0 (the
-null hypothesis of no temporal dependence at any lag): the spectrum is
-preserved, so the joint null of "all lags are noise" is respected.
+Phase surrogates are exchangeable under H0 (no temporal dependence at any
+lag): the spectrum is preserved, so the joint null of "all lags are noise"
+is respected.
 
-The p-value for lag h is estimated as the fraction of surrogates whose
-*maximum-over-lags* statistic exceeds the observed value at lag h (single-
-step), then the step-down enforces monotonicity in the mask.
+A separate monotonicity (coherence) constraint is also enforced: if step
+j-1 was not rejected, step j cannot be either.  This is a standard
+step-down bookkeeping rule, not a source of power gain.
 
 References: Romano & Wolf (2005) "Exact and approximate stepdown methods
-for multiple hypothesis testing", JASA.  Westfall & Young (1993) "Resampling-
-based multiple testing".
+for multiple hypothesis testing", JASA 100(469):94-108.  Westfall & Young
+(1993) "Resampling-based multiple testing".
 """
 
 from __future__ import annotations
@@ -97,8 +100,7 @@ class SignificanceCorrectionService:
     ) -> None:
         if correction not in {"romano_wolf", "bh", "by", "none"}:
             raise ValueError(
-                f"correction must be one of 'romano_wolf', 'bh', 'by', 'none'; "
-                f"got {correction!r}"
+                f"correction must be one of 'romano_wolf', 'bh', 'by', 'none'; got {correction!r}"
             )
         if not (0.0 < alpha < 1.0):
             raise ValueError(f"alpha must be in (0, 1); got {alpha}")
@@ -135,9 +137,7 @@ class SignificanceCorrectionService:
                 f"got shape {surrogate_matrix.shape}"
             )
         if observed.ndim != 1:
-            raise ValueError(
-                f"observed must be 1-D (H,); got shape {observed.shape}"
-            )
+            raise ValueError(f"observed must be 1-D (H,); got shape {observed.shape}")
         n_surrogates, n_lags = surrogate_matrix.shape
         if n_lags != observed.size:
             raise ValueError(
@@ -158,9 +158,7 @@ class SignificanceCorrectionService:
         else:  # "none"
             mask = raw_p <= self._alpha
 
-        low_surrogate_warning = (
-            self._correction == "romano_wolf" and n_surrogates < 999
-        )
+        low_surrogate_warning = self._correction == "romano_wolf" and n_surrogates < 999
 
         return SignificanceCorrectionResult(
             correction=self._correction,
@@ -209,50 +207,46 @@ class SignificanceCorrectionService:
         observed: np.ndarray,
         raw_p: np.ndarray,
     ) -> np.ndarray:
-        """Romano-Wolf step-down FWER correction.
+        """Romano-Wolf (2005) step-down max-T FWER correction.
 
-        Algorithm (Westfall-Young style, surrogate-max null):
+        Algorithm (Romano & Wolf 2005, Algorithm 4.1):
 
-        1. Compute the max-statistic null distribution: for each surrogate
-           replicate, take the maximum observed value across all lags
-           (ignoring NaN).  This gives a distribution of size n_surrogates.
-        2. Sort observed lags from most significant (largest value) to least.
-        3. Stepwise: for each lag in sorted order, compute the adjusted p-value
-           as the fraction of max-null surrogates that exceed the observed
-           value at this lag.  Enforce monotonicity (step-down): if an earlier
-           (more significant) lag was not rejected, later lags in the order
-           also cannot be rejected.
-        4. Return boolean mask: lag is significant iff adjusted p <= alpha.
+        1. Sort observed lags from most significant (largest value) to least.
+           NaN observed values are ranked last (treated as least significant).
+        2. At step j (testing the j-th hypothesis in sorted order), compute the
+           subset-max null distribution: for each surrogate replicate, take the
+           maximum value across only the *remaining untested* lags
+           {j, j+1, ..., m}.  This subset-max null is strictly more powerful
+           than the full-set max-T used by the Westfall-Young single-step
+           procedure.
+        3. The adjusted p-value for the lag at step j is the fraction of
+           subset-max null surrogates that exceed the observed value at that lag
+           (with +1 Monte-Carlo correction).
+        4. Enforce step-down coherence (monotonicity): if step j-1 was not
+           rejected, step j also cannot be rejected.  This is a separate
+           coherence constraint, not a source of power gain.
+        5. Return boolean mask: lag is significant iff adjusted p <= alpha.
 
-        This uses the max-statistic single-step null.  The step-down
-        enforcement of monotonicity provides the step-down improvement over
-        the single-step procedure.
+        References: Romano & Wolf (2005) "Exact and approximate stepdown
+        methods for multiple hypothesis testing", JASA 100(469):94-108.
 
         Note: this operates on the observed MI values directly as test
         statistics.  Higher observed MI = more significant.
         """
         n_surrogates, n_lags = surrogate_matrix.shape
 
-        # Step 1: max-statistic null distribution (n_surrogates,)
-        # Use nanmax to handle NaN horizons.
-        max_null = np.nanmax(surrogate_matrix, axis=1)  # (n_surrogates,)
-
-        # If all values in a row are NaN, nanmax returns NaN — replace with -inf
-        # so those surrogates do not inflate the null.
-        max_null = np.where(np.isnan(max_null), -np.inf, max_null)
-
-        # Step 2: rank lags from most significant (highest observed) to least.
+        # Step 1: rank lags from most significant (highest observed) to least.
         # NaN observed values are ranked last (treated as least significant).
         nan_obs = np.isnan(observed)
-        sort_order = np.argsort(
-            np.where(nan_obs, -np.inf, observed)
-        )[::-1]  # descending: most significant first
+        sort_order = np.argsort(np.where(nan_obs, -np.inf, observed))[
+            ::-1
+        ]  # descending: most significant first
 
-        # Step 3: step-down adjusted p-values.
+        # Step 2 & 3: step-down with subset-max null at each step j.
         adjusted_p = np.ones(n_lags, dtype=float)
         rejected_so_far = True  # monotonicity gate: flip to False on first fail
 
-        for _rank, lag_idx in enumerate(sort_order):
+        for j, lag_idx in enumerate(sort_order):
             if nan_obs[lag_idx]:
                 # NaN horizon: not significant, cut the step-down chain.
                 adjusted_p[lag_idx] = 1.0
@@ -260,13 +254,22 @@ class SignificanceCorrectionService:
                 continue
 
             obs_val = observed[lag_idx]
-            # p = fraction of max-null surrogates that are >= obs_val
-            # (with +1 correction for MC p-values)
-            exceed = int(np.sum(max_null >= obs_val))
+
+            # Subset-max null: maximum over remaining untested hypotheses
+            # {j, j+1, ..., m} in sorted order (Romano-Wolf Algorithm 4.1).
+            remaining = sort_order[j:]  # indices of hypotheses not yet tested
+            surr_subset = surrogate_matrix[:, remaining]  # (n_surrogates, |remaining|)
+            max_null_j = np.nanmax(surr_subset, axis=1)  # (n_surrogates,)
+            # If all values in a row are NaN, nanmax returns NaN; treat as -inf
+            # so those surrogates do not inflate the null.
+            max_null_j = np.where(np.isnan(max_null_j), -np.inf, max_null_j)
+
+            # p = fraction of subset-max null surrogates >= obs_val
+            # (+1 numerator and denominator: Davison & Hinkley MC correction).
+            exceed = int(np.sum(max_null_j >= obs_val))
             p_adj = (exceed + 1.0) / (n_surrogates + 1.0)
 
-            # Step-down: if the previous step was not rejected, this one cannot
-            # be either (enforce monotonicity in the adjusted p-values).
+            # Step 4: enforce monotonicity (step-down coherence).
             if not rejected_so_far:
                 p_adj = 1.0
             elif p_adj > self._alpha:
