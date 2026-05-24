@@ -104,7 +104,7 @@ ID prefix: **RVH** (Review-driven hardening).
 | RVH-F00 | Typed contracts: new kernel protocols, KSG-CMI result, calibration audit, perf-budget report | 0 | P0 | ✅ Done |
 | RVH-F01 | Unified Chebyshev KSG-II curve kernel (canonical implementation of `KSG2ProfileKernel`) | 1 | P0 | ✅ Done |
 | RVH-F02 | Frenzel-Pompe KSG-CMI estimator, renamed TE surfaces, CMI as public surface, quality_warning, PIG asymmetry docstring | 1 | P0 | ✅ Done |
-| RVH-F03 | Romano-Wolf + BH + Benjamini-Yekutieli significance correction; `significance_correction_service` | 1 | P0 | In progress |
+| RVH-F03 | Romano-Wolf + BH + Benjamini-Yekutieli significance correction; `significance_correction_service` | 1 | P0 | ✅ Done |
 | RVH-F04 | Vectorized hot loops: phase-randomization batching, ordinal pattern indexing, Theiler-window filter, DFA fluctuation | 1 | P0 | Not started |
 | RVH-F05 | Incremental QR partial-curve residualization (`metrics/_lag_design.py` rewrite) | 1 | P1 | Not started |
 | RVH-F06 | Request-scoped memoization in `run_triage` (`_scale_series`, Welch PSD, AMI curve) | 1 | P1 | Not started |
