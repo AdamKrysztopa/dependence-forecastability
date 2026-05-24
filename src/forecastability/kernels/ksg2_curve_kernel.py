@@ -34,6 +34,10 @@ def _ksg2_single_k_vectorized(
     """KSG-II MI estimate for one k value. Matches the reference _ksg2_single_k."""
     eps_x = np.max(np.abs(x[neighbor_indices] - x[:, None]), axis=1)
     eps_y = np.max(np.abs(y[neighbor_indices] - y[:, None]), axis=1)
+    # nx counts points j != i with |x_j - x_i| <= eps_x[i] (closed ball, self excluded via -1).
+    # The k-th neighbor lands exactly on the boundary, so nx = n_x_strict + 1 where n_x_strict
+    # is Kraskov 2004 Eq. 8's strict-inequality count. Therefore digamma(nx) here equals
+    # digamma(n_x_strict + 1) in Eq. 8 — no further +1 offset is needed.
     nx = (
         np.searchsorted(x_sorted, x + eps_x, side="right")
         - np.searchsorted(x_sorted, x - eps_x, side="left")
