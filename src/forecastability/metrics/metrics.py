@@ -10,7 +10,7 @@ from sklearn.feature_selection import mutual_info_regression
 from forecastability.kernels.ksg2_curve_kernel import KSG2CurveKernel
 from forecastability.metrics._lag_design import (
     build_intermediate_design,
-    residualize_with_intercept,
+    residualize_with_qr,
 )
 from forecastability.utils.validation import validate_time_series
 
@@ -132,7 +132,7 @@ def compute_pami_linear_residual(
                 res_past = past
                 res_future = future
             else:
-                res_past, res_future = residualize_with_intercept(z, (past, future))
+                res_past, res_future = residualize_with_qr(z, (past, future))
 
             values = kernel._estimate_horizon(
                 res_past, res_future, k_list=k_list, k_max=k_max
@@ -156,7 +156,7 @@ def compute_pami_linear_residual(
                 res_past = past
                 res_future = future
             else:
-                res_past, res_future = residualize_with_intercept(z, (past, future))
+                res_past, res_future = residualize_with_qr(z, (past, future))
 
             value = mutual_info_regression(
                 res_past.reshape(-1, 1),
@@ -293,7 +293,7 @@ def compute_pami_at_horizon(
         res_past = past
         res_future = future
     else:
-        res_past, res_future = residualize_with_intercept(z, (past, future))
+        res_past, res_future = residualize_with_qr(z, (past, future))
     if estimator == "ksg2":
         kernel = KSG2CurveKernel(min_pairs=min_pairs)
         k_list = kernel.k_list

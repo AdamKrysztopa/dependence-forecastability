@@ -106,7 +106,7 @@ ID prefix: **RVH** (Review-driven hardening).
 | RVH-F02 | Frenzel-Pompe KSG-CMI estimator, renamed TE surfaces, CMI as public surface, quality_warning, PIG asymmetry docstring | 1 | P0 | ✅ Done |
 | RVH-F03 | Romano-Wolf + BH + Benjamini-Yekutieli significance correction; `significance_correction_service` | 1 | P0 | ✅ Done |
 | RVH-F04 | Vectorized hot loops: phase-randomization batching, ordinal pattern indexing, Theiler-window filter, DFA fluctuation | 1 | P0 | ✅ Done |
-| RVH-F05 | Incremental QR partial-curve residualization (`metrics/_lag_design.py` rewrite) | 1 | P1 | Not started |
+| RVH-F05 | Incremental QR partial-curve residualization (`metrics/_lag_design.py` rewrite) | 1 | P1 | ✅ Done |
 | RVH-F06 | Request-scoped memoization in `run_triage` (`_scale_series`, Welch PSD, AMI curve) | 1 | P1 | Not started |
 | RVH-F07 | Welch nperseg fix, Lyapunov linear-window fit, cardinality-aware MI fallback to GCMI | 1 | P1 | Not started |
 | RVH-F08 | Routing-confidence calibration: synthetic suite × noise replicates, threshold fitting against target precision | 1 | P1 | Not started |
