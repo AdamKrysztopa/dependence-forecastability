@@ -1,0 +1,12 @@
+{
+  "series_name": "anisotropic_ar1",
+  "description": "bivariate anisotropic: sigma_x=1, sigma_y=10, rho=0.5",
+  "N": 500,
+  "rho": 0.5,
+  "k": 5,
+  "true_mi": 0.14384103622589045,
+  "mi_ksg2": 0.09759374744148896,
+  "mi_ksg1": 0.1543330349434524,
+  "generated_with": "regenerate_v0_5_0_regression_fixtures.py",
+  "forecastability_version": "0.5.0-dev"
+}

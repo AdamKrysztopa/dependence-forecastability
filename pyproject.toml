@@ -122,4 +122,7 @@ extra-paths = ["scripts"]
 [tool.pytest.ini_options]
 addopts = "-q -ra"
 testpaths = ["tests"]
-markers = ["slow: marks tests as slow (deselect with '-m \"not slow\"')"]
+markers = [
+  "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+  "perf_budget: marks performance budget tests (run with -m perf_budget)",
+]

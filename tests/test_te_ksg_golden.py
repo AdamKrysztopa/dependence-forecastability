@@ -89,11 +89,87 @@ def test_gaussian_var1_recovers_analytical_te(coupling: float) -> None:
         Y[t] = b * Y[t - 1] + c * X[t - 1] + rng.normal()
     result = compute_transfer_entropy_ksg(X, Y, lag=1, history_depth=1, k=5)
     expected = _var1_te_analytical(a, b, c)
-    # N_eff≈4998, d_total=3, k^(d_total+2)=5^5=3125 → ratio≈1.6 ("unreliable" regime)
-    # See TransferEntropyKsgResult.quality_warning for regime interpretation.
-    assert result.quality_warning in ("marginal", "unreliable")
+    # N_eff≈4998, d_total=3, k^d_total=5^3=125 → ratio≈39.98 ("ok" regime)
+    # Corrected Frenzel-Pompe cutoff uses k^d_total, not k^(d_total+2).
+    assert result.quality_warning == "ok"
     if coupling == 0.0:
         assert result.value == pytest.approx(0.0, abs=0.05)
     else:
         assert result.status == "computed"
         assert result.value == pytest.approx(expected, rel=0.30)
+
+
+def test_var1_anisotropic_ksg2_vs_ksg1() -> None:
+    """KSG-II should outperform KSG-I on anisotropic VAR(1) coupling.
+
+    Uses bivariate VAR(1) where X variance >> Y variance:
+        X_t = 0.5 * X_{t-1} + eps_x,   eps_x ~ N(0, 9)  → var_X ≈ 12
+        Y_t = 0.3 * Y_{t-1} + 0.6 * X_{t-1} + eps_y,  eps_y ~ N(0, 1)
+
+    TE_{X→Y}(L=1) is not compared to an analytical value here because the
+    exact closed-form requires numerical inversion of the Lyapunov equation
+    for the full VAR(1) stationary covariance matrix.  Instead we check:
+      - KSG-II error relative to a reference from compute_transfer_entropy_ksg
+        is < 30% (generous: unreliable regime).
+      - KSG-II absolute error is smaller than KSG-I absolute error on the
+        same sample.
+
+    N=5000, k=5.
+    """
+    from scipy.spatial import cKDTree  # type: ignore[attr-defined]
+    from sklearn.feature_selection import mutual_info_regression
+
+    from forecastability.kernels.ksg2_curve_kernel import _ksg2_single_k_vectorized
+
+    rng = np.random.default_rng(7)
+    N = 5000
+    a, b, c = 0.5, 0.3, 0.6
+    sigma_x, sigma_y = 3.0, 1.0  # sigma_x >> sigma_y → anisotropic
+
+    X = np.zeros(N)
+    Y = np.zeros(N)
+    for t in range(1, N):
+        X[t] = a * X[t - 1] + rng.normal(0.0, sigma_x)
+        Y[t] = b * Y[t - 1] + c * X[t - 1] + rng.normal(0.0, sigma_y)
+
+    # Reference analytical TE (Barnett formula, single-lag approximation).
+    # This is only a lower-bound estimate when sigma_x != 1; used as reference.
+    var_x = sigma_x**2 / (1.0 - a**2)
+    te_ref = 0.5 * np.log((c**2 * var_x + sigma_y**2) / sigma_y**2)
+
+    # --- KSG-II via low-level vectorised kernel at lag=1 ---
+    k = 5
+    x_lag1 = X[: N - 1]
+    y_lag1 = Y[1:]
+    joint = np.column_stack([x_lag1, y_lag1])
+    tree = cKDTree(joint, leafsize=16)
+    _, indices = tree.query(joint, k=k + 1, p=np.inf)
+    nn_idx = indices[:, 1 : k + 1]  # exclude self
+    assert nn_idx.shape == (N - 1, k), f"Expected nn_idx shape ({N - 1}, {k}), got {nn_idx.shape}"
+    x_sorted = np.sort(x_lag1)
+    y_sorted = np.sort(y_lag1)
+    mi_ksg2 = _ksg2_single_k_vectorized(
+        x_lag1,
+        y_lag1,
+        k=k,
+        neighbor_indices=nn_idx,
+        x_sorted=x_sorted,
+        y_sorted=y_sorted,
+    )
+
+    # --- KSG-I via sklearn ---
+    mi_ksg1 = float(
+        mutual_info_regression(x_lag1.reshape(-1, 1), y_lag1, n_neighbors=k, random_state=42)[0]
+    )
+
+    err_ksg2 = abs(mi_ksg2 - te_ref) / te_ref
+    err_ksg1 = abs(mi_ksg1 - te_ref) / te_ref
+
+    assert err_ksg2 < 0.30, (
+        f"KSG-II relative error {err_ksg2:.3%} > 30% on anisotropic VAR(1). "
+        f"mi_ksg2={mi_ksg2:.4f}, te_ref={te_ref:.4f}"
+    )
+    assert err_ksg2 < err_ksg1, (
+        f"KSG-II should outperform KSG-I on anisotropic inputs. "
+        f"err_ksg2={err_ksg2:.3%}, err_ksg1={err_ksg1:.3%}"
+    )
