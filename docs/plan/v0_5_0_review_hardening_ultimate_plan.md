@@ -7,8 +7,8 @@
 **Target release:** `0.5.0` — headline major release; first breaking-change cut since v0.2.0 PyPI publication
 **Current released version:** `0.4.3`
 **Branch:** `feat/v0.5.0-review-hardening`
-**Status:** Draft
-**Last reviewed:** 2026-05-24
+**Status:** Complete
+**Last reviewed:** 2026-05-25
 
 > [!IMPORTANT]
 > **Scope (binding).** This release ships:
@@ -125,7 +125,7 @@ ID prefix: **RVH** (Review-driven hardening).
 | RVH-F15 | PBE-F* performance budget tests: surrogate band, curve kernel, ModMRMR | 4 | P0 | ✅ Done |
 | RVH-F16 | Migration guide `docs/migration/v0.4.x_to_v0.5.0.md`; CHANGELOG; README refresh | 6 | P0 | ✅ Done |
 | RVH-F16.1 | Medium article `docs/medium/v0.5.0-maturing-the-forecastability-triage-toolkit.md` + figure-regen script `scripts/regenerate_v0_5_0_paper_figures.py` (two new figures: calibration-precision bars, archetype-suite groundtruth) | 6 | P0 | ✅ Done |
-| RVH-F17 | Release engineering: version bump, fixture rebuild, tag, PyPI publication, post-release announcement | 6 | P0 | Not started |
+| RVH-F17 | Release engineering: version bump, fixture rebuild, tag, PyPI publication, post-release announcement | 6 | P0 | ✅ Done |
 
 ---
 
