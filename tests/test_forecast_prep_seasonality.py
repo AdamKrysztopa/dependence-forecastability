@@ -35,7 +35,7 @@ def _fingerprint_bundle(*, structure: str, informative_horizons: list[int]) -> F
     return FingerprintBundle(
         target_name="target",
         geometry=AmiInformationGeometry(
-            signal_to_noise=0.4,
+            informative_mass_fraction=0.4,
             information_horizon=max(informative_horizons, default=0),
             information_structure=structure,  # type: ignore[arg-type]
             informative_horizons=informative_horizons,
@@ -46,7 +46,7 @@ def _fingerprint_bundle(*, structure: str, informative_horizons: list[int]) -> F
             information_horizon=max(informative_horizons, default=0),
             information_structure=structure,  # type: ignore[arg-type]
             nonlinear_share=0.05,
-            signal_to_noise=0.4,
+            informative_mass_fraction=0.4,
             directness_ratio=0.7,
             informative_horizons=informative_horizons,
         ),

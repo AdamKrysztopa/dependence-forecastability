@@ -1,4 +1,5 @@
 """TransferEntropyKsgResult — frozen result for compute_transfer_entropy_ksg (RVH-F02)."""
+
 from __future__ import annotations
 
 from typing import Literal

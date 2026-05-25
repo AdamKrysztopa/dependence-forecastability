@@ -217,9 +217,7 @@ def compute_pami_linear_residual(
             else:
                 res_past, res_future = residualize_with_qr(z, (past, future))
 
-            values = kernel._estimate_horizon(
-                res_past, res_future, k_list=k_list, k_max=k_max
-            )
+            values = kernel._estimate_horizon(res_past, res_future, k_list=k_list, k_max=k_max)
             pami[horizon - 1] = max(float(np.nanmedian(values)), 0.0)
 
     elif estimator == "ksg1_sklearn":
@@ -306,6 +304,7 @@ def compute_ami_at_horizon(
         k_list = kernel.k_list
         k_max = max(k_list)
         from forecastability.kernels.ksg2_curve_kernel import _apply_jitter
+
         jittered = _apply_jitter(arr, jitter_scale=kernel._jitter_scale, random_state=random_state)
         x = jittered[:-h]
         y = jittered[h:]

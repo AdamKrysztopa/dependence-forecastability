@@ -54,7 +54,7 @@ def _technical_item_section(item: BatchForecastabilityWorkbenchItem) -> str:
     lines.extend(
         [
             f"- geometry_structure: {geometry.information_structure}",
-            f"- signal_to_noise: {geometry.signal_to_noise:.4f}",
+            f"- informative_mass_fraction: {geometry.informative_mass_fraction:.4f}",
             f"- information_mass: {fingerprint.information_mass:.4f}",
             f"- nonlinear_share: {fingerprint.nonlinear_share:.4f}",
             f"- routing_confidence: {recommendation.confidence_label}",

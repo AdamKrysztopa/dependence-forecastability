@@ -17,7 +17,7 @@ _GEOMETRY_EXPECTED_DIR = Path("docs/fixtures/geometry_regression/expected")
 _TIEBREAK_FIXTURE_PATH = _GEOMETRY_EXPECTED_DIR / "tiebreak_metadata_case.json"
 
 
-def test_signal_to_noise_below_none_threshold_forces_none() -> None:
+def test_informative_mass_fraction_below_none_threshold_forces_none() -> None:
     """The null rule should override accepted-horizon presence when signal quality is low."""
     corrected = np.array([0.2, 0.2, 0.2])
     accepted = np.array([True, True, True])

@@ -103,7 +103,7 @@ def showcase_summary_frame(records: list[FingerprintShowcaseRecord]) -> pd.DataF
         rows.append(
             {
                 "target_name": bundle.target_name,
-                "signal_to_noise": round(bundle.geometry.signal_to_noise, 6),
+                "informative_mass_fraction": round(bundle.geometry.informative_mass_fraction, 6),
                 "information_mass": round(bundle.fingerprint.information_mass, 6),
                 "information_horizon": bundle.fingerprint.information_horizon,
                 "information_structure": bundle.fingerprint.information_structure,
@@ -176,8 +176,11 @@ def verify_showcase_records(records: list[FingerprintShowcaseRecord]) -> list[st
             issues.append(f"{prefix}: payload target_name diverges from bundle target_name")
         if payload.geometry_method != bundle.geometry.method:
             issues.append(f"{prefix}: payload geometry_method diverges from deterministic bundle")
-        if payload.signal_to_noise != bundle.geometry.signal_to_noise:
-            issues.append(f"{prefix}: payload signal_to_noise diverges from geometry output")
+        if payload.signal_to_noise != bundle.geometry.informative_mass_fraction:
+            issues.append(
+                f"{prefix}: payload signal_to_noise diverges from "
+                "geometry informative_mass_fraction"
+            )
         if payload.information_mass != bundle.fingerprint.information_mass:
             issues.append(f"{prefix}: payload information_mass diverges from fingerprint output")
         if payload.information_horizon != bundle.fingerprint.information_horizon:
@@ -318,7 +321,7 @@ def save_metric_overview(
 
     fig, axes = plt.subplots(2, 2, figsize=(13, 8))
     metric_specs = [
-        ("signal_to_noise", "Signal-to-noise", "tab:blue"),
+        ("informative_mass_fraction", "Informative mass fraction", "tab:blue"),
         ("information_mass", "Information mass", "tab:orange"),
         ("information_horizon", "Information horizon", "tab:green"),
         ("nonlinear_share", "Nonlinear share", "tab:red"),

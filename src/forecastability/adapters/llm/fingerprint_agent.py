@@ -260,7 +260,7 @@ def create_fingerprint_agent(
         return {
             "target_name": bundle.target_name,
             "geometry_method": geometry.method,
-            "signal_to_noise": geometry.signal_to_noise,
+            "signal_to_noise": geometry.informative_mass_fraction,
             "geometry_information_horizon": geometry.information_horizon,
             "geometry_information_structure": geometry.information_structure,
             "information_mass": fp.information_mass,
@@ -343,7 +343,7 @@ def _strict_explanation(bundle: FingerprintBundle) -> FingerprintExplanation:
     return FingerprintExplanation(
         target_name=bundle.target_name,
         geometry_method=str(geometry.method),
-        signal_to_noise=geometry.signal_to_noise,
+        signal_to_noise=geometry.informative_mass_fraction,
         geometry_information_horizon=geometry.information_horizon,
         geometry_information_structure=str(geometry.information_structure),
         information_mass=fp.information_mass,

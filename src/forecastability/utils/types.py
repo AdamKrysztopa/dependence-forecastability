@@ -538,7 +538,7 @@ RoutingCautionFlag = Literal[
     "short_information_horizon",
     "weak_informative_support",
     "signal_conflict",
-    "low_signal_to_noise",
+    "low_informative_mass_fraction",
     "geometry_threshold_borderline",
     "nonstationarity_risk",
 ]
@@ -565,12 +565,21 @@ class AmiInformationGeometry(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     method: GeometryMethodLabel = "ksg2_shuffle_surrogate"
-    signal_to_noise: float
+    informative_mass_fraction: float
     information_horizon: int
     information_structure: FingerprintStructure
     informative_horizons: list[int] = Field(default_factory=list)
     curve: list[AmiGeometryCurvePoint] = Field(default_factory=list)
     metadata: dict[str, str | int | float] = Field(default_factory=dict)
+
+    def __getattr__(self, name: str) -> float:
+        """Raise AttributeError with migration hint for the renamed field."""
+        if name == "signal_to_noise":
+            raise AttributeError(
+                "signal_to_noise was renamed to informative_mass_fraction in v0.5.0; "
+                "see docs/migration/v0.4.x_to_v0.5.0.md"
+            )
+        raise AttributeError(f"{type(self).__name__!r} object has no attribute {name!r}")
 
 
 class ForecastabilityFingerprint(BaseModel):
@@ -588,8 +597,10 @@ class ForecastabilityFingerprint(BaseModel):
         nonlinear_share: Fraction of accepted corrected AMI in excess of a
             Gaussian-information linear baseline. Zero when no informative
             horizons or when the corrected-AMI denominator is near zero.
-        signal_to_noise: Share of corrected AMI that sits meaningfully above
-            the surrogate threshold profile.
+        informative_mass_fraction: Fraction of evaluated lags where corrected
+            AMI exceeds the surrogate threshold. Renamed from ``signal_to_noise``
+            in v0.5.0; the old name was misleading because this is a coverage
+            statistic, not a ratio of signal power to noise power.
         directness_ratio: Direct vs. mediated lag structure ratio, kept semantically
             separate from nonlinear_share. None if not computed.
         informative_horizons: List of horizon indices accepted by the geometry mask.
@@ -602,10 +613,19 @@ class ForecastabilityFingerprint(BaseModel):
     information_horizon: int
     information_structure: FingerprintStructure
     nonlinear_share: float
-    signal_to_noise: float
+    informative_mass_fraction: float
     directness_ratio: float | None = None
     informative_horizons: list[int] = Field(default_factory=list)
     metadata: dict[str, str | int | float] = Field(default_factory=dict)
+
+    def __getattr__(self, name: str) -> float:
+        """Raise AttributeError with migration hint for the renamed field."""
+        if name == "signal_to_noise":
+            raise AttributeError(
+                "signal_to_noise was renamed to informative_mass_fraction in v0.5.0; "
+                "see docs/migration/v0.4.x_to_v0.5.0.md"
+            )
+        raise AttributeError(f"{type(self).__name__!r} object has no attribute {name!r}")
 
 
 class RoutingRecommendation(BaseModel):

@@ -28,14 +28,14 @@ def _make_payload(
     mass: float = 0.12,
     horizon: int = 8,
     nonlinear_share: float = 0.05,
-    signal_to_noise: float = 0.33,
+    informative_mass_fraction: float = 0.33,
     primary_families: list[str] | None = None,
     confidence_label: str = "high",
     narrative: str | None = None,
 ) -> FingerprintAgentPayload:
     """Build a minimal :class:`FingerprintAgentPayload` for testing."""
     geometry = AmiInformationGeometry(
-        signal_to_noise=signal_to_noise,
+        informative_mass_fraction=informative_mass_fraction,
         information_horizon=horizon,
         information_structure=structure,  # type: ignore[arg-type]
         informative_horizons=[1, 2, 3, horizon],
@@ -57,7 +57,7 @@ def _make_payload(
         information_horizon=horizon,
         information_structure=structure,  # type: ignore[arg-type]
         nonlinear_share=nonlinear_share,
-        signal_to_noise=signal_to_noise,
+        informative_mass_fraction=informative_mass_fraction,
         directness_ratio=0.72,
         informative_horizons=[1, 2, 3, horizon],
     )
@@ -109,7 +109,7 @@ class TestSerialisedFingerprintSummaryEnvelope:
         assert inner["information_structure"] == "periodic"
 
     def test_envelope_payload_contains_geometry_fields(self) -> None:
-        payload = _make_payload(signal_to_noise=0.44)
+        payload = _make_payload(informative_mass_fraction=0.44)
         summary = serialise_fingerprint_payload(payload)
 
         inner = summary.payload

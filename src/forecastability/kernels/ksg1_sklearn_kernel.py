@@ -6,6 +6,7 @@ is passed to any public AMI/pAMI function.
 PurePythonBatchedKnnMiKernel alias is preserved here for backward compatibility
 with existing tests. It will be removed in v0.6.0.
 """
+
 from __future__ import annotations
 
 import warnings
@@ -38,6 +39,7 @@ class Ksg1SklearnKernel:
         np.ndarray: Shape (H,), float64. Single-k, no median aggregation.
         """
         from sklearn.preprocessing import StandardScaler
+
         arr = StandardScaler().fit_transform(series.reshape(-1, 1)).ravel()
         result = np.zeros(lag_range, dtype=float)
         for horizon in range(1, lag_range + 1):

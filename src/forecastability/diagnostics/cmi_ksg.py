@@ -62,8 +62,8 @@ def compute_conditional_mutual_information_ksg(
     eps = dists[:, k]  # shape (N_eff,)
 
     # Marginal subspace arrays
-    xz = np.column_stack([x[:, np.newaxis], z])   # (N_eff, d+1)
-    yz = np.column_stack([y[:, np.newaxis], z])   # (N_eff, d+1)
+    xz = np.column_stack([x[:, np.newaxis], z])  # (N_eff, d+1)
+    yz = np.column_stack([y[:, np.newaxis], z])  # (N_eff, d+1)
 
     tree_xz = cKDTree(xz, leafsize=16)
     tree_yz = cKDTree(yz, leafsize=16)
@@ -208,11 +208,11 @@ def compute_transfer_entropy_ksg(
         )
 
     # Build lag-aligned arrays
-    y_t = y_arr[lag + d:]            # current target Y_t
-    x_lagged = x_arr[d: N - lag]    # lagged source X_{t-lag}
+    y_t = y_arr[lag + d :]  # current target Y_t
+    x_lagged = x_arr[d : N - lag]  # lagged source X_{t-lag}
 
     # Target history conditioning: Y_{t-1}, ..., Y_{t-d}
-    z_cols = [y_arr[lag + d - h: N - h] for h in range(1, d + 1)]
+    z_cols = [y_arr[lag + d - h : N - h] for h in range(1, d + 1)]
     Z = np.column_stack(z_cols) if d > 0 else np.empty((N_eff, 0), dtype=float)
 
     # Estimate CMI = I(Y_t; X_{t-lag} | Y_{t-1},...,Y_{t-d})

@@ -126,4 +126,3 @@ def run_exogenous_rolling_origin_evaluation(
             "project_extension": int(project_extension),
         },
     )
-

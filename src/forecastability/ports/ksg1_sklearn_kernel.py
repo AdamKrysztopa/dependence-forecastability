@@ -1,4 +1,5 @@
 """Ksg1SklearnKernel Protocol — legacy sklearn KSG-I compatibility kernel (RVH-F01)."""
+
 from __future__ import annotations
 
 from typing import Protocol, runtime_checkable

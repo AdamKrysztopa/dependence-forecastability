@@ -1,4 +1,5 @@
 """PredictiveInformationGainResult — frozen result for compute_predictive_information_gain."""
+
 from __future__ import annotations
 
 from typing import Literal
@@ -18,10 +19,7 @@ class PredictiveInformationGainResult(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     status: Literal["computed", "blocked"] = Field(
-        description=(
-            "'computed' if estimation succeeded; "
-            "'blocked' if residualization failed."
-        )
+        description=("'computed' if estimation succeeded; 'blocked' if residualization failed.")
     )
     value: float = Field(
         description="Predictive information gain estimate in nats. NaN when status='blocked'."

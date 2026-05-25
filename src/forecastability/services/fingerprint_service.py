@@ -142,7 +142,7 @@ def build_forecastability_fingerprint(
             else geometry.information_structure
         ),
         nonlinear_share=nonlinear_share,
-        signal_to_noise=geometry.signal_to_noise,
+        informative_mass_fraction=geometry.informative_mass_fraction,
         directness_ratio=directness_ratio,
         informative_horizons=informative_horizons,
         metadata=metadata,
@@ -249,7 +249,7 @@ def build_fingerprint(
     )
     informative_horizon_set = set(informative_horizons)
     geometry = AmiInformationGeometry(
-        signal_to_noise=1.0 if informative_horizons else 0.0,
+        informative_mass_fraction=1.0 if informative_horizons else 0.0,
         information_horizon=max(informative_horizons, default=0),
         information_structure=structure,  # type: ignore[arg-type]
         informative_horizons=informative_horizons,

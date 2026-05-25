@@ -39,7 +39,9 @@ class FingerprintAgentPayload(BaseModel):
         schema_version: Payload schema version string.
         target_name: Name of the series being fingerprinted.
         geometry_method: Deterministic geometry engine identifier.
-        signal_to_noise: Geometry signal-quality statistic.
+        signal_to_noise: Geometry coverage statistic (informative_mass_fraction from the
+            geometry model; field kept as ``signal_to_noise`` on the A1 payload boundary
+            for backward compatibility with agent consumers).
         geometry_information_horizon: Geometry-derived latest informative horizon.
         geometry_information_structure: Geometry-derived structure label.
         information_mass: Normalised masked area under the informative AMI profile.
@@ -117,7 +119,7 @@ def fingerprint_agent_payload(
     return FingerprintAgentPayload(
         target_name=bundle.target_name,
         geometry_method=str(geometry.method),
-        signal_to_noise=geometry.signal_to_noise,
+        signal_to_noise=geometry.informative_mass_fraction,
         geometry_information_horizon=geometry.information_horizon,
         geometry_information_structure=str(geometry.information_structure),
         information_mass=fp.information_mass,

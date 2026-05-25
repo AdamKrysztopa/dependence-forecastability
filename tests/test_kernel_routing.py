@@ -1,4 +1,5 @@
 """Invariant A: every public AMI/pAMI call routes through KSG2CurveKernel by default."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch

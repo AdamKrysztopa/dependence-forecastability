@@ -282,12 +282,8 @@ def test_nan_observed_lags_are_not_rejected() -> None:
     for mode in ["romano_wolf", "bh", "by", "none"]:
         svc = SignificanceCorrectionService(correction=mode)  # type: ignore[arg-type]
         result = svc.correct(surrogate_matrix, observed)
-        assert not result.corrected_mask[1], (
-            f"NaN lag 1 should not be rejected in mode={mode}"
-        )
-        assert not result.corrected_mask[3], (
-            f"NaN lag 3 should not be rejected in mode={mode}"
-        )
+        assert not result.corrected_mask[1], f"NaN lag 1 should not be rejected in mode={mode}"
+        assert not result.corrected_mask[3], f"NaN lag 3 should not be rejected in mode={mode}"
 
 
 def test_all_nan_observed_returns_empty_mask() -> None:
@@ -338,7 +334,7 @@ def test_romano_wolf_controls_fwer() -> None:
     all_draws = rng.standard_normal((n_replicates, n_surrogates + 1, n_lags))
 
     surrogate_block = all_draws[:, :n_surrogates, :]  # (n_replicates, n_surrogates, n_lags)
-    observed_block = all_draws[:, n_surrogates, :]     # (n_replicates, n_lags)
+    observed_block = all_draws[:, n_surrogates, :]  # (n_replicates, n_lags)
 
     # For each replicate and lag, compute the per-lag p-value under
     # the max-null (Romano-Wolf single-step, then step-down).

@@ -30,11 +30,17 @@ def _eval_surrogate(
     surrogate, metric_name, max_lag, n_neighbors, seed, estimator = args
     if metric_name == "ami":
         return compute_ami(
-            surrogate, max_lag, n_neighbors=n_neighbors, random_state=seed,
+            surrogate,
+            max_lag,
+            n_neighbors=n_neighbors,
+            random_state=seed,
             estimator=estimator,  # type: ignore[arg-type]
         )
     return compute_pami_linear_residual(
-        surrogate, max_lag, n_neighbors=n_neighbors, random_state=seed,
+        surrogate,
+        max_lag,
+        n_neighbors=n_neighbors,
+        random_state=seed,
         estimator=estimator,  # type: ignore[arg-type]
     )
 
@@ -73,16 +79,12 @@ def phase_surrogates(
         # Even-length: interior bins are indices 1 .. n_freq-2
         n_interior = max(n_freq - 2, 0)
         if n_interior > 0:
-            phase[:, 1:-1] = np.exp(
-                1j * rng.uniform(0.0, 2.0 * np.pi, (n_surrogates, n_interior))
-            )
+            phase[:, 1:-1] = np.exp(1j * rng.uniform(0.0, 2.0 * np.pi, (n_surrogates, n_interior)))
     else:
         # Odd-length: all bins after DC are interior
         n_interior = max(n_freq - 1, 0)
         if n_interior > 0:
-            phase[:, 1:] = np.exp(
-                1j * rng.uniform(0.0, 2.0 * np.pi, (n_surrogates, n_interior))
-            )
+            phase[:, 1:] = np.exp(1j * rng.uniform(0.0, 2.0 * np.pi, (n_surrogates, n_interior)))
 
     # Single batched irfft: shape (n_surrogates, arr.size)
     surrogates = np.fft.irfft(spectrum[None, :] * phase, n=arr.size, axis=1)
@@ -143,8 +145,7 @@ def _validate_significance_bands_args(
         raise ValueError("alpha must be in (0, 1)")
     if metric_name not in {"ami", "pami_linear_residual"}:
         raise ValueError(
-            "metric_name must be 'ami' or 'pami_linear_residual', "
-            f"got {metric_name!r}"
+            f"metric_name must be 'ami' or 'pami_linear_residual', got {metric_name!r}"
         )
     if max_lag < 1:
         raise ValueError(f"max_lag must be >= 1, got {max_lag}")
@@ -276,9 +277,7 @@ def compute_significance_bands_corrected(
     _validate_significance_bands_args(metric_name, max_lag, n_surrogates, alpha, n_jobs)
     observed = np.asarray(observed, dtype=float)
     if observed.size != max_lag:
-        raise ValueError(
-            f"observed.size={observed.size} does not match max_lag={max_lag}"
-        )
+        raise ValueError(f"observed.size={observed.size} does not match max_lag={max_lag}")
 
     from forecastability.services.significance_correction_service import (
         SignificanceCorrectionService,

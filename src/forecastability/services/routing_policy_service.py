@@ -192,7 +192,8 @@ def _low_signal_quality_penalty(
     if fingerprint.information_structure == "none":
         return 0
     return int(
-        fingerprint.signal_to_noise < fingerprint_config.low_signal_to_noise_confidence_threshold
+        fingerprint.informative_mass_fraction
+        < fingerprint_config.low_signal_to_noise_confidence_threshold
     )
 
 
@@ -254,9 +255,10 @@ def _build_caution_flags(
     if signal_conflict_penalty:
         caution_flags.append("signal_conflict")
     if fingerprint.information_structure != "none" and (
-        fingerprint.signal_to_noise < fingerprint_config.low_signal_to_noise_confidence_threshold
+        fingerprint.informative_mass_fraction
+        < fingerprint_config.low_signal_to_noise_confidence_threshold
     ):
-        caution_flags.append("low_signal_to_noise")
+        caution_flags.append("low_informative_mass_fraction")
     if _metadata_flag(fingerprint.metadata.get("geometry_threshold_borderline")):
         caution_flags.append("geometry_threshold_borderline")
 

@@ -5,6 +5,7 @@ Also contains RVH-F19 self-exclusion slot-zero assertion tests
 because Edit cannot create new files and test_kernel_parity.py is the natural home for
 KSG2CurveKernel unit tests).
 """
+
 from __future__ import annotations
 
 import warnings
@@ -42,10 +43,12 @@ def test_v0_5_0_curve_kernel_matches_reference(ar1_series: np.ndarray) -> None:
 
     # Reference: call _ksg2_median_profile_value per horizon
     jittered = _apply_one_shot_jitter(ar1_series, jitter_scale=config.jitter_scale, random_state=42)
-    ref_profile = np.array([
-        _ksg2_median_profile_value(jittered[:-h], jittered[h:], config=config)
-        for h in range(1, 11)
-    ])
+    ref_profile = np.array(
+        [
+            _ksg2_median_profile_value(jittered[:-h], jittered[h:], config=config)
+            for h in range(1, 11)
+        ]
+    )
 
     # Both implement KSG-II correctly. cKDTree and sklearn NearestNeighbors can return
     # different neighbor orderings on near-equidistant points (tie-breaking is
@@ -64,9 +67,7 @@ def test_v0_5_0_curve_kernel_matches_reference(ar1_series: np.ndarray) -> None:
 def test_kernel_jitter_matches_reference_jitter(ar1_series: np.ndarray) -> None:
     """_apply_jitter in ksg2_curve_kernel must match _apply_one_shot_jitter reference."""
     config = AmiInformationGeometryConfig()
-    kernel_jittered = _apply_jitter(
-        ar1_series, jitter_scale=config.jitter_scale, random_state=42
-    )
+    kernel_jittered = _apply_jitter(ar1_series, jitter_scale=config.jitter_scale, random_state=42)
     ref_jittered = _apply_one_shot_jitter(
         ar1_series, jitter_scale=config.jitter_scale, random_state=42
     )
@@ -145,7 +146,8 @@ def test_estimate_curve_no_self_exclusion_warning_on_continuous_data(
         kernel.estimate_curve(ar1_series, lag_range=5, random_state=42)
 
     self_exclusion_warnings = [
-        w for w in caught
+        w
+        for w in caught
         if issubclass(w.category, UserWarning)
         and ("self-exclusion" in str(w.message) or "slot 0" in str(w.message))
     ]

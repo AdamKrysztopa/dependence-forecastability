@@ -27,7 +27,7 @@ def render_fingerprint_summary_dict(bundle: FingerprintBundle) -> dict[str, obje
     return {
         "target_name": bundle.target_name,
         "geometry_method": geometry.method,
-        "signal_to_noise": geometry.signal_to_noise,
+        "informative_mass_fraction": geometry.informative_mass_fraction,
         "geometry_information_horizon": geometry.information_horizon,
         "geometry_information_structure": geometry.information_structure,
         "information_mass": fp.information_mass,
@@ -80,7 +80,7 @@ def build_fingerprint_markdown(bundle: FingerprintBundle) -> str:
 
 ## Geometry
 - method: {geometry.method}
-- signal_to_noise: {geometry.signal_to_noise:.4f}
+- informative_mass_fraction: {geometry.informative_mass_fraction:.4f}
 - geometry_information_horizon: {geometry.information_horizon}
 - geometry_information_structure: {geometry.information_structure}
 
@@ -89,7 +89,7 @@ def build_fingerprint_markdown(bundle: FingerprintBundle) -> str:
 - information_horizon: {fp.information_horizon}
 - information_structure: {fp.information_structure}
 - nonlinear_share: {fp.nonlinear_share:.4f}
-- signal_to_noise: {fp.signal_to_noise:.4f}
+- informative_mass_fraction: {fp.informative_mass_fraction:.4f}
 - directness_ratio: {dr_str}
 - informative_horizons: [{horizons_str}]
 
@@ -137,7 +137,7 @@ def build_fingerprint_summary_row(bundle: FingerprintBundle) -> dict[str, str | 
     rec = bundle.recommendation
     return {
         "target_name": bundle.target_name,
-        "signal_to_noise": geometry.signal_to_noise,
+        "informative_mass_fraction": geometry.informative_mass_fraction,
         "geometry_information_horizon": geometry.information_horizon,
         "geometry_information_structure": geometry.information_structure,
         "information_mass": fp.information_mass,

@@ -679,18 +679,14 @@ def test_run_covariant_pcmci_ami_ci_test_param_accepted(
     """pcmci_ami_ci_test='parcorr' is accepted by run_covariant_analysis without error."""
 
     class _MinimalPcmciAmiPort:
-        def discover(
-            self, data: object, var_names: list[str], **_: object
-        ) -> CausalGraphResult:
+        def discover(self, data: object, var_names: list[str], **_: object) -> CausalGraphResult:
             parents = {name: [] for name in var_names}
             link_matrix = [["" for _ in var_names] for _ in var_names]
             return CausalGraphResult(
                 parents=parents, link_matrix=link_matrix, metadata={"method": "pcmci_ami_hybrid"}
             )
 
-        def discover_full(
-            self, data: object, var_names: list[str], **_: object
-        ) -> PcmciAmiResult:
+        def discover_full(self, data: object, var_names: list[str], **_: object) -> PcmciAmiResult:
             graph = self.discover(data, var_names)
             return PcmciAmiResult(
                 causal_graph=graph,

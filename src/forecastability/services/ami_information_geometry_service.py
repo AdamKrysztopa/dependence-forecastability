@@ -358,7 +358,22 @@ def _classify_information_structure(
     information_horizon: int,
     config: AmiInformationGeometryConfig,
 ) -> tuple[FingerprintStructure, bool]:
-    """Classify the corrected AMI profile into the public fingerprint taxonomy."""
+    """Classify the corrected AMI profile into the public fingerprint taxonomy.
+
+    Args:
+        corrected: Bias-corrected AMI values (NaN-filled for invalid horizons).
+        accepted: Boolean acceptance mask for each horizon.
+        signal_to_noise: Informative-mass-fraction value (fraction of evaluated
+            lags with corrected AMI above the surrogate threshold). The parameter
+            name is kept as ``signal_to_noise`` here for internal consistency with
+            the config field ``signal_to_noise_none_threshold``; the public field
+            is named ``informative_mass_fraction`` on result models (RVH-F23).
+        information_horizon: Latest accepted horizon index (0 when none).
+        config: Geometry configuration.
+
+    Returns:
+        Tuple of (structure label, used_tiebreak flag).
+    """
     if (
         signal_to_noise < config.signal_to_noise_none_threshold
         or information_horizon == 0
@@ -472,9 +487,9 @@ def compute_ami_information_geometry(
     signal_numerator = np.nansum(np.maximum(corrected - tau, 0.0))
     signal_denominator = np.nansum(corrected)
     if signal_denominator <= resolved_config.epsilon:
-        signal_to_noise = 0.0
+        informative_mass_fraction = 0.0
     else:
-        signal_to_noise = float(
+        informative_mass_fraction = float(
             np.clip(signal_numerator / (signal_denominator + resolved_config.epsilon), 0.0, 1.0)
         )
 
@@ -483,7 +498,7 @@ def compute_ami_information_geometry(
     information_structure, used_tiebreak = _classify_information_structure(
         np.nan_to_num(corrected, nan=0.0),
         accepted,
-        signal_to_noise=signal_to_noise,
+        signal_to_noise=informative_mass_fraction,
         information_horizon=information_horizon,
         config=resolved_config,
     )
@@ -528,7 +543,7 @@ def compute_ami_information_geometry(
 
     return AmiInformationGeometry(
         method=_GEOMETRY_METHOD,
-        signal_to_noise=signal_to_noise,
+        informative_mass_fraction=informative_mass_fraction,
         information_horizon=information_horizon,
         information_structure=information_structure,
         informative_horizons=informative_horizons,

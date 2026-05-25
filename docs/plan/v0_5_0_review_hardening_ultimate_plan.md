@@ -115,7 +115,7 @@ ID prefix: **RVH** (Review-driven hardening).
 | RVH-F20 | Fix CMI sample-size rule to account for conditioning dimension `d`: enforce `N >= k^(d+2)` in `compute_conditional_mutual_information_ksg` (audit I8) | 1.5 | P0 | ✅ Done |
 | RVH-F21 | Document pAMI low-cardinality GCMI fallback decision for partial-curve path (Q2); record decision in docstring + migration guide stub | 1.5 | P1 | ✅ Done |
 | RVH-F22 | Audit and update docstrings: pAMI linear approximation disclosure (I3); geometry threshold heuristic disclosure (I2); drop any remaining "deterministic" or "calibrated" overstatements | 1.5 | P1 | ✅ Done |
-| RVH-F23 | Rename `signal_to_noise` → `informative_mass_fraction` on `AmiInformationGeometryResult`; add `ImportError`-raising `__getattr__` for old field name (audit I9) | 2.5 | P1 | Not started |
+| RVH-F23 | Rename `signal_to_noise` → `informative_mass_fraction` on `AmiInformationGeometryResult`; add `ImportError`-raising `__getattr__` for old field name (audit I9) | 2.5 | P1 | ✅ Done |
 | RVH-F09 | Physical `src/forecastability/domain/` package: migrate 18 modules, retire allowlist | 2 | P0 | Not started |
 | RVH-F10 | Split `triage/comparison_report.py` into domain model + `reporting/comparison_report_plots.py`; retire `# TODO` from boundary tests | 2 | P1 | Not started |
 | RVH-F11 | Typed Pydantic returns from agent tools (replace `dict[str, Any]`); merge `adapters/{agents,llm}/` under `adapters/agents/{payloads,runtime}/` | 2 | P1 | Not started |

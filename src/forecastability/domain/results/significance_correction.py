@@ -1,4 +1,5 @@
 """SignificanceCorrectionResult — frozen result for SignificanceCorrectionService (RVH-F03)."""
+
 from __future__ import annotations
 
 from typing import Literal
@@ -41,7 +42,6 @@ class SignificanceCorrectionResult(BaseModel):
     low_surrogate_warning: bool = Field(
         default=False,
         description=(
-            "True if n_surrogates < 999 and correction='romano_wolf' "
-            "(statistical honesty warning)."
+            "True if n_surrogates < 999 and correction='romano_wolf' (statistical honesty warning)."
         ),
     )

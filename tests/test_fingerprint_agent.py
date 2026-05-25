@@ -192,7 +192,7 @@ def test_live_fingerprint_agent_strict_mode_returns_deterministic_payload(
     assert explanation.information_horizon == bundle.fingerprint.information_horizon
     assert explanation.information_structure == bundle.fingerprint.information_structure
     assert explanation.nonlinear_share == pytest.approx(bundle.fingerprint.nonlinear_share)
-    assert explanation.signal_to_noise == pytest.approx(bundle.geometry.signal_to_noise)
+    assert explanation.signal_to_noise == pytest.approx(bundle.geometry.informative_mass_fraction)
 
 
 class TestFingerprintDepsDataclass:

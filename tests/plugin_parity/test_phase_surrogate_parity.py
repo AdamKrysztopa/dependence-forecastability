@@ -35,38 +35,24 @@ def reference_series() -> np.ndarray:
 
 
 def test_phase_surrogate_shape_parity(provider, reference_series: np.ndarray) -> None:
-    native = provider.phase_surrogates(
-        reference_series, n_surrogates=99, random_state=42
-    )
-    python = py_phase_surrogates(
-        reference_series, n_surrogates=99, random_state=42
-    )
+    native = provider.phase_surrogates(reference_series, n_surrogates=99, random_state=42)
+    python = py_phase_surrogates(reference_series, n_surrogates=99, random_state=42)
     assert native.shape == python.shape, (
         f"Shape mismatch: native={native.shape}, python={python.shape}"
     )
 
 
 def test_phase_surrogate_dtype_parity(provider, reference_series: np.ndarray) -> None:
-    native = provider.phase_surrogates(
-        reference_series, n_surrogates=99, random_state=42
-    )
-    python = py_phase_surrogates(
-        reference_series, n_surrogates=99, random_state=42
-    )
+    native = provider.phase_surrogates(reference_series, n_surrogates=99, random_state=42)
+    python = py_phase_surrogates(reference_series, n_surrogates=99, random_state=42)
     assert native.dtype == python.dtype, (
         f"dtype mismatch: native={native.dtype}, python={python.dtype}"
     )
 
 
-def test_phase_surrogate_fixed_seed_bit_identical(
-    provider, reference_series: np.ndarray
-) -> None:
-    native = provider.phase_surrogates(
-        reference_series, n_surrogates=99, random_state=42
-    )
-    python = py_phase_surrogates(
-        reference_series, n_surrogates=99, random_state=42
-    )
+def test_phase_surrogate_fixed_seed_bit_identical(provider, reference_series: np.ndarray) -> None:
+    native = provider.phase_surrogates(reference_series, n_surrogates=99, random_state=42)
+    python = py_phase_surrogates(reference_series, n_surrogates=99, random_state=42)
     np.testing.assert_array_equal(
         native,
         python,
@@ -74,13 +60,9 @@ def test_phase_surrogate_fixed_seed_bit_identical(
     )
 
 
-def test_phase_surrogate_spectrum_preservation(
-    provider, reference_series: np.ndarray
-) -> None:
+def test_phase_surrogate_spectrum_preservation(provider, reference_series: np.ndarray) -> None:
     """Each surrogate row preserves the amplitude spectrum of the input."""
-    native = provider.phase_surrogates(
-        reference_series, n_surrogates=9, random_state=7
-    )
+    native = provider.phase_surrogates(reference_series, n_surrogates=9, random_state=7)
     ref_amp = np.abs(np.fft.rfft(reference_series))
     for i, row in enumerate(native):
         row_amp = np.abs(np.fft.rfft(row))
@@ -92,10 +74,6 @@ def test_phase_surrogate_spectrum_preservation(
         )
 
 
-def test_phase_surrogate_rejects_low_n_surrogates(
-    provider, reference_series: np.ndarray
-) -> None:
+def test_phase_surrogate_rejects_low_n_surrogates(provider, reference_series: np.ndarray) -> None:
     with pytest.raises((ValueError, Exception)):
-        provider.phase_surrogates(
-            reference_series, n_surrogates=10, random_state=42
-        )
+        provider.phase_surrogates(reference_series, n_surrogates=10, random_state=42)

@@ -1,4 +1,5 @@
 """RoutingConfidenceCalibrationAudit — frozen result for RVH-F08 calibration script."""
+
 from __future__ import annotations
 
 from typing import Literal
@@ -16,9 +17,7 @@ class ThresholdEntry(BaseModel):
     achieved_precision: float = Field(
         description="Precision achieved at this threshold on the calibration set."
     )
-    target_precision: float = Field(
-        description="Target precision used to fit this threshold."
-    )
+    target_precision: float = Field(description="Target precision used to fit this threshold.")
     n_samples: int = Field(description="Number of calibration samples at this label.")
 
 
@@ -32,9 +31,7 @@ class RoutingConfidenceCalibrationAudit(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    version: str = Field(
-        description="Release version this audit was generated for, e.g. '0.5.0'."
-    )
+    version: str = Field(description="Release version this audit was generated for, e.g. '0.5.0'.")
     n_archetypes: int = Field(description="Number of synthetic archetypes used.")
     n_noise_replicates: int = Field(description="Number of noise replicates per archetype.")
     thresholds: list[ThresholdEntry] = Field(
