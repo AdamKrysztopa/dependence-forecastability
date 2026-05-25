@@ -163,10 +163,14 @@ def compute_transfer_entropy_ksg(
     N_eff = N - lag - d
 
     # Conditioning dimension: y_t-dim=1, x_lagged-dim=1, z-dims=d
+    # d_total is the total joint-space dimension (X_t, X_{t-lag}, Z_1..Z_d).
+    # Frenzel-Pompe cutoff: N < k^(d_total) — the exponent equals the joint
+    # dimension, NOT d_total+2.  Adding +2 was double-counting: the +2 already
+    # comes from the X_t and X_{t-lag} components embedded in d_total.
     d_total = 1 + 1 + d
 
     # Compute quality_warning BEFORE building any trees (Risk 2)
-    cutoff = k_eff ** (d_total + 2)
+    cutoff = k_eff**d_total
     ratio = N_eff / cutoff if cutoff > 0 else 0.0
     qw: Literal["ok", "marginal", "unreliable"] = _quality_warning_from_ratio(ratio)  # type: ignore[assignment]
 
