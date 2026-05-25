@@ -545,6 +545,8 @@ MOVE orchestrators into use_cases/"]
 > [!NOTE]
 > No new examples or showcase scripts ship in v0.5.0. The migration guide is the sole new public-facing artifact in this phase. Existing examples are re-run end-to-end and committed if their outputs changed.
 
+**Status: ✅ Done (2026-05-25)**. 12/12 examples re-run clean. 5 example files updated for RVH-F23 rename (`signal_to_noise` → `informative_mass_fraction`). Figures collected under `docs/medium/v0.5.0-hardening-figures/` for RVH-F16.1 article. `outputs/` is in `.gitignore`; no output files are committed — this is expected.
+
 **Scope.** Verify existing examples still work; regenerate any output captured under `outputs/` whose numerics changed due to RVH-F01, F02, F03 defaults.
 
 **Acceptance criteria:**

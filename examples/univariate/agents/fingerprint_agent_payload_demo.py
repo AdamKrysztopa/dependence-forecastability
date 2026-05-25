@@ -184,7 +184,7 @@ def _compute_geometry_diagnostics(
     geometry = bundle.geometry
     return _GeometryDiagnostics(
         method=str(geometry.method),
-        signal_to_noise=geometry.signal_to_noise,
+        signal_to_noise=geometry.informative_mass_fraction,
         information_horizon=geometry.information_horizon,
         information_structure=str(geometry.information_structure),
         informative_horizons=list(geometry.informative_horizons),
@@ -414,7 +414,7 @@ def _verify_payload_parity(*, run: _ArchetypeRun) -> list[_VerificationIssue]:
     issues: list[_VerificationIssue] = []
 
     numeric_pairs = [
-        ("signal_to_noise", payload.signal_to_noise, geometry.signal_to_noise),
+        ("signal_to_noise", payload.signal_to_noise, geometry.informative_mass_fraction),
         ("information_mass", payload.information_mass, fingerprint.information_mass),
         ("nonlinear_share", payload.nonlinear_share, fingerprint.nonlinear_share),
     ]

@@ -104,7 +104,7 @@ def main() -> None:
     print("=" * 60)
     header_fields = [
         "target_name",
-        "signal_to_noise",
+        "informative_mass_fraction",
         "geometry_information_structure",
         "information_mass",
         "information_horizon",
