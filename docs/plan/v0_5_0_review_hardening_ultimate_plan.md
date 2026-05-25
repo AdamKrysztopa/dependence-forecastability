@@ -124,7 +124,7 @@ ID prefix: **RVH** (Review-driven hardening).
 | RVH-F14 | Numerical golden tests: Gaussian-MI round-trip; KSG-II vs KSG-I regression-fixture diff | 4 | P0 | ✅ Done |
 | RVH-F15 | PBE-F* performance budget tests: surrogate band, curve kernel, ModMRMR | 4 | P0 | ✅ Done |
 | RVH-F16 | Migration guide `docs/migration/v0.4.x_to_v0.5.0.md`; CHANGELOG; README refresh | 6 | P0 | ✅ Done |
-| RVH-F16.1 | detailed paper with the figures on the 0.4.x to 0.5.0 migration docs/medium/2026-05-25-v0.5.0-medium-article-design.md| 6 | P0 | Not started |
+| RVH-F16.1 | Medium article `docs/medium/v0.5.0-maturing-the-forecastability-triage-toolkit.md` + figure-regen script `scripts/regenerate_v0_5_0_paper_figures.py` (two new figures: calibration-precision bars, archetype-suite groundtruth) | 6 | P0 | ✅ Done |
 | RVH-F17 | Release engineering: version bump, fixture rebuild, tag, PyPI publication, post-release announcement | 6 | P0 | Not started |
 
 ---
