@@ -78,7 +78,7 @@ class TestToolSerialisation:
     """Verify that tool helpers serialise results correctly."""
 
     def test_readiness_to_dict(self) -> None:
-        from forecastability.adapters.llm.triage_agent import _readiness_to_dict
+        from forecastability.adapters.agents.runtime.triage_agent import _readiness_to_result
         from forecastability.triage.models import (
             ReadinessReport,
             ReadinessStatus,
@@ -89,13 +89,13 @@ class TestToolSerialisation:
             status=ReadinessStatus.warning,
             warnings=[ReadinessWarning(code="SIGNIFICANCE_FEASIBILITY", message="Short series")],
         )
-        d = _readiness_to_dict(report)
-        assert d["status"] == "warning"
-        assert len(d["warnings"]) == 1
-        assert d["warnings"][0]["code"] == "SIGNIFICANCE_FEASIBILITY"
+        result = _readiness_to_result(report)
+        assert result.status == "warning"
+        assert len(result.warnings) == 1
+        assert result.warnings[0].code == "SIGNIFICANCE_FEASIBILITY"
 
     def test_method_plan_to_dict(self) -> None:
-        from forecastability.adapters.llm.triage_agent import _method_plan_to_dict
+        from forecastability.adapters.agents.runtime.triage_agent import _method_plan_to_result
         from forecastability.triage.models import MethodPlan
 
         plan = MethodPlan(
@@ -104,12 +104,14 @@ class TestToolSerialisation:
             assumptions=["Long enough"],
             rationale="Standard path",
         )
-        d = _method_plan_to_dict(plan)
-        assert d["route"] == "univariate_with_significance"
-        assert d["compute_surrogates"] is True
+        result = _method_plan_to_result(plan)
+        assert result.route == "univariate_with_significance"
+        assert result.compute_surrogates is True
 
     def test_triage_result_to_dict_blocked(self) -> None:
-        from forecastability.adapters.llm.triage_agent import _triage_result_to_dict
+        from forecastability.adapters.agents.runtime.triage_agent import (
+            _triage_result_to_run_result,
+        )
         from forecastability.triage.models import (
             ReadinessReport,
             ReadinessStatus,
@@ -124,12 +126,14 @@ class TestToolSerialisation:
             readiness=ReadinessReport(status=ReadinessStatus.blocked, warnings=[]),
             blocked=True,
         )
-        d = _triage_result_to_dict(result)
-        assert d["blocked"] is True
-        assert "analyze_summary" not in d
+        run_result = _triage_result_to_run_result(result)
+        assert run_result.blocked is True
+        assert run_result.analyze_summary is None
 
     def test_triage_result_to_dict_complete(self) -> None:
-        from forecastability.adapters.llm.triage_agent import _triage_result_to_dict
+        from forecastability.adapters.agents.runtime.triage_agent import (
+            _triage_result_to_run_result,
+        )
         from forecastability.triage.models import TriageRequest
         from forecastability.use_cases.run_triage import run_triage
 
@@ -142,12 +146,12 @@ class TestToolSerialisation:
 
         req = TriageRequest(series=ts, max_lag=20, random_state=42)
         result = run_triage(req)
-        d = _triage_result_to_dict(result)
+        run_result = _triage_result_to_run_result(result)
 
-        assert d["blocked"] is False
-        assert "analyze_summary" in d
-        assert "interpretation" in d
-        assert d["interpretation"]["forecastability_class"] == "high"
+        assert run_result.blocked is False
+        assert run_result.analyze_summary is not None
+        assert run_result.interpretation is not None
+        assert run_result.interpretation.forecastability_class == "high"
 
 
 class TestAgentWithTestModel:
@@ -196,11 +200,11 @@ class TestAgentWithTestModel:
     async def test_agent_tools_are_callable(self) -> None:
         """Verify that each tool can be called directly without LLM."""
 
-        from forecastability.adapters.llm.triage_agent import (
+        from forecastability.adapters.agents.runtime.triage_agent import (
             TriageDeps,
             _build_request,
-            _readiness_to_dict,
-            _triage_result_to_dict,
+            _readiness_to_result,
+            _triage_result_to_run_result,
         )
         from forecastability.adapters.settings import InfraSettings
         from forecastability.triage.readiness import assess_readiness
@@ -215,13 +219,13 @@ class TestAgentWithTestModel:
 
         # validate_series
         readiness = assess_readiness(request)
-        rd = _readiness_to_dict(readiness)
-        assert "status" in rd
+        rd = _readiness_to_result(readiness)
+        assert rd.status is not None
 
         # run_full_triage
         result = run_triage(request)
-        td = _triage_result_to_dict(result)
-        assert "blocked" in td
+        td = _triage_result_to_run_result(result)
+        assert td.blocked is not None
 
 
 class TestTriageResultNarrativeField:
@@ -300,12 +304,13 @@ class TestBoundaryEnforcement:
         import ast
         from pathlib import Path
 
-        from test_architecture_boundaries import DOMAIN_MODULE_PATHS
-
         root = Path(__file__).parent.parent
-        for rel in DOMAIN_MODULE_PATHS:
-            path = root / rel
-            tree = ast.parse(path.read_text(encoding="utf-8"))
+        domain_dir = root / "src/forecastability/domain"
+        py_files = [p for p in domain_dir.rglob("*.py") if p.name != "__init__.py"]
+        assert py_files, "No .py files found under src/forecastability/domain/"
+        for py_file in py_files:
+            rel = str(py_file.relative_to(root))
+            tree = ast.parse(py_file.read_text(encoding="utf-8"))
             for node in ast.walk(tree):
                 if isinstance(node, ast.Import):
                     for alias in node.names:

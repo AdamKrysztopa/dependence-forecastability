@@ -1,27 +1,27 @@
 """Agent adapters package for the AMI → pAMI triage and fingerprint systems."""
 
-from forecastability.adapters.agents.fingerprint_agent_interpretation_adapter import (
+from forecastability.adapters.agents.payloads.fingerprint_agent_interpretation_adapter import (
     FingerprintAgentInterpretation,
     FingerprintInterpretationEvidence,
     interpret_fingerprint_batch,
     interpret_fingerprint_payload,
 )
-from forecastability.adapters.agents.fingerprint_agent_payload_models import (
+from forecastability.adapters.agents.payloads.fingerprint_agent_payload_models import (
     FingerprintAgentPayload,
     fingerprint_agent_payload,
 )
-from forecastability.adapters.agents.fingerprint_summary_serializer import (
+from forecastability.adapters.agents.payloads.fingerprint_summary_serializer import (
     SerialisedFingerprintSummary,
     serialise_fingerprint_payload,
     serialise_fingerprint_to_json,
 )
-from forecastability.adapters.agents.triage_agent_interpretation_adapter import (
+from forecastability.adapters.agents.payloads.triage_agent_interpretation_adapter import (
     InterpretationEvidence,
     TriageAgentInterpretation,
     interpret_batch,
     interpret_payload,
 )
-from forecastability.adapters.agents.triage_agent_payload_models import (
+from forecastability.adapters.agents.payloads.triage_agent_payload_models import (
     F1ProfilePayload,
     F2LimitsPayload,
     F3LearningCurvePayload,
@@ -32,7 +32,7 @@ from forecastability.adapters.agents.triage_agent_payload_models import (
     F8ExogDriverPayload,
     TriageAgentPayload,
 )
-from forecastability.adapters.agents.triage_summary_serializer import (
+from forecastability.adapters.agents.payloads.triage_summary_serializer import (
     SerialisedTriageSummary,
     serialise_batch,
     serialise_batch_to_json,

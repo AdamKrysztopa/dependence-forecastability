@@ -1,19 +1,24 @@
-"""Routing-validation summary serialiser — transport envelope for agent payloads.
+"""Backward-compatible re-export shim (RVH-F11).
 
-Wraps :class:`RoutingValidationAgentPayload` in a frozen versioned envelope so
-the deterministic routing-validation review can be handed to external tools or
-optional LLM adapters without recomputing any scientific or policy fields.
+Routing validation summary serializer has moved to
+:mod:`forecastability.adapters.agents.payloads.routing_validation_summary_serializer`.
+This shim will be removed in v0.6.0.
 """
 
-from __future__ import annotations
+import warnings as _warnings
 
-import json
-from datetime import UTC, datetime
+_warnings.warn(
+    "forecastability.adapters.agents.routing_validation_summary_serializer is deprecated. "
+    "Import from "
+    "forecastability.adapters.agents.payloads.routing_validation_summary_serializer instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
-from pydantic import BaseModel, ConfigDict
-
-from forecastability.adapters.agents.routing_validation_agent_payload_models import (
-    RoutingValidationAgentPayload,
+from forecastability.adapters.agents.payloads.routing_validation_summary_serializer import (  # noqa: E402, F401
+    SerialisedRoutingValidationSummary,
+    serialise_routing_validation_payload,
+    serialise_routing_validation_to_json,
 )
 
 __all__ = [
@@ -21,54 +26,3 @@ __all__ = [
     "serialise_routing_validation_payload",
     "serialise_routing_validation_to_json",
 ]
-
-
-class SerialisedRoutingValidationSummary(BaseModel):
-    """Versioned envelope for a routing-validation agent payload.
-
-    Attributes:
-        schema_version: Envelope schema version.
-        payload_type: Wrapped payload class name.
-        serialised_at: ISO-8601 UTC timestamp of serialisation.
-        payload: Dumped deterministic payload.
-    """
-
-    model_config = ConfigDict(frozen=True)
-
-    schema_version: str = "1"
-    payload_type: str
-    serialised_at: str
-    payload: dict[str, object]
-
-
-def serialise_routing_validation_payload(
-    payload: RoutingValidationAgentPayload,
-) -> SerialisedRoutingValidationSummary:
-    """Wrap a routing-validation payload in a versioned envelope.
-
-    Args:
-        payload: Deterministic routing-validation agent payload.
-
-    Returns:
-        Frozen serialised envelope.
-    """
-    return SerialisedRoutingValidationSummary(
-        payload_type=type(payload).__name__,
-        serialised_at=datetime.now(UTC).isoformat(),
-        payload=payload.model_dump(),
-    )
-
-
-def serialise_routing_validation_to_json(
-    payload: RoutingValidationAgentPayload,
-) -> str:
-    """Serialise a routing-validation payload to pretty-printed JSON.
-
-    Args:
-        payload: Deterministic routing-validation agent payload.
-
-    Returns:
-        JSON string representing the serialised envelope.
-    """
-    summary = serialise_routing_validation_payload(payload)
-    return json.dumps(summary.model_dump(), indent=2)

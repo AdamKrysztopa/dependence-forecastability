@@ -14,7 +14,6 @@ from typing import NamedTuple, cast
 
 import numpy as np
 
-from forecastability.extensions import compute_target_baseline_by_horizon
 from forecastability.metrics.metrics import compute_ami, compute_pami_linear_residual
 from forecastability.metrics.scorers import DependenceScorer, default_registry
 from forecastability.pipeline import run_rolling_origin_evaluation
@@ -31,6 +30,7 @@ from forecastability.triage import (
 )
 from forecastability.triage.models import TriageResult
 from forecastability.use_cases import run_covariant_analysis, run_triage
+from forecastability.use_cases.extensions import compute_target_baseline_by_horizon
 
 try:
     from scripts.performance_common import (

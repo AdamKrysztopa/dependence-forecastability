@@ -8,19 +8,19 @@ import numpy as np
 import pandas as pd
 import pytest
 
-import forecastability.extensions as extensions
+import forecastability.use_cases.extensions as extensions
 from forecastability import TargetBaselineCurves, compute_target_baseline_by_horizon
 from forecastability.adapters.causal_rivers import (
     evaluate_causal_rivers_pair,
     extract_aligned_station_pair,
     load_causal_rivers_config,
 )
-from forecastability.extensions import (
+from forecastability.pipeline import run_canonical_example
+from forecastability.pipeline.rolling_origin import build_expanding_window_splits
+from forecastability.use_cases.extensions import (
     bootstrap_descriptor_uncertainty,
     compute_k_sensitivity,
 )
-from forecastability.pipeline import run_canonical_example
-from forecastability.pipeline.rolling_origin import build_expanding_window_splits
 from forecastability.utils.datasets import generate_sine_wave
 
 

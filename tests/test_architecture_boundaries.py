@@ -12,53 +12,25 @@ respected:
 import ast
 from pathlib import Path
 
-import pytest
-
 ROOT = Path(__file__).parent.parent
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
-DOMAIN_MODULE_PATHS = [
-    "src/forecastability/metrics/metrics.py",
-    "src/forecastability/utils/validation.py",
-    "src/forecastability/reporting/interpretation.py",
-    "src/forecastability/utils/types.py",
-    "src/forecastability/utils/config.py",
-    "src/forecastability/metrics/scorers.py",
-    "src/forecastability/diagnostics/cmi.py",
-    "src/forecastability/diagnostics/surrogates.py",
-    # AGT-026: additional domain-like modules added to coverage
-    "src/forecastability/utils/aggregation.py",  # pure domain: numpy/pandas/scipy only
-    # reporting.py: output transformation, not domain compute; no forbidden imports
-    "src/forecastability/reporting/reporting.py",
-    # C11: analyzer.py no longer imports matplotlib at module level
-    "src/forecastability/pipeline/analyzer.py",
-    # C15: triage domain models must not import infrastructure
-    "src/forecastability/triage/models.py",
-    "src/forecastability/triage/events.py",
-    "src/forecastability/triage/batch_models.py",
-    "src/forecastability/triage/result_bundle.py",
-    "src/forecastability/triage/forecastability_profile.py",
-    "src/forecastability/triage/readiness.py",
-    "src/forecastability/triage/router.py",
-    "src/forecastability/triage/complexity_band.py",
-    "src/forecastability/triage/lyapunov.py",
-    "src/forecastability/triage/spectral_predictability.py",
-    "src/forecastability/triage/theoretical_limit_diagnostics.py",
-    "src/forecastability/triage/predictive_info_learning_curve.py",
-    # C15: TODO — comparison_report.py imports matplotlib; excluded until fixed
-    # RVH-F00: new domain/results/ models — structural check added in Phase 2 RVH-F09
-    "src/forecastability/domain/results/transfer_entropy_ksg.py",
-    "src/forecastability/domain/results/predictive_information_gain.py",
-    "src/forecastability/domain/results/significance_correction.py",
-    "src/forecastability/domain/results/calibration_audit.py",
-    "src/forecastability/domain/results/perf_budget.py",
-]
-
-_DOMAIN_FORBIDDEN = frozenset(
-    ["pydantic_ai", "fastapi", "mcp", "httpx", "click", "typer", "matplotlib"]
+_DOMAIN_STRUCTURAL_FORBIDDEN = frozenset(
+    [
+        "pydantic_ai",
+        "fastapi",
+        "mcp",
+        "httpx",
+        "click",
+        "typer",
+        "matplotlib",
+        "sklearn",
+        "scipy",
+        "statsmodels",
+    ]
 )
 
 _PORTS_FORBIDDEN = frozenset(
@@ -113,15 +85,23 @@ def _get_full_imports(path: Path) -> list[str]:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("module_path", DOMAIN_MODULE_PATHS)
-def test_domain_modules_have_no_infra_imports(module_path: str) -> None:
-    path = ROOT / module_path
-    imported = _get_imports(path)
-    violations = [pkg for pkg in imported if pkg in _DOMAIN_FORBIDDEN]
+def test_domain_package_has_no_forbidden_imports() -> None:
+    """Every module under src/forecastability/domain/ must be infra-clean."""
+    domain_dir = ROOT / "src/forecastability/domain"
+    py_files = [p for p in domain_dir.rglob("*.py") if p.name != "__init__.py"]
+    assert py_files, "No .py files found under src/forecastability/domain/ — check the path"
+
+    violations: list[str] = []
+    for py_file in py_files:
+        imported = _get_imports(py_file)
+        bad = [pkg for pkg in imported if pkg in _DOMAIN_STRUCTURAL_FORBIDDEN]
+        if bad:
+            relative = str(py_file.relative_to(ROOT))
+            violations.append(f"{relative}: {sorted(set(bad))}")
+
     assert not violations, (
-        f"{module_path} imports forbidden infrastructure package(s): "
-        f"{sorted(set(violations))}. "
-        "Domain modules must not depend on infrastructure or presentation layers."
+        "domain/ modules must not import infrastructure or compute packages.\n"
+        + "\n".join(violations)
     )
 
 
@@ -271,10 +251,10 @@ def test_adapter_utilities_do_not_import_transport_adapters() -> None:
         for p in adapters_dir.glob("*.py")
         if p.stem not in _TRANSPORT_ADAPTER_NAMES and p.name != "__init__.py"
     ]
-    # include agents/ sub-package
+    # include agents/ sub-package (payloads/ and runtime/ subdirectories included)
     agents_dir = adapters_dir / "agents"
     if agents_dir.exists():
-        utility_files += [p for p in agents_dir.glob("*.py") if p.name != "__init__.py"]
+        utility_files += [p for p in agents_dir.rglob("*.py") if p.name != "__init__.py"]
 
     violations: list[str] = []
     for py_file in utility_files:
@@ -303,14 +283,21 @@ def test_adapter_utilities_do_not_import_transport_adapters() -> None:
 
 
 def test_llm_adapters_do_not_import_scripts() -> None:
-    """Agent adapters under adapters/llm/ must not reach back into scripts/.
+    """Agent adapters must not reach back into scripts/.
 
-    The CLI showcase scripts are allowed to import from adapters/, but the
-    reverse direction would couple library code to one-off entry points.
+    This covers both adapters/llm/ (shim layer) and adapters/agents/runtime/
+    (canonical implementations). The CLI showcase scripts are allowed to import
+    from adapters/, but the reverse direction would couple library code to
+    one-off entry points.
     """
     llm_dir = ROOT / "src/forecastability/adapters/llm"
+    runtime_dir = ROOT / "src/forecastability/adapters/agents/runtime"
     py_files = sorted(p for p in llm_dir.glob("*.py") if p.name != "__init__.py")
-    assert py_files, "No .py files found under src/forecastability/adapters/llm/"
+    if runtime_dir.exists():
+        py_files += sorted(p for p in runtime_dir.glob("*.py") if p.name != "__init__.py")
+    assert py_files, (
+        "No .py files found under src/forecastability/adapters/llm/ or adapters/agents/runtime/"
+    )
 
     violations: list[str] = []
     for py_file in py_files:

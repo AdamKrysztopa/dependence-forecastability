@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from forecastability.exog_benchmark import run_benchmark_exog_panel
+from forecastability.use_cases.exog_benchmark import run_benchmark_exog_panel
 
 
 def main() -> None:

@@ -1,19 +1,25 @@
-"""Live LLM adapters for forecastability workflows."""
+"""Live LLM adapters for forecastability workflows.
 
-from forecastability.adapters.llm.fingerprint_agent import (
+Canonical implementations have moved to
+:mod:`forecastability.adapters.agents.runtime`. This package re-exports
+them for backward compatibility. Direct imports from the runtime subpackage
+are preferred.
+"""
+
+from forecastability.adapters.agents.runtime.fingerprint_agent import (
     FingerprintDeps,
     FingerprintExplanation,
     create_fingerprint_agent,
     pydantic_ai_available,
     run_fingerprint_agent,
 )
-from forecastability.adapters.llm.screening_agent import (
+from forecastability.adapters.agents.runtime.screening_agent import (
     FeatureRanking,
     FeatureScreeningReport,
     ScreeningDeps,
     create_screening_agent,
 )
-from forecastability.adapters.llm.triage_agent import (
+from forecastability.adapters.agents.runtime.triage_agent import (
     TriageDeps,
     TriageExplanation,
     create_triage_agent,

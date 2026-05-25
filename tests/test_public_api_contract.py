@@ -104,3 +104,91 @@ def test_validate_time_series_importable_and_callable() -> None:
     from forecastability import validate_time_series
 
     assert callable(validate_time_series)
+
+
+# ---------------------------------------------------------------------------
+# RVH-F12 — canonical surface completeness (v0.5.0)
+# ---------------------------------------------------------------------------
+
+
+def test_canonical_public_names_importable() -> None:
+    """Every name in forecastability.api.__all__ must be accessible on the top-level package."""
+    import forecastability
+    from forecastability.api import __all__ as api_all
+
+    missing = [name for name in api_all if not hasattr(forecastability, name)]
+    assert not missing, (
+        "The following canonical names are in forecastability.api.__all__ "
+        f"but not accessible on forecastability: {missing}"
+    )
+
+
+def test_legacy_names_raise_deprecation_warning() -> None:
+    """A representative sample of v0.4.x names must emit DeprecationWarning (not AttributeError).
+
+    Names that were *removed* with a semantics change may raise ImportError instead;
+    that is also acceptable — the key invariant is that they do not raise AttributeError.
+    """
+    import warnings
+
+    import forecastability
+
+    # Representative legacy names from the old _LAZY_EXPORT_MAP and _NOTEBOOK_COMPAT_EXPORTS.
+    # These are NOT in the canonical v0.5.0 __all__ but were accessible in v0.4.x.
+    legacy_sample = [
+        "AnalyzeResult",  # pipeline.analyzer
+        "ForecastabilityAnalyzer",  # pipeline.analyzer
+        "ScorerRegistry",  # metrics.scorers
+        "default_registry",  # metrics.scorers
+        "run_batch_triage",  # use_cases
+        "BenchmarkDataConfig",  # utils.config
+        "CMIConfig",  # utils.config
+        "generate_ar1_archetype",  # utils.synthetic
+        "ForecastabilityProfile",  # triage.forecastability_profile
+        "LagAwareModMRMRResult",  # triage.lag_aware_mod_mrmr
+    ]
+
+    for name in legacy_sample:
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            try:
+                getattr(forecastability, name)
+            except ImportError:
+                # Acceptable: symbol removed with semantics change (e.g. compute_transfer_entropy)
+                pass
+            except AttributeError as exc:
+                raise AssertionError(
+                    f"forecastability.{name} raised AttributeError — "
+                    "expected DeprecationWarning or ImportError for a legacy name. "
+                    f"Original error: {exc}"
+                ) from exc
+
+            dep_warnings = [w for w in caught if issubclass(w.category, DeprecationWarning)]
+            # If no exception was raised and no DeprecationWarning emitted, that is a failure.
+            if not dep_warnings:
+                # Re-check: if it raised ImportError above we already continued; only fail
+                # when the attribute resolved *silently* without a warning.
+                try:
+                    getattr(forecastability, name)
+                except (ImportError, AttributeError):
+                    pass  # already handled
+                else:
+                    raise AssertionError(
+                        f"forecastability.{name} resolved without emitting a DeprecationWarning. "
+                        "Legacy names must warn callers to migrate."
+                    )
+
+
+def test_removed_name_raises_import_error() -> None:
+    """compute_transfer_entropy was removed in v0.5.0 and must raise ImportError."""
+    import forecastability
+
+    try:
+        _ = forecastability.compute_transfer_entropy
+    except ImportError:
+        pass  # expected
+    except AttributeError as exc:
+        raise AssertionError(
+            "forecastability.compute_transfer_entropy raised AttributeError; "
+            f"expected ImportError with a migration message. Original: {exc}"
+        ) from exc

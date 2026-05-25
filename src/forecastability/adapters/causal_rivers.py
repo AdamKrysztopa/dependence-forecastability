@@ -10,8 +10,8 @@ import pandas as pd
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from forecastability.extensions import TargetBaselineCurves
 from forecastability.pipeline import run_exogenous_rolling_origin_evaluation
+from forecastability.use_cases.extensions import TargetBaselineCurves
 from forecastability.utils.config import RollingOriginConfig
 
 CausalRiversRole = Literal["positive", "negative"]
