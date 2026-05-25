@@ -2,6 +2,16 @@
 
 *A deterministic, information-theoretic workflow for diagnosing target memory, exogenous signal retention, lag legality, sparse feature selection, and downstream model hand-off before expensive forecasting begins.*
 
+> **v0.5.0 erratum (2026-05-25):** This article was written against v0.4.3.
+> v0.5.0 introduces breaking changes: the default AMI estimator is now KSG-II
+> (pass `estimator='ksg1_sklearn'` to reproduce v0.4.3 numerics),
+> `compute_transfer_entropy` has been removed in favour of
+> `compute_transfer_entropy_ksg` and `compute_predictive_information_gain`,
+> significance correction now defaults to Romano-Wolf FWER, and
+> `signal_to_noise` has been renamed to `informative_mass_fraction`.
+> See the full migration guide:
+> [`docs/migration/v0.4.x_to_v0.5.0.md`](../migration/v0.4.x_to_v0.5.0.md).
+
 ## Most Forecasting Work Starts Too Late
 
 Most forecasting work starts too late.

@@ -123,7 +123,7 @@ ID prefix: **RVH** (Review-driven hardening).
 | RVH-F13 | Delete dead DTOs (`use_cases/requests.py`, `use_cases/responses.py`); move `extensions.py`, `exog_benchmark.py` into `use_cases/` | 2 | P1 | ✅ Done |
 | RVH-F14 | Numerical golden tests: Gaussian-MI round-trip; KSG-II vs KSG-I regression-fixture diff | 4 | P0 | ✅ Done |
 | RVH-F15 | PBE-F* performance budget tests: surrogate band, curve kernel, ModMRMR | 4 | P0 | ✅ Done |
-| RVH-F16 | Migration guide `docs/migration/v0.4.x_to_v0.5.0.md`; CHANGELOG; README refresh | 6 | P0 | Not started |
+| RVH-F16 | Migration guide `docs/migration/v0.4.x_to_v0.5.0.md`; CHANGELOG; README refresh | 6 | P0 | ✅ Done |
 | RVH-F16.1 | detailed paper with the figures on the 0.4.x to 0.5.0 migration docs/medium/2026-05-25-v0.5.0-medium-article-design.md| 6 | P0 | Not started |
 | RVH-F17 | Release engineering: version bump, fixture rebuild, tag, PyPI publication, post-release announcement | 6 | P0 | Not started |
 

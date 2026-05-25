@@ -27,6 +27,12 @@ MLForecast, StatsForecast, Nixtla, sklearn, Prophet, or custom models.
 [![Research base](https://img.shields.io/badge/research%20base-AMI%20%2B%20pAMI%20%2B%20causal%20screening-2E8B57.svg)](docs/theory)
 [![Examples](https://img.shields.io/badge/examples-forecastability--examples-0A7B83.svg)](https://github.com/AdamKrysztopa/forecastability-examples)
 
+> **v0.5.0** — Default estimator upgraded to KSG-II; true Schreiber transfer
+> entropy via `compute_transfer_entropy_ksg`; Romano-Wolf FWER correction
+> across lags by default; physical `domain/` layer; typed agent boundaries.
+> Upgrading from v0.4.x? See the
+> [migration guide](docs/migration/v0.4.x_to_v0.5.0.md).
+
 ---
 
 ## Why this exists
@@ -106,7 +112,7 @@ result = run_triage(
         series=series,
         goal="univariate",
         max_lag=20,
-        n_surrogates=99,
+        n_surrogates=99,  # explicit override; v0.5.0 default is 999
         random_state=42,
     )
 )

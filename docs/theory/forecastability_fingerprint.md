@@ -30,7 +30,10 @@ The authoritative implementation lives in:
 ## Public Fields
 
 The fingerprint keeps the original four public fields and now mirrors
-`signal_to_noise` from the geometry layer.
+`informative_mass_fraction` from the geometry layer.
+
+> **v0.5.0 note:** `signal_to_noise` was renamed to `informative_mass_fraction`
+> in v0.5.0 (RVH-F23).  All field names below reflect the v0.5.0 API.
 
 ### `information_mass`
 
@@ -91,10 +94,10 @@ $$
 Horizons with invalid `I_G(h)` are excluded conservatively from both numerator
 and denominator.
 
-### `signal_to_noise`
+### `informative_mass_fraction`
 
-`signal_to_noise` is mirrored into the fingerprint object, but it remains a
-geometry-quality metric:
+`informative_mass_fraction` (renamed from `signal_to_noise` in v0.5.0) is
+mirrored into the fingerprint object, but it remains a geometry-quality metric:
 
 $$
 S = \frac{\sum_h \max(I_c(h)-\tau(h), 0)}{\sum_h I_c(h) + \epsilon}
@@ -109,8 +112,8 @@ Interpretation:
 
 The fingerprint does **not** identify the one true best model.
 
-- `information_mass` is not `signal_to_noise`
-- `signal_to_noise` is not `nonlinear_share`
+- `information_mass` is not `informative_mass_fraction`
+- `informative_mass_fraction` is not `nonlinear_share`
 - `nonlinear_share` is not `1 - directness_ratio`
 - routing is heuristic model-family guidance, not an empirical winner guarantee
 
@@ -121,7 +124,7 @@ The v0.3.1 fingerprint no longer rebuilds threshold semantics locally.
 - accepted horizons come from `AmiInformationGeometry.curve[*].accepted`
 - `information_horizon` and `information_mass` use the same acceptance mask
 - structure comes from the geometry classifier
-- `signal_to_noise` is copied from geometry without reinterpretation
+- `informative_mass_fraction` is copied from geometry without reinterpretation
 
 That keeps the deterministic core aligned across Python objects, markdown
 reports, JSON output, and agent payloads.
@@ -197,7 +200,7 @@ Each fixture captures the deterministic surfaces required by v0.3.1 release
 semantics:
 
 - geometry: corrected AMI curve (`ami_corrected`), `tau`, accepted mask,
-  `signal_to_noise`, `information_horizon`, `information_structure`
+  `informative_mass_fraction`, `information_horizon`, `information_structure`
 - fingerprint: `information_mass`, `information_horizon`,
-  `information_structure`, `nonlinear_share`, mirrored `signal_to_noise`
+  `information_structure`, `nonlinear_share`, mirrored `informative_mass_fraction`
 - routing: primary and secondary families, confidence label, caution flags
