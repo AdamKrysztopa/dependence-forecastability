@@ -14,6 +14,7 @@ No plotting, file I/O, agent orchestration, or routing logic belongs here.
 from __future__ import annotations
 
 import math
+import warnings
 from typing import Literal
 
 import numpy as np
@@ -481,7 +482,17 @@ def compute_ami_information_geometry(
         # Use bias-corrected values as test statistics; shuffle matrix as null.
         # Replace NaN in corrected with 0 for the service (NaN obs → not rejected).
         obs_for_correction = np.where(valid_mask & np.isfinite(corrected), corrected, np.nan)
-        corr_result = svc.correct(shuffle_matrix, obs_for_correction)
+        # Guard: if bias is NaN at any valid horizon, the surrogate null
+        # for that horizon will be all-NaN. This is propagated correctly
+        # downstream (NaN p → not significant) but can mask data issues.
+        if np.any(~np.isfinite(bias[valid_mask])):
+            warnings.warn(
+                "Surrogate bias is NaN at valid horizon(s); "
+                "those lags will be treated as not significant.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+        corr_result = svc.correct(shuffle_matrix - bias[np.newaxis, :], obs_for_correction)
         accepted = valid_mask & corr_result.corrected_mask
 
     signal_numerator = np.nansum(np.maximum(corrected - tau, 0.0))

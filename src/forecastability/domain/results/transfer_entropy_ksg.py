@@ -44,6 +44,15 @@ class TransferEntropyKsgResult(BaseModel):
         )
     )
     value: float = Field(description="TE estimate in nats. NaN when status != 'computed'.")
+    raw_value: float = Field(
+        default=float("nan"),
+        description=(
+            "Raw (unclamped) Frenzel-Pompe CMI estimate in nats, before non-negativity "
+            "clamping. Equal to value when value >= 0; may be slightly negative near "
+            "independence due to finite-sample digamma approximation. NaN when "
+            "status != 'computed'."
+        ),
+    )
     lag: int = Field(description="Transfer lag L at which TE was estimated.")
     history_depth: int = Field(
         description="Number of target history lags used as conditioning set."

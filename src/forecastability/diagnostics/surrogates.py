@@ -216,11 +216,22 @@ def compute_significance_bands(
         )
 
         # Compute observed curve to get the corrected mask.
+        # Must use the same estimator as the surrogate null for a valid rank test.
         if metric_name == "ami":
-            observed = compute_ami(ts, max_lag, n_neighbors=n_neighbors, random_state=random_state)
+            observed = compute_ami(
+                ts,
+                max_lag,
+                n_neighbors=n_neighbors,
+                random_state=random_state,
+                estimator=estimator,  # type: ignore[arg-type]
+            )
         else:
             observed = compute_pami_linear_residual(
-                ts, max_lag, n_neighbors=n_neighbors, random_state=random_state
+                ts,
+                max_lag,
+                n_neighbors=n_neighbors,
+                random_state=random_state,
+                estimator=estimator,  # type: ignore[arg-type]
             )
 
         svc = SignificanceCorrectionService(correction=correction, alpha=alpha)

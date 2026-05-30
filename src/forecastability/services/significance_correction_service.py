@@ -187,17 +187,16 @@ class SignificanceCorrectionService:
         # observed: (H,)
         # Count how many surrogates exceed the observed value at each lag.
         # NaN surrogates are treated as not exceeding the observed value.
-        n_surrogates = surrogate_matrix.shape[0]
         nan_obs = np.isnan(observed)
         # Replace NaN observed with +inf so no surrogate can exceed them;
         # these entries are overwritten with NaN below.
         obs_safe = np.where(nan_obs, np.inf, observed)
         exceed = np.nansum(surrogate_matrix >= obs_safe[np.newaxis, :], axis=0)
-        # Add 1 to numerator and denominator (Davison & Hinkley correction for
-        # Monte-Carlo p-values: p = (B_exceed + 1) / (B + 1) is more conservative
-        # and avoids p=0 for observed > all surrogates).
-        raw_p = (exceed + 1.0) / (n_surrogates + 1.0)
-        # NaN observed → NaN p-value so BH/BY correctly skip those lags.
+        # Davison & Hinkley MC p-value: (B_exceed + 1) / (B_valid + 1)
+        # Uses per-lag valid (non-NaN) surrogate count so NaN surrogates
+        # do not deflate p. All-NaN surrogate column -> NaN p (not significant).
+        valid_n = np.sum(~np.isnan(surrogate_matrix), axis=0).astype(float)
+        raw_p = np.where(valid_n > 0, (exceed + 1.0) / (valid_n + 1.0), np.nan)
         raw_p = np.where(nan_obs, np.nan, raw_p)
         return raw_p.astype(float)
 

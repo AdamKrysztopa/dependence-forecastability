@@ -221,12 +221,15 @@ def compute_transfer_entropy_ksg(
 
     # Estimate CMI = I(Y_t; X_{t-lag} | Y_{t-1},...,Y_{t-d})
     # lag=1 because arrays are already aligned above
-    value = compute_conditional_mutual_information_ksg(y_t, x_lagged, Z, lag=1, k=k_eff)
+    raw_value = compute_conditional_mutual_information_ksg(y_t, x_lagged, Z, lag=1, k=k_eff)
+    # Clamp to non-negative for the reported estimate; store raw for diagnostics.
+    value = max(0.0, raw_value) if not np.isnan(raw_value) else raw_value
 
     return TransferEntropyKsgResult(
         status="computed",
         quality_warning=qw,
         value=value,
+        raw_value=raw_value,
         lag=lag,
         history_depth=resolved_history_depth,
         n_neighbors=k_eff,

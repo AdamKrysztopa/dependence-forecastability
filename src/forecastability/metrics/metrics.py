@@ -100,7 +100,8 @@ def compute_ami(
             if arr.size - horizon < min_pairs:
                 break
             gcmi_vals[horizon - 1] = compute_gcmi_at_lag(arr, arr, lag=horizon, min_pairs=min_pairs)
-        return gcmi_vals
+        # convert bits → nats to match KSG estimator output scale
+        return gcmi_vals * np.log(2)
 
     if estimator == "ksg2":
         arr = validate_time_series(ts, min_length=max_lag + min_pairs + 1)
