@@ -175,7 +175,7 @@ def compute_predictive_information_gain(
     backend_literal: Literal["linear_residual", "rf", "et"]
     if backend == "linear_residual":
         backend_literal = "linear_residual"
-    elif backend == "rf":
+    elif backend == "rf_residual":
         backend_literal = "rf"
     else:
         backend_literal = "et"
@@ -208,6 +208,9 @@ def _compute_predictive_information_gain_curve_validated(
     """Run the per-lag PIG curve loop on already-validated equal-length arrays."""
     curve = np.zeros(max_lag, dtype=float)
     for lag in range(1, max_lag + 1):
+        # Skip lags where fixed history exceeds causal depth (history <= lag-1).
+        if history_mode == "fixed" and fixed_history is not None and fixed_history > lag - 1:
+            continue
         history = None if history_mode == "canonical" else fixed_history
         resolved_history = _resolve_history(lag=lag, history=history)
         _validate_conditional_te_sample_size(
