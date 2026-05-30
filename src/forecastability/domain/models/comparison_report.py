@@ -172,8 +172,10 @@ def _compute_auc(values: np.ndarray) -> float:
         values: 1-D array of horizon-indexed values.
 
     Returns:
-        Scalar AUC estimate.
+        Scalar AUC estimate, or 0.0 for an empty array.
     """
+    if values.size == 0:
+        return 0.0
     return float(np.trapezoid(values))
 
 

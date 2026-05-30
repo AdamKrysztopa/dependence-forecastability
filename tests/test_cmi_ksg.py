@@ -52,7 +52,8 @@ def test_valid_mask_all_false_returns_nan() -> None:
 
     mock_tree_instance = MagicMock()
     mock_tree_instance.query.return_value = (real_distances, np.zeros((n, 4), dtype=int))
-    mock_tree_instance.query_ball_point.return_value = [0]  # only self → count 0
+    # return_length=True returns an int ndarray; mock must match that shape.
+    mock_tree_instance.query_ball_point.return_value = np.zeros(n, dtype=int)
 
     MockCKDTree = MagicMock(return_value=mock_tree_instance)
 
