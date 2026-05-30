@@ -167,16 +167,10 @@ def _run_compute(
 
     compute_surrogates = route == "univariate_with_significance"
 
-    # Warm the AMI cache before the analyzer runs — the analyzer will call
-    # compute_ami internally, but we prime the cache so any other consumer
-    # within this triage call (e.g. the Lyapunov orbital-period heuristic)
-    # can retrieve the result without recomputing the KSG-II curve.
-    cache.ami_curve(
-        request.series,
-        request.max_lag,
-        min_pairs=30,
-        random_state=request.random_state,
-    )
+    # TODO(RVH-F06): The warm-up call was removed because ForecastabilityAnalyzer
+    # receives a validate_time_series-produced array (different id()) so the cache
+    # key never matched. Any future consumer that wants cached AMI must call
+    # cache.ami_curve() itself rather than relying on pre-population here.
 
     analyzer = ForecastabilityAnalyzer(
         n_surrogates=request.n_surrogates,
