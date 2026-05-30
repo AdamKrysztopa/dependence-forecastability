@@ -54,14 +54,19 @@ def _estimate_dominant_orbital_period(series: np.ndarray) -> int | None:
     except Exception:
         return None
 
-    # Find the first local minimum: index where ami[i] < ami[i-1] and ami[i] < ami[i+1]
-    for i in range(1, len(ami) - 1):
+    # Find the first local minimum within the non-zero region of the AMI curve.
+    # compute_ami clips all values to >= 0, so exact zero marks break-truncated
+    # or zero-information lags; searching beyond the last nonzero entry would
+    # set orbital_period at the truncation point rather than a dynamic feature.
+    non_zero_idx = np.flatnonzero(ami > 0)
+    if non_zero_idx.size == 0:
+        return None
+    last_nonzero = int(non_zero_idx[-1])
+    for i in range(1, last_nonzero):
         if ami[i] < ami[i - 1] and ami[i] < ami[i + 1]:
             return i + 1  # 1-based lag
-    # Fallback: return the index of the global minimum
-    if ami.size > 0:
-        return int(np.argmin(ami)) + 1
-    return None
+    # Fallback: global minimum within non-zero region
+    return int(np.argmin(ami[: last_nonzero + 1])) + 1
 
 
 def _interpret_lle(lambda_estimate: float) -> str:
@@ -175,11 +180,11 @@ def build_largest_lyapunov_exponent(
 
     The linear slope is fitted only over the initial linear region of the
     log-divergence curve (RVH-F07).  The window is bounded to
-    ``min(n_steps // 3, mean_orbital_period)`` steps, where
-    ``mean_orbital_period`` is derived from the first AMI minimum — the
-    standard Rosenstein et al. (1993) heuristic.  This prevents the slope
-    estimate from being distorted by the saturation regime of the divergence
-    curve that appears beyond one orbital period.
+    ``min(n_steps, mean_orbital_period)`` steps (floor 2), where
+    ``mean_orbital_period`` is derived from the first AMI minimum within the
+    non-zero AMI region — the standard Rosenstein et al. (1993) heuristic.
+    This prevents the slope estimate from being distorted by the saturation
+    regime of the divergence curve that appears beyond one orbital period.
 
     Args:
         series: 1-D float array of observations.
@@ -194,13 +199,15 @@ def build_largest_lyapunov_exponent(
     n_embedded = max(0, n - (embedding_dim - 1) * delay)
     full_steps = max(1, n // 20)
 
-    # RVH-F07: bound the linear-fit window to the initial linear divergence
-    # region.  The window is min(full_steps // 3, orbital_period).
+    # RVH-F07: cap the linear-fit window at one orbital period (Rosenstein 1993:
+    # fit only the initial linear divergence region, up to ~one mean orbital period).
+    # Floor of 2 ensures polyfit has >= 2 points; the old `// 3` was too aggressive
+    # and collapsed to 0 for n < 60 (CR-08 fix).
     orbital_period = _estimate_dominant_orbital_period(series)
     if orbital_period is not None:
-        linear_window = max(1, min(full_steps // 3, orbital_period))
+        linear_window = max(2, min(full_steps, orbital_period))
     else:
-        linear_window = max(1, full_steps // 3)
+        linear_window = max(2, full_steps)
 
     evolution_steps = linear_window
 
