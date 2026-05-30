@@ -15,7 +15,7 @@ class TransferEntropyKsgResult(BaseModel):
     (residual-MI, not true TE).
 
     The KSG-CMI estimator degrades with conditioning dimension d. Even before the
-    hard cutoff N < k^(d+2), bias grows roughly with d*log(d) for fixed N. Check
+    hard cutoff N_eff < k^d_total, bias grows roughly with d*log(d) for fixed N. Check
     quality_warning before interpreting values at history_depth >= 3 with N < 5000.
     """
 
@@ -29,7 +29,7 @@ class TransferEntropyKsgResult(BaseModel):
     ] = Field(
         description=(
             "'computed' if estimation succeeded. "
-            "'blocked_sample_size' if N < k^(d+2) (Frenzel-Pompe cutoff). "
+            "'blocked_sample_size' if N_eff < k^d_total (Frenzel-Pompe cutoff). "
             "'blocked_low_cardinality' if unique(X)/N < 0.1 "
             "(KSG unreliable on near-discrete data). "
             "'blocked_constant_input' if X or Y is constant (zero variance)."
@@ -37,10 +37,11 @@ class TransferEntropyKsgResult(BaseModel):
     )
     quality_warning: Literal["ok", "marginal", "unreliable"] = Field(
         description=(
-            "Reliability indicator based on N / k^(d+2). "
-            "'ok': N/k^(d+2) >= 10 (estimation is reliable). "
-            "'marginal': 2 <= N/k^(d+2) < 10 (use with caution, bias may be significant). "
-            "'unreliable': N/k^(d+2) < 2 (near the hard cutoff; result is noisy)."
+            "Reliability indicator based on N_eff / k^d_total, where "
+            "d_total = 1 + 1 + history_depth. "
+            "'ok': ratio >= 10 (estimation is reliable). "
+            "'marginal': 2 <= ratio < 10 (use with caution, bias may be significant). "
+            "'unreliable': ratio < 2 (near the hard cutoff; result is noisy)."
         )
     )
     value: float = Field(description="TE estimate in nats. NaN when status != 'computed'.")
