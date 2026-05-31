@@ -5,7 +5,7 @@
 **Plan type:** Actionable release plan — review-driven hardening pass with intentional breaking changes
 **Audience:** Maintainer, reviewer, statistician reviewer, Jr. developer
 **Target release:** `0.5.0` — headline major release; first breaking-change cut since v0.2.0 PyPI publication
-**Current released version:** `0.4.3`
+**Current released version:** `0.5.0`
 **Branch:** `feat/v0.5.0-review-hardening`
 **Status:** Complete
 **Last reviewed:** 2026-05-25
@@ -27,7 +27,7 @@
 > - Any new optional extra beyond the existing `[agent]`, `[causal]`, `[data]`.
 > - A new dashboard, MCP, or transport surface.
 >
-> Binding driver document: [aux_documents/developer_instruction_repo_scope.md](aux_documents/developer_instruction_repo_scope.md).
+> Binding driver document: [aux_documents/developer_instruction_repo_scope.md](./aux_documents/developer_instruction_repo_scope.md).
 
 > [!NOTE]
 > **Cross-release ordering.** This is a standalone major release with no chained predecessor or successor. It is the first release after the v0.4.3 deep audit ([docs/reviews/v0.4.3-deep-audit.md](../reviews/v0.4.3-deep-audit.md)) and consumes every Critical and Important finding from that report. Minor items not assigned to a phase here (citations in module headers, dcov streaming form) may be revisited after v0.5.0 ships.

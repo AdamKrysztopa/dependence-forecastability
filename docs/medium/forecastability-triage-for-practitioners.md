@@ -16,7 +16,7 @@
 
 Most forecasting work starts too late.
 
-The usual story is familiar. Pick a forecasting framework. Generate lag features. Add every covariate that looks plausible. Run a leaderboard. Then discover the target has weak memory, the horizon is mismatched to the signal, the best covariates are unsafe at prediction time, or the strongest lags would leak future information.
+The usual story is familiar. Pick a forecasting library. Generate lag features. Add every covariate that looks plausible. Run a leaderboard. Then discover the target has weak memory, the horizon is mismatched to the signal, the best covariates are unsafe at prediction time, or the strongest lags would leak future information.
 
 At that point, the leaderboard is not wrong exactly. It is answering a question the project should not have asked yet.
 
@@ -104,7 +104,7 @@ uv run jupyter lab
 
 Framework extras live in the examples project, not in the core runtime dependencies. The core package keeps deterministic triage separate from downstream model libraries.
 
-The core `forecastability` package has no import-time or runtime dependencies on Darts, MLForecast, StatsForecast, Nixtla, or similar forecasting frameworks; any framework extras and comparisons are optional and live in the separate `forecastability-examples` repository. That split is intentional: the core package produces deterministic evidence; the examples repository shows how to translate that evidence into framework-specific modeling recipes.
+The core `forecastability` package has no import-time or runtime dependencies on Darts, MLForecast, StatsForecast, Nixtla, or similar forecasting libraries; any such extras and comparisons are optional and live in the separate `forecastability-examples` repository. That split is intentional: the core package produces deterministic evidence; the examples repository shows how to translate that evidence into framework-specific modeling recipes.
 
 Minimal target triage:
 
@@ -215,7 +215,7 @@ Negative controls are the pressure test. If a weak or unrelated driver survives 
 
 ![CausalRivers MLForecast LightGBM deep dive](../img/medium/mlforecast_lgbm_deep_dive.png)
 
-The downstream MLForecast LightGBM deep dive shows where the boundary sits. The core `forecastability` package produces deterministic pre-model triage and a hand-off surface: selected lags, retained drivers, cautions, and configuration evidence. The MLForecast fitting code lives in `forecastability-examples` by design, because this repository is not a model zoo and not a training framework. It gives model search a cleaner starting line.
+The downstream MLForecast LightGBM deep dive shows where the boundary sits. The core `forecastability` package produces deterministic pre-model triage and a hand-off surface: selected lags, retained drivers, cautions, and configuration evidence. The MLForecast fitting code lives in `forecastability-examples` by design, because this repository is not a model-search catalog and not a training toolkit. It gives model search a cleaner starting line.
 
 ## Forecastability Triage Before Model Search
 
@@ -414,7 +414,7 @@ The contract can carry:
 
 See [docs/public_api.md](https://github.com/AdamKrysztopa/dependence-forecastability/blob/main/docs/public_api.md) and [docs/reference/forecast_prep_contract.md](https://github.com/AdamKrysztopa/dependence-forecastability/blob/main/docs/reference/forecast_prep_contract.md) for the supported surface and full schema.
 
-The contract is evidence-backed configuration guidance. It does not import downstream forecasting frameworks, fit models, choose a winner, or replace validation.
+The contract is evidence-backed configuration guidance. It does not import downstream forecasting libraries, fit models, choose a winner, or replace validation.
 
 ## How to Read the Triage Packet
 
@@ -456,7 +456,7 @@ Read this conservatively. The subset is not a full benchmark. Outlier diagnostic
 - It is not AutoML.
 - It is not causal proof.
 - It is not production approval.
-- It is not a forecasting framework.
+- It is not a forecasting library.
 - It is not a replacement for Darts, MLForecast, StatsForecast, Nixtla, Prophet, statsmodels, sklearn, or custom model code.
 - It is not a replacement for holdout validation.
 - It is not a replacement for domain review.

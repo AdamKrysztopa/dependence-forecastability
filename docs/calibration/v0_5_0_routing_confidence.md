@@ -56,7 +56,7 @@ using `numpy.random.default_rng` seeded deterministically.
 
 For a confidence label L:
 
-```
+```text
 Precision(L) = TP(L) / (TP(L) + FP(L))
 ```
 
