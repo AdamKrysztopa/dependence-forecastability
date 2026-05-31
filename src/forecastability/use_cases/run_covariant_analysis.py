@@ -19,7 +19,9 @@ from forecastability.services.gcmi_service import compute_gcmi_curve
 from forecastability.services.pcmci_ami_service import build_pcmci_ami_hybrid
 from forecastability.services.pcmci_plus_service import build_pcmci_plus
 from forecastability.services.significance_service import compute_significance_bands_generic
-from forecastability.services.transfer_entropy_service import compute_transfer_entropy_curve
+from forecastability.services.transfer_entropy_service import (
+    compute_predictive_information_gain_curve as compute_transfer_entropy_curve,
+)
 from forecastability.use_cases.run_lagged_exogenous_triage import (
     run_lagged_exogenous_triage,
 )

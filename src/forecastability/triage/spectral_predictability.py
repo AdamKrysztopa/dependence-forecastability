@@ -1,33 +1,17 @@
-"""Domain model for Spectral Predictability result (F4)."""
-
+# Migration shim — canonical location is forecastability.domain.models.spectral_predictability
+# Remove this shim in v0.6.0
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict
+import warnings as _warnings
 
+from forecastability.domain.models.spectral_predictability import (
+    SpectralPredictabilityResult,  # noqa: F401
+)
 
-class SpectralPredictabilityResult(BaseModel):
-    """Spectral predictability score for a single time series.
-
-    Quantifies how much predictable (periodic/trend) structure exists in the
-    frequency domain.  Ω near 1 indicates a spectrally concentrated series;
-    Ω near 0 indicates a flat spectrum resembling white noise.
-
-    The score is computed as ``Ω = 1 − H_nat(p) / log(N_bins)`` where
-    ``p`` is the Welch-PSD normalised probability vector.
-
-    Attributes:
-        score: Spectral predictability Ω ∈ [0, 1].  Near 1 means predictable
-            (concentrated spectrum).  Near 0 means flat spectrum (white noise).
-        normalised_entropy: Normalised spectral entropy H / log(N_bins) ∈ [0, 1].
-        n_bins: Number of frequency bins from the Welch PSD estimate.
-        detrend: Detrending mode used (passed to Welch, e.g. ``"constant"``).
-        interpretation: One-sentence human-readable explanation of the score.
-    """
-
-    model_config = ConfigDict(frozen=True)
-
-    score: float
-    normalised_entropy: float
-    n_bins: int
-    detrend: str
-    interpretation: str
+_warnings.warn(
+    "forecastability.triage.spectral_predictability is deprecated in v0.5.0; "
+    "use forecastability.domain.models.spectral_predictability instead. "
+    "See docs/migration/v0.4.x_to_v0.5.0.md.",
+    DeprecationWarning,
+    stacklevel=2,
+)

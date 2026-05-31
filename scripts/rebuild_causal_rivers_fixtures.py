@@ -22,7 +22,7 @@ from forecastability.adapters.causal_rivers import (
     load_causal_rivers_config,
     load_resampled_causal_rivers_frame,
 )
-from forecastability.extensions import compute_target_baseline_by_horizon
+from forecastability.use_cases.extensions import compute_target_baseline_by_horizon
 
 _LOGGER = logging.getLogger(__name__)
 _DEFAULT_CONFIG_PATH = Path("configs/causal_rivers_analysis.yaml")

@@ -60,7 +60,7 @@ def main() -> None:
         print(
             "  - "
             f"{item.series_id}: structure={bundle.fingerprint.information_structure}, "
-            f"signal_to_noise={bundle.geometry.signal_to_noise:.3f}, "
+            f"informative_mass_fraction={bundle.geometry.informative_mass_fraction:.3f}, "
             f"families={list(bundle.recommendation.primary_families)}"
         )
 

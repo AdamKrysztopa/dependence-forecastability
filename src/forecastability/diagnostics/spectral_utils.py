@@ -10,6 +10,7 @@ def compute_normalised_psd(
     series: np.ndarray,
     *,
     nperseg: int | None = None,
+    noverlap: int | None = None,
     detrend: str | bool = "constant",
 ) -> tuple[np.ndarray, np.ndarray]:
     """Compute Welch PSD and return normalised frequency weights.
@@ -22,6 +23,9 @@ def compute_normalised_psd(
         series: 1-D float array, length >= 8.
         nperseg: Segment length passed to ``scipy.signal.welch``.  Defaults to
             ``min(len(series), 256)``.
+        noverlap: Number of overlapping samples between adjacent segments.
+            Defaults to ``nperseg // 2`` (50 % overlap) when ``None``.
+            Passed directly to ``scipy.signal.welch``.
         detrend: Detrending applied by welch (``"constant"`` mean-centres,
             ``"linear"`` removes linear trend, ``False`` skips detrending).
 
@@ -36,7 +40,16 @@ def compute_normalised_psd(
         raise ValueError(f"series must be 1-D with at least 8 samples; got shape {series.shape}")
     n = len(series)
     seg = nperseg if nperseg is not None else min(n, 256)
-    freqs, psd = welch(series, nperseg=seg, detrend=detrend)
+    # RVH-F07: clamp nperseg to series length so Welch never receives a segment
+    # longer than the input (scipy raises ValueError when nperseg > len(x)).
+    seg = min(seg, n)
+    # RVH-F07: default to 50 % overlap for Welch variance reduction.
+    # After clamping seg, recompute noverlap so it stays within [0, seg-1].
+    if noverlap is not None:
+        n_overlap = min(noverlap, seg - 1)
+    else:
+        n_overlap = seg // 2
+    freqs, psd = welch(series, nperseg=seg, noverlap=n_overlap, detrend=detrend)
     # Clip near-zero to avoid log(0) in entropy computations
     psd = np.clip(psd, a_min=1e-12, a_max=None)
     p = psd / psd.sum()

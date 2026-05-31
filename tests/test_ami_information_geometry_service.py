@@ -31,8 +31,8 @@ def test_white_noise_geometry_has_low_signal_to_noise() -> None:
         random_state=42,
     )
 
-    assert 0.0 <= geometry.signal_to_noise <= 1.0
-    assert geometry.signal_to_noise < 0.30
+    assert 0.0 <= geometry.informative_mass_fraction <= 1.0
+    assert geometry.informative_mass_fraction < 0.30
     assert geometry.information_structure == "none"
     assert geometry.information_horizon == 0
 
@@ -46,7 +46,7 @@ def test_seasonal_periodic_geometry_detects_periodic_structure() -> None:
         random_state=42,
     )
 
-    assert geometry.signal_to_noise > 0.10
+    assert geometry.informative_mass_fraction > 0.10
     assert geometry.information_structure == "periodic"
     assert geometry.information_horizon >= 12
     assert len(geometry.informative_horizons) > 0
@@ -151,7 +151,7 @@ def test_corrected_profile_clamps_negative_values_to_zero(monkeypatch: pytest.Mo
     assert first_point.valid is True
     assert first_point.ami_corrected == pytest.approx(0.0)
     assert first_point.accepted is False
-    assert 0.0 <= geometry.signal_to_noise <= 1.0
+    assert 0.0 <= geometry.informative_mass_fraction <= 1.0
 
 
 def test_acceptance_mask_uses_strict_multiplier_rule(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -193,6 +193,7 @@ def test_acceptance_mask_uses_strict_multiplier_rule(monkeypatch: pytest.MonkeyP
             horizon_multiplier_threshold=2.0,
         ),
         random_state=7,
+        correction="none",
     )
 
     # threshold = 2 * tau = [0.25, 0.20, 0.25], strict '>' only accepts h=2

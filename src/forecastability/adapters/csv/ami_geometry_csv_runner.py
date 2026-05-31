@@ -122,7 +122,7 @@ def _write_summary_csv(items: list[CsvGeometryBatchItem], output_path: Path) -> 
         "n_observations",
         "skip_reason",
         "target_name",
-        "signal_to_noise",
+        "informative_mass_fraction",
         "geometry_information_horizon",
         "geometry_information_structure",
         "information_mass",
@@ -278,7 +278,7 @@ def _plot_geometry_panel(bundles: list[FingerprintBundle], output_path: Path) ->
             (
                 f"{bundle.target_name}\n"
                 f"structure={bundle.geometry.information_structure}, "
-                f"SNR={bundle.geometry.signal_to_noise:.3f}"
+                f"IMF={bundle.geometry.informative_mass_fraction:.3f}"
             ),
             fontsize=10,
         )

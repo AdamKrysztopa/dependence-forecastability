@@ -132,9 +132,18 @@ def compute_spectral_forecastability(
     if float(np.ptp(arr)) <= eps:
         return _conservative_result(_CONSTANT_SERIES_NOTE)
 
+    # RVH-F07: use a data-adaptive segment length instead of the full-series
+    # length.  nperseg=arr.size collapses Welch to a single-segment periodogram,
+    # losing its variance-reduction benefit and degrading spectral resolution for
+    # long series.  The heuristic max(64, N//8) matches the scipy.signal.welch
+    # default for most practical series lengths while guaranteeing a minimum of
+    # 64 samples per segment for short series.  50 % overlap (noverlap=nperseg//2)
+    # is the Welch standard that halves spectral variance at each frequency bin.
+    nperseg_welch = max(64, arr.size // 8)
     frequencies, probabilities = compute_normalised_psd(
         arr,
-        nperseg=arr.size,
+        nperseg=nperseg_welch,
+        noverlap=nperseg_welch // 2,
         detrend=_resolve_detrend(detrend_mode),
     )
     positive_mask = frequencies > 0.0

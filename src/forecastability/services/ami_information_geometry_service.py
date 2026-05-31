@@ -1,7 +1,7 @@
 """AMI Information Geometry service for v0.3.1.
 
-This module is the deterministic geometry engine that sits beneath the
-forecastability fingerprint and routing layers. It owns:
+This module is the reproducible (seed-controlled) geometry engine that sits
+beneath the forecastability fingerprint and routing layers. It owns:
 
 * horizon-wise KSG-II AMI estimation,
 * shuffle-surrogate bias correction,
@@ -14,6 +14,8 @@ No plotting, file I/O, agent orchestration, or routing logic belongs here.
 from __future__ import annotations
 
 import math
+import warnings
+from typing import Literal
 
 import numpy as np
 from joblib import Parallel, delayed
@@ -36,7 +38,20 @@ _DEFAULT_BORDERLINE_MARGIN = 0.01
 
 
 class AmiInformationGeometryConfig(BaseModel):
-    """Versioned threshold and estimator settings for geometry semantics."""
+    """Versioned threshold and estimator settings for geometry semantics.
+
+    .. note::
+        **Heuristic threshold disclosure (RVH-F22 / audit finding I2).**
+        The threshold parameters ``peak_prominence_abs``,
+        ``signal_to_noise_none_threshold``, and ``horizon_multiplier_threshold``
+        are empirically chosen heuristics calibrated against the 10-archetype
+        synthetic suite in ``scripts/run_routing_confidence_calibration.py``.
+        They are **not** derived from a held-out precision target; they reflect
+        the maintainer's judgment about a reasonable operating point on the
+        precision-recall curve.  The word "calibrated" in this codebase refers
+        only to threshold values that were actually fitted against a stated
+        precision target — these thresholds do not meet that bar.
+    """
 
     model_config = ConfigDict(frozen=True)
 
@@ -344,7 +359,22 @@ def _classify_information_structure(
     information_horizon: int,
     config: AmiInformationGeometryConfig,
 ) -> tuple[FingerprintStructure, bool]:
-    """Classify the corrected AMI profile into the public fingerprint taxonomy."""
+    """Classify the corrected AMI profile into the public fingerprint taxonomy.
+
+    Args:
+        corrected: Bias-corrected AMI values (NaN-filled for invalid horizons).
+        accepted: Boolean acceptance mask for each horizon.
+        signal_to_noise: Informative-mass-fraction value (fraction of evaluated
+            lags with corrected AMI above the surrogate threshold). The parameter
+            name is kept as ``signal_to_noise`` here for internal consistency with
+            the config field ``signal_to_noise_none_threshold``; the public field
+            is named ``informative_mass_fraction`` on result models (RVH-F23).
+        information_horizon: Latest accepted horizon index (0 when none).
+        config: Geometry configuration.
+
+    Returns:
+        Tuple of (structure label, used_tiebreak flag).
+    """
     if (
         signal_to_noise < config.signal_to_noise_none_threshold
         or information_horizon == 0
@@ -381,8 +411,33 @@ def compute_ami_information_geometry(
     *,
     config: AmiInformationGeometryConfig | None = None,
     random_state: int = 42,
+    correction: Literal["romano_wolf", "bh", "by", "none"] = "romano_wolf",
 ) -> AmiInformationGeometry:
-    """Compute the deterministic AMI Information Geometry outputs for one series."""
+    """Compute AMI Information Geometry outputs for one series.
+
+    The geometry classification (structure, information horizon, accepted lags)
+    uses heuristic thresholds — see :class:`AmiInformationGeometryConfig` for
+    the disclosure.  Results are reproducible given a fixed ``random_state``.
+
+    Args:
+        series: Univariate time series.
+        config: Optional geometry configuration.  Defaults to
+            :class:`AmiInformationGeometryConfig` with all defaults.
+        random_state: Integer seed for reproducibility.
+        correction: Significance correction applied to the per-lag acceptance
+            test.  Choices:
+
+            - ``"romano_wolf"`` *(default)*: step-down FWER control using the
+              max-statistic null derived from the shuffle-surrogate matrix.
+              The statistically honest default for formal significance.
+            - ``"bh"``: Benjamini-Hochberg FDR, assumes positive regression
+              dependence.  Less conservative than BY.
+            - ``"by"``: Benjamini-Yekutieli FDR, valid under arbitrary
+              dependence including autocorrelated lags.  More conservative.
+            - ``"none"``: raw per-lag threshold (legacy behaviour — lag is
+              accepted iff ``corrected > horizon_multiplier_threshold * tau``).
+              Provided for backward compatibility.
+    """
     resolved_config = config if config is not None else AmiInformationGeometryConfig()
     values = validate_time_series(series, min_length=resolved_config.min_n)
 
@@ -403,19 +458,49 @@ def compute_ami_information_geometry(
     bias = np.nanmean(shuffle_matrix, axis=0)
     tau = np.nanpercentile(shuffle_matrix, 90.0, axis=0)
     corrected = np.where(valid_mask, np.maximum(raw - bias, 0.0), np.nan)
-    accepted = (
-        valid_mask
-        & np.isfinite(corrected)
-        & np.isfinite(tau)
-        & (corrected > resolved_config.horizon_multiplier_threshold * tau)
-    )
+
+    if correction == "none":
+        accepted = (
+            valid_mask
+            & np.isfinite(corrected)
+            & np.isfinite(tau)
+            & (corrected > resolved_config.horizon_multiplier_threshold * tau)
+        )
+    else:
+        # Route per-lag acceptance through SignificanceCorrectionService.
+        # The surrogate matrix for the service is the shuffle matrix; the
+        # observed values are the bias-corrected profile.  NaN entries (invalid
+        # horizons) are handled by the service's NaN-safe p-value computation.
+        from forecastability.services.significance_correction_service import (
+            SignificanceCorrectionService,
+        )
+
+        svc = SignificanceCorrectionService(
+            correction=correction,
+            alpha=0.05,
+        )
+        # Use bias-corrected values as test statistics; shuffle matrix as null.
+        # Replace NaN in corrected with 0 for the service (NaN obs → not rejected).
+        obs_for_correction = np.where(valid_mask & np.isfinite(corrected), corrected, np.nan)
+        # Guard: if bias is NaN at any valid horizon, the surrogate null
+        # for that horizon will be all-NaN. This is propagated correctly
+        # downstream (NaN p → not significant) but can mask data issues.
+        if np.any(~np.isfinite(bias[valid_mask])):
+            warnings.warn(
+                "Surrogate bias is NaN at valid horizon(s); "
+                "those lags will be treated as not significant.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+        corr_result = svc.correct(shuffle_matrix - bias[np.newaxis, :], obs_for_correction)
+        accepted = valid_mask & corr_result.corrected_mask
 
     signal_numerator = np.nansum(np.maximum(corrected - tau, 0.0))
     signal_denominator = np.nansum(corrected)
     if signal_denominator <= resolved_config.epsilon:
-        signal_to_noise = 0.0
+        informative_mass_fraction = 0.0
     else:
-        signal_to_noise = float(
+        informative_mass_fraction = float(
             np.clip(signal_numerator / (signal_denominator + resolved_config.epsilon), 0.0, 1.0)
         )
 
@@ -424,7 +509,7 @@ def compute_ami_information_geometry(
     information_structure, used_tiebreak = _classify_information_structure(
         np.nan_to_num(corrected, nan=0.0),
         accepted,
-        signal_to_noise=signal_to_noise,
+        signal_to_noise=informative_mass_fraction,
         information_horizon=information_horizon,
         config=resolved_config,
     )
@@ -469,7 +554,7 @@ def compute_ami_information_geometry(
 
     return AmiInformationGeometry(
         method=_GEOMETRY_METHOD,
-        signal_to_noise=signal_to_noise,
+        informative_mass_fraction=informative_mass_fraction,
         information_horizon=information_horizon,
         information_structure=information_structure,
         informative_horizons=informative_horizons,

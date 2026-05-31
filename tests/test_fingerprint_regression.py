@@ -37,7 +37,7 @@ class TestFingerprintRegressionDriftDetection:
 
         path = tmp_path / "white_noise.json"
         payload = json.loads(path.read_text())
-        payload["geometry"]["signal_to_noise"] = 0.123
+        payload["geometry"]["informative_mass_fraction"] = 0.123
         path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
 
         with pytest.raises(ValueError, match="white_noise"):

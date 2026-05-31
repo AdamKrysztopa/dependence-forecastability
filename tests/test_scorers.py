@@ -184,9 +184,7 @@ class TestConstantArrayReturnsZero:
 class TestDistanceScorerBudgetGuard:
     """PBE-F08: distance-correlation scorer enforces an N x N pair budget."""
 
-    def test_above_threshold_raises_value_error(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_above_threshold_raises_value_error(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from forecastability.metrics import scorers as scorers_module
 
         monkeypatch.setattr(scorers_module, "_DISTANCE_SCORER_PAIR_BUDGET", 100)

@@ -67,7 +67,7 @@ def test_profile_summary_contains_geometry_fields(ar1_bundle: FingerprintBundle)
     assert ar1_bundle.profile_summary["max_lag"] == _MAX_LAG
     assert ar1_bundle.profile_summary["n_surrogates"] == _N_SURROGATES
     assert "geometry_method" in ar1_bundle.profile_summary
-    assert "signal_to_noise" in ar1_bundle.profile_summary
+    assert "informative_mass_fraction" in ar1_bundle.profile_summary
     assert "confidence" in ar1_bundle.profile_summary
     assert ar1_bundle.profile_summary["input_window_contract"] == (
         "train_window_only_for_rolling_origin"
@@ -85,8 +85,8 @@ def test_white_noise_abstains_from_family_routing(white_noise_bundle: Fingerprin
 
 def test_ar1_bundle_keeps_geometry_and_fingerprint_aligned(ar1_bundle: FingerprintBundle) -> None:
     """Geometry and fingerprint should agree on horizon and structure semantics."""
-    assert ar1_bundle.fingerprint.signal_to_noise == pytest.approx(
-        ar1_bundle.geometry.signal_to_noise
+    assert ar1_bundle.fingerprint.informative_mass_fraction == pytest.approx(
+        ar1_bundle.geometry.informative_mass_fraction
     )
     assert ar1_bundle.fingerprint.information_horizon == ar1_bundle.geometry.information_horizon
     assert ar1_bundle.fingerprint.information_structure == ar1_bundle.geometry.information_structure

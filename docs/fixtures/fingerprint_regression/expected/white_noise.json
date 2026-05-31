@@ -5,8 +5,8 @@
     "information_mass": 0.0,
     "information_structure": "none",
     "informative_horizons": [],
-    "nonlinear_share": 0.0,
-    "signal_to_noise": 0.24009014730743633
+    "informative_mass_fraction": 0.24009014730743633,
+    "nonlinear_share": 0.0
   },
   "geometry": {
     "curve": [
@@ -98,7 +98,7 @@
     "information_horizon": 0,
     "information_structure": "none",
     "informative_horizons": [],
-    "signal_to_noise": 0.24009014730743633
+    "informative_mass_fraction": 0.24009014730743633
   },
   "recommendation": {
     "caution_flags": [],

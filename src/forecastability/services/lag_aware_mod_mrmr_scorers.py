@@ -322,9 +322,7 @@ def build_scorer(spec: PairwiseScorerSpec) -> PairwiseDependenceScorer:
     name = spec.name
     if name not in _SCORER_REGISTRY:
         supported = ", ".join(sorted(_SUPPORTED_SCORER_NAMES))
-        raise ValueError(
-            f"Unknown scorer name {name!r}. Supported scorers: {supported}"
-        )
+        raise ValueError(f"Unknown scorer name {name!r}. Supported scorers: {supported}")
     scorer = _SCORER_REGISTRY[name]
     n_neighbors = spec.settings.get("n_neighbors")
     if n_neighbors is not None and hasattr(scorer, "_n_neighbors"):
@@ -420,8 +418,7 @@ class _PoolNormalizer:
 
         if not self._fitted:
             raise RuntimeError(
-                "Normalizer must be fitted before calling transform(). "
-                "Call fit(pool) first."
+                "Normalizer must be fitted before calling transform(). Call fit(pool) first."
             )
 
         if self._strategy == "rank_percentile":

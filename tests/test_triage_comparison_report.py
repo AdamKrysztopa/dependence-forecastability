@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import numpy as np
 
-from forecastability.pipeline.analyzer import AnalyzeResult
-from forecastability.triage.batch_models import BatchSeriesRequest, BatchTriageRequest
-from forecastability.triage.comparison_report import (
+from forecastability.domain.models.comparison_report import (
     HORIZON_DROPOFF_TABLE_COLUMNS,
     RECOMMENDATION_TABLE_COLUMNS,
     SERIES_COMPARISON_TABLE_COLUMNS,
-    build_multi_series_comparison_report,
 )
+from forecastability.pipeline.analyzer import AnalyzeResult
+from forecastability.reporting.comparison_report_plots import build_multi_series_comparison_report
+from forecastability.triage.batch_models import BatchSeriesRequest, BatchTriageRequest
 from forecastability.triage.models import (
     MethodPlan,
     ReadinessReport,

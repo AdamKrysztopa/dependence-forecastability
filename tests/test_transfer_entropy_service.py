@@ -7,7 +7,9 @@ import pytest
 
 from forecastability.metrics.scorers import DependenceScorer, default_registry, te_scorer
 from forecastability.services.transfer_entropy_service import (
-    compute_transfer_entropy,
+    compute_predictive_information_gain as compute_transfer_entropy,
+)
+from forecastability.services.transfer_entropy_service import (
     compute_transfer_entropy_curve,
 )
 
@@ -29,8 +31,8 @@ def _generate_directional_pair(
 
 def test_transfer_entropy_is_directional_for_synthetic_pair() -> None:
     x, y = _generate_directional_pair(seed=7)
-    te_xy = compute_transfer_entropy(x, y, lag=1, random_state=11, min_pairs=100)
-    te_yx = compute_transfer_entropy(y, x, lag=1, random_state=11, min_pairs=100)
+    te_xy = compute_transfer_entropy(x, y, lag=1, random_state=11, min_pairs=100).value
+    te_yx = compute_transfer_entropy(y, x, lag=1, random_state=11, min_pairs=100).value
 
     assert te_xy >= 0.0
     assert te_yx >= 0.0
@@ -94,7 +96,7 @@ def test_te_scorer_factory_matches_service_value() -> None:
     x, y = _generate_directional_pair(seed=17)
     scorer = te_scorer(lag=1)
 
-    direct = compute_transfer_entropy(x, y, lag=1, random_state=23)
+    direct = compute_transfer_entropy(x, y, lag=1, random_state=23).value
     via_scorer = scorer(x, y, random_state=23)
     assert via_scorer == pytest.approx(direct)
 
@@ -132,7 +134,7 @@ def test_compute_transfer_entropy_curve_matches_per_lag_calls() -> None:
                 backend="linear_residual",
                 min_pairs=50,
                 random_state=42 + lag,
-            )
+            ).value
             for lag in range(1, 5)
         ],
         dtype=float,

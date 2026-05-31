@@ -114,7 +114,7 @@ def _lag_dependence_source(
         return False
     return (
         geometry.information_horizon >= config.lag_information_horizon_min
-        and geometry.signal_to_noise >= config.lag_signal_to_noise_min
+        and geometry.informative_mass_fraction >= config.lag_signal_to_noise_min
         and len(geometry.informative_horizons) > 0
     )
 
@@ -262,7 +262,7 @@ def _signal_strength(
 
     geometry = fingerprint.information_geometry
     strong_ami = geometry is not None and (
-        geometry.signal_to_noise >= 0.55 or geometry.information_horizon >= 6
+        geometry.informative_mass_fraction >= 0.55 or geometry.information_horizon >= 6
     )
     spectral = fingerprint.spectral
     strong_spectral = spectral is not None and spectral.periodicity_hint == "strong"
@@ -460,7 +460,8 @@ def _explanation(
     elif "lag_dependence" in sources:
         lines.append(
             "AMI-first view: informative lag structure extends to horizon "
-            f"{geometry.information_horizon} with signal-to-noise {geometry.signal_to_noise:.2f}."
+            f"{geometry.information_horizon} with informative_mass_fraction "
+            f"{geometry.informative_mass_fraction:.2f}."
         )
     else:
         lines.append("AMI-first view: no stable informative lag structure was detected.")

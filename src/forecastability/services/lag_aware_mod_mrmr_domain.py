@@ -211,9 +211,7 @@ def build_aligned_pair(
         raise ValueError(f"lag must be >= 0, got {lag}")
     n = len(target)
     if len(covariate) != n:
-        raise ValueError(
-            f"target length {n} and covariate length {len(covariate)} must match"
-        )
+        raise ValueError(f"target length {n} and covariate length {len(covariate)} must match")
     if lag >= n:
         raise ValueError(f"lag={lag} >= series length={n}")
 

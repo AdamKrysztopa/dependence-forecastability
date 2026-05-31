@@ -464,9 +464,7 @@ def _save_ablation_heatmap(
 
     all_features = sorted(set(full_names) | set(no_th_names) | set(relevance_names))
     # Sort: full_mod_mrmr selected first, then alphabetical
-    all_features = sorted(
-        all_features, key=lambda n: (0 if n in full_set else 1, n)
-    )
+    all_features = sorted(all_features, key=lambda n: (0 if n in full_set else 1, n))
 
     cols = ["relevance_only", "mod_mrmr_no_th", "full_mod_mrmr"]
     sets = [rel_set, no_th_set, full_set]
@@ -703,9 +701,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # Step 2: Run two ModMRMR ablations
     config = _build_config(settings=settings)
-    config_no_th = config.model_copy(
-        update={"target_history_scorer": None, "target_lags": None}
-    )
+    config_no_th = config.model_copy(update={"target_history_scorer": None, "target_lags": None})
 
     t1 = time.perf_counter()
     result: LagAwareModMRMRResult = run_lag_aware_mod_mrmr(

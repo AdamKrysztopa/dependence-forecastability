@@ -26,7 +26,7 @@ def test_batch_workbench_treats_abstain_as_non_usable() -> None:
     bundle = FingerprintBundle(
         target_name="case",
         geometry=AmiInformationGeometry(
-            signal_to_noise=0.3,
+            informative_mass_fraction=0.3,
             information_horizon=12,
             information_structure="periodic",
             informative_horizons=[1, 2, 3, 12],
@@ -36,7 +36,7 @@ def test_batch_workbench_treats_abstain_as_non_usable() -> None:
             information_horizon=12,
             information_structure="periodic",
             nonlinear_share=0.1,
-            signal_to_noise=0.3,
+            informative_mass_fraction=0.3,
             informative_horizons=[1, 2, 3, 12],
         ),
         recommendation=RoutingRecommendation(

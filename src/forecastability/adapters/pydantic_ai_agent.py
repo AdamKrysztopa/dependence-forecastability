@@ -1,29 +1,5 @@
-"""Backward-compatible re-export shim.
-
-The live triage agent has moved to
-``forecastability.adapters.llm.triage_agent``.
-This module will be removed in a future release.
-"""
-
-import warnings
-
-warnings.warn(
-    "forecastability.adapters.pydantic_ai_agent is deprecated. "
-    "Import from forecastability.adapters.llm.triage_agent instead.",
-    DeprecationWarning,
-    stacklevel=2,
+raise ImportError(
+    "forecastability.adapters.pydantic_ai_agent was removed in v0.5.0. "
+    "Use forecastability.adapters.agents.runtime.triage_agent instead. "
+    "See docs/migration/v0.4.x_to_v0.5.0.md."
 )
-
-from forecastability.adapters.llm.triage_agent import (  # noqa: E402, F401
-    TriageDeps,
-    TriageExplanation,
-    create_triage_agent,
-    run_triage_agent,
-)
-
-__all__ = [
-    "TriageDeps",
-    "TriageExplanation",
-    "create_triage_agent",
-    "run_triage_agent",
-]

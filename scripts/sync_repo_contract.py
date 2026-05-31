@@ -19,6 +19,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _repo_contract import RepoContractError, load_repo_contract
 
 _VERSION_HEADER_RE = re.compile(r"(\*\*Current released version:\*\*\s+`)[^`]+(`)")
+# Matches `__version__ = "X.Y.Z"` with an optional type annotation (e.g. `: str`),
+# capturing the prefix (up to and including the opening quote) and the closing quote
+# so only the version VALUE is rewritten — annotation and quoting style are preserved.
+_INIT_VERSION_LITERAL_RE = re.compile(
+    r'(^__version__(?:\s*:\s*[^=]+?)?\s*=\s*")[^"]+(")',
+    re.MULTILINE,
+)
+# Matches the CFF `version: "X.Y.Z"` field, capturing surrounding quotes.
+_CITATION_VERSION_LITERAL_RE = re.compile(r'(^version:\s*")[^"]+(")', re.MULTILINE)
 _FORBIDDEN_PATHS_SUFFIXES = (".json",)
 _FORBIDDEN_PATH_PREFIXES = ("src/", "tests/", "docs/releases/")
 
@@ -313,6 +322,66 @@ def _is_inside_dep_groups(content: str, key: str) -> bool:
     return False
 
 
+def _sync_api_init_version(repo_root: Path, v_pkg: str, *, write: bool) -> list[str]:
+    """Sync the ``__version__`` literal in src/forecastability/api/__init__.py.
+
+    This is the single canonical literal home post hex-migration. Only the
+    version VALUE is rewritten; the ``: str`` annotation and quoting style are
+    preserved by the capture-group substitution.
+
+    Args:
+        repo_root: Absolute path to the repository root.
+        v_pkg: Target version string to insert.
+        write: If True, apply changes; otherwise report only.
+
+    Returns:
+        List of rewrite message strings.
+    """
+    messages: list[str] = []
+    init_path = repo_root / "src" / "forecastability" / "api" / "__init__.py"
+    if not init_path.is_file():
+        return messages
+    original = init_path.read_text(encoding="utf-8")
+    updated = _INIT_VERSION_LITERAL_RE.sub(rf"\g<1>{v_pkg}\g<2>", original)
+    if updated != original:
+        rel = init_path.relative_to(repo_root)
+        msg = f"{rel}: __version__ literal → {v_pkg}"
+        if write:
+            init_path.write_text(updated, encoding="utf-8")
+            messages.append(f"REWRITE: {msg}")
+        else:
+            messages.append(f"WOULD REWRITE: {msg}")
+    return messages
+
+
+def _sync_citation_version(repo_root: Path, v_pkg: str, *, write: bool) -> list[str]:
+    """Sync the ``version`` field in CITATION.cff.
+
+    Args:
+        repo_root: Absolute path to the repository root.
+        v_pkg: Target version string to insert.
+        write: If True, apply changes; otherwise report only.
+
+    Returns:
+        List of rewrite message strings.
+    """
+    messages: list[str] = []
+    citation_path = repo_root / "CITATION.cff"
+    if not citation_path.is_file():
+        return messages
+    original = citation_path.read_text(encoding="utf-8")
+    updated = _CITATION_VERSION_LITERAL_RE.sub(rf"\g<1>{v_pkg}\g<2>", original)
+    if updated != original:
+        rel = citation_path.relative_to(repo_root)
+        msg = f"{rel}: version field → {v_pkg}"
+        if write:
+            citation_path.write_text(updated, encoding="utf-8")
+            messages.append(f"REWRITE: {msg}")
+        else:
+            messages.append(f"WOULD REWRITE: {msg}")
+    return messages
+
+
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     """Parse CLI arguments.
 
@@ -361,6 +430,8 @@ def main(argv: list[str] | None = None) -> None:
     v_pkg = _read_pkg_version(repo_root)
 
     messages: list[str] = []
+    messages.extend(_sync_api_init_version(repo_root, v_pkg, write=write))
+    messages.extend(_sync_citation_version(repo_root, v_pkg, write=write))
     messages.extend(_sync_plan_headers(repo_root, v_pkg, write=write))
     messages.extend(_sync_deprecated_links(repo_root, dict(contract.deprecated_paths), write=write))
     messages.extend(

@@ -1,0 +1,26 @@
+# Performance budget registry — v0.5.0
+# Budget = 5x locally measured mean (see comment per entry for baseline machine).
+# All times in seconds. CI may be 3-4x slower; 5x headroom provides margin.
+# Update measured_mean_seconds by running:
+#   uv run python -m pytest tests/test_perf_budget_*.py -m perf_budget -s --tb=short
+
+PBE-F28:
+  name: surrogate_band
+  description: "KSG2CurveKernel.estimate_surrogate_band (N=2000, lag_range=40, n_surrogates=99)"
+  budget_seconds: 65.0
+  baseline_machine: "developer-local (M-series Mac)"
+  measured_mean_seconds: 12.94
+
+PBE-F29:
+  name: curve_kernel
+  description: "KSG2CurveKernel.estimate_curve (N=2000, lag_range=40, k_list=(3,5,8))"
+  budget_seconds: 1.0
+  baseline_machine: "developer-local (M-series Mac)"
+  measured_mean_seconds: 0.132
+
+PBE-F30:
+  name: mod_mrmr
+  description: "run_lag_aware_mod_mrmr (p=200 covariates, N=500)"
+  budget_seconds: 350.0
+  baseline_machine: "CI (GitHub Actions linux-latest; Mac measured 41.29s, CI measured 237s)"
+  measured_mean_seconds: 41.29

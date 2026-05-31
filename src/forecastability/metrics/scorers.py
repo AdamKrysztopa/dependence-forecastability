@@ -14,8 +14,10 @@ from scipy.stats import kendalltau, spearmanr
 from sklearn.feature_selection import mutual_info_regression
 
 from forecastability.diagnostics.gcmi import compute_gcmi_at_lag
+from forecastability.diagnostics.predictive_information_gain import (
+    compute_predictive_information_gain,
+)
 from forecastability.diagnostics.spectral_utils import compute_normalised_psd, spectral_entropy
-from forecastability.diagnostics.transfer_entropy import compute_transfer_entropy
 
 
 @runtime_checkable
@@ -264,7 +266,7 @@ def te_scorer(
         *,
         random_state: int = 42,
     ) -> float:
-        return compute_transfer_entropy(
+        result = compute_predictive_information_gain(
             past,
             future,
             lag=lag,
@@ -274,6 +276,7 @@ def te_scorer(
             min_pairs=min_pairs,
             random_state=random_state,
         )
+        return result.value
 
     return _te
 
@@ -437,16 +440,23 @@ def _compute_permutation_entropy(series: np.ndarray, *, m: int) -> float:
     if n < m:
         raise ValueError(f"Series length {n} must be >= embedding order m={m}")
 
-    # Build a lookup from pattern tuple to index for O(1) counting
     all_patterns = _get_ordinal_patterns(m)
     pattern_index = {p: i for i, p in enumerate(all_patterns)}
-    counts = np.zeros(len(all_patterns), dtype=np.float64)
 
-    for i in range(n - m + 1):
-        window = series[i : i + m]
-        # stable argsort: ties broken by earlier position
-        rank = tuple(int(r) for r in np.argsort(window, kind="stable"))
-        counts[pattern_index[rank]] += 1
+    # Vectorised sliding-window: build (n_windows, m) matrix then argsort rows.
+    n_windows = n - m + 1
+    window_idx = np.arange(n_windows)[:, None] + np.arange(m)[None, :]
+    windows = series[window_idx]  # (n_windows, m)
+    ranks_mat = np.argsort(windows, axis=1, kind="stable")  # (n_windows, m)
+
+    # Map each rank-row to its pattern index via the cached lookup.
+    # The dict key ordering matches itertools.permutations(range(m)).
+    pattern_ints = np.fromiter(
+        (pattern_index[tuple(r)] for r in ranks_mat),
+        dtype=np.intp,
+        count=n_windows,
+    )
+    counts = np.bincount(pattern_ints, minlength=len(all_patterns)).astype(np.float64)
 
     total = counts.sum()
     if total == 0:
@@ -620,12 +630,13 @@ def _select_valid_nn(
         1-D integer array of shape ``(n_e,)`` with the valid nearest-neighbor
         index for each point, or ``-1`` when no valid neighbor exists.
     """
+    # Vectorised Theiler mask: True where temporal distance exceeds the window.
+    mask = np.abs(indices_k - np.arange(n_e)[:, None]) > theiler_window
     nn = np.full(n_e, -1, dtype=np.intp)
-    for i in range(n_e):
-        for j in indices_k[i]:
-            if abs(int(j) - i) > theiler_window:
-                nn[i] = int(j)
-                break
+    # Guard: rows where no column is True have no valid neighbor → keep -1.
+    valid_any = mask.any(axis=1)
+    row_idx = np.arange(n_e)[valid_any]
+    nn[valid_any] = indices_k[row_idx, mask[valid_any].argmax(axis=1)]
     return nn
 
 

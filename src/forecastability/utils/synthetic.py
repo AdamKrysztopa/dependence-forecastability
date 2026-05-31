@@ -1182,7 +1182,7 @@ def generate_lag_aware_mod_mrmr_panel(
 
     # Step 4: seasonal_proxy — tracks target[t-12].
     target_lagged_12 = np.zeros(n, dtype=float)
-    target_lagged_12[12:] = target[:n - 12]
+    target_lagged_12[12:] = target[: n - 12]
     seasonal_proxy = 0.9 * target_lagged_12 + rng.normal(0.0, 0.1, size=n)
 
     # Step 5: derived covariates.

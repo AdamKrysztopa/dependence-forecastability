@@ -6,8 +6,8 @@ import numpy as np
 import pandas as pd
 import yaml
 
-import forecastability.exog_benchmark as exog_benchmark
-from forecastability.exog_benchmark import run_benchmark_exog_panel
+import forecastability.use_cases.exog_benchmark as exog_benchmark
+from forecastability.use_cases.exog_benchmark import run_benchmark_exog_panel
 
 
 def test_exog_benchmark_runner_writes_expected_outputs(

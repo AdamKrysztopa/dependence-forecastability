@@ -2,20 +2,42 @@
 
 from __future__ import annotations
 
+import warnings
+from typing import Literal
+
 import numpy as np
 from sklearn.feature_selection import mutual_info_regression
-from sklearn.preprocessing import StandardScaler
 
+from forecastability.diagnostics.gcmi import compute_gcmi_at_lag
+from forecastability.kernels.ksg2_curve_kernel import KSG2CurveKernel
 from forecastability.metrics._lag_design import (
     build_intermediate_design,
-    residualize_with_intercept,
+    residualize_with_qr,
 )
 from forecastability.utils.validation import validate_time_series
 
+# RVH-F07: cardinality threshold below which the raw AMI path routes to GCMI.
+# Heavy-tie discrete input (unique / N < 0.1) causes KSG-II jitter to produce
+# unreliable MI estimates; GCMI's rank-copula normalization is more robust in
+# this regime.  This threshold applies to the raw AMI path only — the pAMI
+# linear-residualization path already operates under a Gaussian approximation
+# and GCMI routing does not reduce the approximation further.
+_GCMI_CARDINALITY_THRESHOLD: float = 0.1
+
+# RVH-F07: discrete-alphabet warning threshold.  When unique values < 20,
+# emit a UserWarning recommending a discrete-MI estimator.
+_DISCRETE_ALPHABET_WARNING_THRESHOLD: int = 20
+
 
 def _scale_series(ts: np.ndarray) -> np.ndarray:
-    """Standardize a univariate series."""
-    return StandardScaler().fit_transform(ts.reshape(-1, 1)).ravel()
+    """Standardize a univariate series to zero mean and unit variance.
+
+    Replaces ``StandardScaler().fit_transform(...)`` with a direct NumPy
+    computation, eliminating the sklearn object construction and reshape
+    round-trip on every call (RVH-F04).
+    """
+    std = ts.std()
+    return (ts - ts.mean()) / (std if std > 0.0 else 1.0)
 
 
 def compute_ami(
@@ -25,30 +47,90 @@ def compute_ami(
     n_neighbors: int = 8,
     min_pairs: int = 30,
     random_state: int = 42,
+    estimator: Literal["ksg2", "ksg1_sklearn"] = "ksg2",
 ) -> np.ndarray:
-    """Compute horizon-specific average mutual information."""
+    """Compute horizon-specific average mutual information.
+
+    Parameters
+    ----------
+    ts: Univariate time series.
+    max_lag: Number of lags to evaluate.
+    n_neighbors: kNN neighbours (used only when estimator='ksg1_sklearn').
+    min_pairs: Minimum number of aligned sample pairs required per horizon.
+    random_state: Base random seed.
+    estimator: "ksg2" (default, v0.5.0) uses KSG-II with Chebyshev cKDTree +
+        median over k in {3,5,8}. "ksg1_sklearn" reproduces v0.4.3 KSG-I numerics
+        via sklearn.mutual_info_regression (single k=n_neighbors).
+
+    Notes
+    -----
+    Heavy-tie discrete inputs (``unique / N < _GCMI_CARDINALITY_THRESHOLD``) are
+    automatically routed to GCMI (Gaussian Copula MI, Ince et al. 2017) regardless
+    of the ``estimator`` argument.  KSG-II jitter degrades on heavily discrete
+    marginals; GCMI's rank-copula normalization is more reliable in this regime
+    (RVH-F07).  This routing applies to the raw AMI path only; the pAMI
+    linear-residualization path is unaffected.
+
+    When the number of unique values is below ``_DISCRETE_ALPHABET_WARNING_THRESHOLD``
+    a :class:`UserWarning` is emitted recommending a dedicated discrete-MI estimator
+    (e.g. Miller-Madow or NSB) for small-alphabet data.
+    """
     if max_lag < 1:
         raise ValueError("max_lag must be >= 1")
 
-    arr = validate_time_series(ts, min_length=max_lag + min_pairs + 1)
-    arr = _scale_series(arr)
+    # RVH-F07: cardinality check — route to GCMI for heavy-tie discrete inputs.
+    arr_check = np.asarray(ts, dtype=float).ravel()
+    n_unique = int(np.unique(arr_check).size)
+    if n_unique < _DISCRETE_ALPHABET_WARNING_THRESHOLD:
+        warnings.warn(
+            f"compute_ami: series has only {n_unique} unique value(s). "
+            "For small-alphabet discrete data, consider a dedicated discrete-MI "
+            "estimator (e.g. Miller-Madow or NSB) for more accurate estimates. "
+            "Routing to GCMI when unique/N < _GCMI_CARDINALITY_THRESHOLD.",
+            UserWarning,
+            stacklevel=2,
+        )
+    n_total = arr_check.size
+    cardinality_ratio = n_unique / max(n_total, 1)
+    if cardinality_ratio < _GCMI_CARDINALITY_THRESHOLD:
+        # Heavy-tie discrete: use GCMI for robustness.
+        arr = validate_time_series(ts, min_length=max_lag + min_pairs + 1)
+        gcmi_vals = np.zeros(max_lag, dtype=float)
+        for horizon in range(1, max_lag + 1):
+            if arr.size - horizon < min_pairs:
+                break
+            gcmi_vals[horizon - 1] = compute_gcmi_at_lag(arr, arr, lag=horizon, min_pairs=min_pairs)
+        # convert bits → nats to match KSG estimator output scale
+        return gcmi_vals * np.log(2)
 
-    ami = np.zeros(max_lag, dtype=float)
-    for horizon in range(1, max_lag + 1):
-        if arr.size - horizon < min_pairs:
-            break
+    if estimator == "ksg2":
+        arr = validate_time_series(ts, min_length=max_lag + min_pairs + 1)
+        kernel = KSG2CurveKernel(min_pairs=min_pairs)
+        curve_2d = kernel.estimate_curve(arr, max_lag, random_state=random_state)
+        # Median across k axis, clip to 0
+        return np.maximum(np.nanmedian(curve_2d, axis=1), 0.0)
+    elif estimator == "ksg1_sklearn":
+        arr = validate_time_series(ts, min_length=max_lag + min_pairs + 1)
+        arr = _scale_series(arr)
 
-        x = arr[:-horizon].reshape(-1, 1)
-        y = arr[horizon:]
-        value = mutual_info_regression(
-            x,
-            y,
-            n_neighbors=n_neighbors,
-            random_state=random_state + horizon,
-        )[0]
-        ami[horizon - 1] = max(float(value), 0.0)
+        ami = np.zeros(max_lag, dtype=float)
+        for horizon in range(1, max_lag + 1):
+            if arr.size - horizon < min_pairs:
+                break
 
-    return ami
+            x = arr[:-horizon].reshape(-1, 1)
+            y = arr[horizon:]
+            value = mutual_info_regression(
+                x,
+                y,
+                n_neighbors=n_neighbors,
+                random_state=random_state + horizon,
+            )[0]
+            ami[horizon - 1] = max(float(value), 0.0)
+
+        return ami
+    else:
+        raise ValueError(f"estimator must be 'ksg2' or 'ksg1_sklearn', got {estimator!r}")
 
 
 def _build_conditioning_matrix(ts: np.ndarray, lag: int) -> np.ndarray:
@@ -63,40 +145,111 @@ def compute_pami_linear_residual(
     n_neighbors: int = 8,
     min_pairs: int = 50,
     random_state: int = 42,
+    estimator: Literal["ksg2", "ksg1_sklearn"] = "ksg2",
 ) -> np.ndarray:
-    """Compute pAMI via linear residualization + nonlinear MI."""
+    """Compute pAMI via linear residualization + nonlinear MI.
+
+    Parameters
+    ----------
+    estimator: "ksg2" (default) routes the residualized-pair MI through
+        KSG2CurveKernel._estimate_horizon (single-horizon call with k in {3,5,8},
+        median aggregation). "ksg1_sklearn" reproduces v0.4.3 numerics via
+        sklearn.mutual_info_regression.
+
+    Notes
+    -----
+    **Linear approximation disclosure (RVH-F22 / audit finding I3).**
+    This function computes a **linear approximation** to conditional mutual
+    information.  It equals the true partial MI only under joint Gaussianity.
+    For non-Gaussian processes it measures the MI between linear residuals,
+    not the CMI ``I(X_t; X_{t-h} | X_{t-1}, ..., X_{t-h+1})``.
+
+    **Low-cardinality behaviour (RVH-F21).**
+    When ``unique(X) / N < _GCMI_CARDINALITY_THRESHOLD`` (default 0.1) a
+    :class:`UserWarning` is emitted.  The computation continues without
+    rerouting — routing to GCMI would not reduce the approximation error
+    already introduced by linear residualization on a discrete series.
+    To suppress: ``warnings.filterwarnings("ignore", message=".*low cardinality.*")``.
+    """
     if max_lag < 1:
         raise ValueError("max_lag must be >= 1")
+
+    # RVH-F21: cardinality check — warn on heavy-tie discrete inputs.
+    # Do NOT reroute: the linear-residualization step is already a Gaussian
+    # approximation, so switching to GCMI on the residualized path would not
+    # reduce the approximation error further.  Warn once before the loop.
+    _ts_check = np.asarray(ts, dtype=float).ravel()
+    _n_unique_pami = int(np.unique(_ts_check).size)
+    if _n_unique_pami / max(_ts_check.size, 1) < _GCMI_CARDINALITY_THRESHOLD:
+        warnings.warn(
+            f"compute_pami_linear_residual: input has low cardinality "
+            f"({_n_unique_pami} unique / {_ts_check.size} samples = "
+            f"{_n_unique_pami / max(_ts_check.size, 1):.3f} < "
+            f"{_GCMI_CARDINALITY_THRESHOLD}); the linear-residual approximation "
+            "is unreliable for discrete series — consider a discrete-MI estimator.",
+            UserWarning,
+            stacklevel=2,
+        )
 
     arr = validate_time_series(ts, min_length=max_lag + min_pairs + 1)
     arr = _scale_series(arr)
 
     pami = np.zeros(max_lag, dtype=float)
-    for horizon in range(1, max_lag + 1):
-        if arr.size - horizon < min_pairs:
-            break
 
-        z = _build_conditioning_matrix(arr, horizon)
-        past = arr[:-horizon]
-        future = arr[horizon:]
+    if estimator == "ksg2":
+        kernel = KSG2CurveKernel(min_pairs=min_pairs)
+        k_list = kernel.k_list
+        k_max = max(k_list)
+        for horizon in range(1, max_lag + 1):
+            if arr.size - horizon < min_pairs:
+                break
 
-        # Guard: skip underdetermined conditioning regression
-        if z.shape[1] > 0 and z.shape[0] <= z.shape[1]:
-            break
+            z = _build_conditioning_matrix(arr, horizon)
+            past = arr[:-horizon]
+            future = arr[horizon:]
 
-        if z.shape[1] == 0:
-            res_past = past
-            res_future = future
-        else:
-            res_past, res_future = residualize_with_intercept(z, (past, future))
+            # Guard: skip underdetermined conditioning regression
+            if z.shape[1] > 0 and z.shape[0] <= z.shape[1]:
+                break
 
-        value = mutual_info_regression(
-            res_past.reshape(-1, 1),
-            res_future,
-            n_neighbors=n_neighbors,
-            random_state=random_state + horizon,
-        )[0]
-        pami[horizon - 1] = max(float(value), 0.0)
+            if z.shape[1] == 0:
+                res_past = past
+                res_future = future
+            else:
+                res_past, res_future = residualize_with_qr(z, (past, future))
+
+            values = kernel._estimate_horizon(res_past, res_future, k_list=k_list, k_max=k_max)
+            pami[horizon - 1] = max(float(np.nanmedian(values)), 0.0)
+
+    elif estimator == "ksg1_sklearn":
+        for horizon in range(1, max_lag + 1):
+            if arr.size - horizon < min_pairs:
+                break
+
+            z = _build_conditioning_matrix(arr, horizon)
+            past = arr[:-horizon]
+            future = arr[horizon:]
+
+            # Guard: skip underdetermined conditioning regression
+            if z.shape[1] > 0 and z.shape[0] <= z.shape[1]:
+                break
+
+            if z.shape[1] == 0:
+                res_past = past
+                res_future = future
+            else:
+                res_past, res_future = residualize_with_qr(z, (past, future))
+
+            value = mutual_info_regression(
+                res_past.reshape(-1, 1),
+                res_future,
+                n_neighbors=n_neighbors,
+                random_state=random_state + horizon,
+            )[0]
+            pami[horizon - 1] = max(float(value), 0.0)
+
+    else:
+        raise ValueError(f"estimator must be 'ksg2' or 'ksg1_sklearn', got {estimator!r}")
 
     return pami
 
@@ -113,6 +266,7 @@ def compute_ami_at_horizon(
     n_neighbors: int = 8,
     min_pairs: int = 30,
     random_state: int = 42,
+    estimator: Literal["ksg2", "ksg1_sklearn"] = "ksg2",
 ) -> float:
     """Compute AMI at a single horizon *h*.
 
@@ -122,15 +276,17 @@ def compute_ami_at_horizon(
     the ``max_lag=H`` minimum-length requirement.
 
     Invariant F: ``_scale_series`` is applied once to the full series before
-    slicing.  The aligned pair is never independently scaled.
+    slicing (ksg1_sklearn path only).  The aligned pair is never independently
+    scaled.
 
     Args:
         ts: Univariate time series.
         h: Horizon index (1-based).
-        n_neighbors: kNN neighbours for MI estimation.
+        n_neighbors: kNN neighbours for MI estimation (ksg1_sklearn only).
         min_pairs: Minimum number of aligned sample pairs.
         random_state: Base random seed; internally uses ``random_state + h``
-            for the MI estimator (mirrors the full-curve convention).
+            for the MI estimator on the ksg1_sklearn path.
+        estimator: "ksg2" (default) or "ksg1_sklearn".
 
     Returns:
         Non-negative scalar MI value at horizon *h*, or ``0.0`` when the
@@ -142,18 +298,30 @@ def compute_ami_at_horizon(
     if h < 1:
         raise ValueError("h must be >= 1")
     arr = validate_time_series(ts, min_length=h + min_pairs + 1)
-    arr = _scale_series(arr)
     if arr.size - h < min_pairs:
         return 0.0
-    x = arr[:-h].reshape(-1, 1)
-    y = arr[h:]
-    value = mutual_info_regression(
-        x,
-        y,
-        n_neighbors=n_neighbors,
-        random_state=random_state + h,
-    )[0]
-    return max(float(value), 0.0)
+    if estimator == "ksg2":
+        kernel = KSG2CurveKernel(min_pairs=min_pairs)
+        k_list = kernel.k_list
+        k_max = max(k_list)
+        from forecastability.kernels.ksg2_curve_kernel import _apply_jitter
+
+        jittered = _apply_jitter(arr, jitter_scale=kernel._jitter_scale, random_state=random_state)
+        x = jittered[:-h]
+        y = jittered[h:]
+        values = kernel._estimate_horizon(x, y, k_list=k_list, k_max=k_max)
+        return max(float(np.nanmedian(values)), 0.0)
+    else:
+        arr = _scale_series(arr)
+        x = arr[:-h].reshape(-1, 1)
+        y = arr[h:]
+        value = mutual_info_regression(
+            x,
+            y,
+            n_neighbors=n_neighbors,
+            random_state=random_state + h,
+        )[0]
+        return max(float(value), 0.0)
 
 
 def compute_pami_at_horizon(
@@ -163,6 +331,7 @@ def compute_pami_at_horizon(
     n_neighbors: int = 8,
     min_pairs: int = 50,
     random_state: int = 42,
+    estimator: Literal["ksg2", "ksg1_sklearn"] = "ksg2",
 ) -> float:
     """Compute pAMI at a single horizon *h* (legacy break-then-zero semantics).
 
@@ -178,10 +347,11 @@ def compute_pami_at_horizon(
     Args:
         ts: Univariate time series.
         h: Horizon index (1-based).
-        n_neighbors: kNN neighbours for MI estimation.
+        n_neighbors: kNN neighbours for MI estimation (ksg1_sklearn only).
         min_pairs: Minimum number of aligned sample pairs.
         random_state: Base random seed; internally uses ``random_state + h``
-            for the MI estimator (mirrors the full-curve convention).
+            for the MI estimator (ksg1_sklearn path).
+        estimator: "ksg2" (default) or "ksg1_sklearn".
 
     Returns:
         Non-negative scalar pAMI value at horizon *h*, or ``0.0`` when the
@@ -206,11 +376,18 @@ def compute_pami_at_horizon(
         res_past = past
         res_future = future
     else:
-        res_past, res_future = residualize_with_intercept(z, (past, future))
-    value = mutual_info_regression(
-        res_past.reshape(-1, 1),
-        res_future,
-        n_neighbors=n_neighbors,
-        random_state=random_state + h,
-    )[0]
-    return max(float(value), 0.0)
+        res_past, res_future = residualize_with_qr(z, (past, future))
+    if estimator == "ksg2":
+        kernel = KSG2CurveKernel(min_pairs=min_pairs)
+        k_list = kernel.k_list
+        k_max = max(k_list)
+        values = kernel._estimate_horizon(res_past, res_future, k_list=k_list, k_max=k_max)
+        return max(float(np.nanmedian(values)), 0.0)
+    else:
+        value = mutual_info_regression(
+            res_past.reshape(-1, 1),
+            res_future,
+            n_neighbors=n_neighbors,
+            random_state=random_state + h,
+        )[0]
+        return max(float(value), 0.0)

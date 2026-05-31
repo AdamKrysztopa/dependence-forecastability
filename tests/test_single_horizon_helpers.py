@@ -74,9 +74,7 @@ def test_pami_at_horizon_matches_curve(sine_series: np.ndarray, h: int, H: int) 
     curve = compute_pami_linear_residual(
         sine_series, max_lag=H, n_neighbors=8, min_pairs=50, random_state=_RS
     )
-    single = compute_pami_at_horizon(
-        sine_series, h, n_neighbors=8, min_pairs=50, random_state=_RS
-    )
+    single = compute_pami_at_horizon(sine_series, h, n_neighbors=8, min_pairs=50, random_state=_RS)
     assert math.isclose(single, float(curve[h - 1]), rel_tol=1e-10, abs_tol=1e-14)
 
 
@@ -87,21 +85,15 @@ def test_pami_at_horizon_matches_curve(sine_series: np.ndarray, h: int, H: int) 
 
 @pytest.mark.parametrize("h,H", _H_PAIRS)
 def test_raw_at_horizon_matches_curve_univariate(sine_series: np.ndarray, h: int, H: int) -> None:
-    curve = compute_raw_curve(
-        sine_series, H, _mi_scorer, min_pairs=30, random_state=_RS
-    )
-    single = compute_raw_at_horizon(
-        sine_series, h, _mi_scorer, min_pairs=30, random_state=_RS
-    )
+    curve = compute_raw_curve(sine_series, H, _mi_scorer, min_pairs=30, random_state=_RS)
+    single = compute_raw_at_horizon(sine_series, h, _mi_scorer, min_pairs=30, random_state=_RS)
     assert math.isclose(single, float(curve[h - 1]), rel_tol=1e-10, abs_tol=1e-14)
 
 
 @pytest.mark.parametrize("h,H", _H_PAIRS)
 def test_raw_at_horizon_matches_curve_with_exog(sine_series: np.ndarray, h: int, H: int) -> None:
     exog = np.cos(np.linspace(0.0, 20.0, _N))
-    curve = compute_raw_curve(
-        sine_series, H, _mi_scorer, exog=exog, min_pairs=30, random_state=_RS
-    )
+    curve = compute_raw_curve(sine_series, H, _mi_scorer, exog=exog, min_pairs=30, random_state=_RS)
     single = compute_raw_at_horizon(
         sine_series, h, _mi_scorer, exog=exog, min_pairs=30, random_state=_RS
     )
@@ -117,12 +109,8 @@ def test_raw_at_horizon_matches_curve_with_exog(sine_series: np.ndarray, h: int,
 def test_partial_at_horizon_matches_curve_univariate(
     sine_series: np.ndarray, h: int, H: int
 ) -> None:
-    curve = compute_partial_curve(
-        sine_series, H, _mi_scorer, min_pairs=50, random_state=_RS
-    )
-    single = compute_partial_at_horizon(
-        sine_series, h, _mi_scorer, min_pairs=50, random_state=_RS
-    )
+    curve = compute_partial_curve(sine_series, H, _mi_scorer, min_pairs=50, random_state=_RS)
+    single = compute_partial_at_horizon(sine_series, h, _mi_scorer, min_pairs=50, random_state=_RS)
     assert math.isclose(single, float(curve[h - 1]), rel_tol=1e-10, abs_tol=1e-14)
 
 
@@ -223,9 +211,7 @@ def test_partial_at_horizon_computes_anyway_for_underdetermined_conditioning() -
         lambda ts: compute_partial_at_horizon(ts, 0, _mi_scorer, min_pairs=1, random_state=0),
     ],
 )
-def test_single_horizon_helpers_reject_h_zero(
-    sine_series: np.ndarray, fn: object
-) -> None:
+def test_single_horizon_helpers_reject_h_zero(sine_series: np.ndarray, fn: object) -> None:
     with pytest.raises(ValueError, match="h must be >= 1"):
         fn(sine_series)  # type: ignore[operator]
 

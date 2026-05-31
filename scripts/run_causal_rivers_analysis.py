@@ -39,7 +39,7 @@ from forecastability.adapters.causal_rivers import (
     load_causal_rivers_config,
     load_resampled_causal_rivers_frame,
 )
-from forecastability.extensions import (
+from forecastability.use_cases.extensions import (
     TargetBaselineCurves,
     compute_target_baseline_by_horizon,
 )

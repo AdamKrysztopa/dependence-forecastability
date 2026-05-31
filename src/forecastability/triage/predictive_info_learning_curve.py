@@ -1,30 +1,17 @@
-"""Domain model for F3 — Predictive Information Learning Curves."""
-
+# Migration shim — see forecastability.domain.models.predictive_info_learning_curve
+# Remove this shim in v0.6.0
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict
+import warnings as _warnings
 
+from forecastability.domain.models.predictive_info_learning_curve import (  # noqa: F401
+    PredictiveInfoLearningCurve,
+)
 
-class PredictiveInfoLearningCurve(BaseModel):
-    """Result of a predictive-information learning-curve analysis.
-
-    Attributes:
-        window_sizes: Window (lookback) sizes evaluated, k=1..K.
-        information_values: I_pred(k) for each window size.
-        convergence_index: Index (0-based) within window_sizes where plateau
-            begins; -1 if no plateau.
-        recommended_lookback: Recommended lookback length from plateau
-            detection.
-        plateau_detected: True when a plateau was found.
-        reliability_warnings: List of reliability warning strings (may be
-            empty).
-    """
-
-    model_config = ConfigDict(frozen=True)
-
-    window_sizes: list[int]
-    information_values: list[float]
-    convergence_index: int
-    recommended_lookback: int
-    plateau_detected: bool
-    reliability_warnings: list[str]
+_warnings.warn(
+    "forecastability.triage.predictive_info_learning_curve is deprecated in v0.5.0; "
+    "use forecastability.domain.models.predictive_info_learning_curve instead. "
+    "See docs/migration/v0.4.x_to_v0.5.0.md.",
+    DeprecationWarning,
+    stacklevel=2,
+)

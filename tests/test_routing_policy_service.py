@@ -21,7 +21,7 @@ def _fp(
     structure: str = "monotonic",
     mass: float = 0.20,
     nl_share: float = 0.05,
-    signal_to_noise: float = 0.40,
+    informative_mass_fraction: float = 0.40,
     horizon: int = 5,
     informative_horizons: list[int] | None = None,
     directness_ratio: float | None = None,
@@ -33,7 +33,7 @@ def _fp(
         information_horizon=horizon,
         information_structure=structure,  # type: ignore[arg-type]
         nonlinear_share=nl_share,
-        signal_to_noise=signal_to_noise,
+        informative_mass_fraction=informative_mass_fraction,
         directness_ratio=directness_ratio,
         informative_horizons=informative_horizons if informative_horizons is not None else [],
         metadata=metadata or {},
@@ -42,7 +42,9 @@ def _fp(
 
 def test_routing_none_structure_abstains_from_family_routing() -> None:
     """A none-structure fingerprint must abstain from family-level routing."""
-    rec = route_fingerprint(_fp(structure="none", mass=0.0, nl_share=0.0, signal_to_noise=0.0))
+    rec = route_fingerprint(
+        _fp(structure="none", mass=0.0, nl_share=0.0, informative_mass_fraction=0.0)
+    )
     assert rec.primary_families == []
     assert rec.confidence_label == "abstain"
 
@@ -89,7 +91,7 @@ def test_confidence_high_when_no_penalties() -> None:
             structure="monotonic",
             mass=0.20,
             nl_share=0.05,
-            signal_to_noise=0.40,
+            informative_mass_fraction=0.40,
             directness_ratio=0.80,
             informative_horizons=[1, 2, 3, 4, 5],
         )
@@ -104,7 +106,7 @@ def test_confidence_medium_when_only_near_threshold_penalty() -> None:
             structure="monotonic",
             mass=0.101,
             nl_share=0.05,
-            signal_to_noise=0.40,
+            informative_mass_fraction=0.40,
             directness_ratio=0.80,
             informative_horizons=[1, 2, 3, 4, 5],
         )
@@ -120,7 +122,7 @@ def test_confidence_low_when_multiple_penalties_fire() -> None:
             structure="mixed",
             mass=0.20,
             nl_share=0.05,
-            signal_to_noise=0.05,
+            informative_mass_fraction=0.05,
             informative_horizons=[1, 2],
         )
     )
@@ -134,14 +136,14 @@ def test_low_signal_to_noise_adds_caution_and_penalty() -> None:
             structure="monotonic",
             mass=0.20,
             nl_share=0.05,
-            signal_to_noise=0.05,
+            informative_mass_fraction=0.05,
             informative_horizons=[1, 2, 3, 4],
         ),
         fingerprint_config=FingerprintThresholdConfig(
             low_signal_to_noise_confidence_threshold=0.10
         ),
     )
-    assert "low_signal_to_noise" in rec.caution_flags
+    assert "low_informative_mass_fraction" in rec.caution_flags
     assert rec.metadata["low_signal_quality_penalty"] == 1
 
 
@@ -152,7 +154,7 @@ def test_low_signal_to_noise_downgrades_confidence() -> None:
             structure="monotonic",
             mass=0.20,
             nl_share=0.05,
-            signal_to_noise=0.05,
+            informative_mass_fraction=0.05,
             directness_ratio=0.80,
             informative_horizons=[1, 2, 3, 4],
         ),

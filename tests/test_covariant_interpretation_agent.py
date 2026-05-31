@@ -11,8 +11,10 @@ from forecastability.adapters.agents.covariant_agent_payload_models import (
     CovariantAgentExplanation,
     explanation_from_interpretation,
 )
-from forecastability.adapters.llm import covariant_interpretation_agent as agent_module
-from forecastability.adapters.llm.covariant_interpretation_agent import (
+from forecastability.adapters.agents.runtime import (
+    covariant_interpretation_agent as agent_module,
+)
+from forecastability.adapters.agents.runtime.covariant_interpretation_agent import (
     run_covariant_interpretation_agent,
 )
 from forecastability.adapters.settings import InfraSettings

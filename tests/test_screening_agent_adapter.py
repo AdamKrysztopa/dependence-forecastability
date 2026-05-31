@@ -71,7 +71,7 @@ class TestScreeningResultSummary:
     """Verify deterministic summary extraction used by LLM tools."""
 
     def test_result_summary_contains_scalar_fields(self) -> None:
-        from forecastability.adapters.llm.screening_agent import _result_summary
+        from forecastability.adapters.agents.runtime.screening_agent import _result_summary
         from forecastability.triage import TriageRequest, run_triage
 
         rng = np.random.default_rng(42)
@@ -83,10 +83,9 @@ class TestScreeningResultSummary:
         result = run_triage(TriageRequest(series=series, max_lag=20, random_state=42))
         summary = _result_summary(result)
 
-        assert summary["blocked"] is False
-        assert "peak_raw" in summary
-        assert "peak_partial" in summary
-        assert "recommendation" in summary
+        assert summary.blocked is False
+        assert summary.peak_raw is not None
+        assert summary.recommendation is not None
 
 
 class TestAgentWithTestModel:

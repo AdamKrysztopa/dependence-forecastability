@@ -30,7 +30,7 @@ def _make_bundle(
     mass: float = 0.20,
     horizon: int = 8,
     nonlinear_share: float = 0.08,
-    signal_to_noise: float = 0.36,
+    informative_mass_fraction: float = 0.36,
     directness_ratio: float | None = 0.75,
     informative_horizons: list[int] | None = None,
     primary_families: list[str] | None = None,
@@ -39,7 +39,7 @@ def _make_bundle(
 ) -> FingerprintBundle:
     informative = informative_horizons or [1, 2, 3, 8]
     geometry = AmiInformationGeometry(
-        signal_to_noise=signal_to_noise,
+        informative_mass_fraction=informative_mass_fraction,
         information_horizon=horizon,
         information_structure=structure,  # type: ignore[arg-type]
         informative_horizons=list(informative),
@@ -61,7 +61,7 @@ def _make_bundle(
         information_horizon=horizon,
         information_structure=structure,  # type: ignore[arg-type]
         nonlinear_share=nonlinear_share,
-        signal_to_noise=signal_to_noise,
+        informative_mass_fraction=informative_mass_fraction,
         directness_ratio=directness_ratio,
         informative_horizons=list(informative),
     )
@@ -190,7 +190,7 @@ class TestInterpretFingerprintPayload:
         assert result_without.evidence.has_directness_ratio is False
 
     def test_evidence_has_signal_to_noise_bucket(self) -> None:
-        bundle = _make_bundle(signal_to_noise=0.05)
+        bundle = _make_bundle(informative_mass_fraction=0.05)
         payload = fingerprint_agent_payload(bundle)
         result = interpret_fingerprint_payload(payload)
 

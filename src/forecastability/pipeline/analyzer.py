@@ -7,13 +7,15 @@ for MI, Pearson, Spearman, Kendall, and distance correlation.
 from __future__ import annotations
 
 import dataclasses
-from dataclasses import dataclass
 from typing import Any, Literal, cast
 
 import numpy as np
 
+from forecastability.diagnostics.predictive_information_gain import (
+    compute_predictive_information_gain_curve,
+)
 from forecastability.diagnostics.surrogates import compute_significance_bands
-from forecastability.diagnostics.transfer_entropy import compute_transfer_entropy_curve
+from forecastability.domain.models.analyze_result import AnalyzeResult
 from forecastability.metrics.metrics import (
     compute_ami,
     compute_pami_linear_residual,
@@ -60,27 +62,6 @@ def _te_partial_not_supported_error() -> ValueError:
         "method='te' is not supported for partial curves: "
         "no validated partial-TE estimand is implemented"
     )
-
-
-@dataclass(slots=True)
-class AnalyzeResult:
-    """Container returned by :meth:`ForecastabilityAnalyzer.analyze`.
-
-    Attributes:
-        raw: Raw dependence curve (AMI when method is ``"mi"``).
-        partial: Partial dependence curve (pAMI when method is ``"mi"``).
-        sig_raw_lags: Lag indices where raw exceeds the upper surrogate band.
-        sig_partial_lags: Lag indices where partial exceeds the upper band.
-        recommendation: Human-readable triage recommendation.
-        method: Name of the scorer used.
-    """
-
-    raw: np.ndarray
-    partial: np.ndarray
-    sig_raw_lags: np.ndarray
-    sig_partial_lags: np.ndarray
-    recommendation: str
-    method: str
 
 
 class ForecastabilityAnalyzer:
@@ -216,7 +197,7 @@ class ForecastabilityAnalyzer:
             self._registry.get(method)
             effective_min_pairs = max(min_pairs, _TE_MIN_PAIRS)
             arr = validate_time_series(ts, min_length=max_lag + effective_min_pairs + 1)
-            raw = compute_transfer_entropy_curve(
+            raw = compute_predictive_information_gain_curve(
                 arr,
                 arr,
                 max_lag=max_lag,
@@ -668,7 +649,7 @@ class ForecastabilityAnalyzerExog(ForecastabilityAnalyzer):
             arr = validate_time_series(ts, min_length=max_lag + effective_min_pairs + 1)
             validated_exog = _validate_exog_for_target(exog, target=arr)
             source = validated_exog if validated_exog is not None else arr
-            raw = compute_transfer_entropy_curve(
+            raw = compute_predictive_information_gain_curve(
                 source,
                 arr,
                 max_lag=max_lag,

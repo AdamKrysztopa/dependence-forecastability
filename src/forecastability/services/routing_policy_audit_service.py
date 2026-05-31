@@ -161,7 +161,7 @@ def _make_routing_callable(
     The returned callable takes a modified coordinate dict, creates a new
     ForecastabilityFingerprint with the overridden scalar fields, and returns
     the primary family labels emitted by ``route_fingerprint``.  All non-scalar
-    fields (information_structure, informative_horizons, signal_to_noise,
+    fields (information_structure, informative_horizons, informative_mass_fraction,
     information_horizon, metadata) are preserved from the base fingerprint.
 
     Args:

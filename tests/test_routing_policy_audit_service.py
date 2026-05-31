@@ -32,7 +32,7 @@ def _fp(
     structure: str = "monotonic",
     mass: float = 0.20,
     nl_share: float = 0.05,
-    signal_to_noise: float = 0.50,
+    informative_mass_fraction: float = 0.50,
     horizon: int = 5,
     informative_horizons: list[int] | None = None,
     directness_ratio: float | None = None,
@@ -44,7 +44,7 @@ def _fp(
         information_horizon=horizon,
         information_structure=structure,  # type: ignore[arg-type]
         nonlinear_share=nl_share,
-        signal_to_noise=signal_to_noise,
+        informative_mass_fraction=informative_mass_fraction,
         directness_ratio=directness_ratio,
         informative_horizons=informative_horizons or [1, 2, 3, 4, 5],
         metadata=metadata or {},
@@ -107,7 +107,7 @@ class TestPassOutcome:
             structure="monotonic",
             mass=0.35,  # far above high_mass_min (0.10)
             nl_share=0.05,  # far below high_nonlinear_share_min (0.30)
-            signal_to_noise=0.80,
+            informative_mass_fraction=0.80,
             informative_horizons=[1, 2, 3, 4, 5, 6, 7],
         )
         rec = _route(fp)
@@ -124,7 +124,7 @@ class TestPassOutcome:
         assert case.outcome == "pass"
 
     def test_pass_case_returns_frozen_validation_case(self) -> None:
-        fp = _fp(mass=0.35, nl_share=0.05, signal_to_noise=0.80)
+        fp = _fp(mass=0.35, nl_share=0.05, informative_mass_fraction=0.80)
         rec = _route(fp)
         vector = build_routing_threshold_vector(fp)
         case = audit_routing_case(
@@ -147,7 +147,7 @@ class TestFailOutcome:
             structure="monotonic",
             mass=0.35,
             nl_share=0.05,
-            signal_to_noise=0.80,
+            informative_mass_fraction=0.80,
         )
         rec = _route(fp)
         # Declare expected families from the OPPOSITE routing arm
@@ -216,7 +216,7 @@ class TestDowngradeOutcome:
             structure="monotonic",
             mass=0.10,  # exactly at threshold → margin = 0
             nl_share=0.05,
-            signal_to_noise=0.50,
+            informative_mass_fraction=0.50,
             informative_horizons=[1, 2, 3, 4, 5],
         )
         rec = _route(fp)
@@ -255,7 +255,7 @@ class TestConfidenceCalibration:
             structure="monotonic",
             mass=0.10,
             nl_share=0.05,
-            signal_to_noise=0.50,
+            informative_mass_fraction=0.50,
             informative_horizons=[1, 2, 3, 4, 5],
         )
         recommendation = _route(fp)
@@ -334,7 +334,7 @@ class TestRuleStabilityField:
 
     def test_fingerprint_far_from_all_thresholds_has_high_stability(self) -> None:
         """A fingerprint well inside a routing arm should be maximally stable."""
-        fp = _fp(mass=0.50, nl_share=0.05, signal_to_noise=0.80)
+        fp = _fp(mass=0.50, nl_share=0.05, informative_mass_fraction=0.80)
         rec = _route(fp)
         case = audit_routing_case(
             case_name="high_stability",

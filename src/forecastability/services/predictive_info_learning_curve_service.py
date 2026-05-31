@@ -8,7 +8,6 @@ point, and recommends a minimal sufficient lookback length.
 from __future__ import annotations
 
 import numpy as np
-from sklearn.preprocessing import StandardScaler
 
 from forecastability.triage.predictive_info_learning_curve import PredictiveInfoLearningCurve
 
@@ -21,13 +20,17 @@ _MIN_SAMPLES_FOR_ESTIMATION: int = 24
 def _scale(arr: np.ndarray) -> np.ndarray:
     """Standardise a 1-D array to zero mean and unit variance.
 
+    Uses a direct NumPy computation, eliminating the sklearn object
+    construction and reshape round-trip on every call (RVH-F04).
+
     Args:
         arr: Input 1-D array.
 
     Returns:
         Standardised 1-D array of the same length.
     """
-    return StandardScaler().fit_transform(arr.reshape(-1, 1)).ravel()
+    std = arr.std()
+    return (arr - arr.mean()) / (std if std > 0.0 else 1.0)
 
 
 def _build_warnings(n: int, effective_max_k: int, *, max_k: int) -> list[str]:
@@ -126,12 +129,10 @@ def _estimate_joint_mi(
     kd_past = cKDTree(joint[:, :-1])  # past subspace
     kd_fut = cKDTree(joint[:, -1:])  # future subspace (1-D)
 
-    nx = np.array(
-        [len(nb) - 1 for nb in kd_past.query_ball_point(joint[:, :-1], r=radius, p=np.inf)]
-    )
-    ny = np.array(
-        [len(nb) - 1 for nb in kd_fut.query_ball_point(joint[:, -1:], r=radius, p=np.inf)]
-    )
+    # return_length=True avoids materialising neighbour lists (SciPy >= 1.7).
+    # Subtract 1 to exclude the query point itself from the marginal count.
+    nx = kd_past.query_ball_point(joint[:, :-1], r=radius, p=np.inf, return_length=True) - 1
+    ny = kd_fut.query_ball_point(joint[:, -1:], r=radius, p=np.inf, return_length=True) - 1
 
     mi = float(digamma(n_neighbors) + digamma(n) - np.mean(digamma(nx + 1) + digamma(ny + 1)))
     return max(0.0, mi)

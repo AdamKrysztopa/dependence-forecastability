@@ -1,0 +1,30 @@
+{
+  "version": "0.5.0",
+  "n_archetypes": 10,
+  "n_noise_replicates": 100,
+  "thresholds": [
+    {
+      "label": "high",
+      "threshold": 0.15,
+      "achieved_precision": 0.9934,
+      "target_precision": 0.9,
+      "n_samples": 604
+    },
+    {
+      "label": "medium",
+      "threshold": 0.05,
+      "achieved_precision": 0.5842,
+      "target_precision": 0.75,
+      "n_samples": 291
+    },
+    {
+      "label": "low",
+      "threshold": 0.05,
+      "achieved_precision": 0.7524,
+      "target_precision": 0.0,
+      "n_samples": 105
+    }
+  ],
+  "audit_timestamp": "2026-05-24T20:39:39.014734+00:00",
+  "notes": "Calibration run with 10 archetypes \u00d7 100 replicates. HIGH precision MEETS target (0.993 vs 0.90). MEDIUM precision DOES NOT MEET target (0.584 vs 0.75). Thresholds reported are the current hand-picked values from _TRIAGE_THRESHOLDS; a full sweep calibration is planned for v0.5.1 when raw AMI peaks are stored per run."
+}

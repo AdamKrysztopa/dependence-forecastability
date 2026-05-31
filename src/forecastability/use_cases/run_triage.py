@@ -7,6 +7,10 @@ import warnings
 from collections.abc import Callable
 from typing import Any
 
+import numpy as np
+
+from forecastability.diagnostics.spectral_utils import compute_normalised_psd
+from forecastability.metrics.metrics import _scale_series, compute_ami
 from forecastability.pipeline.analyzer import (
     AnalyzeResult,
     ForecastabilityAnalyzer,
@@ -40,12 +44,102 @@ from forecastability.triage.theoretical_limit_diagnostics import TheoreticalLimi
 from forecastability.utils.types import CanonicalExampleResult, MetricCurve
 
 
-def _run_compute(request: TriageRequest, method_plan: MethodPlan) -> AnalyzeResult:
+class _TriageCache:
+    """Request-scoped memoization cache for expensive pure computations (RVH-F06).
+
+    Wraps three pure functions that may be invoked more than once with the same
+    inputs during a single ``run_triage`` call:
+
+    * ``_scale_series`` — O(N) standardization; cheap but called from both the
+      raw-AMI and pAMI paths on the same array.
+    * ``compute_normalised_psd`` — Welch FFT; called by the complexity-band
+      scorer and the spectral-forecastability service on the same array.
+    * ``compute_ami`` — KSG-II kNN graph; by far the most expensive single
+      computation; memoized so a second caller (e.g. Lyapunov orbital-period
+      heuristic) does not re-run the full curve.
+
+    Cache key: ``(id(arr), *scalar_params)``.  Using ``id()`` as the array
+    identity is correct **within a single call** because the numpy array held
+    inside the frozen ``TriageRequest`` cannot be reassigned, and the cache
+    object is discarded at the end of ``run_triage``.
+
+    .. warning::
+        Do not mutate the series in-place while a triage call is in progress.
+        In-place mutation would produce stale cached values without any error.
+
+    Lifetime: constructed at the top of ``run_triage`` and never stored in any
+    module-level or class-level container.  No global state is introduced.
+    """
+
+    def __init__(self) -> None:
+        self._scale_cache: dict[tuple[int, ...], np.ndarray] = {}
+        self._psd_cache: dict[Any, tuple[np.ndarray, np.ndarray]] = {}
+        self._ami_cache: dict[tuple[int, ...], np.ndarray] = {}
+
+    def scale_series(self, arr: np.ndarray) -> np.ndarray:
+        """Memoized wrapper around :func:`~forecastability.metrics.metrics._scale_series`."""
+        key = (id(arr),)
+        if key not in self._scale_cache:
+            self._scale_cache[key] = _scale_series(arr)
+        return self._scale_cache[key]
+
+    def normalised_psd(
+        self,
+        arr: np.ndarray,
+        *,
+        nperseg: int | None = None,
+        detrend: str | bool = "constant",
+    ) -> tuple[np.ndarray, np.ndarray]:
+        """Memoized :func:`~forecastability.diagnostics.spectral_utils.compute_normalised_psd`."""
+        key = (id(arr), nperseg, detrend)
+        if key not in self._psd_cache:
+            self._psd_cache[key] = compute_normalised_psd(arr, nperseg=nperseg, detrend=detrend)
+        return self._psd_cache[key]
+
+    def ami_curve(
+        self,
+        arr: np.ndarray,
+        max_lag: int,
+        *,
+        n_neighbors: int = 8,
+        min_pairs: int = 30,
+        random_state: int = 42,
+    ) -> np.ndarray:
+        """Memoized wrapper around :func:`~forecastability.metrics.metrics.compute_ami` (KSG-II).
+
+        Only the ``estimator="ksg2"`` path is memoized here because it is the
+        only path used by ``run_triage`` by default.  The ``"ksg1_sklearn"``
+        opt-in path is not cached (it is not expected in production triage).
+        """
+        key = (id(arr), max_lag, n_neighbors, min_pairs, random_state)
+        if key not in self._ami_cache:
+            self._ami_cache[key] = compute_ami(
+                arr,
+                max_lag,
+                n_neighbors=n_neighbors,
+                min_pairs=min_pairs,
+                random_state=random_state,
+                estimator="ksg2",
+            )
+        return self._ami_cache[key]
+
+
+def _run_compute(
+    request: TriageRequest,
+    method_plan: MethodPlan,
+    cache: _TriageCache,
+) -> AnalyzeResult:
     """Dispatch compute to the appropriate analyzer based on ``method_plan.route``.
+
+    The ``cache`` is a request-scoped :class:`_TriageCache` that memoizes
+    ``_scale_series``, ``compute_normalised_psd``, and the raw KSG-II AMI
+    profile so repeated callers within one triage pass pay the compute cost
+    only once (RVH-F06).
 
     Args:
         request: Inbound triage request.
         method_plan: Selected compute path from the method router.
+        cache: Request-scoped memoization cache.
 
     Returns:
         :class:`AnalyzeResult` from the chosen analyzer.
@@ -72,6 +166,12 @@ def _run_compute(request: TriageRequest, method_plan: MethodPlan) -> AnalyzeResu
         )
 
     compute_surrogates = route == "univariate_with_significance"
+
+    # TODO(RVH-F06): The warm-up call was removed because ForecastabilityAnalyzer
+    # receives a validate_time_series-produced array (different id()) so the cache
+    # key never matched. Any future consumer that wants cached AMI must call
+    # cache.ami_curve() itself rather than relying on pre-population here.
+
     analyzer = ForecastabilityAnalyzer(
         n_surrogates=request.n_surrogates,
         random_state=request.random_state,
@@ -215,6 +315,10 @@ def run_triage(
     """
     timing: dict[str, float] | None = {} if event_emitter is not None else None
 
+    # RVH-F06: request-scoped memoization cache — constructed fresh for every
+    # run_triage call; never stored in any module-level container.
+    _cache = _TriageCache()
+
     # AGT-023: warn when caller uses the default checkpoint key in a multi-run
     # context, as it risks overwriting another run's partial state.
     if checkpoint is not None and checkpoint_key == "default":
@@ -323,7 +427,7 @@ def run_triage(
             f"method={analyze_result.method} raw_mean={analyze_result.raw.mean():.4f}"
         ),
     ):
-        analyze_result = _run_compute(request, method_plan)
+        analyze_result = _run_compute(request, method_plan, _cache)
 
     if checkpoint is not None:
         checkpoint.save_checkpoint(

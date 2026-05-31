@@ -6,8 +6,12 @@ import numpy as np
 
 from forecastability.utils.validation import validate_time_series
 
-# Family → (high_threshold, medium_threshold) — peak-based, calibrated on
-# canonical examples (WN ≈ 0.02, AR(1) ≈ 0.38, Logistic/Sine/Hénon ≥ 1.1).
+# Family → (high_threshold, medium_threshold) — peak-based thresholds.
+# These values are hand-picked heuristics, not precision-fitted.
+# The word "calibrated" is intentionally absent here; it applies only after
+# running scripts/run_routing_confidence_calibration.py and deriving thresholds
+# from a stated precision target (see docs/calibration/v0_5_0_routing_confidence.md).
+# Current values: WN ≈ 0.02 (LOW), AR(1) ≈ 0.38 (HIGH), Logistic/Sine/Hénon ≥ 1.1 (HIGH).
 _TRIAGE_THRESHOLDS: dict[str, tuple[float, float]] = {
     "nonlinear": (0.15, 0.05),
     "linear": (0.15, 0.05),

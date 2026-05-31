@@ -8,7 +8,7 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 
-from forecastability.adapters.llm.fingerprint_agent import (
+from forecastability.adapters.agents.runtime.fingerprint_agent import (
     FingerprintDeps,
     FingerprintExplanation,
     _strict_explanation,
@@ -42,7 +42,7 @@ class TestCreateFingerprintAgent:
 
     def test_raises_import_error_when_pydantic_ai_unavailable(self) -> None:
         with patch(
-            "forecastability.adapters.llm.fingerprint_agent._PYDANTIC_AI_AVAILABLE",
+            "forecastability.adapters.agents.runtime.fingerprint_agent._PYDANTIC_AI_AVAILABLE",
             False,
         ):
             with pytest.raises(ImportError, match="pydantic-ai"):
@@ -133,7 +133,7 @@ class TestRunFingerprintAgentStrictMode:
 
     def test_strict_mode_when_pydantic_ai_unavailable(self, ar1_series: np.ndarray) -> None:
         with patch(
-            "forecastability.adapters.llm.fingerprint_agent._PYDANTIC_AI_AVAILABLE",
+            "forecastability.adapters.agents.runtime.fingerprint_agent._PYDANTIC_AI_AVAILABLE",
             False,
         ):
             explanation = asyncio.run(
@@ -192,7 +192,7 @@ def test_live_fingerprint_agent_strict_mode_returns_deterministic_payload(
     assert explanation.information_horizon == bundle.fingerprint.information_horizon
     assert explanation.information_structure == bundle.fingerprint.information_structure
     assert explanation.nonlinear_share == pytest.approx(bundle.fingerprint.nonlinear_share)
-    assert explanation.signal_to_noise == pytest.approx(bundle.geometry.signal_to_noise)
+    assert explanation.signal_to_noise == pytest.approx(bundle.geometry.informative_mass_fraction)
 
 
 class TestFingerprintDepsDataclass:

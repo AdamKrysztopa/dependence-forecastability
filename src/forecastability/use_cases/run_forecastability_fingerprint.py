@@ -112,7 +112,7 @@ def run_forecastability_fingerprint(
         "evaluated_max_horizon": len(geometry.curve),
         "n_surrogates": n_surrogates,
         "geometry_method": geometry.method,
-        "signal_to_noise": geometry.signal_to_noise,
+        "informative_mass_fraction": geometry.informative_mass_fraction,
         "geometry_information_horizon": geometry.information_horizon,
         "geometry_information_structure": geometry.information_structure,
         "accepted_horizon_count": len(geometry.informative_horizons),

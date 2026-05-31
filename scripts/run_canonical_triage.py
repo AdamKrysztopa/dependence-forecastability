@@ -242,7 +242,7 @@ def _run_dataset(
     sensitivity_table: pd.DataFrame | None = None
     bootstrap_table: pd.DataFrame | None = None
     if run_extensions:
-        from forecastability.extensions import (
+        from forecastability.use_cases.extensions import (
             bootstrap_descriptor_uncertainty,
             compute_k_sensitivity,
         )

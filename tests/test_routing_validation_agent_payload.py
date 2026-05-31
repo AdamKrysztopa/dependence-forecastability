@@ -18,8 +18,8 @@ from forecastability.adapters.agents.routing_validation_summary_serializer impor
     serialise_routing_validation_payload,
     serialise_routing_validation_to_json,
 )
-from forecastability.adapters.llm import routing_validation_agent as agent_module
-from forecastability.adapters.llm.routing_validation_agent import (
+from forecastability.adapters.agents.runtime import routing_validation_agent as agent_module
+from forecastability.adapters.agents.runtime.routing_validation_agent import (
     RoutingValidationNarrative,
     run_routing_validation_agent,
 )

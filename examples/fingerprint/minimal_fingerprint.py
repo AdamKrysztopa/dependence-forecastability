@@ -41,7 +41,7 @@ def _print_bundle(name: str, series: np.ndarray) -> None:
     print(f"{'=' * 60}")
     print("Geometry")
     print(f"  method                = {geometry.method}")
-    print(f"  signal_to_noise       = {geometry.signal_to_noise:.4f}")
+    print(f"  informative_mass_fraction = {geometry.informative_mass_fraction:.4f}")
     print(f"  information_horizon   = {geometry.information_horizon}")
     print(f"  information_structure = {geometry.information_structure}")
     print(f"  informative_horizons  = {geometry.informative_horizons}")

@@ -43,26 +43,26 @@ def _resolve_scales(
 
 
 def _dfa_fluctuation(profile: np.ndarray, *, scale: int) -> float | None:
-    """Compute the DFA fluctuation at one scale."""
+    """Compute the DFA fluctuation at one scale.
+
+    Uses vectorised OLS detrending: all segments are processed simultaneously
+    via broadcasting, eliminating the per-segment Python loop.
+    """
     n_segments = profile.size // scale
     if n_segments < 2:
         return None
-    segments = profile[: n_segments * scale].reshape(n_segments, scale)
+    segments = profile[: n_segments * scale].reshape(n_segments, scale)  # (n_seg, scale)
     time_index = np.arange(scale, dtype=float)
-    centered_time = time_index - float(np.mean(time_index))
+    centered_time = time_index - time_index.mean()  # (scale,)
     denominator = float(np.dot(centered_time, centered_time))
-    mean_squares: list[float] = []
-    for segment in segments:
-        centered_segment = segment - float(np.mean(segment))
-        slope = (
-            0.0
-            if denominator == 0.0
-            else float(np.dot(centered_time, centered_segment) / denominator)
-        )
-        trend = float(np.mean(segment)) + slope * centered_time
-        detrended = segment - trend
-        mean_squares.append(float(np.mean(np.square(detrended))))
-    mean_square = float(np.mean(mean_squares))
+    if denominator == 0.0:
+        return None
+    seg_means = segments.mean(axis=1, keepdims=True)  # (n_seg, 1)
+    centered_segs = segments - seg_means  # (n_seg, scale)
+    slopes = (centered_segs @ centered_time) / denominator  # (n_seg,)
+    trends = seg_means + slopes[:, None] * centered_time[None, :]  # (n_seg, scale)
+    residuals = segments - trends  # (n_seg, scale)
+    mean_square = float(np.mean(np.square(residuals)))
     if mean_square <= 0.0:
         return None
     return math.sqrt(mean_square)

@@ -667,9 +667,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # Step 2: Run two ModMRMR ablations (catt_knn_mi scorer)
     config = _build_config(settings=settings)
-    config_no_th = config.model_copy(
-        update={"target_history_scorer": None, "target_lags": None}
-    )
+    config_no_th = config.model_copy(update={"target_history_scorer": None, "target_lags": None})
 
     t1 = time.perf_counter()
     result: LagAwareModMRMRResult = run_lag_aware_mod_mrmr(

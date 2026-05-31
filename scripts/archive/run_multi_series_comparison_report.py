@@ -13,11 +13,11 @@ from pydantic import ValidationError
 # Default to non-interactive plotting backend for script execution.
 os.environ.setdefault("MPLBACKEND", "Agg")
 
-from forecastability.triage.batch_models import BatchTriageRequest
-from forecastability.triage.comparison_report import (
+from forecastability.reporting.comparison_report_plots import (
     build_multi_series_comparison_report,
     write_multi_series_comparison_artifacts,
 )
+from forecastability.triage.batch_models import BatchTriageRequest
 from forecastability.use_cases.run_triage import run_triage
 
 _logger = logging.getLogger(__name__)

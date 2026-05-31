@@ -85,12 +85,12 @@ def _parse_pyproject_version() -> str | None:
 
 
 def _parse_init_version() -> str | None:
-    """Extract __version__ from src/forecastability/__init__.py if present."""
-    init_path = REPO_ROOT / "src" / "forecastability" / "__init__.py"
+    """Extract __version__ from src/forecastability/api/__init__.py if present."""
+    init_path = REPO_ROOT / "src" / "forecastability" / "api" / "__init__.py"
     if not init_path.is_file():
         return None
     text = init_path.read_text(encoding="utf-8", errors="replace")
-    m = re.search(r'^__version__\s*=\s*["\']([^"\']+)["\']', text, re.MULTILINE)
+    m = re.search(r'^__version__(?:\s*:\s*[^=]+?)?\s*=\s*["\']([^"\']+)["\']', text, re.MULTILINE)
     return m.group(1) if m else None
 
 
@@ -367,7 +367,7 @@ def check_root_path_pinned() -> bool:
 # ---------------------------------------------------------------------------
 
 _CITATION_VERSION_RE = re.compile(r'^version:\s*"([^"]+)"', re.MULTILINE)
-_INIT_VERSION_RE = re.compile(r'^__version__\s*=\s*"([^"]+)"', re.MULTILINE)
+_INIT_VERSION_RE = re.compile(r'^__version__(?:\s*:\s*[^=]+?)?\s*=\s*"([^"]+)"', re.MULTILINE)
 
 
 def check_version_consistent() -> bool:
@@ -408,10 +408,10 @@ def check_version_consistent() -> bool:
             )
             all_ok = all_ok and match
 
-    # --- src/forecastability/__init__.py ---
-    init_path = REPO_ROOT / "src" / "forecastability" / "__init__.py"
+    # --- src/forecastability/api/__init__.py ---
+    init_path = REPO_ROOT / "src" / "forecastability" / "api" / "__init__.py"
     if not init_path.is_file():
-        _report("src/forecastability/__init__.py exists", ok=False)
+        _report("src/forecastability/api/__init__.py exists", ok=False)
         all_ok = False
     else:
         init_text = init_path.read_text(encoding="utf-8", errors="replace")

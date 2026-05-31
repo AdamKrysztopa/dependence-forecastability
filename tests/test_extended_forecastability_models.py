@@ -27,7 +27,7 @@ from forecastability.utils.types import AmiInformationGeometry
 def _minimal_geometry() -> AmiInformationGeometry:
     """Build a minimal AMI geometry object for extended-model tests."""
     return AmiInformationGeometry(
-        signal_to_noise=0.4,
+        informative_mass_fraction=0.4,
         information_horizon=3,
         information_structure="monotonic",
         informative_horizons=[1, 2, 3],

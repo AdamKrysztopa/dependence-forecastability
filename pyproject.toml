@@ -1,6 +1,6 @@
 [project]
 name = "dependence-forecastability"
-version = "0.4.3"
+version = "0.5.0"
 description = "Forecastability triage for time series using AMI, pAMI, and covariate-aware dependence diagnostics before expensive model search."
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -122,4 +122,7 @@ extra-paths = ["scripts"]
 [tool.pytest.ini_options]
 addopts = "-q -ra"
 testpaths = ["tests"]
-markers = ["slow: marks tests as slow (deselect with '-m \"not slow\"')"]
+markers = [
+  "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+  "perf_budget: marks performance budget tests (run with -m perf_budget)",
+]

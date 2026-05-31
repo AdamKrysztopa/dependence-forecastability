@@ -19,7 +19,7 @@ from forecastability.utils.types import AmiGeometryCurvePoint, AmiInformationGeo
 
 def _geometry(
     *,
-    signal_to_noise: float,
+    informative_mass_fraction: float,
     structure: str,
     rows: list[tuple[int, float | None, float | None, bool, bool]],
     tiebreak: int = 0,
@@ -41,7 +41,7 @@ def _geometry(
         for horizon, corrected, tau, accepted, valid in rows
     ]
     return AmiInformationGeometry(
-        signal_to_noise=signal_to_noise,
+        informative_mass_fraction=informative_mass_fraction,
         information_horizon=max(informative_horizons, default=0),
         information_structure=structure,  # type: ignore[arg-type]
         informative_horizons=informative_horizons,
@@ -83,7 +83,7 @@ def _baseline(values: dict[int, float | None]) -> LinearInformationCurve:
 def test_information_mass_uses_geometry_acceptance_mask() -> None:
     """Mass should sum corrected AMI over accepted horizons and normalize by valid H."""
     geometry = _geometry(
-        signal_to_noise=0.42,
+        informative_mass_fraction=0.42,
         structure="monotonic",
         rows=[
             (1, 0.30, 0.05, True, True),
@@ -104,7 +104,7 @@ def test_information_mass_uses_geometry_acceptance_mask() -> None:
 def test_information_horizon_zero_when_no_informative_horizons() -> None:
     """No accepted horizons should yield the empty fingerprint semantics."""
     geometry = _geometry(
-        signal_to_noise=0.0,
+        informative_mass_fraction=0.0,
         structure="none",
         rows=[
             (1, 0.01, 0.04, False, True),
@@ -122,10 +122,10 @@ def test_information_horizon_zero_when_no_informative_horizons() -> None:
     assert fingerprint.informative_horizons == []
 
 
-def test_signal_to_noise_is_mirrored_from_geometry() -> None:
-    """The fingerprint should expose signal_to_noise from the geometry layer."""
+def test_informative_mass_fraction_is_mirrored_from_geometry() -> None:
+    """The fingerprint should expose informative_mass_fraction from the geometry layer."""
     geometry = _geometry(
-        signal_to_noise=0.37,
+        informative_mass_fraction=0.37,
         structure="periodic",
         rows=[
             (1, 0.18, 0.05, True, True),
@@ -135,13 +135,13 @@ def test_signal_to_noise_is_mirrored_from_geometry() -> None:
 
     fingerprint = build_forecastability_fingerprint(geometry=geometry, baseline=None)
 
-    assert fingerprint.signal_to_noise == pytest.approx(0.37)
+    assert fingerprint.informative_mass_fraction == pytest.approx(0.37)
 
 
 def test_nonlinear_share_uses_corrected_profile_over_accepted_mask() -> None:
     """nonlinear_share should compare accepted corrected AMI to the linear baseline."""
     geometry = _geometry(
-        signal_to_noise=0.48,
+        informative_mass_fraction=0.48,
         structure="mixed",
         rows=[
             (1, 0.30, 0.05, True, True),
@@ -161,7 +161,7 @@ def test_nonlinear_share_uses_corrected_profile_over_accepted_mask() -> None:
 def test_invalid_baseline_horizons_are_excluded_from_nonlinear_share_denominator() -> None:
     """Horizons with invalid I_G should be excluded conservatively from the ratio."""
     geometry = _geometry(
-        signal_to_noise=0.31,
+        informative_mass_fraction=0.31,
         structure="monotonic",
         rows=[
             (1, 0.40, 0.05, True, True),
@@ -179,7 +179,7 @@ def test_invalid_baseline_horizons_are_excluded_from_nonlinear_share_denominator
 def test_directness_ratio_not_used_as_nonlinear_share() -> None:
     """nonlinear_share must not be inferred from directness_ratio."""
     geometry = _geometry(
-        signal_to_noise=0.40,
+        informative_mass_fraction=0.40,
         structure="monotonic",
         rows=[
             (1, 0.30, 0.05, True, True),
@@ -209,7 +209,7 @@ def test_legacy_build_fingerprint_keeps_backward_compatible_surface() -> None:
         series=np.asarray(series),
     )
 
-    assert fingerprint.signal_to_noise >= 0.0
+    assert fingerprint.informative_mass_fraction >= 0.0
     assert fingerprint.information_horizon == 3
     assert fingerprint.information_mass > 0.0
 
@@ -230,7 +230,7 @@ def test_build_forecastability_fingerprint_rejects_invalid_directness_ratio(
 ) -> None:
     """Service-level builder should enforce the public [0, 1] directness contract."""
     geometry = _geometry(
-        signal_to_noise=0.40,
+        informative_mass_fraction=0.40,
         structure="monotonic",
         rows=[
             (1, 0.30, 0.05, True, True),
@@ -244,3 +244,13 @@ def test_build_forecastability_fingerprint_rejects_invalid_directness_ratio(
             baseline=_baseline({1: 0.10, 2: 0.10}),
             directness_ratio=invalid_ratio,
         )
+
+
+def test_signal_to_noise_attribute_raises_with_migration_hint() -> None:
+    """Old field name raises AttributeError with migration hint."""
+    from forecastability.utils.types import AmiInformationGeometry
+
+    # build a minimal valid result (use model_construct to bypass full validation)
+    instance = AmiInformationGeometry.model_construct(informative_mass_fraction=0.5)
+    with pytest.raises(AttributeError, match="informative_mass_fraction"):
+        _ = instance.signal_to_noise

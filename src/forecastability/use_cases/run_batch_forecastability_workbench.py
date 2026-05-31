@@ -307,14 +307,10 @@ def _run_one_workbench_item(
 
     max_lag = request_item.max_lag if request_item.max_lag is not None else request_max_lag
     n_surrogates = (
-        request_item.n_surrogates
-        if request_item.n_surrogates is not None
-        else request_n_surrogates
+        request_item.n_surrogates if request_item.n_surrogates is not None else request_n_surrogates
     )
     random_state = (
-        request_item.random_state
-        if request_item.random_state is not None
-        else request_random_state
+        request_item.random_state if request_item.random_state is not None else request_random_state
     )
     bundle = _build_fingerprint_bundle(
         series_id=triage_item.series_id,

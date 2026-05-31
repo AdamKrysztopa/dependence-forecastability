@@ -196,10 +196,7 @@ def test_exogenous_rolling_origin_pipeline_is_train_only_for_diagnostics() -> No
 
     # Train-only diagnostics must be identical: holdout perturbation must not
     # leak into the MI estimates.
-    assert (
-        result_clean.raw_cross_mi_by_horizon[H]
-        == result_perturbed.raw_cross_mi_by_horizon[H]
-    )
+    assert result_clean.raw_cross_mi_by_horizon[H] == result_perturbed.raw_cross_mi_by_horizon[H]
     assert (
         result_clean.conditioned_cross_mi_by_horizon[H]
         == result_perturbed.conditioned_cross_mi_by_horizon[H]

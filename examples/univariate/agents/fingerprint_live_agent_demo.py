@@ -270,7 +270,7 @@ def _verify_explanation_against_bundle(*, run: _LiveRun) -> list[_VerificationIs
     issues: list[_VerificationIssue] = []
 
     numeric_pairs = [
-        ("signal_to_noise", explanation.signal_to_noise, geometry.signal_to_noise),
+        ("signal_to_noise", explanation.signal_to_noise, geometry.informative_mass_fraction),
         ("information_mass", explanation.information_mass, fingerprint.information_mass),
         ("nonlinear_share", explanation.nonlinear_share, fingerprint.nonlinear_share),
     ]
@@ -322,7 +322,7 @@ def _compute_geometry_diagnostics(bundle: FingerprintBundle) -> _GeometryDiagnos
     geometry = bundle.geometry
     return _GeometryDiagnostics(
         method=str(geometry.method),
-        signal_to_noise=geometry.signal_to_noise,
+        signal_to_noise=geometry.informative_mass_fraction,
         information_horizon=geometry.information_horizon,
         information_structure=str(geometry.information_structure),
         informative_horizons=list(geometry.informative_horizons),

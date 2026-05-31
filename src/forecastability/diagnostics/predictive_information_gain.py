@@ -1,4 +1,4 @@
-"""Directional transfer-entropy diagnostics built on the CMI backend."""
+"""Predictive Information Gain — residual-MI diagnostic (renamed from transfer_entropy)."""
 
 from __future__ import annotations
 
@@ -9,6 +9,9 @@ import numpy as np
 from forecastability.diagnostics.cmi import (
     CMIBackendName,
     compute_conditional_mi_with_backend,
+)
+from forecastability.domain.results.predictive_information_gain import (
+    PredictiveInformationGainResult,
 )
 from forecastability.utils.validation import validate_time_series
 
@@ -56,7 +59,7 @@ def _validate_directional_pair(
     lag: int,
     min_pairs: int,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Validate source/target series for directional TE estimation."""
+    """Validate source/target series for directional estimation."""
     min_length = lag + min_pairs
     source_validated = validate_time_series(source, min_length=min_length)
     target_validated = validate_time_series(target, min_length=min_length)
@@ -74,7 +77,7 @@ def _validate_conditional_te_sample_size(
     history: int,
     min_pairs: int,
 ) -> None:
-    """Validate robust sample-size safeguards for conditional TE estimation."""
+    """Validate robust sample-size safeguards for conditional estimation."""
     if min_pairs < _CONDITIONAL_MIN_PAIRS_FLOOR:
         raise ValueError(f"min_pairs must be >= 50 for conditional estimators; got {min_pairs}")
     if history > 0 and n_rows < 2 * min_pairs:
@@ -84,7 +87,7 @@ def _validate_conditional_te_sample_size(
         )
 
 
-def compute_transfer_entropy(
+def compute_predictive_information_gain(
     source: np.ndarray,
     target: np.ndarray,
     *,
@@ -98,12 +101,12 @@ def compute_transfer_entropy(
     n_neighbors: int = 8,
     min_pairs: int = 50,
     random_state: int = 42,
-) -> float:
-    r"""Compute directional transfer entropy $TE(X \to Y \mid \text{lag})$.
+) -> PredictiveInformationGainResult:
+    """Predictive information gain (residual-MI estimator, NOT Schreiber transfer entropy).
 
-    Implements the conditional-MI formulation:
-
-    ``TE(X -> Y | lag) = I(Y_t ; X_{t-lag} | Y_{t-1}, ..., Y_{t-lag+1})``.
+    PIG is computed with target=X, source=Y. It is NOT generally equal to
+    PIG(target=Y, source=X) — the asymmetry arises from which series is
+    residualized on which history, not from directional information flow.
 
     Args:
         source: Source series ``X``.
@@ -121,7 +124,7 @@ def compute_transfer_entropy(
         random_state: Deterministic seed.
 
     Returns:
-        Non-negative TE estimate.
+        :class:`PredictiveInformationGainResult` with status and value.
 
     Raises:
         ValueError: If lag/history constraints or sample-length constraints fail.
@@ -147,22 +150,46 @@ def compute_transfer_entropy(
         history=resolved_history,
     )
 
-    return compute_conditional_mi_with_backend(
-        source_lagged,
-        target_future,
-        conditioning=conditioning,
-        backend=backend,
-        rf_estimators=rf_estimators,
-        rf_max_depth=rf_max_depth,
-        et_estimators=et_estimators,
-        et_max_depth=et_max_depth,
-        n_neighbors=n_neighbors,
-        min_pairs=min_pairs,
-        random_state=random_state,
+    n_samples = int(target_future.size)
+
+    try:
+        value = compute_conditional_mi_with_backend(
+            source_lagged,
+            target_future,
+            conditioning=conditioning,
+            backend=backend,
+            rf_estimators=rf_estimators,
+            rf_max_depth=rf_max_depth,
+            et_estimators=et_estimators,
+            et_max_depth=et_max_depth,
+            n_neighbors=n_neighbors,
+            min_pairs=min_pairs,
+            random_state=random_state,
+        )
+        status: Literal["computed", "blocked"] = "computed"
+    except Exception:
+        value = float("nan")
+        status = "blocked"
+
+    # Map backend literal
+    backend_literal: Literal["linear_residual", "rf", "et"]
+    if backend == "linear_residual":
+        backend_literal = "linear_residual"
+    elif backend == "rf_residual":
+        backend_literal = "rf"
+    else:
+        backend_literal = "et"
+
+    return PredictiveInformationGainResult(
+        status=status,
+        value=value,
+        lag=lag,
+        backend=backend_literal,
+        n_samples=n_samples,
     )
 
 
-def _compute_transfer_entropy_curve_validated(
+def _compute_predictive_information_gain_curve_validated(
     src: np.ndarray,
     tgt: np.ndarray,
     *,
@@ -178,14 +205,12 @@ def _compute_transfer_entropy_curve_validated(
     min_pairs: int,
     random_state: int,
 ) -> np.ndarray:
-    """Run the per-lag TE curve loop on already-validated equal-length arrays.
-
-    Per-lag responsibilities are preserved: ``_resolve_history`` runs per lag,
-    ``_validate_conditional_te_sample_size`` runs per lag (n_rows depends on
-    lag), and the conditioning matrix is rebuilt per lag.
-    """
+    """Run the per-lag PIG curve loop on already-validated equal-length arrays."""
     curve = np.zeros(max_lag, dtype=float)
     for lag in range(1, max_lag + 1):
+        # Skip lags where fixed history exceeds causal depth (history <= lag-1).
+        if history_mode == "fixed" and fixed_history is not None and fixed_history > lag - 1:
+            continue
         history = None if history_mode == "canonical" else fixed_history
         resolved_history = _resolve_history(lag=lag, history=history)
         _validate_conditional_te_sample_size(
@@ -216,7 +241,7 @@ def _compute_transfer_entropy_curve_validated(
     return curve
 
 
-def compute_transfer_entropy_curve(
+def compute_predictive_information_gain_curve(
     source: np.ndarray,
     target: np.ndarray,
     *,
@@ -232,7 +257,7 @@ def compute_transfer_entropy_curve(
     min_pairs: int = 50,
     random_state: int = 42,
 ) -> np.ndarray:
-    """Compute directional TE for lags ``1..max_lag``.
+    """Compute directional PIG for lags ``1..max_lag``.
 
     Args:
         source: Source series ``X``.
@@ -251,7 +276,7 @@ def compute_transfer_entropy_curve(
         random_state: Deterministic seed.
 
     Returns:
-        1-D array of shape ``(max_lag,)`` with TE per lag.
+        1-D array of shape ``(max_lag,)`` with PIG per lag.
     """
     if max_lag < 1:
         raise ValueError(f"max_lag must be >= 1; got {max_lag}")
@@ -263,7 +288,7 @@ def compute_transfer_entropy_curve(
         lag=max_lag,
         min_pairs=min_pairs,
     )
-    return _compute_transfer_entropy_curve_validated(
+    return _compute_predictive_information_gain_curve_validated(
         src,
         tgt,
         max_lag=max_lag,

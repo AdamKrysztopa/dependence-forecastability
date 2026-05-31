@@ -48,7 +48,7 @@ class TestTriageRequest:
         req = self._make_request()
         assert req.goal == AnalysisGoal.univariate
         assert req.max_lag == 40
-        assert req.n_surrogates == 99
+        assert req.n_surrogates == 999  # RVH-F18: default raised from 99 to 999
         assert req.random_state == 42
         assert req.exog is None
 
@@ -74,6 +74,16 @@ class TestTriageRequest:
         req = self._make_request()
         with pytest.raises(ValidationError):
             req.max_lag = 99
+
+    def test_n_surrogates_floor_still_accepted(self) -> None:
+        """RVH-F18: explicit n_surrogates=99 (the minimum floor) is still valid."""
+        req = TriageRequest(series=np.arange(100, dtype=float), n_surrogates=99)
+        assert req.n_surrogates == 99
+
+    def test_n_surrogates_below_floor_rejected(self) -> None:
+        """RVH-F18: n_surrogates=98 (below ge=99 floor) still raises ValidationError."""
+        with pytest.raises(ValidationError):
+            TriageRequest(series=np.arange(100, dtype=float), n_surrogates=98)
 
 
 class TestReadinessReport:

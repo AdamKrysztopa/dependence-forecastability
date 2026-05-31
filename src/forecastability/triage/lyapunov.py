@@ -1,35 +1,15 @@
-"""Domain model for Largest Lyapunov Exponent result (F5)."""
-
+# Migration shim — canonical location is forecastability.domain.models.lyapunov
+# Remove this shim in v0.6.0
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict
+import warnings as _warnings
 
+from forecastability.domain.models.lyapunov import LargestLyapunovExponentResult  # noqa: F401
 
-class LargestLyapunovExponentResult(BaseModel):
-    """Estimated largest Lyapunov exponent (LLE) from delay embedding.
-
-    Experimental — do NOT use as sole triage decision-maker.
-    Reliable only for ``n >> 10**m`` and stationary, noise-free series.
-
-    Attributes:
-        lambda_estimate: Estimated LLE.  ``nan`` if estimation failed.
-        embedding_dim: Embedding dimension *m* used for Takens reconstruction.
-        delay: Time delay *tau* used in the embedding.
-        evolution_steps: Number of divergence-tracking steps in Rosenstein algorithm.
-        n_embedded_points: Number of delay vectors in the reconstructed attractor.
-        interpretation: Human-readable characterisation of the lambda estimate.
-        reliability_warning: Mandatory caution text; always populated.
-        is_experimental: Always ``True``; signals that this result must not drive
-            triage decisions in isolation.
-    """
-
-    model_config = ConfigDict(frozen=True)
-
-    lambda_estimate: float
-    embedding_dim: int
-    delay: int
-    evolution_steps: int
-    n_embedded_points: int
-    interpretation: str
-    reliability_warning: str
-    is_experimental: bool = True
+_warnings.warn(
+    "forecastability.triage.lyapunov is deprecated in v0.5.0; "
+    "use forecastability.domain.models.lyapunov instead. "
+    "See docs/migration/v0.4.x_to_v0.5.0.md.",
+    DeprecationWarning,
+    stacklevel=2,
+)

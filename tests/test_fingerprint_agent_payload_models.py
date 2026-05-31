@@ -26,7 +26,7 @@ def _make_bundle(
     mass: float = 0.12,
     horizon: int = 8,
     nonlinear_share: float = 0.10,
-    signal_to_noise: float = 0.35,
+    informative_mass_fraction: float = 0.35,
     directness_ratio: float | None = 0.72,
     informative_horizons: list[int] | None = None,
     primary_families: list[str] | None = None,
@@ -38,7 +38,7 @@ def _make_bundle(
     """Build a minimal :class:`FingerprintBundle` for testing."""
     informative = informative_horizons if informative_horizons is not None else [1, 2, 3, 8]
     geometry = AmiInformationGeometry(
-        signal_to_noise=signal_to_noise,
+        informative_mass_fraction=informative_mass_fraction,
         information_horizon=horizon,
         information_structure=structure,  # type: ignore[arg-type]
         informative_horizons=list(informative),
@@ -60,7 +60,7 @@ def _make_bundle(
         information_horizon=horizon,
         information_structure=structure,  # type: ignore[arg-type]
         nonlinear_share=nonlinear_share,
-        signal_to_noise=signal_to_noise,
+        informative_mass_fraction=informative_mass_fraction,
         directness_ratio=directness_ratio,
         informative_horizons=list(informative),
     )
@@ -93,11 +93,11 @@ class TestFingerprintAgentPayloadFields:
         assert payload.nonlinear_share == bundle.fingerprint.nonlinear_share
 
     def test_geometry_fields_present(self) -> None:
-        bundle = _make_bundle(signal_to_noise=0.41)
+        bundle = _make_bundle(informative_mass_fraction=0.41)
         payload = fingerprint_agent_payload(bundle)
 
         assert payload.geometry_method == bundle.geometry.method
-        assert payload.signal_to_noise == bundle.geometry.signal_to_noise
+        assert payload.signal_to_noise == bundle.geometry.informative_mass_fraction
         assert payload.geometry_information_horizon == bundle.geometry.information_horizon
         assert payload.geometry_information_structure == bundle.geometry.information_structure
 
@@ -143,7 +143,7 @@ def test_fingerprint_agent_payload_preserves_bundle_fields() -> None:
         mass=0.17,
         horizon=6,
         nonlinear_share=0.42,
-        signal_to_noise=0.28,
+        informative_mass_fraction=0.28,
         directness_ratio=0.33,
         primary_families=["tree_on_lags", "tcn"],
         confidence_label="medium",
@@ -155,7 +155,7 @@ def test_fingerprint_agent_payload_preserves_bundle_fields() -> None:
     assert payload.information_horizon == bundle.fingerprint.information_horizon
     assert payload.information_structure == bundle.fingerprint.information_structure
     assert payload.nonlinear_share == bundle.fingerprint.nonlinear_share
-    assert payload.signal_to_noise == bundle.geometry.signal_to_noise
+    assert payload.signal_to_noise == bundle.geometry.informative_mass_fraction
     assert payload.primary_families == bundle.recommendation.primary_families
     assert payload.confidence_label == bundle.recommendation.confidence_label
 

@@ -52,7 +52,7 @@ def _compact_bundle(target_name: str, *, n: int, seed: int) -> dict[str, Any]:
     return {
         "target_name": bundle.target_name,
         "geometry": {
-            "signal_to_noise": bundle.geometry.signal_to_noise,
+            "informative_mass_fraction": bundle.geometry.informative_mass_fraction,
             "information_horizon": bundle.geometry.information_horizon,
             "information_structure": bundle.geometry.information_structure,
             "informative_horizons": bundle.geometry.informative_horizons,
@@ -63,7 +63,7 @@ def _compact_bundle(target_name: str, *, n: int, seed: int) -> dict[str, Any]:
             "information_horizon": bundle.fingerprint.information_horizon,
             "information_structure": bundle.fingerprint.information_structure,
             "nonlinear_share": bundle.fingerprint.nonlinear_share,
-            "signal_to_noise": bundle.fingerprint.signal_to_noise,
+            "informative_mass_fraction": bundle.fingerprint.informative_mass_fraction,
             "directness_ratio": bundle.fingerprint.directness_ratio,
             "informative_horizons": bundle.fingerprint.informative_horizons,
         },

@@ -10,8 +10,8 @@
       3,
       5
     ],
-    "nonlinear_share": 0.0,
-    "signal_to_noise": 0.5930721463425598
+    "informative_mass_fraction": 0.5930721463425598,
+    "nonlinear_share": 0.0
   },
   "geometry": {
     "curve": [
@@ -108,7 +108,7 @@
       3,
       5
     ],
-    "signal_to_noise": 0.5930721463425598
+    "informative_mass_fraction": 0.5930721463425598
   },
   "recommendation": {
     "caution_flags": [],

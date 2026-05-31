@@ -37,12 +37,14 @@ def test_significance_rejects_too_few_surrogates() -> None:
 
 def test_legacy_significance_bands_fixed_seed_regression() -> None:
     ts = generate_sine_wave(n_samples=180, random_state=1)
+    # v0.4.x baseline — use ksg1_sklearn to reproduce v0.4.3 numerics
     lower, upper = compute_significance_bands(
         ts,
         metric_name="ami",
         max_lag=10,
         n_surrogates=99,
         random_state=4,
+        estimator="ksg1_sklearn",
     )
 
     expected_lower = np.array(

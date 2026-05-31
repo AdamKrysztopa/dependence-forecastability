@@ -45,7 +45,7 @@ class ShowcaseSemanticSnapshot(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     series_name: str
-    signal_to_noise: float | None
+    informative_mass_fraction: float | None
     information_horizon: int
     predictability_sources: tuple[str, ...]
     ordinal_redundancy: float | None
@@ -91,7 +91,7 @@ def _semantic_snapshot(record: ExtendedFingerprintShowcaseRecord) -> ShowcaseSem
     classical = fingerprint.classical
     return ShowcaseSemanticSnapshot(
         series_name=record.series_name,
-        signal_to_noise=None if geometry is None else geometry.signal_to_noise,
+        informative_mass_fraction=None if geometry is None else geometry.informative_mass_fraction,
         information_horizon=0 if geometry is None else geometry.information_horizon,
         predictability_sources=tuple(record.analysis.profile.predictability_sources),
         ordinal_redundancy=None if ordinal is None else ordinal.ordinal_redundancy,
@@ -109,7 +109,11 @@ def _geometry_metrics(
     geometry = record.analysis.fingerprint.information_geometry
     if geometry is None:
         return np.nan, np.nan, "unavailable"
-    return geometry.signal_to_noise, geometry.information_horizon, geometry.information_structure
+    return (
+        geometry.informative_mass_fraction,
+        geometry.information_horizon,
+        geometry.information_structure,
+    )
 
 
 def extended_profile_frame(record: ExtendedFingerprintShowcaseRecord) -> pd.DataFrame:
@@ -142,14 +146,18 @@ def showcase_summary_frame(records: list[ExtendedFingerprintShowcaseRecord]) -> 
         analysis = record.analysis
         fingerprint = analysis.fingerprint
         profile = analysis.profile
-        signal_to_noise, information_horizon, information_structure = _geometry_metrics(record)
+        informative_mass_fraction, information_horizon, information_structure = _geometry_metrics(
+            record
+        )
         rows.append(
             {
                 "target_name": record.series_name,
                 "generator": record.generator,
                 "period": record.period if record.period is not None else np.nan,
-                "signal_to_noise": (
-                    round(signal_to_noise, 6) if not np.isnan(signal_to_noise) else np.nan
+                "informative_mass_fraction": (
+                    round(informative_mass_fraction, 6)
+                    if not np.isnan(informative_mass_fraction)
+                    else np.nan
                 ),
                 "information_horizon": information_horizon,
                 "information_structure": information_structure,
@@ -424,8 +432,8 @@ def _semantic_issues(records: list[ExtendedFingerprintShowcaseRecord]) -> list[s
         _append_maximum_float_issue(
             issues,
             series_name="white_noise",
-            metric_name="signal_to_noise",
-            value=white_noise.signal_to_noise,
+            metric_name="informative_mass_fraction",
+            value=white_noise.informative_mass_fraction,
             maximum=0.30,
         )
 
@@ -491,8 +499,8 @@ def _semantic_issues(records: list[ExtendedFingerprintShowcaseRecord]) -> list[s
         _append_minimum_float_issue(
             issues,
             series_name="ar1",
-            metric_name="signal_to_noise",
-            value=ar1.signal_to_noise,
+            metric_name="informative_mass_fraction",
+            value=ar1.informative_mass_fraction,
             minimum=0.55,
         )
 
@@ -531,8 +539,8 @@ def _semantic_issues(records: list[ExtendedFingerprintShowcaseRecord]) -> list[s
         _append_minimum_float_issue(
             issues,
             series_name="long_memory_candidate",
-            metric_name="signal_to_noise",
-            value=long_memory_candidate.signal_to_noise,
+            metric_name="informative_mass_fraction",
+            value=long_memory_candidate.informative_mass_fraction,
             minimum=0.45,
         )
         _append_minimum_float_issue(
@@ -604,7 +612,8 @@ def _semantic_snapshot_lines(records: list[ExtendedFingerprintShowcaseRecord]) -
             continue
         lines.append(
             f"- `{series_name}`: sources={_joined(snapshot.predictability_sources)}; "
-            f"signal_to_noise={_format_optional_float(snapshot.signal_to_noise)}; "
+            f"informative_mass_fraction="
+            f"{_format_optional_float(snapshot.informative_mass_fraction)}; "
             f"information_horizon={snapshot.information_horizon}; "
             f"ordinal_redundancy={_format_optional_float(snapshot.ordinal_redundancy)}; "
             f"seasonal_strength={_format_optional_float(snapshot.seasonal_strength)}; "
@@ -686,7 +695,7 @@ def save_showcase_profile_grid(
         axis.set_title(
             (
                 f"{record.series_name}\n"
-                f"SNR={geometry.signal_to_noise:.2f}, "
+                f"IMF={geometry.informative_mass_fraction:.2f}, "
                 f"sources={sources}, route={first_family}"
             ),
             fontsize=9,
@@ -732,7 +741,7 @@ def save_metric_overview(
 
     fig, axes = plt.subplots(2, 3, figsize=(16, 8.5))
     metric_specs = [
-        ("signal_to_noise", "AMI signal-to-noise", "tab:blue"),
+        ("informative_mass_fraction", "AMI informative mass fraction", "tab:blue"),
         ("information_horizon", "AMI information horizon", "tab:orange"),
         ("spectral_predictability", "Spectral predictability", "tab:green"),
         ("ordinal_redundancy", "Ordinal redundancy", "tab:red"),
@@ -786,7 +795,7 @@ def _math_line(record: ExtendedFingerprintShowcaseRecord) -> str:
     analysis = record.analysis
     profile = analysis.profile
     geometry = analysis.fingerprint.information_geometry
-    signal_to_noise = geometry.signal_to_noise if geometry is not None else 0.0
+    informative_mass_fraction = geometry.informative_mass_fraction if geometry is not None else 0.0
     information_horizon = geometry.information_horizon if geometry is not None else 0
     sources = _joined(profile.predictability_sources)
     route = _joined(profile.recommended_model_families)
@@ -794,7 +803,8 @@ def _math_line(record: ExtendedFingerprintShowcaseRecord) -> str:
     if len(profile.predictability_sources) == 0:
         return (
             f"- `{record.series_name}`: the AMI-first gate stays near the noise floor "
-            f"(signal_to_noise={signal_to_noise:.3f}), so the additive blocks are treated as "
+            f"(informative_mass_fraction={informative_mass_fraction:.3f}), "
+            "so the additive blocks are treated as "
             f"confirmation of a simple baseline route `{route}` rather than a reason to escalate."
         )
     if "trend" in profile.predictability_sources:
@@ -905,7 +915,9 @@ def _series_section(record: ExtendedFingerprintShowcaseRecord) -> str:
         fingerprint.classical.trend_strength if fingerprint.classical is not None else None
     )
     dfa_alpha = fingerprint.memory.dfa_alpha if fingerprint.memory is not None else None
-    ami_signal_to_noise = geometry.signal_to_noise if geometry is not None else None
+    ami_informative_mass_fraction = (
+        geometry.informative_mass_fraction if geometry is not None else None
+    )
     ami_information_horizon = geometry.information_horizon if geometry is not None else "N/A"
 
     lines = [
@@ -919,7 +931,7 @@ def _series_section(record: ExtendedFingerprintShowcaseRecord) -> str:
         f"- predictability_sources: {_joined(profile.predictability_sources)}",
         f"- recommended_model_families: {_joined(profile.recommended_model_families)}",
         f"- avoid_model_families: {_joined(profile.avoid_model_families)}",
-        f"- ami_signal_to_noise: {_format_optional_float(ami_signal_to_noise)}",
+        f"- ami_informative_mass_fraction: {_format_optional_float(ami_informative_mass_fraction)}",
         f"- ami_information_horizon: {ami_information_horizon}",
         f"- ami_informative_horizons: {_informative_horizons_text(record)}",
         f"- spectral_predictability: {_format_optional_float(spectral_predictability)}",
