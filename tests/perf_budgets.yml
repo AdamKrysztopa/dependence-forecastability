@@ -21,6 +21,6 @@ PBE-F29:
 PBE-F30:
   name: mod_mrmr
   description: "run_lag_aware_mod_mrmr (p=200 covariates, N=500)"
-  budget_seconds: 210.0
-  baseline_machine: "developer-local (M-series Mac)"
+  budget_seconds: 350.0
+  baseline_machine: "CI (GitHub Actions linux-latest; Mac measured 41.29s, CI measured 237s)"
   measured_mean_seconds: 41.29

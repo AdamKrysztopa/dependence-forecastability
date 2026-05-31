@@ -1,9 +1,16 @@
 """RVH-F14: Regression fixture tests for v0.5.0.
 
-Verifies that current code reproduces committed fixture values within tight
-numerical tolerances:
-  - KSG-II: atol=1e-7  (deterministic scipy cKDTree + numpy searchsorted)
-  - KSG-I : atol=1e-6  (sklearn has minor float-order variability)
+Verifies that current code reproduces committed fixture values within
+cross-platform-robust numerical tolerances:
+  - KSG-II / KSG-I curves: rtol=1e-4, atol=1e-6
+  - in-process scalar reproductions: abs < 1e-5
+
+Tolerances tolerate cKDTree max-norm kNN tie-ordering + BLAS rounding that
+differs across OS/arch (fixtures are regenerated on macOS; CI runs Linux x86).
+An isolated k-th-neighbor near-tie can flip a single marginal count by +/-1,
+perturbing one curve point by ~1e-5 -- well below any real algorithmic
+regression (which moves points by O(1/k) ~ tenths). See the v0.5.0 paper-
+fidelity audit for the platform-noise adjudication.
 
 If fixtures are absent the tests skip gracefully. Run
     uv run python scripts/regenerate_v0_5_0_regression_fixtures.py
@@ -98,7 +105,8 @@ def test_ksg2_curve_matches_fixture(series_name: str) -> None:
     np.testing.assert_allclose(
         actual,
         expected,
-        atol=1e-7,
+        rtol=1e-4,
+        atol=1e-6,
         err_msg=(
             f"KSG-II curve for '{series_name}' diverged from fixture. "
             "If this is an intentional algorithm change, re-run "
@@ -114,7 +122,7 @@ def test_ksg2_curve_matches_fixture(series_name: str) -> None:
 
 @pytest.mark.parametrize("series_name", ["ar1", "white_noise"])
 def test_ksg1_curve_matches_fixture(series_name: str) -> None:
-    """KSG-I AMI curve reproduces committed fixture values (atol=1e-6)."""
+    """KSG-I AMI curve reproduces committed fixture values (rtol=1e-4, atol=1e-6)."""
     fixture = _load_fixture(series_name)
     expected = np.array(fixture["ksg1_ami_curve"], dtype=float)
 
@@ -125,6 +133,7 @@ def test_ksg1_curve_matches_fixture(series_name: str) -> None:
     np.testing.assert_allclose(
         actual,
         expected,
+        rtol=1e-4,
         atol=1e-6,
         err_msg=(
             f"KSG-I curve for '{series_name}' diverged from fixture. "
@@ -189,11 +198,13 @@ def test_anisotropic_ksg2_ksg1_disagreement_fixture() -> None:
     # KSG-I
     mi_ksg1 = float(mutual_info_regression(X.reshape(-1, 1), Y, n_neighbors=k, random_state=42)[0])
 
-    # Values match stored fixture (tight tolerance: deterministic RNG)
-    assert abs(mi_ksg2 - stored_mi_ksg2) < 1e-7, (
+    # Values match stored fixture. RNG input is bit-identical across platforms,
+    # but the kNN/cKDTree estimator output is not (max-norm tie-ordering + BLAS
+    # rounding), so use a cross-platform-robust scalar tolerance.
+    assert abs(mi_ksg2 - stored_mi_ksg2) < 1e-5, (
         f"Reproduced KSG-II ({mi_ksg2:.6f}) differs from fixture ({stored_mi_ksg2:.6f})"
     )
-    assert abs(mi_ksg1 - stored_mi_ksg1) < 1e-6, (
+    assert abs(mi_ksg1 - stored_mi_ksg1) < 1e-5, (
         f"Reproduced KSG-I ({mi_ksg1:.6f}) differs from fixture ({stored_mi_ksg1:.6f})"
     )
 

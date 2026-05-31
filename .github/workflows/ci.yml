@@ -77,7 +77,10 @@ jobs:
         run: uv run ty check
 
       - name: Run test suite
-        run: uv run pytest -q -ra -n auto
+        # Perf-budget tests (PBE-F*) are wall-clock assertions tuned for fast
+        # local hardware; slow shared GitHub runners make them flaky as a merge
+        # gate. They run in the separate non-blocking "perf-budgets" job below.
+        run: uv run pytest -q -ra -n auto -m "not perf_budget"
 
       - name: Build package artifacts
         run: uv build
@@ -91,6 +94,37 @@ jobs:
             outputs/json/
             outputs/tables/
           if-no-files-found: ignore
+
+  perf-budgets:
+    name: Performance budgets (non-blocking)
+    runs-on: ubuntu-latest
+    # Wall-clock perf-budget assertions are tuned for fast local hardware and
+    # are noisy on shared runners, so this job never gates a merge:
+    #   - continue-on-error keeps a red run from blocking the PR.
+    #   - it is excluded from the blocking "quality" job via -m "not perf_budget".
+    # Runs on the workflow's PR/push triggers for visibility without gating.
+    continue-on-error: true
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Sync development dependencies
+        run: |
+          set -euo pipefail
+          uv sync --dev --all-extras
+
+      - name: Run perf-budget tests
+        run: uv run pytest -q -ra -n auto -m perf_budget
 
   docs-contract:
     name: Docs contract checks
