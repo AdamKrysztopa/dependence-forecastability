@@ -11,10 +11,6 @@ from typing import Any, Literal, cast
 
 import numpy as np
 
-from forecastability.diagnostics.predictive_information_gain import (
-    compute_predictive_information_gain_curve,
-)
-from forecastability.diagnostics.surrogates import compute_significance_bands
 from forecastability.domain.models.analyze_result import AnalyzeResult
 from forecastability.metrics.metrics import (
     compute_ami,
@@ -26,6 +22,10 @@ from forecastability.metrics.scorers import (
     ScorerRegistryProtocol,
     default_registry,
 )
+from forecastability.services.diagnostics.predictive_information_gain import (
+    compute_predictive_information_gain_curve,
+)
+from forecastability.services.diagnostics.surrogates import compute_significance_bands
 
 # ---------------------------------------------------------------------------
 # Service imports — thin wrappers kept here for backward-compat internal calls

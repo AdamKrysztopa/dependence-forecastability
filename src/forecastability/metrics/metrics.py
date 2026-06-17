@@ -8,12 +8,12 @@ from typing import Literal
 import numpy as np
 from sklearn.feature_selection import mutual_info_regression
 
-from forecastability.diagnostics.gcmi import compute_gcmi_at_lag
 from forecastability.kernels.ksg2_curve_kernel import KSG2CurveKernel
 from forecastability.metrics._lag_design import (
     build_intermediate_design,
     residualize_with_qr,
 )
+from forecastability.services.diagnostics.gcmi import compute_gcmi_at_lag
 from forecastability.utils.validation import validate_time_series
 
 # RVH-F07: cardinality threshold below which the raw AMI path routes to GCMI.

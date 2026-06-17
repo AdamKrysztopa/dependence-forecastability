@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import numpy as np
 
-from forecastability.diagnostics.cmi import compute_pami_with_backend
-from forecastability.diagnostics.surrogates import compute_significance_bands
 from forecastability.metrics.metrics import compute_ami, compute_pami_linear_residual
+from forecastability.services.diagnostics.cmi import compute_pami_with_backend
+from forecastability.services.diagnostics.surrogates import compute_significance_bands
 from forecastability.use_cases.run_exogenous_rolling_origin_evaluation import (
     run_exogenous_rolling_origin_evaluation as _impl_exog,
 )

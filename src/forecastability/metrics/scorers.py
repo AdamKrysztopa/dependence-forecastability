@@ -12,12 +12,6 @@ from scipy.spatial.distance import pdist, squareform
 from scipy.stats import kendalltau, spearmanr
 from sklearn.feature_selection import mutual_info_regression
 
-from forecastability.diagnostics.gcmi import compute_gcmi_at_lag
-from forecastability.diagnostics.predictive_information_gain import (
-    compute_predictive_information_gain,
-)
-from forecastability.diagnostics.spectral_utils import compute_normalised_psd, spectral_entropy
-
 # Scorer contracts live in ports (inner ring); ``metrics -> ports`` is inward.
 # Re-exported here so ``forecastability.metrics.scorers.{DependenceScorer,
 # SeriesDiagnosticScorer, ScorerInfo}`` remains importable.
@@ -25,6 +19,14 @@ from forecastability.ports.scorers import (
     DependenceScorer,
     ScorerInfo,
     SeriesDiagnosticScorer,
+)
+from forecastability.services.diagnostics.gcmi import compute_gcmi_at_lag
+from forecastability.services.diagnostics.predictive_information_gain import (
+    compute_predictive_information_gain,
+)
+from forecastability.services.diagnostics.spectral_utils import (
+    compute_normalised_psd,
+    spectral_entropy,
 )
 
 __all__ = [
@@ -488,7 +490,7 @@ def _spectral_entropy_scorer(
     """Normalised spectral entropy scorer (Welch PSD, natural-log base).
 
     Implements :class:`SeriesDiagnosticScorer`.  Uses
-    :func:`~forecastability.diagnostics.spectral_utils.compute_normalised_psd` then
+    :func:`~forecastability.services.diagnostics.spectral_utils.compute_normalised_psd` then
     normalises by ``log(N_bins)`` where ``N_bins`` is the number of frequency
     bins in the Welch estimate.
 
@@ -519,7 +521,7 @@ def _spectral_predictability_scorer(
     """Spectral predictability scorer Ω = 1 − normalised spectral entropy.
 
     Implements :class:`SeriesDiagnosticScorer`.  Uses
-    :func:`~forecastability.diagnostics.spectral_utils.compute_normalised_psd` then
+    :func:`~forecastability.services.diagnostics.spectral_utils.compute_normalised_psd` then
     normalises by ``log(N_bins)`` where ``N_bins`` is the number of frequency
     bins in the Welch estimate.
 

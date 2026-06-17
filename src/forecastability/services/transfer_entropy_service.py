@@ -5,7 +5,7 @@ v0.5.0: compute_transfer_entropy renamed to compute_predictive_information_gain.
         This facade re-exports under both old and new names for a single release cycle.
 """
 
-from forecastability.diagnostics.predictive_information_gain import (
+from forecastability.services.diagnostics.predictive_information_gain import (
     compute_predictive_information_gain,
     compute_predictive_information_gain_curve,
 )

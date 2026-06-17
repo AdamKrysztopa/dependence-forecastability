@@ -189,7 +189,7 @@ class KSG2CurveKernel:
         k_list = k_list if k_list is not None else self._k_list
         from numpy.random import SeedSequence
 
-        from forecastability.diagnostics.surrogates import phase_surrogates
+        from forecastability.services.diagnostics.surrogates import phase_surrogates
 
         surrogates = phase_surrogates(series, n_surrogates=n_surrogates, random_state=random_state)
         ss = SeedSequence(random_state + 1)

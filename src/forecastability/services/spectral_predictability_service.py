@@ -13,7 +13,10 @@ from __future__ import annotations
 
 import numpy as np
 
-from forecastability.diagnostics.spectral_utils import compute_normalised_psd, spectral_entropy
+from forecastability.services.diagnostics.spectral_utils import (
+    compute_normalised_psd,
+    spectral_entropy,
+)
 from forecastability.triage.spectral_predictability import SpectralPredictabilityResult
 
 

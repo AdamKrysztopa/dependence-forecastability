@@ -4,8 +4,8 @@ from collections.abc import Sequence
 
 import numpy as np
 
-from forecastability.diagnostics.cmi import compute_pami_with_backend
 from forecastability.pipeline.analyzer import ForecastabilityAnalyzerExog
+from forecastability.services.diagnostics.cmi import compute_pami_with_backend
 from forecastability.utils.types import (
     CanonicalExampleResult,
     ExogenousBenchmarkResult,

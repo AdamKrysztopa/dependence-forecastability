@@ -29,7 +29,7 @@ import numpy as np
 from scipy.stats import pearsonr, spearmanr
 from sklearn.feature_selection import mutual_info_regression
 
-from forecastability.diagnostics.gcmi import compute_gcmi
+from forecastability.services.diagnostics.gcmi import compute_gcmi
 from forecastability.triage.lag_aware_mod_mrmr import (
     NormalizationStrategy,
     PairwiseScorerSpec,
