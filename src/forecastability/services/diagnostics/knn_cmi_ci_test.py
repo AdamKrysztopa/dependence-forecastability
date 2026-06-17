@@ -154,7 +154,7 @@ def build_knn_cmi_test(
     )
     cond_ind_test_cls = base_module.CondIndTest
 
-    from forecastability.diagnostics.cmi import (
+    from forecastability.services.diagnostics.cmi import (
         _residualize_target_with_backend,
         compute_conditional_mi_with_backend,
     )
