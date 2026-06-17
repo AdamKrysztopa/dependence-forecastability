@@ -9,7 +9,9 @@ from __future__ import annotations
 
 import numpy as np
 
-from forecastability.triage.predictive_info_learning_curve import PredictiveInfoLearningCurve
+from forecastability.domain.models.predictive_info_learning_curve import (
+    PredictiveInfoLearningCurve,
+)
 
 _MAX_K_CAP: int = 8
 _N_WARN_THRESHOLD: int = 1000

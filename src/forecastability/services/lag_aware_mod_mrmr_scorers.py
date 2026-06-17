@@ -30,7 +30,7 @@ from scipy.stats import pearsonr, spearmanr
 from sklearn.feature_selection import mutual_info_regression
 
 from forecastability.services.diagnostics.gcmi import compute_gcmi
-from forecastability.triage.lag_aware_mod_mrmr import (
+from forecastability.services.lag_aware_mod_mrmr import (
     NormalizationStrategy,
     PairwiseScorerSpec,
     ScorerDiagnostics,
