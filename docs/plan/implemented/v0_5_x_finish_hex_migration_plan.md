@@ -23,7 +23,7 @@
 **Companion refs:**
 
 - [docs/architecture-review-2026-06-17.md](../../architecture-review-2026-06-17.md) — review driver document (findings #1, #2, #3)
-- [v0.5.0 — Review-Driven Hardening Plan](../v0_5_0_review_hardening_ultimate_plan.md) — shipped predecessor; introduced the physical `domain/` package and the current boundary test
+- [v0.5.0 — Review-Driven Hardening Plan](v0_5_0_review_hardening_ultimate_plan.md) — shipped predecessor; introduced the physical `domain/` package and the current boundary test
 - [v0.4.3 — Lag-Aware ModMRMR Plan](v0_4_3_lag_aware_catt_mod_mrmr_plan_template_aligned.md) — most recent template-aligned shipped plan
 - [docs/plan/planning_template.md](../planning_template.md) — required style and section ordering
 - [docs/plan/acceptance_criteria.md](../acceptance_criteria.md) — non-negotiable invariants

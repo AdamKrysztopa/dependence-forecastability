@@ -48,8 +48,9 @@ v0.4.3 deep audit ([`docs/reviews/v0.4.3-deep-audit.md`](docs/reviews/v0.4.3-dee
 
 1. [`docs/plan/planning_template.md`](docs/plan/planning_template.md) — release-plan structure
 2. [`docs/plan/acceptance_criteria.md`](docs/plan/acceptance_criteria.md) — non-negotiable invariants
-3. Active plan under `docs/plan/` — currently
-   [`v0_5_0_review_hardening_ultimate_plan.md`](docs/plan/v0_5_0_review_hardening_ultimate_plan.md)
+3. Most recent plans (both complete, under `docs/plan/implemented/`) —
+   [`v0_5_x_finish_hex_migration_plan.md`](docs/plan/implemented/v0_5_x_finish_hex_migration_plan.md)
+   and [`v0_5_0_review_hardening_ultimate_plan.md`](docs/plan/implemented/v0_5_0_review_hardening_ultimate_plan.md)
 4. [`docs/reviews/v0.4.3-deep-audit.md`](docs/reviews/v0.4.3-deep-audit.md) — standing review punch list
 5. [`.github/copilot-instructions.md`](.github/copilot-instructions.md) — repo-wide engineering rules
 

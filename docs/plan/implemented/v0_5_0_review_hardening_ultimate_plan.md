@@ -27,18 +27,18 @@
 > - Any new optional extra beyond the existing `[agent]`, `[causal]`, `[data]`.
 > - A new dashboard, MCP, or transport surface.
 >
-> Binding driver document: [aux_documents/developer_instruction_repo_scope.md](./aux_documents/developer_instruction_repo_scope.md).
+> Binding driver document: [aux_documents/developer_instruction_repo_scope.md](../aux_documents/developer_instruction_repo_scope.md).
 
 > [!NOTE]
-> **Cross-release ordering.** This is a standalone major release with no chained predecessor or successor. It is the first release after the v0.4.3 deep audit ([docs/reviews/v0.4.3-deep-audit.md](../reviews/v0.4.3-deep-audit.md)) and consumes every Critical and Important finding from that report. Minor items not assigned to a phase here (citations in module headers, dcov streaming form) may be revisited after v0.5.0 ships.
+> **Cross-release ordering.** This is a standalone major release with no chained predecessor or successor. It is the first release after the v0.4.3 deep audit ([docs/reviews/v0.4.3-deep-audit.md](../../reviews/v0.4.3-deep-audit.md)) and consumes every Critical and Important finding from that report. Minor items not assigned to a phase here (citations in module headers, dcov streaming form) may be revisited after v0.5.0 ships.
 
 **Companion refs:**
 
-- [docs/reviews/v0.4.3-deep-audit.md](../reviews/v0.4.3-deep-audit.md) — review driver document
-- [v0.4.3 — Lag-Aware ModMRMR Plan](implemented/v0_4_3_lag_aware_catt_mod_mrmr_plan_template_aligned.md) — most recent shipped plan
-- [v0.4.1 — Performance Hardening Plan](implemented/v0_4_1_performance_bottleneck_elimination_ultimate_plan.md) — sets perf-budget precedent (PBE-F* tags)
-- [docs/plan/planning_template.md](planning_template.md) — required style
-- [docs/plan/acceptance_criteria.md](acceptance_criteria.md) — invariants
+- [docs/reviews/v0.4.3-deep-audit.md](../../reviews/v0.4.3-deep-audit.md) — review driver document
+- [v0.4.3 — Lag-Aware ModMRMR Plan](v0_4_3_lag_aware_catt_mod_mrmr_plan_template_aligned.md) — most recent shipped plan
+- [v0.4.1 — Performance Hardening Plan](v0_4_1_performance_bottleneck_elimination_ultimate_plan.md) — sets perf-budget precedent (PBE-F* tags)
+- [docs/plan/planning_template.md](../planning_template.md) — required style
+- [docs/plan/acceptance_criteria.md](../acceptance_criteria.md) — invariants
 
 **Builds on:**
 
@@ -54,7 +54,7 @@
 
 ## 1. Why this plan exists
 
-The v0.4.3 deep audit ([docs/reviews/v0.4.3-deep-audit.md](../reviews/v0.4.3-deep-audit.md)) identified one structural pattern that repeats across all three reviewed dimensions: **a declared contract is honored in one canonical place and not propagated anywhere else.**
+The v0.4.3 deep audit ([docs/reviews/v0.4.3-deep-audit.md](../../reviews/v0.4.3-deep-audit.md)) identified one structural pattern that repeats across all three reviewed dimensions: **a declared contract is honored in one canonical place and not propagated anywhere else.**
 
 - **Math.** `compute_ami_information_geometry` implements KSG-II + median-over-k correctly. Every other public AMI / pAMI surface — `compute_ami`, `compute_pami_linear_residual`, `_compute_raw_curve_prescaled`, `_compute_partial_curve_prescaled`, the surrogate-band scorers — delegates to `sklearn.feature_selection.mutual_info_regression`, which is single-k KSG-I. The README, the Medium article, the docstrings everywhere claim "KSG-II + median over k ∈ {3, 5, 8}". This is paper-vs-code drift.
 - **Architecture.** `tests/test_architecture_boundaries.py` enforces a strict hex boundary against a hand-curated allowlist of 18 paths. There is no physical `src/forecastability/domain/` directory; a contributor opening the repo cannot point at the domain layer. One file (`triage/comparison_report.py`) is silently excluded with a documented `# TODO` because it imports matplotlib.
@@ -193,7 +193,7 @@ ID prefix: **RVH** (Review-driven hardening).
 
 12. **Documentation parity with implementation**
     - Every public docstring that mentions "KSG-II", "Schreiber transfer entropy", "calibrated", "hexagonal domain", or any other term whose meaning changes in this release is audited and updated.
-    - The Medium article ([docs/medium/forecastability-triage-for-practitioners.md](../medium/forecastability-triage-for-practitioners.md)) gets a v0.5.0 erratum at the top linking the migration guide.
+    - The Medium article ([docs/medium/forecastability-triage-for-practitioners.md](../../medium/forecastability-triage-for-practitioners.md)) gets a v0.5.0 erratum at the top linking the migration guide.
     - The README quickstart is re-run end-to-end and the output captured.
 
 ---
@@ -595,7 +595,7 @@ MOVE orchestrators into use_cases/"]
 - `CHANGELOG.md` v0.5.0 entry: leads with **Breaking changes** section, then **New features**, then **Performance**, then **Architecture**, then **Bug fixes**, then **Internal**.
 - `README.md` updated: feature list, install snippet (still `pip install dependence-forecastability`), the "what's new" line.
 - `docs/theory/` audited: any page that says "KSG-II" is correct as of v0.5.0 by default; any page that says "Schreiber TE" links to `compute_transfer_entropy_ksg`.
-- Medium article ([docs/medium/forecastability-triage-for-practitioners.md](../medium/forecastability-triage-for-practitioners.md)) gets a top-of-page erratum block linking the migration guide.
+- Medium article ([docs/medium/forecastability-triage-for-practitioners.md](../../medium/forecastability-triage-for-practitioners.md)) gets a top-of-page erratum block linking the migration guide.
 
 **RVH-F17 — Release engineering.**
 
@@ -742,7 +742,7 @@ Release is complete when item 12 is done.
 
 ## 9. Phase 1 retrospection plan
 
-**Status:** ✅ Done — retrospection document committed at `docs/plan/phase1_retrospection.md` (2026-05-24).
+**Status:** ✅ Done — retrospection document committed at `docs/plan/implemented/phase1_retrospection.md` (2026-05-24).
 
 **Owner:** `release-planner` drafted; `statistician` sign-off on math-correctness findings **pending**; `software_architect` sign-off on architecture findings **pending**.
 
