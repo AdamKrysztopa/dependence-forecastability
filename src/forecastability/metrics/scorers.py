@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
 from itertools import permutations
 from typing import Literal, Protocol, runtime_checkable
 
@@ -19,64 +18,25 @@ from forecastability.diagnostics.predictive_information_gain import (
 )
 from forecastability.diagnostics.spectral_utils import compute_normalised_psd, spectral_entropy
 
+# Scorer contracts live in ports (inner ring); ``metrics -> ports`` is inward.
+# Re-exported here so ``forecastability.metrics.scorers.{DependenceScorer,
+# SeriesDiagnosticScorer, ScorerInfo}`` remains importable.
+from forecastability.ports.scorers import (
+    DependenceScorer,
+    ScorerInfo,
+    SeriesDiagnosticScorer,
+)
 
-@runtime_checkable
-class DependenceScorer(Protocol):
-    """Protocol for dependence scoring functions.
-
-    A scorer takes two aligned 1-D arrays (past, future) and returns
-    a non-negative scalar measuring statistical dependence.
-    """
-
-    def __call__(
-        self,
-        past: np.ndarray,
-        future: np.ndarray,
-        *,
-        random_state: int = 42,
-    ) -> float: ...
-
-
-@runtime_checkable
-class SeriesDiagnosticScorer(Protocol):
-    """Protocol for univariate diagnostic scoring functions.
-
-    A scorer takes a single 1-D series and returns a non-negative scalar
-    measuring a univariate property (entropy, spectral predictability, etc.).
-
-    This is distinct from :class:`DependenceScorer` which takes ``(past, future)``
-    pairs.  Used by F4 (SpectralPredictabilityScorer) and F6
-    (PermutationEntropyScorer).
-    """
-
-    def __call__(
-        self,
-        series: np.ndarray,
-        *,
-        random_state: int = 42,
-    ) -> float: ...
-
-
-@dataclass(slots=True)
-class ScorerInfo:
-    """Metadata for a registered scorer.
-
-    Attributes:
-        name: Short identifier (e.g. ``"mi"``, ``"pearson"``).
-        scorer: Callable implementing :class:`DependenceScorer` or
-            :class:`SeriesDiagnosticScorer`.
-        family: Scorer family used to auto-select triage thresholds.
-        description: One-line description of the scorer.
-        kind: Whether the scorer operates on ``(past, future)`` pairs
-            (``"bivariate"``) or a single series (``"univariate"``).
-    """
-
-    name: str
-    scorer: DependenceScorer | SeriesDiagnosticScorer
-    family: Literal["nonlinear", "linear", "rank", "bounded_nonlinear"]
-    description: str
-    kind: Literal["bivariate", "univariate", "diagnostic"] = "bivariate"
-    experimental: bool = False
+__all__ = [
+    "DependenceScorer",
+    "ScorerInfo",
+    "ScorerRegistry",
+    "ScorerRegistryProtocol",
+    "SeriesDiagnosticScorer",
+    "default_registry",
+    "gcmi_scorer",
+    "te_scorer",
+]
 
 
 @runtime_checkable

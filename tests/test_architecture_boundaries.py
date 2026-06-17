@@ -375,21 +375,13 @@ def test_domain_has_no_outer_first_party_imports() -> None:
     )
 
 
-# Un-xfailed for the domain leg once Slice 1 broke domain -> triage/utils.
+# Un-xfailed for the ports leg once Slice 3 repointed port modules off the
+# legacy packages (triage/utils/metrics) onto domain + ports.
 # See docs/plan/v0_5_0_review_hardening_ultimate_plan.md (hex-migration).
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "ports/ still imports outer first-party packages until Slice 3 of the "
-        "hex-migration plan repoints them; see "
-        "docs/plan/v0_5_0_review_hardening_ultimate_plan.md."
-    ),
-)
 def test_ports_have_no_outer_first_party_imports() -> None:
     """ports/ modules must not import outer first-party packages.
 
-    ports may import domain + ports only. This is expected to fail until the
-    Slice 3 ports repoint of the hex-migration plan.
+    ports may import domain + ports only.
     """
     ports_dir = ROOT / "src/forecastability/ports"
     py_files = [p for p in ports_dir.rglob("*.py")]
