@@ -7,7 +7,7 @@
 **Target release:** none — this plan ships no release tag; it is an internal-structure refactor that lands on `main` and is *bequeathed* to the next feature release
 **Current released version:** `0.5.0`
 **Branch:** `refactor/finish-hex-migration`
-**Status:** Draft
+**Status:** Implemented — landed on `main` (branch `refactor/finish-hex-migration`); layer graph acyclic, boundary test enforced
 **Last reviewed:** 2026-06-17
 
 > [!IMPORTANT]
@@ -15,18 +15,18 @@
 >
 > It does **not** ship: any math / estimator / numeric change; any public-API name change; any new public symbol; any new release tag; any change to the frozen `api/__init__.py` export set, the `forecastability/__init__.py` re-export shim, or the `_legacy/` `DeprecationWarning` shim. The public surface is **byte-stable** across the whole plan.
 >
-> Binding driver document: [docs/architecture-review-2026-06-17.md](../architecture-review-2026-06-17.md).
+> Binding driver document: [docs/architecture-review-2026-06-17.md](../../architecture-review-2026-06-17.md).
 
 > [!NOTE]
 > **Cross-release ordering.** This is a post-v0.5.0 internal refactor with no chained predecessor or successor *release*. It **consumes** the physical `src/forecastability/domain/` package and the AST boundary test that v0.5.0 shipped (commit `507b64c`, RVH architecture-realignment phase). It **bequeaths** a genuinely isolable core (`domain`/`ports` importable without dragging in `triage`/`services`/`adapters`) and a boundary test that fails on first-party leaks and cycles — so the next feature release inherits a clean layer graph and a guardrail that defends it. No version bump, CHANGELOG entry, or PyPI publication is produced by this plan.
 
 **Companion refs:**
 
-- [docs/architecture-review-2026-06-17.md](../architecture-review-2026-06-17.md) — review driver document (findings #1, #2, #3)
-- [v0.5.0 — Review-Driven Hardening Plan](v0_5_0_review_hardening_ultimate_plan.md) — shipped predecessor; introduced the physical `domain/` package and the current boundary test
-- [v0.4.3 — Lag-Aware ModMRMR Plan](implemented/v0_4_3_lag_aware_catt_mod_mrmr_plan_template_aligned.md) — most recent template-aligned shipped plan
-- [docs/plan/planning_template.md](planning_template.md) — required style and section ordering
-- [docs/plan/acceptance_criteria.md](acceptance_criteria.md) — non-negotiable invariants
+- [docs/architecture-review-2026-06-17.md](../../architecture-review-2026-06-17.md) — review driver document (findings #1, #2, #3)
+- [v0.5.0 — Review-Driven Hardening Plan](../v0_5_0_review_hardening_ultimate_plan.md) — shipped predecessor; introduced the physical `domain/` package and the current boundary test
+- [v0.4.3 — Lag-Aware ModMRMR Plan](v0_4_3_lag_aware_catt_mod_mrmr_plan_template_aligned.md) — most recent template-aligned shipped plan
+- [docs/plan/planning_template.md](../planning_template.md) — required style and section ordering
+- [docs/plan/acceptance_criteria.md](../acceptance_criteria.md) — non-negotiable invariants
 
 **Builds on:**
 
