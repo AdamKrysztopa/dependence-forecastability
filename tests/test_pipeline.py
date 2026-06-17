@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import numpy as np
 
-import forecastability.pipeline.pipeline as _pipeline_impl
-from forecastability.pipeline import (
+import forecastability.use_cases.pipeline as _pipeline_impl
+from forecastability.use_cases.pipeline import (
     run_canonical_example,
     run_exogenous_rolling_origin_evaluation,
     run_rolling_origin_evaluation,
 )
-from forecastability.pipeline.rolling_origin import build_expanding_window_splits
+from forecastability.use_cases.rolling_origin import build_expanding_window_splits
 from forecastability.utils.datasets import generate_simulated_stock_returns, generate_sine_wave
 
 

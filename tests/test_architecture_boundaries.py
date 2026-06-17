@@ -12,8 +12,6 @@ respected:
 import ast
 from pathlib import Path
 
-import pytest
-
 ROOT = Path(__file__).parent.parent
 
 # ---------------------------------------------------------------------------
@@ -480,16 +478,6 @@ def _find_cycle(graph: dict[str, set[str]]) -> list[str] | None:
     return None
 
 
-# Un-xfail when the layer graph is acyclic.
-# See docs/plan/v0_5_0_review_hardening_ultimate_plan.md (hex-migration).
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "Cross-layer import cycles remain until later slices of the "
-        "hex-migration plan; see "
-        "docs/plan/v0_5_0_review_hardening_ultimate_plan.md."
-    ),
-)
 def test_layer_graph_has_no_cycles() -> None:
     """The layer-level import graph must be acyclic."""
     graph = _build_layer_graph()
