@@ -12,6 +12,8 @@ respected:
 import ast
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).parent.parent
 
 # ---------------------------------------------------------------------------
@@ -310,3 +312,194 @@ def test_llm_adapters_do_not_import_scripts() -> None:
     assert not violations, "adapters/llm/ modules must not import from scripts/.\n" + "\n".join(
         violations
     )
+
+
+# ---------------------------------------------------------------------------
+# Rule 7 — inner-ring (domain/, ports/) must not import outer first-party pkgs
+#
+# Tracked by docs/plan/v0_5_0_review_hardening_ultimate_plan.md (hex-migration
+# completion). The domain leg is enforced once Slice 1 lands; the ports leg
+# stays xfail until Slice 3 repoints port modules off the legacy packages.
+# ---------------------------------------------------------------------------
+
+# First-party OUTER packages the inner ring must not depend on. The inner ring
+# may import only inward (domain -> domain; ports -> domain + ports) plus the
+# allowed third-party numerics already governed by the rules above.
+_OUTER_FIRST_PARTY_PACKAGES = frozenset(
+    [
+        "triage",
+        "utils",
+        "metrics",
+        "pipeline",
+        "reporting",
+        "diagnostics",
+        "kernels",
+    ]
+)
+
+
+def _forbidden_first_party_imports(py_file: Path) -> list[str]:
+    """Return outer first-party ``forecastability.<pkg>`` imports in a file."""
+    bad: list[str] = []
+    for dotted in _get_full_imports(py_file):
+        parts = dotted.split(".")
+        if (
+            len(parts) >= 2
+            and parts[0] == "forecastability"
+            and parts[1] in (_OUTER_FIRST_PARTY_PACKAGES)
+        ):
+            bad.append(dotted)
+    return bad
+
+
+def test_domain_has_no_outer_first_party_imports() -> None:
+    """domain/ modules must not import outer first-party packages.
+
+    domain may import domain only; importing triage/utils/metrics/pipeline/
+    reporting/diagnostics/kernels is an inner-ring violation.
+    """
+    domain_dir = ROOT / "src/forecastability/domain"
+    py_files = [p for p in domain_dir.rglob("*.py") if p.name != "__init__.py"]
+    assert py_files, "No .py files found under src/forecastability/domain/"
+
+    violations: list[str] = []
+    for py_file in py_files:
+        bad = _forbidden_first_party_imports(py_file)
+        if bad:
+            relative = str(py_file.relative_to(ROOT))
+            violations.append(f"{relative}: {sorted(set(bad))}")
+
+    assert not violations, (
+        "domain/ modules must not import outer first-party packages "
+        f"({sorted(_OUTER_FIRST_PARTY_PACKAGES)}).\n" + "\n".join(violations)
+    )
+
+
+# Un-xfailed for the domain leg once Slice 1 broke domain -> triage/utils.
+# See docs/plan/v0_5_0_review_hardening_ultimate_plan.md (hex-migration).
+@pytest.mark.xfail(
+    strict=True,
+    reason=(
+        "ports/ still imports outer first-party packages until Slice 3 of the "
+        "hex-migration plan repoints them; see "
+        "docs/plan/v0_5_0_review_hardening_ultimate_plan.md."
+    ),
+)
+def test_ports_have_no_outer_first_party_imports() -> None:
+    """ports/ modules must not import outer first-party packages.
+
+    ports may import domain + ports only. This is expected to fail until the
+    Slice 3 ports repoint of the hex-migration plan.
+    """
+    ports_dir = ROOT / "src/forecastability/ports"
+    py_files = [p for p in ports_dir.rglob("*.py")]
+    assert py_files, "No .py files found under src/forecastability/ports/"
+
+    violations: list[str] = []
+    for py_file in py_files:
+        bad = _forbidden_first_party_imports(py_file)
+        if bad:
+            relative = str(py_file.relative_to(ROOT))
+            violations.append(f"{relative}: {sorted(set(bad))}")
+
+    assert not violations, (
+        "ports/ modules must not import outer first-party packages "
+        f"({sorted(_OUTER_FIRST_PARTY_PACKAGES)}).\n" + "\n".join(violations)
+    )
+
+
+# ---------------------------------------------------------------------------
+# Rule 8 — no import cycles between architectural layers
+#
+# Tracked by docs/plan/v0_5_0_review_hardening_ultimate_plan.md (hex-migration
+# completion). Expected to fail until the migration removes cross-layer cycles;
+# will be un-xfailed when the layer graph becomes acyclic.
+# ---------------------------------------------------------------------------
+
+# Layer label -> top-level package directory under src/forecastability/.
+_LAYER_PACKAGES = (
+    "domain",
+    "ports",
+    "services",
+    "use_cases",
+    "api",
+    "adapters",
+    "triage",
+    "utils",
+    "metrics",
+    "pipeline",
+    "reporting",
+    "diagnostics",
+    "kernels",
+)
+
+
+def _layer_of(dotted: str) -> str | None:
+    """Map a ``forecastability.<layer>....`` dotted import to its layer label."""
+    parts = dotted.split(".")
+    if len(parts) >= 2 and parts[0] == "forecastability" and parts[1] in _LAYER_PACKAGES:
+        return parts[1]
+    return None
+
+
+def _build_layer_graph() -> dict[str, set[str]]:
+    """Build a directed layer-to-layer import graph from AST imports."""
+    pkg_root = ROOT / "src/forecastability"
+    graph: dict[str, set[str]] = {layer: set() for layer in _LAYER_PACKAGES}
+    for layer in _LAYER_PACKAGES:
+        layer_dir = pkg_root / layer
+        if not layer_dir.exists():
+            continue
+        for py_file in layer_dir.rglob("*.py"):
+            for dotted in _get_full_imports(py_file):
+                target = _layer_of(dotted)
+                if target is not None and target != layer:
+                    graph[layer].add(target)
+    return graph
+
+
+def _find_cycle(graph: dict[str, set[str]]) -> list[str] | None:
+    """Return one detected cycle as a node list, or ``None`` if acyclic."""
+    visiting: set[str] = set()
+    visited: set[str] = set()
+    stack: list[str] = []
+
+    def _walk(node: str) -> list[str] | None:
+        visiting.add(node)
+        stack.append(node)
+        for neighbour in sorted(graph.get(node, set())):
+            if neighbour in visiting:
+                cycle_start = stack.index(neighbour)
+                return [*stack[cycle_start:], neighbour]
+            if neighbour not in visited:
+                found = _walk(neighbour)
+                if found is not None:
+                    return found
+        visiting.discard(node)
+        visited.add(node)
+        stack.pop()
+        return None
+
+    for start in sorted(graph):
+        if start not in visited:
+            cycle = _walk(start)
+            if cycle is not None:
+                return cycle
+    return None
+
+
+# Un-xfail when the layer graph is acyclic.
+# See docs/plan/v0_5_0_review_hardening_ultimate_plan.md (hex-migration).
+@pytest.mark.xfail(
+    strict=True,
+    reason=(
+        "Cross-layer import cycles remain until later slices of the "
+        "hex-migration plan; see "
+        "docs/plan/v0_5_0_review_hardening_ultimate_plan.md."
+    ),
+)
+def test_layer_graph_has_no_cycles() -> None:
+    """The layer-level import graph must be acyclic."""
+    graph = _build_layer_graph()
+    cycle = _find_cycle(graph)
+    assert cycle is None, "Import cycle detected between layers: " + " -> ".join(cycle or [])
