@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 from pydantic import BaseModel, ConfigDict, Field
 
-from forecastability.triage.batch_models import BatchSummaryRow
+from forecastability.domain.models.batch_models import BatchSummaryRow
 
 SERIES_COMPARISON_TABLE_COLUMNS: tuple[str, ...] = (
     "rank",
@@ -370,9 +370,11 @@ def _build_series_row(item: object) -> SeriesComparisonRow:
     Returns:
         Fully-populated ``SeriesComparisonRow``.
     """
-    # Import here to keep the module importable without pulling in all triage
-    # internals at module level (avoids circular-dependency at domain level).
-    from forecastability.triage.batch_models import BatchTriageExecutionItem  # noqa: PLC0415
+    # Import here to keep the module importable without pulling in all domain
+    # batch internals at module level (avoids circular-dependency at domain level).
+    from forecastability.domain.models.batch_models import (  # noqa: PLC0415
+        BatchTriageExecutionItem,
+    )
 
     execution_item: BatchTriageExecutionItem = item  # type: ignore[assignment]
     result = execution_item.result

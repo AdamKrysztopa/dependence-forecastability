@@ -13,7 +13,7 @@ No new fields are added; semantics are unchanged.
 
 from __future__ import annotations
 
-from forecastability.utils.types import CovariantInterpretationResult
+from forecastability.domain.value_objects.types import CovariantInterpretationResult
 
 __all__ = [
     "CovariantInterpretationResult",

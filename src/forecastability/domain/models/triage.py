@@ -9,11 +9,13 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from forecastability.domain.models.analyze_result import AnalyzeResult
 from forecastability.domain.models.complexity_band import ComplexityBandResult
+from forecastability.domain.models.extended_forecastability import (
+    ExtendedForecastabilityAnalysisResult,
+)
 from forecastability.domain.models.forecastability_profile import ForecastabilityProfile
 from forecastability.domain.models.lyapunov import LargestLyapunovExponentResult
 from forecastability.domain.models.theoretical_limit_diagnostics import TheoreticalLimitDiagnostics
 from forecastability.domain.value_objects.types import InterpretationResult
-from forecastability.triage.extended_forecastability import ExtendedForecastabilityAnalysisResult
 
 
 class AnalysisGoal(StrEnum):
