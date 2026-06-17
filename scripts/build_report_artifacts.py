@@ -19,7 +19,7 @@ from forecastability.reporting import (
     mandatory_caveats,
     save_exog_reports,
 )
-from forecastability.utils.io_models import CanonicalPayload
+from forecastability.reporting.io_models import CanonicalPayload
 from forecastability.utils.plots import plot_rank_association_bars, plot_smape_vs_ami
 
 _logger = logging.getLogger(__name__)

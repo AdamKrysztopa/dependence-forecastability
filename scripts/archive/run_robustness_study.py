@@ -13,14 +13,14 @@ import yaml
 # Non-interactive plotting backend.
 os.environ.setdefault("MPLBACKEND", "Agg")
 
-from forecastability.utils.config import RobustnessStudyConfig
+from forecastability.domain.value_objects.config import RobustnessStudyConfig
+from forecastability.pipeline.robustness import run_robustness_study
 from forecastability.utils.datasets import (
     generate_henon_map,
     generate_simulated_stock_returns,
     generate_sine_wave,
     load_air_passengers,
 )
-from forecastability.utils.robustness import run_robustness_study
 
 _logger = logging.getLogger(__name__)
 

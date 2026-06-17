@@ -23,6 +23,7 @@ from forecastability.reporting import (
     save_canonical_markdown,
     save_canonical_result_json,
 )
+from forecastability.reporting.io_models import CanonicalPayload, CanonicalSummaryBundle
 from forecastability.utils.datasets import (
     generate_henon_map,
     generate_simulated_stock_returns,
@@ -33,7 +34,6 @@ from forecastability.utils.datasets import (
     load_crude_oil_returns,
     load_gold_returns,
 )
-from forecastability.utils.io_models import CanonicalPayload, CanonicalSummaryBundle
 from forecastability.utils.plots import plot_canonical_panel_summary, save_all_canonical_plots
 from forecastability.utils.types import CanonicalExampleResult
 

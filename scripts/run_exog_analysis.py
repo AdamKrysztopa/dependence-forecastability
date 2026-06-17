@@ -22,7 +22,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402 — must follow matplotlib.use()
 
 from forecastability.pipeline.analyzer import ForecastabilityAnalyzerExog
-from forecastability.utils.io_models import ExogCaseRecord
+from forecastability.reporting.io_models import ExogCaseRecord
 
 _logger = logging.getLogger(__name__)
 

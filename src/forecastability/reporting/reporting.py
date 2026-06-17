@@ -12,8 +12,8 @@ import pandas as pd
 from pydantic import BaseModel, ConfigDict
 
 from forecastability.reporting.interpretation import interpret_canonical_result
+from forecastability.reporting.io_models import CanonicalPayload
 from forecastability.utils.aggregation import summarize_canonical_result
-from forecastability.utils.io_models import CanonicalPayload
 from forecastability.utils.types import CanonicalExampleResult
 
 _logger = logging.getLogger(__name__)
