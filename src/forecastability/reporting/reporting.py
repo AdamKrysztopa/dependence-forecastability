@@ -11,8 +11,8 @@ from typing import Any, cast
 import pandas as pd
 from pydantic import BaseModel, ConfigDict
 
-from forecastability.reporting.interpretation import interpret_canonical_result
 from forecastability.reporting.io_models import CanonicalPayload
+from forecastability.services.interpretation import interpret_canonical_result
 from forecastability.utils.aggregation import summarize_canonical_result
 from forecastability.utils.types import CanonicalExampleResult
 

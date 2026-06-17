@@ -16,7 +16,7 @@ from forecastability.models import (
     forecast_seasonal_naive,
     smape,
 )
-from forecastability.pipeline.rolling_origin import build_expanding_window_splits
+from forecastability.use_cases.rolling_origin import build_expanding_window_splits
 from forecastability.utils.types import ForecastResult, SeriesEvaluationResult
 
 _AMI_MIN_PAIRS = 30

@@ -12,7 +12,7 @@ from forecastability.domain.value_objects.types import (
     CanonicalSummary,
     InterpretationResult,
 )
-from forecastability.reporting.interpretation import interpret_canonical_result
+from forecastability.services.interpretation import interpret_canonical_result
 from forecastability.utils.aggregation import summarize_canonical_result
 
 

@@ -10,6 +10,8 @@
 from __future__ import annotations
 
 import warnings as _warnings
+from importlib import import_module
+from typing import Any
 
 from forecastability.domain.models.comparison_report import (  # noqa: F401, F403
     HORIZON_DROPOFF_TABLE_COLUMNS,
@@ -33,17 +35,32 @@ from forecastability.domain.models.comparison_report import (  # noqa: F401, F40
     _priority_score,
     _recommendation_rationale,
 )
-from forecastability.reporting.comparison_report_plots import (  # noqa: F401, F403
-    _build_recommendation_markdown_table,
-    _plot_auc,
-    _plot_directness_ratio,
-    _plot_horizon_dropoff,
-    _plot_significance_coverage,
-    _render_report_markdown,
-    _save_no_data_plot,
-    build_multi_series_comparison_report,
-    write_multi_series_comparison_artifacts,
+
+# Rendering helpers live in the reporting layer. They are resolved lazily so
+# this deprecated shim holds no static import edge into the reporting layer
+# (hexagonal boundary; v0.5.0). Remove this shim in v0.6.0.
+_REPORTING_EXPORTS = frozenset(
+    {
+        "_build_recommendation_markdown_table",
+        "_plot_auc",
+        "_plot_directness_ratio",
+        "_plot_horizon_dropoff",
+        "_plot_significance_coverage",
+        "_render_report_markdown",
+        "_save_no_data_plot",
+        "build_multi_series_comparison_report",
+        "write_multi_series_comparison_artifacts",
+    }
 )
+
+
+def __getattr__(name: str) -> Any:
+    """Resolve relocated reporting renderers from the reporting layer lazily."""
+    if name in _REPORTING_EXPORTS:
+        module = import_module("forecastability.reporting.comparison_report_plots")
+        return getattr(module, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 _warnings.warn(
     "forecastability.triage.comparison_report is deprecated in v0.5.0; "

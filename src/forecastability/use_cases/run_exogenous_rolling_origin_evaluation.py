@@ -5,9 +5,9 @@ from __future__ import annotations
 import numpy as np
 
 from forecastability.metrics.scorers import _mi_scorer
-from forecastability.pipeline.rolling_origin import build_expanding_window_splits
 from forecastability.services.partial_curve_service import compute_partial_at_horizon
 from forecastability.services.raw_curve_service import compute_raw_at_horizon
+from forecastability.use_cases.rolling_origin import build_expanding_window_splits
 from forecastability.utils.types import ExogenousBenchmarkResult
 
 
