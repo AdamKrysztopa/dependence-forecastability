@@ -8,14 +8,17 @@ from typing import Literal
 import numpy as np
 from numpy.typing import ArrayLike
 
-from forecastability.diagnostics.spectral_utils import compute_normalised_psd, spectral_entropy
+from forecastability.domain.models.extended_forecastability import SpectralForecastabilityResult
 from forecastability.services._extended_diagnostic_validation import (
     SpectralDetrendMode,
     coerce_univariate_values,
     validate_positive_argument,
     validate_spectral_detrend,
 )
-from forecastability.triage.extended_forecastability import SpectralForecastabilityResult
+from forecastability.services.diagnostics.spectral_utils import (
+    compute_normalised_psd,
+    spectral_entropy,
+)
 
 _MIN_SPECTRAL_LENGTH = 8
 _SHORT_SERIES_NOTE = "series is too short for a stable spectral summary"

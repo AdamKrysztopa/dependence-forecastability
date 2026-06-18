@@ -9,7 +9,7 @@ from types import ModuleType
 
 import numpy as np
 
-from forecastability.utils.io_models import CanonicalSummaryBundle
+from forecastability.reporting.io_models import CanonicalSummaryBundle
 from forecastability.utils.types import CanonicalExampleResult, MetricCurve
 
 

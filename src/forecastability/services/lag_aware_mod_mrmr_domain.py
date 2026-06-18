@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from forecastability.triage.lag_aware_mod_mrmr import (
+from forecastability.services.lag_aware_mod_mrmr import (
     BlockedLagAwareFeature,
     ForecastSafeLagCandidate,
     LagAwareModMRMRConfig,

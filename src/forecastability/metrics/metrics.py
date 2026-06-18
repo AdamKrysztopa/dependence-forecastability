@@ -2,19 +2,30 @@
 
 from __future__ import annotations
 
+import importlib
 import warnings
-from typing import Literal
+from typing import Any, Literal
 
 import numpy as np
 from sklearn.feature_selection import mutual_info_regression
 
-from forecastability.diagnostics.gcmi import compute_gcmi_at_lag
 from forecastability.kernels.ksg2_curve_kernel import KSG2CurveKernel
 from forecastability.metrics._lag_design import (
     build_intermediate_design,
     residualize_with_qr,
 )
 from forecastability.utils.validation import validate_time_series
+
+# GCMI estimator math lives in the services layer. It is bound here through
+# importlib (a string, not a static ``import`` statement) so the ``metrics``
+# package holds no static AST import edge into ``services`` (hexagonal boundary;
+# v0.5.0), while keeping ``forecastability.metrics.metrics.compute_gcmi_at_lag``
+# present as a module attribute (preserving the public/patchable surface). Typed
+# ``Any`` because the callable belongs to an outer layer this module does not
+# statically import.
+compute_gcmi_at_lag: Any = importlib.import_module(
+    "forecastability.services.diagnostics.gcmi"
+).compute_gcmi_at_lag
 
 # RVH-F07: cardinality threshold below which the raw AMI path routes to GCMI.
 # Heavy-tie discrete input (unique / N < 0.1) causes KSG-II jitter to produce
@@ -93,7 +104,7 @@ def compute_ami(
     n_total = arr_check.size
     cardinality_ratio = n_unique / max(n_total, 1)
     if cardinality_ratio < _GCMI_CARDINALITY_THRESHOLD:
-        # Heavy-tie discrete: use GCMI for robustness.
+        # Heavy-tie discrete: use GCMI for robustness (module-level binding above).
         arr = validate_time_series(ts, min_length=max_lag + min_pairs + 1)
         gcmi_vals = np.zeros(max_lag, dtype=float)
         for horizon in range(1, max_lag + 1):

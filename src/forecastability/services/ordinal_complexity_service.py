@@ -8,11 +8,11 @@ from typing import Literal
 import numpy as np
 from numpy.typing import ArrayLike
 
+from forecastability.domain.models.extended_forecastability import OrdinalComplexityResult
 from forecastability.services._extended_diagnostic_validation import (
     coerce_univariate_values,
     validate_embedding_dimension,
 )
-from forecastability.triage.extended_forecastability import OrdinalComplexityResult
 
 _DEGENERATE_NOTE = "constant series; ordinal complexity is degenerate"
 _SHORT_SERIES_NOTE = "series is too short for the requested ordinal embedding"

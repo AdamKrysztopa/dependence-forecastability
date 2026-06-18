@@ -4,13 +4,56 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from pathlib import Path
+from typing import Protocol
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from forecastability.utils.io_models import CanonicalPayload
 from forecastability.utils.types import CanonicalExampleResult
+
+
+class _CanonicalSummaryView(Protocol):
+    """Structural view of the summary fields the panel plot reads."""
+
+    @property
+    def auc_ami(self) -> float: ...
+
+    @property
+    def directness_ratio(self) -> float: ...
+
+    @property
+    def n_sig_ami(self) -> int: ...
+
+    @property
+    def n_sig_pami(self) -> int: ...
+
+
+class _CanonicalInterpretationView(Protocol):
+    """Structural view of the interpretation fields the panel plot reads."""
+
+    @property
+    def forecastability_class(self) -> str: ...
+
+    @property
+    def modeling_regime(self) -> str: ...
+
+
+class _CanonicalPayloadView(Protocol):
+    """Structural view of a canonical payload consumed by the panel plot.
+
+    Decouples plotting from ``forecastability.reporting.io_models`` so the
+    ``utils`` layer does not statically depend on the ``reporting`` layer.
+    """
+
+    @property
+    def series_name(self) -> str: ...
+
+    @property
+    def summary(self) -> _CanonicalSummaryView: ...
+
+    @property
+    def interpretation(self) -> _CanonicalInterpretationView: ...
 
 
 def _save(fig: plt.Figure, path: Path) -> None:
@@ -166,7 +209,7 @@ def save_all_canonical_plots(
 
 
 def plot_canonical_panel_summary(
-    payloads: Sequence[CanonicalPayload],
+    payloads: Sequence[_CanonicalPayloadView],
     *,
     save_path: Path,
 ) -> None:

@@ -1,11 +1,16 @@
-"""Pipeline and analyzer orchestration modules."""
+"""Pipeline and analyzer orchestration modules.
+
+Migration shim — the analyzer/pipeline/rolling-origin/robustness implementations
+moved to ``forecastability.use_cases`` in v0.5.0. This package keeps the legacy
+public API resolving through thin wrappers and a lazy ``__getattr__`` so it holds
+no static import edge into the use-case layer at module load. Remove in v0.6.0.
+"""
 
 from collections.abc import Sequence
+from typing import Any
 
 import numpy as np
 
-from forecastability.diagnostics.cmi import compute_pami_with_backend
-from forecastability.pipeline.analyzer import ForecastabilityAnalyzerExog
 from forecastability.utils.types import (
     CanonicalExampleResult,
     ExogenousBenchmarkResult,
@@ -28,7 +33,7 @@ def run_canonical_example(
     skip_bands: bool = False,
 ) -> CanonicalExampleResult:
     """Compatibility wrapper for canonical pipeline execution."""
-    from forecastability.pipeline import pipeline as _pipeline_module
+    from forecastability.use_cases import pipeline as _pipeline_module
 
     return _pipeline_module.run_canonical_example(
         series_name,
@@ -58,7 +63,7 @@ def run_rolling_origin_evaluation(
     include_nbeats: bool = False,
 ) -> SeriesEvaluationResult:
     """Compatibility wrapper for rolling-origin evaluation."""
-    from forecastability.pipeline.pipeline import run_rolling_origin_evaluation as _impl
+    from forecastability.use_cases.pipeline import run_rolling_origin_evaluation as _impl
 
     return _impl(
         ts,
@@ -90,7 +95,7 @@ def run_exogenous_rolling_origin_evaluation(
     project_extension: bool = True,
 ) -> ExogenousBenchmarkResult:
     """Compatibility wrapper for exogenous rolling-origin evaluation."""
-    from forecastability.pipeline import pipeline as _pipeline_module
+    from forecastability.use_cases import pipeline as _pipeline_module
 
     return _pipeline_module.run_exogenous_rolling_origin_evaluation(
         target,
@@ -116,3 +121,28 @@ __all__ = [
     "run_exogenous_rolling_origin_evaluation",
     "run_rolling_origin_evaluation",
 ]
+
+# Lazy re-export targets whose canonical homes moved out of the pipeline package
+# in v0.5.0. Resolved on first access via importlib so this package keeps no
+# static import edge into use_cases/services at module load. Remove in v0.6.0.
+_LAZY_EXPORTS = {
+    "ForecastabilityAnalyzerExog": (
+        "forecastability.use_cases.analyzer",
+        "ForecastabilityAnalyzerExog",
+    ),
+    "compute_pami_with_backend": (
+        "forecastability.services.diagnostics.cmi",
+        "compute_pami_with_backend",
+    ),
+}
+
+
+def __getattr__(name: str) -> Any:
+    """Resolve relocated pipeline exports lazily (v0.5.0 migration)."""
+    target = _LAZY_EXPORTS.get(name)
+    if target is None:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    import importlib
+
+    module_path, attr = target
+    return getattr(importlib.import_module(module_path), attr)

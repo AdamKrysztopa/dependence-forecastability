@@ -26,6 +26,14 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
+from forecastability.services.lag_aware_mod_mrmr import (
+    ForecastSafeLagCandidate,
+    LagAwareModMRMRConfig,
+    RejectedLagAwareFeature,
+    RejectionReason,
+    ScorerDiagnostics,
+    SelectedLagAwareFeature,
+)
 from forecastability.services.lag_aware_mod_mrmr_domain import (
     build_aligned_pair,
     validate_target_history_lags,
@@ -36,14 +44,6 @@ from forecastability.services.lag_aware_mod_mrmr_scorers import (
     build_normalizer,
     build_scorer,
     make_diagnostics,
-)
-from forecastability.triage.lag_aware_mod_mrmr import (
-    ForecastSafeLagCandidate,
-    LagAwareModMRMRConfig,
-    RejectedLagAwareFeature,
-    RejectionReason,
-    ScorerDiagnostics,
-    SelectedLagAwareFeature,
 )
 
 _ZERO_SCORE_TOLERANCE = 1e-12

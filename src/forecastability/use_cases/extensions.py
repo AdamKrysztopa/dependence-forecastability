@@ -7,10 +7,10 @@ import pandas as pd
 from pydantic import BaseModel, ConfigDict
 
 from forecastability.metrics.scorers import _mi_scorer
-from forecastability.pipeline import run_canonical_example
-from forecastability.pipeline.rolling_origin import build_expanding_window_splits
 from forecastability.services.partial_curve_service import compute_partial_at_horizon
 from forecastability.services.raw_curve_service import compute_raw_at_horizon
+from forecastability.use_cases.pipeline import run_canonical_example
+from forecastability.use_cases.rolling_origin import build_expanding_window_splits
 from forecastability.utils.aggregation import summarize_canonical_result
 from forecastability.utils.types import CanonicalExampleResult
 

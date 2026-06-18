@@ -13,8 +13,8 @@ import math
 
 import numpy as np
 
+from forecastability.domain.models.lyapunov import LargestLyapunovExponentResult
 from forecastability.metrics.scorers import _embed_series, _estimate_lle_rosenstein
-from forecastability.triage.lyapunov import LargestLyapunovExponentResult
 
 # Minimum number of embedded points required for a meaningful estimate.
 _MIN_EMBEDDED: int = 10

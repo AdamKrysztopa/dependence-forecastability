@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from forecastability.triage.forecastability_profile import ForecastabilityProfile
+from forecastability.domain.models.forecastability_profile import ForecastabilityProfile
 
 
 def _determine_epsilon(

@@ -11,7 +11,13 @@ from typing import Any, Protocol, runtime_checkable
 
 import numpy as np
 
-from forecastability.metrics.scorers import DependenceScorer, ScorerInfo
+from forecastability.domain.models.events import TriageEvent
+from forecastability.domain.value_objects.types import (
+    CanonicalExampleResult,
+    CausalGraphResult,
+    InterpretationResult,
+    PcmciAmiResult,
+)
 from forecastability.ports.kernels import (
     BatchedKnnMiKernel,
     KernelProvider,
@@ -23,13 +29,7 @@ from forecastability.ports.kernels import (
     PhaseSurrogateKernel,
     load_kernel_provider,
 )
-from forecastability.triage.events import TriageEvent
-from forecastability.utils.types import (
-    CanonicalExampleResult,
-    CausalGraphResult,
-    InterpretationResult,
-    PcmciAmiResult,
-)
+from forecastability.ports.scorers import DependenceScorer, ScorerInfo
 
 __all__ = [
     "BatchedKnnMiKernel",
@@ -37,6 +37,7 @@ __all__ = [
     "CausalGraphPort",
     "CheckpointPort",
     "CurveComputePort",
+    "DependenceScorer",
     "EventEmitterPort",
     "InterpretationPort",
     "KernelProvider",
@@ -48,6 +49,7 @@ __all__ = [
     "PhaseSurrogateKernel",
     "RecommendationPort",
     "ReportRendererPort",
+    "ScorerInfo",
     "SeriesValidatorPort",
     "SettingsPort",
     "SignificanceBandsPort",

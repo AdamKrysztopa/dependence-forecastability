@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import yaml
 
-from forecastability.pipeline import run_exogenous_rolling_origin_evaluation
+from forecastability.use_cases.pipeline import run_exogenous_rolling_origin_evaluation
 from forecastability.utils.config import ExogenousBenchmarkConfig
 from forecastability.utils.plots import plot_exog_benchmark_curves
 

@@ -8,12 +8,12 @@ from typing import cast
 
 import numpy as np
 
-from forecastability.diagnostics.predictive_information_gain import (
-    compute_predictive_information_gain_curve,
-)
-from forecastability.diagnostics.surrogates import phase_surrogates
 from forecastability.metrics import _scale_series
 from forecastability.metrics.scorers import DependenceScorer, ScorerInfo
+from forecastability.services.diagnostics.predictive_information_gain import (
+    compute_predictive_information_gain_curve,
+)
+from forecastability.services.diagnostics.surrogates import phase_surrogates
 from forecastability.services.partial_curve_service import (
     _compute_partial_curve_prescaled,
 )

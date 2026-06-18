@@ -5,15 +5,6 @@ from __future__ import annotations
 from importlib import import_module
 from typing import Any
 
-from forecastability.adapters.result_bundle_io import (
-    load_result_bundle,
-    save_result_bundle,
-    save_triage_result_bundle,
-)
-from forecastability.services.forecast_prep_export import (
-    forecast_prep_contract_to_lag_table,
-    forecast_prep_contract_to_markdown,
-)
 from forecastability.triage.batch_models import (
     FAILURE_TABLE_COLUMNS,
     SUMMARY_TABLE_COLUMNS,
@@ -83,13 +74,6 @@ from forecastability.triage.result_bundle import (
 from forecastability.triage.router import plan_method
 from forecastability.triage.spectral_predictability import SpectralPredictabilityResult
 from forecastability.triage.theoretical_limit_diagnostics import TheoreticalLimitDiagnostics
-from forecastability.use_cases.build_forecast_prep_contract import build_forecast_prep_contract
-from forecastability.use_cases.run_batch_triage import (
-    rank_batch_items,
-    run_batch_triage,
-    run_batch_triage_with_details,
-)
-from forecastability.use_cases.run_triage import run_triage
 from forecastability.utils.types import (
     CovariateRecommendation,
     FamilyRecommendation,
@@ -112,6 +96,30 @@ _LAZY_EXPORT_MAP: dict[str, tuple[str, str | None]] = {
         "forecastability.use_cases.lag_aware_mod_mrmr",
         None,
     ),
+    # Relocated to keep this facade free of static import edges into the
+    # adapters/services/use-case layers (hexagonal boundary; v0.5.0).
+    "load_result_bundle": ("forecastability.adapters.result_bundle_io", None),
+    "save_result_bundle": ("forecastability.adapters.result_bundle_io", None),
+    "save_triage_result_bundle": ("forecastability.adapters.result_bundle_io", None),
+    "forecast_prep_contract_to_lag_table": (
+        "forecastability.services.forecast_prep_export",
+        None,
+    ),
+    "forecast_prep_contract_to_markdown": (
+        "forecastability.services.forecast_prep_export",
+        None,
+    ),
+    "build_forecast_prep_contract": (
+        "forecastability.use_cases.build_forecast_prep_contract",
+        None,
+    ),
+    "rank_batch_items": ("forecastability.use_cases.run_batch_triage", None),
+    "run_batch_triage": ("forecastability.use_cases.run_batch_triage", None),
+    "run_batch_triage_with_details": (
+        "forecastability.use_cases.run_batch_triage",
+        None,
+    ),
+    "run_triage": ("forecastability.use_cases.run_triage", None),
 }
 
 

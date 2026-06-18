@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+import importlib as _importlib
 from collections.abc import Callable
-from dataclasses import dataclass
 from itertools import permutations
-from typing import Literal, Protocol, runtime_checkable
+from typing import Any, Literal, Protocol, runtime_checkable
 
 import numpy as np
 from scipy.spatial import cKDTree  # type: ignore[attr-defined]
@@ -13,70 +13,38 @@ from scipy.spatial.distance import pdist, squareform
 from scipy.stats import kendalltau, spearmanr
 from sklearn.feature_selection import mutual_info_regression
 
-from forecastability.diagnostics.gcmi import compute_gcmi_at_lag
-from forecastability.diagnostics.predictive_information_gain import (
-    compute_predictive_information_gain,
+# Scorer contracts live in ports (inner ring); ``metrics -> ports`` is inward.
+# Re-exported here so ``forecastability.metrics.scorers.{DependenceScorer,
+# SeriesDiagnosticScorer, ScorerInfo}`` remains importable.
+from forecastability.ports.scorers import (
+    DependenceScorer,
+    ScorerInfo,
+    SeriesDiagnosticScorer,
 )
-from forecastability.diagnostics.spectral_utils import compute_normalised_psd, spectral_entropy
 
 
-@runtime_checkable
-class DependenceScorer(Protocol):
-    """Protocol for dependence scoring functions.
+def _load_service(module_path: str, attr: str) -> Any:
+    """Resolve a services-layer estimator lazily via importlib.
 
-    A scorer takes two aligned 1-D arrays (past, future) and returns
-    a non-negative scalar measuring statistical dependence.
+    Diagnostic estimator math lives in the services layer. Resolving it through
+    importlib (rather than a static import) keeps the ``metrics`` package free of
+    a static import edge into ``services`` (hexagonal boundary; v0.5.0). Returns
+    ``Any`` because the resolved callable belongs to an outer layer this module
+    deliberately does not statically import.
     """
-
-    def __call__(
-        self,
-        past: np.ndarray,
-        future: np.ndarray,
-        *,
-        random_state: int = 42,
-    ) -> float: ...
+    return getattr(_importlib.import_module(module_path), attr)
 
 
-@runtime_checkable
-class SeriesDiagnosticScorer(Protocol):
-    """Protocol for univariate diagnostic scoring functions.
-
-    A scorer takes a single 1-D series and returns a non-negative scalar
-    measuring a univariate property (entropy, spectral predictability, etc.).
-
-    This is distinct from :class:`DependenceScorer` which takes ``(past, future)``
-    pairs.  Used by F4 (SpectralPredictabilityScorer) and F6
-    (PermutationEntropyScorer).
-    """
-
-    def __call__(
-        self,
-        series: np.ndarray,
-        *,
-        random_state: int = 42,
-    ) -> float: ...
-
-
-@dataclass(slots=True)
-class ScorerInfo:
-    """Metadata for a registered scorer.
-
-    Attributes:
-        name: Short identifier (e.g. ``"mi"``, ``"pearson"``).
-        scorer: Callable implementing :class:`DependenceScorer` or
-            :class:`SeriesDiagnosticScorer`.
-        family: Scorer family used to auto-select triage thresholds.
-        description: One-line description of the scorer.
-        kind: Whether the scorer operates on ``(past, future)`` pairs
-            (``"bivariate"``) or a single series (``"univariate"``).
-    """
-
-    name: str
-    scorer: DependenceScorer | SeriesDiagnosticScorer
-    family: Literal["nonlinear", "linear", "rank", "bounded_nonlinear"]
-    description: str
-    kind: Literal["bivariate", "univariate", "diagnostic"] = "bivariate"
-    experimental: bool = False
+__all__ = [
+    "DependenceScorer",
+    "ScorerInfo",
+    "ScorerRegistry",
+    "ScorerRegistryProtocol",
+    "SeriesDiagnosticScorer",
+    "default_registry",
+    "gcmi_scorer",
+    "te_scorer",
+]
 
 
 @runtime_checkable
@@ -266,6 +234,10 @@ def te_scorer(
         *,
         random_state: int = 42,
     ) -> float:
+        compute_predictive_information_gain = _load_service(
+            "forecastability.services.diagnostics.predictive_information_gain",
+            "compute_predictive_information_gain",
+        )
         result = compute_predictive_information_gain(
             past,
             future,
@@ -306,6 +278,9 @@ def gcmi_scorer(
         random_state: int = 42,
     ) -> float:
         del random_state  # GCMI is deterministic
+        compute_gcmi_at_lag = _load_service(
+            "forecastability.services.diagnostics.gcmi", "compute_gcmi_at_lag"
+        )
         return compute_gcmi_at_lag(past, future, lag=lag, min_pairs=min_pairs)
 
     return _gcmi
@@ -528,7 +503,7 @@ def _spectral_entropy_scorer(
     """Normalised spectral entropy scorer (Welch PSD, natural-log base).
 
     Implements :class:`SeriesDiagnosticScorer`.  Uses
-    :func:`~forecastability.diagnostics.spectral_utils.compute_normalised_psd` then
+    :func:`~forecastability.services.diagnostics.spectral_utils.compute_normalised_psd` then
     normalises by ``log(N_bins)`` where ``N_bins`` is the number of frequency
     bins in the Welch estimate.
 
@@ -543,6 +518,12 @@ def _spectral_entropy_scorer(
         Normalised spectral entropy in [0, 1].
     """
     del random_state
+    compute_normalised_psd = _load_service(
+        "forecastability.services.diagnostics.spectral_utils", "compute_normalised_psd"
+    )
+    spectral_entropy = _load_service(
+        "forecastability.services.diagnostics.spectral_utils", "spectral_entropy"
+    )
     _, p = compute_normalised_psd(series)
     h = spectral_entropy(p, base=np.e)
     h_max = float(np.log(len(p)))
@@ -559,7 +540,7 @@ def _spectral_predictability_scorer(
     """Spectral predictability scorer Ω = 1 − normalised spectral entropy.
 
     Implements :class:`SeriesDiagnosticScorer`.  Uses
-    :func:`~forecastability.diagnostics.spectral_utils.compute_normalised_psd` then
+    :func:`~forecastability.services.diagnostics.spectral_utils.compute_normalised_psd` then
     normalises by ``log(N_bins)`` where ``N_bins`` is the number of frequency
     bins in the Welch estimate.
 
@@ -574,6 +555,12 @@ def _spectral_predictability_scorer(
         Spectral predictability Ω ∈ [0, 1].
     """
     del random_state
+    compute_normalised_psd = _load_service(
+        "forecastability.services.diagnostics.spectral_utils", "compute_normalised_psd"
+    )
+    spectral_entropy = _load_service(
+        "forecastability.services.diagnostics.spectral_utils", "spectral_entropy"
+    )
     _, p = compute_normalised_psd(series)
     h = spectral_entropy(p, base=np.e)
     h_max = float(np.log(len(p)))
@@ -760,8 +747,9 @@ def _largest_lyapunov_exponent_scorer(
         LLE estimate λ̂ as a float, or ``nan`` on failure.
     """
     del random_state
-    from forecastability.services.lyapunov_service import build_largest_lyapunov_exponent
-
+    build_largest_lyapunov_exponent = _load_service(
+        "forecastability.services.lyapunov_service", "build_largest_lyapunov_exponent"
+    )
     result = build_largest_lyapunov_exponent(series)
     return result.lambda_estimate
 

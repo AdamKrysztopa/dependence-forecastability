@@ -17,12 +17,12 @@ from __future__ import annotations
 
 import numpy as np
 
+from forecastability.domain.models.complexity_band import ComplexityBandResult
 from forecastability.metrics.scorers import (
     _choose_embedding_order,
     _permutation_entropy_scorer,
     _spectral_entropy_scorer,
 )
-from forecastability.triage.complexity_band import ComplexityBandResult
 
 # Composite-score band thresholds (configurable via named constants)
 _LOW_THRESHOLD: float = 0.40

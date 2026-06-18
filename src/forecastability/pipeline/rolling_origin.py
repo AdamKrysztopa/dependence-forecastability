@@ -1,44 +1,28 @@
-"""Rolling-origin split construction."""
-
+# Migration shim — canonical location is
+# forecastability.use_cases.rolling_origin
+# Remove this shim in v0.6.0.
+#
+# Names are resolved lazily through ``importlib`` so the public import path
+# keeps working without eagerly importing the use-case layer at module load.
 from __future__ import annotations
 
-from dataclasses import dataclass
+import importlib
+import warnings as _warnings
+from typing import Any
 
-import numpy as np
-
-from forecastability.utils.validation import validate_time_series
-
-
-@dataclass(slots=True)
-class RollingSplit:
-    """Train-test split for one rolling origin."""
-
-    origin_index: int
-    train: np.ndarray
-    test: np.ndarray
+_CANONICAL_MODULE = "forecastability.use_cases.rolling_origin"
 
 
-def build_expanding_window_splits(
-    ts: np.ndarray,
-    *,
-    n_origins: int,
-    horizon: int,
-) -> list[RollingSplit]:
-    """Build expanding-window rolling-origin splits."""
-    if n_origins < 1:
-        raise ValueError("n_origins must be >= 1")
-    if horizon < 1:
-        raise ValueError("horizon must be >= 1")
-
-    arr = validate_time_series(ts, min_length=(n_origins * horizon) + 21)
-
-    splits: list[RollingSplit] = []
-    first_origin = arr.size - n_origins * horizon
-
-    for index in range(n_origins):
-        origin = first_origin + index * horizon
-        train = arr[:origin]
-        test = arr[origin : origin + horizon]
-        splits.append(RollingSplit(origin_index=origin, train=train, test=test))
-
-    return splits
+def __getattr__(name: str) -> Any:
+    """Resolve the relocated pipeline module from the use-case layer lazily."""
+    if name.startswith("__") and name.endswith("__"):
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    _warnings.warn(
+        "forecastability.pipeline.rolling_origin is deprecated in v0.5.0; "
+        "use forecastability.use_cases.rolling_origin instead. "
+        "See docs/migration/v0.4.x_to_v0.5.0.md.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
+    module = importlib.import_module(_CANONICAL_MODULE)
+    return getattr(module, name)

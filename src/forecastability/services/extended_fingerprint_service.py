@@ -5,6 +5,9 @@ from __future__ import annotations
 import numpy as np
 from numpy.typing import ArrayLike
 
+from forecastability.domain.models.extended_forecastability import (
+    ExtendedForecastabilityFingerprint,
+)
 from forecastability.services._extended_diagnostic_validation import (
     coerce_univariate_values,
     validate_embedding_dimension,
@@ -22,7 +25,6 @@ from forecastability.services.ordinal_complexity_service import compute_ordinal_
 from forecastability.services.spectral_forecastability_service import (
     compute_spectral_forecastability,
 )
-from forecastability.triage.extended_forecastability import ExtendedForecastabilityFingerprint
 from forecastability.utils.types import AmiInformationGeometry
 
 

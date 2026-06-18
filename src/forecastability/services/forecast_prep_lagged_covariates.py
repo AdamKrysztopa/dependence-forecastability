@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import cast
 
-from forecastability.triage.lag_aware_mod_mrmr import (
+from forecastability.services.lag_aware_mod_mrmr import (
     LagAwareModMRMRResult,
     SelectedLagAwareFeature,
 )

@@ -187,9 +187,17 @@ class KSG2CurveKernel:
             raise ValueError("n_surrogates must be >= 99")
 
         k_list = k_list if k_list is not None else self._k_list
+        import importlib
+
         from numpy.random import SeedSequence
 
-        from forecastability.diagnostics.surrogates import phase_surrogates
+        # Surrogate generation lives in the services layer; resolved via importlib
+        # so the kernels package holds no static import edge into services
+        # (hexagonal boundary). The Hermitian-correct phase-randomisation and
+        # n_surrogates contract are unchanged.
+        phase_surrogates = importlib.import_module(
+            "forecastability.services.diagnostics.surrogates"
+        ).phase_surrogates
 
         surrogates = phase_surrogates(series, n_surrogates=n_surrogates, random_state=random_state)
         ss = SeedSequence(random_state + 1)

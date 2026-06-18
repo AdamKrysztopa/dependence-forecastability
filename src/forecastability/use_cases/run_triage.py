@@ -9,17 +9,12 @@ from typing import Any
 
 import numpy as np
 
-from forecastability.diagnostics.spectral_utils import compute_normalised_psd
 from forecastability.metrics.metrics import _scale_series, compute_ami
-from forecastability.pipeline.analyzer import (
-    AnalyzeResult,
-    ForecastabilityAnalyzer,
-    ForecastabilityAnalyzerExog,
-)
 from forecastability.ports import CheckpointPort, EventEmitterPort
-from forecastability.reporting.interpretation import interpret_canonical_result
 from forecastability.services.complexity_band_service import build_complexity_band
+from forecastability.services.diagnostics.spectral_utils import compute_normalised_psd
 from forecastability.services.forecastability_profile_service import build_forecastability_profile
+from forecastability.services.interpretation import interpret_canonical_result
 from forecastability.services.theoretical_limit_diagnostics_service import (
     build_theoretical_limit_diagnostics,
 )
@@ -41,6 +36,11 @@ from forecastability.triage.models import (
 from forecastability.triage.readiness import assess_readiness
 from forecastability.triage.router import plan_method
 from forecastability.triage.theoretical_limit_diagnostics import TheoreticalLimitDiagnostics
+from forecastability.use_cases.analyzer import (
+    AnalyzeResult,
+    ForecastabilityAnalyzer,
+    ForecastabilityAnalyzerExog,
+)
 from forecastability.utils.types import CanonicalExampleResult, MetricCurve
 
 

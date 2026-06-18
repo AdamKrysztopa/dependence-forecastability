@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import numpy as np
 
-from forecastability.triage.theoretical_limit_diagnostics import TheoreticalLimitDiagnostics
+from forecastability.domain.models.theoretical_limit_diagnostics import (
+    TheoreticalLimitDiagnostics,
+)
 
 _NON_TRIVIAL_THRESHOLD = 0.01
 

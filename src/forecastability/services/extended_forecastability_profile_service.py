@@ -7,8 +7,7 @@ from collections.abc import Iterable
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field
 
-from forecastability.services.forecastability_profile_service import build_forecastability_profile
-from forecastability.triage.extended_forecastability import (
+from forecastability.domain.models.extended_forecastability import (
     ExtendedForecastabilityFingerprint,
     ExtendedForecastabilityProfile,
     NoiseRiskLabel,
@@ -16,7 +15,8 @@ from forecastability.triage.extended_forecastability import (
     RoutingMetadataValue,
     SignalStrengthLabel,
 )
-from forecastability.triage.forecastability_profile import ForecastabilityProfile
+from forecastability.domain.models.forecastability_profile import ForecastabilityProfile
+from forecastability.services.forecastability_profile_service import build_forecastability_profile
 from forecastability.utils.types import AmiInformationGeometry
 
 _NONLINEAR_AVOID_FAMILIES: tuple[str, ...] = (

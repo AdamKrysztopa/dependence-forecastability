@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import numpy as np
 
-from forecastability.diagnostics.cmi_ksg import (
+from forecastability.services.diagnostics.cmi_ksg import (
     compute_conditional_mutual_information_ksg,
     compute_transfer_entropy_ksg,
 )
@@ -57,7 +57,7 @@ def test_valid_mask_all_false_returns_nan() -> None:
 
     MockCKDTree = MagicMock(return_value=mock_tree_instance)
 
-    with patch("forecastability.diagnostics.cmi_ksg.cKDTree", MockCKDTree):
+    with patch("forecastability.services.diagnostics.cmi_ksg.cKDTree", MockCKDTree):
         result = compute_conditional_mutual_information_ksg(x, y, z_arr, lag=1, k=3)
 
     assert np.isnan(result), (
@@ -80,7 +80,7 @@ def test_nan_raw_value_yields_blocked_not_computed_status() -> None:
 
     # Patch the inner CMI call to return nan, simulating the degenerate path.
     with patch(
-        "forecastability.diagnostics.cmi_ksg.compute_conditional_mutual_information_ksg",
+        "forecastability.services.diagnostics.cmi_ksg.compute_conditional_mutual_information_ksg",
         return_value=float("nan"),
     ):
         result = compute_transfer_entropy_ksg(x, y, lag=1, k=3)

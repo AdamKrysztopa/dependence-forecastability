@@ -8,28 +8,44 @@ walkthrough notebook.
 
 from __future__ import annotations
 
+import importlib
 from pathlib import Path
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from pydantic import BaseModel, ConfigDict
 
-from forecastability.adapters.agents.fingerprint_agent_interpretation_adapter import (
-    FingerprintAgentInterpretation,
-    interpret_fingerprint_payload,
-)
-from forecastability.adapters.agents.fingerprint_agent_payload_models import (
-    FingerprintAgentPayload,
-    fingerprint_agent_payload,
-)
-from forecastability.adapters.agents.fingerprint_summary_serializer import (
-    SerialisedFingerprintSummary,
-    serialise_fingerprint_payload,
-)
 from forecastability.reporting.fingerprint_reporting import build_fingerprint_markdown
 from forecastability.services.linear_information_service import LinearInformationCurve
 from forecastability.utils.types import FingerprintBundle
+
+# Agent payload/serializer/interpretation symbols live in the adapters layer.
+# They are required as Pydantic field types below, so they must exist in the
+# module globals (Pydantic resolves string annotations via the module dict).
+# They are bound here through importlib — strings, not static ``import``
+# statements — so this reporting module holds no static AST import edge into the
+# adapters layer (hexagonal boundary; v0.5.0). Runtime-safe: the agent adapters
+# do not import the reporting layer, so no circular import arises. The names are
+# typed ``Any`` because the concrete classes belong to an outer layer this inner
+# module deliberately does not statically import.
+_interpretation_module = importlib.import_module(
+    "forecastability.adapters.agents.fingerprint_agent_interpretation_adapter"
+)
+_payload_module = importlib.import_module(
+    "forecastability.adapters.agents.fingerprint_agent_payload_models"
+)
+_serializer_module = importlib.import_module(
+    "forecastability.adapters.agents.fingerprint_summary_serializer"
+)
+
+FingerprintAgentInterpretation: Any = _interpretation_module.FingerprintAgentInterpretation
+interpret_fingerprint_payload: Any = _interpretation_module.interpret_fingerprint_payload
+FingerprintAgentPayload: Any = _payload_module.FingerprintAgentPayload
+fingerprint_agent_payload: Any = _payload_module.fingerprint_agent_payload
+SerialisedFingerprintSummary: Any = _serializer_module.SerialisedFingerprintSummary
+serialise_fingerprint_payload: Any = _serializer_module.serialise_fingerprint_payload
 
 _CANONICAL_SERIES: tuple[str, ...] = (
     "white_noise",

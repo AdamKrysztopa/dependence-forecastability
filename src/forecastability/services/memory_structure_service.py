@@ -8,8 +8,8 @@ from typing import Literal
 import numpy as np
 from numpy.typing import ArrayLike
 
+from forecastability.domain.models.extended_forecastability import MemoryStructureResult
 from forecastability.services._extended_diagnostic_validation import coerce_univariate_values
-from forecastability.triage.extended_forecastability import MemoryStructureResult
 
 _SHORT_SERIES_NOTE = "series is too short for a stable DFA fit"
 _CONSTANT_SERIES_NOTE = "constant series; memory structure is undefined"
