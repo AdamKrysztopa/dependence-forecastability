@@ -315,7 +315,7 @@ def test_llm_adapters_do_not_import_scripts() -> None:
 # ---------------------------------------------------------------------------
 # Rule 7 — inner-ring (domain/, ports/) must not import outer first-party pkgs
 #
-# Tracked by docs/plan/implemented/v0_5_x_finish_hex_migration_plan.md (hex-migration
+# Tracked by docs/plan/implemented/v0_5_1_finish_hex_migration_plan.md (hex-migration
 # completion). The domain leg is enforced once Slice 1 lands; the ports leg
 # stays xfail until Slice 3 repoints port modules off the legacy packages.
 # ---------------------------------------------------------------------------
@@ -375,7 +375,7 @@ def test_domain_has_no_outer_first_party_imports() -> None:
 
 # Un-xfailed for the ports leg once Slice 3 repointed port modules off the
 # legacy packages (triage/utils/metrics) onto domain + ports.
-# See docs/plan/implemented/v0_5_x_finish_hex_migration_plan.md (hex-migration).
+# See docs/plan/implemented/v0_5_1_finish_hex_migration_plan.md (hex-migration).
 def test_ports_have_no_outer_first_party_imports() -> None:
     """ports/ modules must not import outer first-party packages.
 
@@ -401,7 +401,7 @@ def test_ports_have_no_outer_first_party_imports() -> None:
 # ---------------------------------------------------------------------------
 # Rule 8 — no import cycles between architectural layers
 #
-# Tracked by docs/plan/implemented/v0_5_x_finish_hex_migration_plan.md (hex-migration
+# Tracked by docs/plan/implemented/v0_5_1_finish_hex_migration_plan.md (hex-migration
 # completion). Expected to fail until the migration removes cross-layer cycles;
 # will be un-xfailed when the layer graph becomes acyclic.
 # ---------------------------------------------------------------------------

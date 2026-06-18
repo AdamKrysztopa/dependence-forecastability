@@ -1,13 +1,13 @@
 <!-- type: reference -->
 
-# v0.5.x — Finish the Hexagonal Migration: Strangler-Fig Cycle Removal
+# v0.5.1 — Finish the Hexagonal Migration: Strangler-Fig Cycle Removal
 
 **Plan type:** Actionable refactor plan — structural debt paydown, no behaviour change
 **Audience:** Maintainer, reviewer, software-architect reviewer, Jr. developer
-**Target release:** none — this plan ships no release tag; it is an internal-structure refactor that lands on `main` and is *bequeathed* to the next feature release
+**Target release:** `0.5.1` (patch) — the maintainer elected to ship this internal-structure refactor as a patch release; additive `DeprecationWarning` shims only, public surface byte-stable
 **Current released version:** `0.5.0`
 **Branch:** `refactor/finish-hex-migration`
-**Status:** Implemented — landed on `main` (branch `refactor/finish-hex-migration`); layer graph acyclic, boundary test enforced
+**Status:** Shipped (v0.5.1) — landed on `main` (branch `refactor/finish-hex-migration`); layer graph acyclic, boundary test enforced
 **Last reviewed:** 2026-06-17
 
 > [!IMPORTANT]
@@ -18,7 +18,7 @@
 > Binding driver document: [docs/architecture-review-2026-06-17.md](../../architecture-review-2026-06-17.md).
 
 > [!NOTE]
-> **Cross-release ordering.** This is a post-v0.5.0 internal refactor with no chained predecessor or successor *release*. It **consumes** the physical `src/forecastability/domain/` package and the AST boundary test that v0.5.0 shipped (commit `507b64c`, RVH architecture-realignment phase). It **bequeaths** a genuinely isolable core (`domain`/`ports` importable without dragging in `triage`/`services`/`adapters`) and a boundary test that fails on first-party leaks and cycles — so the next feature release inherits a clean layer graph and a guardrail that defends it. No version bump, CHANGELOG entry, or PyPI publication is produced by this plan.
+> **Cross-release ordering.** This is a post-v0.5.0 internal refactor with no chained predecessor or successor *release*. It **consumes** the physical `src/forecastability/domain/` package and the AST boundary test that v0.5.0 shipped (commit `507b64c`, RVH architecture-realignment phase). It **bequeaths** a genuinely isolable core (`domain`/`ports` importable without dragging in `triage`/`services`/`adapters`) and a boundary test that fails on first-party leaks and cycles — so the next feature release inherits a clean layer graph and a guardrail that defends it. The maintainer elected to ship this structural hardening as the **v0.5.1 patch** (additive `DeprecationWarning` shims only; public surface byte-stable), so a version bump, CHANGELOG entry, and PyPI publication *are* produced for this release.
 
 **Companion refs:**
 
@@ -349,4 +349,4 @@ This plan ships **no release tag**, so the standard publish steps collapse to a 
 9. **No tag, no PyPI, no GitHub release** — confirm none is created (out of scope).
 10. **No sibling-repo bump** — `forecastability-examples` is unaffected (no public surface change); confirm no dispatch is sent.
 11. **Index update** — `docs/plan/README.md` updated with this plan's final status.
-12. **Move plan to implemented** — relocate this file to `docs/plan/implemented/v0_5_x_finish_hex_migration_plan.md` and update all references.
+12. **Move plan to implemented** — relocate this file to `docs/plan/implemented/v0_5_1_finish_hex_migration_plan.md` and update all references.

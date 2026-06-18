@@ -9,6 +9,31 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-06-18
+
+> **v0.5.1 — Hexagonal-migration hardening (internal structure only).**
+> Completes the Strangler-Fig hexagonal migration. See the implemented plan
+> [`docs/plan/implemented/v0_5_1_finish_hex_migration_plan.md`](docs/plan/implemented/v0_5_1_finish_hex_migration_plan.md).
+> **No public-API change** — `api/__init__.py` is byte-stable and `__all__` is
+> unchanged — and **no numeric or estimator change.**
+
+### Architecture
+
+- The top-level layer graph is now **acyclic** and enforced by
+  `tests/test_architecture_boundaries.py`: `domain`/`ports` import only
+  `domain`/`ports` (plus numpy/pandas/pydantic) among first-party packages,
+  and no cross-layer import cycles remain.
+
+### Internal
+
+- Relocated legacy import paths into the hexagonal ring layers behind
+  `DeprecationWarning` shims (removal in v0.6.0):
+  `forecastability.diagnostics.*`, `forecastability.pipeline.*`,
+  `forecastability.triage.*`, `forecastability.utils.*`,
+  `forecastability.metrics.scorers`, and
+  `forecastability.reporting.interpretation`.  The shims are **additive**;
+  existing imports continue to work and emit a deprecation notice.
+
 ## [0.5.0] - 2026-05-25
 
 > **v0.5.0 — Review-driven hardening: math honesty, architecture realignment,
