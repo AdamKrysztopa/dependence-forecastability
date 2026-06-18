@@ -26,6 +26,7 @@
 ## Findings
 
 ### 1. The hexagonal migration is half-done — ring layers and legacy packages form import cycles
+
 The folder taxonomy is hexagonal, but the **dependency graph is bidirectional**, so the
 guarantee hexagonal buys you (test the core in isolation, swap an adapter without
 touching the domain) is not actually realized.
@@ -54,6 +55,7 @@ and `BatchSummaryRow` into `domain/models/`, then invert `triage` to import them
 · **Cost:** churn across import sites; do it incrementally so CI stays green per cycle.
 
 ### 2. The architecture-boundary test gives false assurance
+
 `tests/test_architecture_boundaries.py` enforces only that `domain`/`ports` avoid
 *external* infra (`sklearn`, `scipy`, `matplotlib`, …). It is blind to **first-party**
 outward imports, so `domain → triage` and `ports → metrics/triage/utils` pass CI today.
@@ -71,6 +73,7 @@ passing as the migration completes.
 · **Cost:** one test; goes red immediately (by design).
 
 ### 3. `utils/` is a dumping ground that participates in the cycles
+
 At 3.2k LOC, `utils/` imports `domain`, `pipeline`, and `reporting`, and is imported by
 five other packages. A "utils" that imports domain and reporting is not utilities — it
 is hidden domain/orchestration code mislabeled as a leaf.
